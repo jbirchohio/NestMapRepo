@@ -4,6 +4,15 @@ import { z } from 'zod';
 import { getDatabase } from '../../db/connection';
 import { trips } from '../../db/tripSchema';
 
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 const router = Router();
 
 // Validation schemas
@@ -183,7 +192,7 @@ router.post('/:templateId/create-trip', async (req: Request, res: Response) => {
       return res.status(503).json(response);
     }
 
-    const [newTrip] = await db.insert(trips).values({
+    const [newTrip] = await getDB().insert(trips).values({
       title: template.title,
       description: template.description,
       startDate: new Date(startDate),

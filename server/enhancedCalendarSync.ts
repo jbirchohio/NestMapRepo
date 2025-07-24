@@ -1,10 +1,15 @@
 import { Router } from 'express';
 import axios from 'axios';
 import { db } from './db-connection';
-import { users, trips, activities } from '../shared/src/schema';
+import { users, trips, activities } from './src/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { auditLogger } from './auditLogger';
 import crypto from 'crypto';
+import EWS from 'node-ews';
+import { dav } from 'dav';
+import ICAL from 'ical.js';
+import { Client } from '@microsoft/microsoft-graph-client';
+import 'isomorphic-fetch';
 
 export interface CalendarProvider {
   id: string;
@@ -169,10 +174,10 @@ export class EnhancedCalendarSyncService {
     this.providers.set(userId, userProviders);
 
     await auditLogger.log({
-      userId,
-      organizationId,
+      userId: userId.toString(),
+      organizationId: organizationId.toString(),
       action: 'calendar_provider_configured',
-      entityType: 'calendar_provider',
+      logType: 'calendar_provider',
       details: {
         providerId: provider.id,
         providerType: type,
@@ -228,10 +233,10 @@ export class EnhancedCalendarSyncService {
         results.push(result);
 
         await auditLogger.log({
-          userId,
-          organizationId: provider.organizationId,
+          userId: userId.toString(),
+          organizationId: provider.organizationId.toString(),
           action: 'calendar_sync_completed',
-          entityType: 'calendar_sync',
+          logType: 'calendar_sync',
           details: {
             providerId: provider.id,
             providerType: provider.type,
@@ -399,23 +404,83 @@ export class EnhancedCalendarSyncService {
     };
 
     try {
-      // Real Exchange Web Services (EWS) integration would go here
-      // This would require the 'node-ews' library or similar
-      
       if (!provider.config.serverUrl || !provider.config.username || !provider.config.password) {
         result.errors.push('Exchange integration requires server URL, username, and password');
         return result;
       }
 
-      // Basic validation of Exchange server connectivity
-      // In a real implementation, this would use EWS SOAP calls
-      console.log(`Connecting to Exchange server: ${provider.config.serverUrl}`);
-      console.log(`Authenticating user: ${provider.config.username}`);
-      
-      // Simulate Exchange sync
+      // Initialize EWS connection
+      const ewsConfig = {
+        username: provider.config.username,
+        password: provider.config.password,
+        host: provider.config.serverUrl.replace(/^https?:\/\//, ''),
+        auth: 'basic'
+      };
+
+      const ews = new EWS(ewsConfig);
+
+      // Get calendar items for the next 30 days
+      const startDate = new Date();
+      const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      const ewsFunction = 'FindItem';
+      const ewsArgs = {
+        'ItemShape': {
+          'BaseShape': 'IdOnly',
+          'AdditionalProperties': {
+            'FieldURI': [
+              { 'FieldURI': 'item:Subject' },
+              { 'FieldURI': 'calendar:Start' },
+              { 'FieldURI': 'calendar:End' },
+              { 'FieldURI': 'item:Body' },
+              { 'FieldURI': 'calendar:Location' },
+              { 'FieldURI': 'calendar:IsAllDayEvent' },
+              { 'FieldURI': 'calendar:CalendarItemType' }
+            ]
+          }
+        },
+        'ParentFolderIds': {
+          'DistinguishedFolderId': {
+            'Id': 'calendar'
+          }
+        },
+        'CalendarView': {
+          'StartDate': startDate.toISOString(),
+          'EndDate': endDate.toISOString()
+        }
+      };
+
+      const exchangeEvents = await ews.run(ewsFunction, ewsArgs);
+      const providerEvents = this.events.get(provider.id) || [];
+
+      if (exchangeEvents && exchangeEvents.ResponseMessages && exchangeEvents.ResponseMessages.FindItemResponseMessage) {
+        const items = exchangeEvents.ResponseMessages.FindItemResponseMessage.RootFolder.Items.CalendarItem || [];
+        const calendarItems = Array.isArray(items) ? items : [items];
+
+        for (const calItem of calendarItems) {
+          const event = this.convertExchangeEventToCalendarEvent(calItem, provider.id);
+          
+          const existingEvent = providerEvents.find(e => e.externalId === calItem.ItemId.Id);
+          
+          if (existingEvent) {
+            Object.assign(existingEvent, event);
+            result.eventsUpdated++;
+          } else {
+            providerEvents.push(event);
+            result.eventsCreated++;
+          }
+        }
+      }
+
+      this.events.set(provider.id, providerEvents);
+
+      // Sync NestMap events to Exchange if two-way sync is enabled
+      if (provider.syncSettings.syncDirection === 'two_way') {
+        await this.syncNestMapEventsToExchange(provider, ews);
+      }
+
       result.success = true;
-      result.eventsCreated = 0; // No events synced yet - placeholder for real implementation
-      
+
     } catch (error) {
       result.errors.push(`Exchange Calendar sync error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -436,23 +501,82 @@ export class EnhancedCalendarSyncService {
     };
 
     try {
-      // Real CalDAV integration would use libraries like 'dav' or custom WebDAV client
-      
       if (!provider.config.serverUrl || !provider.config.username || !provider.config.password) {
         result.errors.push('CalDAV integration requires server URL, username, and password');
         return result;
       }
 
-      // Basic CalDAV server validation
-      console.log(`Connecting to CalDAV server: ${provider.config.serverUrl}`);
-      console.log(`Authenticating user: ${provider.config.username}`);
-      
-      // Would perform PROPFIND and REPORT requests to fetch calendar data
-      // Example: Fetch calendar collection, then individual events
-      
+      // Initialize CalDAV client
+      const xhr = new dav.transport.Basic(
+        new dav.Credentials({
+          username: provider.config.username,
+          password: provider.config.password
+        })
+      );
+
+      // Create account and discover calendars
+      const account = await dav.createAccount({
+        server: provider.config.serverUrl,
+        xhr: xhr,
+        loadCollections: true
+      });
+
+      if (!account.calendars || account.calendars.length === 0) {
+        result.errors.push('No calendars found on CalDAV server');
+        return result;
+      }
+
+      const calendar = account.calendars[0]; // Use first calendar
+      const providerEvents = this.events.get(provider.id) || [];
+
+      // Sync objects (events) from calendar
+      const calendarObjects = await dav.syncCalendar(calendar, {
+        xhr: xhr,
+        syncToken: provider.config.customFields?.syncToken
+      });
+
+      // Update sync token for next sync
+      if (!provider.config.customFields) {
+        provider.config.customFields = {};
+      }
+      provider.config.customFields.syncToken = calendarObjects.syncToken;
+
+      // Process calendar objects
+      for (const calendarObject of calendarObjects.objects) {
+        if (calendarObject.calendarData) {
+          try {
+            const jcalData = ICAL.parse(calendarObject.calendarData);
+            const vcalendar = new ICAL.Component(jcalData);
+            const vevents = vcalendar.getAllSubcomponents('vevent');
+
+            for (const vevent of vevents) {
+              const event = this.convertCalDAVEventToCalendarEvent(vevent, provider.id, calendarObject.url);
+              
+              const existingEvent = providerEvents.find(e => e.externalId === calendarObject.url);
+              
+              if (existingEvent) {
+                Object.assign(existingEvent, event);
+                result.eventsUpdated++;
+              } else {
+                providerEvents.push(event);
+                result.eventsCreated++;
+              }
+            }
+          } catch (parseError) {
+            result.errors.push(`Failed to parse calendar event: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+          }
+        }
+      }
+
+      this.events.set(provider.id, providerEvents);
+
+      // Sync NestMap events to CalDAV if two-way sync is enabled
+      if (provider.syncSettings.syncDirection === 'two_way') {
+        await this.syncNestMapEventsToCalDAV(provider, calendar, xhr);
+      }
+
       result.success = true;
-      result.eventsCreated = 0; // Placeholder for real implementation
-      
+
     } catch (error) {
       result.errors.push(`CalDAV sync error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -473,26 +597,58 @@ export class EnhancedCalendarSyncService {
     };
 
     try {
-      // Real iCal integration would use libraries like 'ical.js' or 'node-ical'
-      
       if (!provider.config.serverUrl) {
         result.errors.push('iCal integration requires calendar URL');
         return result;
       }
 
-      // Fetch and parse iCal data
-      console.log(`Fetching iCal data from: ${provider.config.serverUrl}`);
-      
-      // Would fetch the .ics file and parse it
-      // const response = await axios.get(provider.config.serverUrl);
-      // const icalData = ical.parseICS(response.data);
-      
-      // Process events from iCal data
-      // Parse VEVENT components and convert to CalendarEvent format
-      
+      // Fetch iCal data from URL
+      const response = await axios.get(provider.config.serverUrl, {
+        headers: {
+          'User-Agent': 'NestMap Calendar Sync',
+          'Accept': 'text/calendar, text/plain'
+        },
+        timeout: 30000 // 30 second timeout
+      });
+
+      if (!response.data) {
+        result.errors.push('No calendar data received from iCal URL');
+        return result;
+      }
+
+      // Parse iCal data
+      const jcalData = ICAL.parse(response.data);
+      const vcalendar = new ICAL.Component(jcalData);
+      const vevents = vcalendar.getAllSubcomponents('vevent');
+
+      const providerEvents = this.events.get(provider.id) || [];
+
+      // Process each calendar event
+      for (const vevent of vevents) {
+        try {
+          const event = this.convertICalEventToCalendarEvent(vevent, provider.id);
+          
+          // Check if event already exists (based on UID)
+          const uid = vevent.getFirstPropertyValue('uid');
+          const existingEvent = providerEvents.find(e => e.externalId === uid);
+          
+          if (existingEvent) {
+            Object.assign(existingEvent, event);
+            result.eventsUpdated++;
+          } else {
+            providerEvents.push(event);
+            result.eventsCreated++;
+          }
+        } catch (parseError) {
+          result.errors.push(`Failed to parse iCal event: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+        }
+      }
+
+      this.events.set(provider.id, providerEvents);
+
+      // Note: iCal is typically read-only, so no two-way sync
       result.success = true;
-      result.eventsCreated = 0; // Placeholder for real implementation
-      
+
     } catch (error) {
       result.errors.push(`iCal sync error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -501,7 +657,7 @@ export class EnhancedCalendarSyncService {
   }
 
   // Create calendar event from trip
-  async createTripEvent(tripId: number, providerId: string): Promise<CalendarEvent> {
+  async createTripEvent(tripId: string, providerId: string): Promise<CalendarEvent> {
     const trip = await db.select().from(trips).where(eq(trips.id, tripId)).limit(1);
     if (!trip.length) {
       throw new Error(`Trip ${tripId} not found`);
@@ -518,9 +674,9 @@ export class EnhancedCalendarSyncService {
       providerId,
       title: `${provider.syncSettings.eventPrefix || ''}${tripData.title}`,
       description: `Trip to ${tripData.city}\n\nGenerated by NestMap`,
-      location: tripData.city,
-      startTime: tripData.start_date,
-      endTime: tripData.end_date,
+      location: tripData.city || '',
+      startTime: tripData.startDate,
+      endTime: tripData.endDate,
       isAllDay: true,
       status: 'confirmed',
       visibility: 'private',
@@ -553,7 +709,7 @@ export class EnhancedCalendarSyncService {
   }
 
   // Create calendar event from activity
-  async createActivityEvent(activityId: number, providerId: string): Promise<CalendarEvent> {
+  async createActivityEvent(activityId: string, providerId: string): Promise<CalendarEvent> {
     const activity = await db.select().from(activities).where(eq(activities.id, activityId)).limit(1);
     if (!activity.length) {
       throw new Error(`Activity ${activityId} not found`);
@@ -569,10 +725,10 @@ export class EnhancedCalendarSyncService {
       id: `activity-${activityId}-${Date.now()}`,
       providerId,
       title: `${provider.syncSettings.eventPrefix || ''}${activityData.title}`,
-      description: `${activityData.description}\n\nGenerated by NestMap`,
-      location: activityData.location,
-      startTime: new Date(activityData.start_time),
-      endTime: new Date(activityData.end_time),
+      description: `${activityData.notes || activityData.title}\n\nGenerated by NestMap`,
+      location: activityData.locationName || '',
+      startTime: new Date(activityData.date),
+      endTime: new Date(new Date(activityData.date).getTime() + 60 * 60 * 1000), // Default 1 hour duration
       isAllDay: false,
       status: 'confirmed',
       visibility: 'private',
@@ -803,19 +959,387 @@ export class EnhancedCalendarSyncService {
     };
   }
 
+  private convertExchangeEventToCalendarEvent(exchangeEvent: any, providerId: string): CalendarEvent {
+    return {
+      id: `exchange-${exchangeEvent.ItemId.Id}`,
+      providerId,
+      externalId: exchangeEvent.ItemId.Id,
+      title: exchangeEvent.Subject || 'Untitled Event',
+      description: exchangeEvent.Body?.Value || '',
+      location: exchangeEvent.Location || '',
+      startTime: new Date(exchangeEvent.Start),
+      endTime: new Date(exchangeEvent.End),
+      isAllDay: exchangeEvent.IsAllDayEvent || false,
+      attendees: exchangeEvent.RequiredAttendees?.Attendee?.map((attendee: any) => ({
+        email: attendee.Mailbox.EmailAddress,
+        name: attendee.Mailbox.Name,
+        status: 'needs_action' as const,
+        isOrganizer: false,
+        isOptional: false
+      })) || [],
+      status: 'confirmed' as const,
+      visibility: 'private' as const,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+
+  private convertCalDAVEventToCalendarEvent(vevent: any, providerId: string, url: string): CalendarEvent {
+    const summary = vevent.getFirstPropertyValue('summary') || 'Untitled Event';
+    const description = vevent.getFirstPropertyValue('description') || '';
+    const location = vevent.getFirstPropertyValue('location') || '';
+    const uid = vevent.getFirstPropertyValue('uid');
+    const dtstart = vevent.getFirstPropertyValue('dtstart');
+    const dtend = vevent.getFirstPropertyValue('dtend');
+    const isAllDay = dtstart && !dtstart.isDate ? false : true;
+
+    return {
+      id: `caldav-${uid}`,
+      providerId,
+      externalId: url,
+      title: summary,
+      description,
+      location,
+      startTime: dtstart ? dtstart.toJSDate() : new Date(),
+      endTime: dtend ? dtend.toJSDate() : new Date(),
+      isAllDay,
+      attendees: [],
+      status: 'confirmed' as const,
+      visibility: 'private' as const,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+
+  private convertICalEventToCalendarEvent(vevent: any, providerId: string): CalendarEvent {
+    const summary = vevent.getFirstPropertyValue('summary') || 'Untitled Event';
+    const description = vevent.getFirstPropertyValue('description') || '';
+    const location = vevent.getFirstPropertyValue('location') || '';
+    const uid = vevent.getFirstPropertyValue('uid');
+    const dtstart = vevent.getFirstPropertyValue('dtstart');
+    const dtend = vevent.getFirstPropertyValue('dtend');
+    const isAllDay = dtstart && !dtstart.isDate ? false : true;
+
+    return {
+      id: `ical-${uid}`,
+      providerId,
+      externalId: uid,
+      title: summary,
+      description,
+      location,
+      startTime: dtstart ? dtstart.toJSDate() : new Date(),
+      endTime: dtend ? dtend.toJSDate() : new Date(),
+      isAllDay,
+      attendees: [],
+      status: 'confirmed' as const,
+      visibility: 'public' as const,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+
   private async syncEventToProvider(event: CalendarEvent, provider: CalendarProvider): Promise<void> {
-    // Implementation would sync the event to the external calendar
-    console.log(`Syncing event ${event.id} to ${provider.type} provider`);
+    try {
+      switch (provider.type) {
+        case 'google':
+          await this.syncEventToGoogle(event, provider);
+          break;
+        case 'outlook':
+          await this.syncEventToOutlook(event, provider);
+          break;
+        case 'exchange':
+          await this.syncEventToExchange(event, provider);
+          break;
+        case 'caldav':
+          await this.syncEventToCalDAV(event, provider);
+          break;
+        case 'ical':
+          // iCal is typically read-only
+          console.log(`Skipping sync to iCal (read-only): ${event.id}`);
+          break;
+        default:
+          console.log(`Unsupported provider type for sync: ${provider.type}`);
+      }
+    } catch (error) {
+      console.error(`Error syncing event ${event.id} to ${provider.type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  private async syncEventToGoogle(event: CalendarEvent, provider: CalendarProvider): Promise<void> {
+    await this.refreshGoogleToken(provider);
+    
+    const googleEvent = {
+      summary: event.title,
+      description: event.description,
+      location: event.location,
+      start: event.isAllDay 
+        ? { date: event.startTime.toISOString().split('T')[0] }
+        : { dateTime: event.startTime.toISOString() },
+      end: event.isAllDay 
+        ? { date: event.endTime.toISOString().split('T')[0] }
+        : { dateTime: event.endTime.toISOString() },
+      attendees: event.attendees?.map(attendee => ({
+        email: attendee.email,
+        displayName: attendee.name
+      }))
+    };
+
+    await axios.post(
+      `https://www.googleapis.com/calendar/v3/calendars/${provider.config.calendarId || 'primary'}/events`,
+      googleEvent,
+      {
+        headers: { 'Authorization': `Bearer ${provider.config.accessToken}` }
+      }
+    );
+  }
+
+  private async syncEventToOutlook(event: CalendarEvent, provider: CalendarProvider): Promise<void> {
+    await this.refreshOutlookToken(provider);
+    
+    const outlookEvent = {
+      subject: event.title,
+      body: {
+        contentType: 'text',
+        content: event.description
+      },
+      location: {
+        displayName: event.location
+      },
+      start: {
+        dateTime: event.startTime.toISOString(),
+        timeZone: 'UTC'
+      },
+      end: {
+        dateTime: event.endTime.toISOString(),
+        timeZone: 'UTC'
+      },
+      isAllDay: event.isAllDay,
+      attendees: event.attendees?.map(attendee => ({
+        emailAddress: {
+          address: attendee.email,
+          name: attendee.name
+        }
+      }))
+    };
+
+    await axios.post(
+      'https://graph.microsoft.com/v1.0/me/events',
+      outlookEvent,
+      {
+        headers: { 'Authorization': `Bearer ${provider.config.accessToken}` }
+      }
+    );
+  }
+
+  private async syncEventToExchange(event: CalendarEvent, provider: CalendarProvider): Promise<void> {
+    const ewsConfig = {
+      username: provider.config.username,
+      password: provider.config.password,
+      host: provider.config.serverUrl?.replace(/^https?:\/\//, ''),
+      auth: 'basic'
+    };
+
+    const ews = new EWS(ewsConfig);
+    
+    const ewsFunction = 'CreateItem';
+    const ewsArgs = {
+      'SavedItemFolderId': {
+        'DistinguishedFolderId': {
+          'Id': 'calendar'
+        }
+      },
+      'Items': {
+        'CalendarItem': {
+          'Subject': event.title,
+          'Body': {
+            'BodyType': 'Text',
+            'Value': event.description
+          },
+          'Start': event.startTime.toISOString(),
+          'End': event.endTime.toISOString(),
+          'Location': event.location,
+          'IsAllDayEvent': event.isAllDay
+        }
+      }
+    };
+
+    await ews.run(ewsFunction, ewsArgs);
+  }
+
+  private async syncEventToCalDAV(event: CalendarEvent, provider: CalendarProvider): Promise<void> {
+    const xhr = new dav.transport.Basic(
+      new dav.Credentials({
+        username: provider.config.username!,
+        password: provider.config.password!
+      })
+    );
+
+    const account = await dav.createAccount({
+      server: provider.config.serverUrl!,
+      xhr: xhr,
+      loadCollections: true
+    });
+
+    if (!account.calendars || account.calendars.length === 0) {
+      throw new Error('No calendars found on CalDAV server');
+    }
+
+    const calendar = account.calendars[0];
+    
+    // Create iCalendar string
+    const icalString = this.createICalString(event);
+    
+    await dav.createCalendarObject(calendar, {
+      data: icalString,
+      filename: `${event.id}.ics`,
+      xhr: xhr
+    });
+  }
+
+  private createICalString(event: CalendarEvent): string {
+    const uid = event.externalId || event.id;
+    const now = new Date().toISOString().replace(/[:-]/g, '').split('.')[0] + 'Z';
+    const startTime = event.isAllDay 
+      ? event.startTime.toISOString().split('T')[0].replace(/-/g, '')
+      : event.startTime.toISOString().replace(/[:-]/g, '').split('.')[0] + 'Z';
+    const endTime = event.isAllDay 
+      ? event.endTime.toISOString().split('T')[0].replace(/-/g, '')
+      : event.endTime.toISOString().replace(/[:-]/g, '').split('.')[0] + 'Z';
+
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//NestMap//Calendar Sync//EN',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${now}`,
+      event.isAllDay ? `DTSTART;VALUE=DATE:${startTime}` : `DTSTART:${startTime}`,
+      event.isAllDay ? `DTEND;VALUE=DATE:${endTime}` : `DTEND:${endTime}`,
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${event.description || ''}`,
+      `LOCATION:${event.location || ''}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
   }
 
   private async syncNestMapEventsToGoogle(provider: CalendarProvider): Promise<void> {
-    // Implementation would sync NestMap events to Google Calendar
-    console.log(`Syncing NestMap events to Google Calendar for provider ${provider.id}`);
+    // Get NestMap trips and activities that need to be synced
+    const nestMapEvents = await this.getNestMapEventsForSync(provider);
+    
+    for (const event of nestMapEvents) {
+      try {
+        await this.syncEventToGoogle(event, provider);
+      } catch (error) {
+        console.error(`Failed to sync NestMap event ${event.id} to Google: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
   }
 
   private async syncNestMapEventsToOutlook(provider: CalendarProvider): Promise<void> {
-    // Implementation would sync NestMap events to Outlook Calendar
-    console.log(`Syncing NestMap events to Outlook Calendar for provider ${provider.id}`);
+    // Get NestMap trips and activities that need to be synced
+    const nestMapEvents = await this.getNestMapEventsForSync(provider);
+    
+    for (const event of nestMapEvents) {
+      try {
+        await this.syncEventToOutlook(event, provider);
+      } catch (error) {
+        console.error(`Failed to sync NestMap event ${event.id} to Outlook: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  }
+
+  private async syncNestMapEventsToExchange(provider: CalendarProvider, ews: any): Promise<void> {
+    // Get NestMap trips and activities that need to be synced
+    const nestMapEvents = await this.getNestMapEventsForSync(provider);
+    
+    for (const event of nestMapEvents) {
+      try {
+        await this.syncEventToExchange(event, provider);
+      } catch (error) {
+        console.error(`Failed to sync NestMap event ${event.id} to Exchange: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  }
+
+  private async syncNestMapEventsToCalDAV(provider: CalendarProvider, calendar: any, xhr: any): Promise<void> {
+    // Get NestMap trips and activities that need to be synced
+    const nestMapEvents = await this.getNestMapEventsForSync(provider);
+    
+    for (const event of nestMapEvents) {
+      try {
+        await this.syncEventToCalDAV(event, provider);
+      } catch (error) {
+        console.error(`Failed to sync NestMap event ${event.id} to CalDAV: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  }
+
+  private async getNestMapEventsForSync(provider: CalendarProvider): Promise<CalendarEvent[]> {
+    const events: CalendarEvent[] = [];
+    
+    try {
+      // Get trips if sync is enabled
+      if (provider.syncSettings.syncTripEvents) {
+        const userTrips = await db.select().from(trips).where(eq(trips.userId, provider.userId.toString()));
+        
+        for (const trip of userTrips) {
+          const event: CalendarEvent = {
+            id: `trip-${trip.id}`,
+            providerId: provider.id,
+            title: `${provider.syncSettings.eventPrefix || ''}${trip.title}`,
+            description: `Trip to ${trip.city}\n\nGenerated by NestMap`,
+            location: trip.city || '',
+            startTime: trip.startDate,
+            endTime: trip.endDate,
+            isAllDay: true,
+            status: 'confirmed',
+            visibility: 'private',
+            metadata: {
+              tripId: trip.id,
+              source: 'nestmap',
+              type: 'trip'
+            },
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          events.push(event);
+        }
+      }
+
+      // Get activities if sync is enabled
+      if (provider.syncSettings.syncActivityEvents) {
+        const userActivities = await db.select().from(activities).where(eq(activities.assignedTo, provider.userId.toString()));
+        
+        for (const activity of userActivities) {
+          const event: CalendarEvent = {
+            id: `activity-${activity.id}`,
+            providerId: provider.id,
+            title: `${provider.syncSettings.eventPrefix || ''}${activity.title}`,
+            description: `${activity.notes || activity.title}\n\nGenerated by NestMap`,
+            location: activity.locationName || '',
+            startTime: new Date(activity.date),
+            endTime: new Date(new Date(activity.date).getTime() + 60 * 60 * 1000), // Default 1 hour duration
+            isAllDay: false,
+            status: 'confirmed',
+            visibility: 'private',
+            metadata: {
+              activityId: activity.id,
+              source: 'nestmap',
+              type: 'activity'
+            },
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          events.push(event);
+        }
+      }
+    } catch (error) {
+      console.error(`Error getting NestMap events for sync: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    return events;
   }
 
   private async checkRoomAvailability(roomId: string, startTime: Date, endTime: Date): Promise<boolean> {
@@ -854,3 +1378,149 @@ export class EnhancedCalendarSyncService {
 }
 
 export const enhancedCalendarSyncService = EnhancedCalendarSyncService.getInstance();
+
+// Create API router for calendar sync
+const router = Router();
+
+// Configure a calendar provider
+router.post('/providers', async (req, res) => {
+  try {
+    const { userId, organizationId, type, name, config, syncSettings } = req.body;
+    
+    const provider = await enhancedCalendarSyncService.configureProvider(
+      userId,
+      organizationId,
+      type,
+      name,
+      config,
+      syncSettings
+    );
+    
+    res.json({ success: true, provider });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Get user's calendar providers
+router.get('/providers/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const providers = await enhancedCalendarSyncService.getUserProviders(userId);
+    res.json({ success: true, providers });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Sync calendar events
+router.post('/sync/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { providerId } = req.body;
+    
+    const results = await enhancedCalendarSyncService.syncCalendar(userId, providerId);
+    res.json({ success: true, results });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Get events for a provider
+router.get('/events/:providerId', async (req, res) => {
+  try {
+    const { providerId } = req.params;
+    const { startDate, endDate } = req.query;
+    
+    const events = await enhancedCalendarSyncService.getProviderEvents(
+      providerId,
+      startDate ? new Date(startDate as string) : undefined,
+      endDate ? new Date(endDate as string) : undefined
+    );
+    
+    res.json({ success: true, events });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Create trip event
+router.post('/events/trip', async (req, res) => {
+  try {
+    const { tripId, providerId } = req.body;
+    
+    const event = await enhancedCalendarSyncService.createTripEvent(tripId, providerId);
+    res.json({ success: true, event });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Create activity event
+router.post('/events/activity', async (req, res) => {
+  try {
+    const { activityId, providerId } = req.body;
+    
+    const event = await enhancedCalendarSyncService.createActivityEvent(activityId, providerId);
+    res.json({ success: true, event });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Get meeting rooms
+router.get('/meeting-rooms/:organizationId', async (req, res) => {
+  try {
+    const organizationId = parseInt(req.params.organizationId);
+    const rooms = await enhancedCalendarSyncService.getMeetingRooms(organizationId);
+    res.json({ success: true, rooms });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Book meeting room
+router.post('/meeting-rooms/book', async (req, res) => {
+  try {
+    const { organizationId, roomId, startTime, endTime, title, attendees } = req.body;
+    
+    const event = await enhancedCalendarSyncService.bookMeetingRoom(
+      organizationId,
+      roomId,
+      new Date(startTime),
+      new Date(endTime),
+      title,
+      attendees
+    );
+    
+    res.json({ success: true, event });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+export { router as calendarSyncRouter };

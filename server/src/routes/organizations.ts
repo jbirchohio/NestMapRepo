@@ -8,6 +8,15 @@ import { logger } from '../utils/logger';
 import { authenticateJWT } from '../middleware/auth';
 import slugify from 'slugify';
 
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 // Type for API response to ensure consistency
 type ApiResponse<T = any> = {
   success: boolean;
@@ -68,10 +77,10 @@ router.get('/', async (req: Request, res: Response) => {
     let organizationsList: any[];
     if (user.role === 'superadmin_owner' || user.role === 'superadmin_staff') {
       // Superadmins can see all organizations
-      organizationsList = await db.select().from(organizations);
+      organizationsList = await getDB().select().from(organizations);
     } else {
       // Regular users can only see their organization
-      organizationsList = await db.select().from(organizations).where(
+      organizationsList = await getDB().select().from(organizations).where(
         eq(organizations.id, user.organizationId)
       );
     }
@@ -131,7 +140,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     // Create organization
     const slug = slugify(organizationData.name, { lower: true, strict: true, locale: 'en' });
-    const [newOrganization] = await db.insert(organizations).values({
+    const [newOrganization] = await getDB().insert(organizations).values({
       name: organizationData.name,
       slug: slug,
       plan: organizationData.plan || 'free',
@@ -232,7 +241,7 @@ router.put('/:id', async (req: Request, res: Response) => {
       updatedAt: new Date().toISOString(),
     };
 
-    const [updatedOrganization] = await db.update(organizations)
+    const [updatedOrganization] = await getDB().update(organizations)
       .set(updatePayload)
       .where(eq(organizations.id, id))
       .returning();

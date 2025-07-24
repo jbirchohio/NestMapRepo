@@ -31,12 +31,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     id: authUser.id,
     email: authUser.email,
     role: authUser.role,
-    organization_id: authUser.organizationId || null,
-    username: authUser.name || authUser.email.split('@')[0] || '',
-    avatarUrl: (authUser as any).image || null,
-    name: authUser.name || '',
-    firstName: authUser.name ? authUser.name.split(' ')[0] : null,
-    lastName: authUser.name ? authUser.name.split(' ').slice(1).join(' ') || null : null,
+    organization_id: authUser.organization_id || null,
+    username: authUser.username || authUser.email.split('@')[0] || '',
+    avatarUrl: null, // Not available in current User type
+    name: authUser.username || '',
+    firstName: null, // Not available in current User type
+    lastName: null, // Not available in current User type
     permissions: [],  // Add empty permissions array if not provided by NextAuth
   } : null;
   const { notifications = [], markAsRead, markAllAsRead } = useNotifications();
@@ -60,7 +60,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           notifications={notifications}
           onSignOut={async () => {
             try {
-              await signOut({ callbackUrl: '/login' });
+              await signOut();
               navigate('/login');
             } catch (error) {
               console.error('Error signing out:', error);

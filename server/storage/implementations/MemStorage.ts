@@ -3,13 +3,15 @@ import { InMemoryTripTravelerRepository } from '../repositories/TripTravelerRepo
 import * as crypto from 'crypto';
 import { 
   Activity,
-  TripTraveler, 
-  NewTripTraveler, 
   User, 
   NewUser, 
   Trip, 
   NewTrip 
-} from '../../shared/src/schema';
+} from '../../src/db/schema';
+import { 
+  TripTraveler, 
+  NewTripTraveler 
+} from '../types/index';
 
 type InsertUser = NewUser;
 type InsertTrip = NewTrip;
@@ -17,6 +19,8 @@ type InsertTrip = NewTrip;
 export class MemStorage implements IStorage {
   private travelerRepository: InMemoryTripTravelerRepository;
   private activities: Map<string, Activity> = new Map();
+  private users: Map<string, User> = new Map();
+  private trips: Map<string, Trip> = new Map();
 
   constructor() {
     this.travelerRepository = new InMemoryTripTravelerRepository();
@@ -48,110 +52,180 @@ export class MemStorage implements IStorage {
 
   // Corporate Card operations
   async createCorporateCard(cardData: any): Promise<any> {
-    // In a real implementation, this would create a new card in the database
-    // For the mock, we'll return a basic card object
-    return {
-      id: 'card_' + Math.random().toString(36).substr(2, 9),
-      ...cardData,
-      status: 'active',
-      created_at: new Date().toISOString()
-    };
+    throw new Error('Corporate card creation requires database integration');
   }
 
   async updateCorporateCard(
     _id: string | number, 
     _updates: { status?: string; [key: string]: any }
   ): Promise<boolean> {
-    // In a real implementation, this would update the card in the database
-    // For the mock, we'll just return true to indicate success
-    return true;
+    throw new Error('Corporate card updates require database integration');
   }
 
   async getCorporateCard(_id: string | number): Promise<any> {
-    // In a real implementation, this would fetch the card from the database
-    // For the mock, we'll return a basic card object
-    return {
-      id: _id,
-      user_id: 'mock-user-id',
-      organization_id: 'mock-org-id',
-      stripe_card_id: 'card_mock123',
-      last_four: '4242',
-      status: 'active'
-    };
+    throw new Error('Corporate card retrieval requires database integration');
   }
 
   // Organization operations
   async getOrganization(id: string): Promise<any> {
-    // In a real implementation, this would fetch the organization from the database
-    // For the mock, we'll return a basic organization object with Stripe Connect enabled
-    return {
-      id: id,
-      name: 'Test Organization',
-      stripe_connect_id: 'acct_mock123',
-      is_stripe_connected: true
-    };
+    throw new Error('Organization retrieval requires database integration');
   }
 
-  // Stub implementations for other required methods
-  async getUser(_id: string): Promise<User | undefined> { 
-    throw new Error('Not implemented'); 
+  // User operations
+  async getUser(id: string): Promise<User | undefined> { 
+    return this.users.get(id);
   }
   
-  async getUserByUsername(_username: string): Promise<User | undefined> { 
-    throw new Error('Not implemented'); 
+  async getUserByUsername(username: string): Promise<User | undefined> { 
+    return Array.from(this.users.values()).find(user => user.username === username);
   }
   
-  async getUserByAuthId(_authId: string): Promise<User | undefined> { 
-    throw new Error('Not implemented'); 
+  async getUserByAuthId(authId: string): Promise<User | undefined> { 
+    // Note: User schema doesn't have authId property
+    // This might need to be implemented differently or the User schema needs to be updated
+    return undefined;
   }
   
-  async getUserByEmail(_email: string): Promise<User | undefined> { 
-    throw new Error('Not implemented'); 
+  async getUserByEmail(email: string): Promise<User | undefined> { 
+    return Array.from(this.users.values()).find(user => user.email === email);
   }
   
-  async createUser(_user: InsertUser): Promise<User> { 
-    throw new Error('Not implemented'); 
+  async createUser(userData: InsertUser): Promise<User> { 
+    const user: User = {
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Handle optional fields properly
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
+      passwordChangedAt: userData.passwordChangedAt ?? null,
+      passwordResetToken: userData.passwordResetToken ?? null,
+      passwordResetExpires: userData.passwordResetExpires ?? null,
+      resetToken: userData.resetToken ?? null,
+      resetTokenExpires: userData.resetTokenExpires ?? null,
+      failedLoginAttempts: userData.failedLoginAttempts ?? 0,
+      lockedUntil: userData.lockedUntil ?? null,
+      mfaSecret: userData.mfaSecret ?? null,
+      lastLoginAt: userData.lastLoginAt ?? null,
+      lastLoginIp: userData.lastLoginIp ?? null,
+      role: userData.role ?? 'member',
+      organizationId: userData.organizationId ?? null,
+      emailVerified: userData.emailVerified ?? false,
+      isActive: userData.isActive ?? true,
+      // Required fields
+      email: userData.email,
+      username: userData.username,
+      passwordHash: userData.passwordHash
+    };
+    this.users.set(user.id, user);
+    return user;
   }
   
-  async updateUser(_id: string, _user: Partial<InsertUser>): Promise<User | undefined> { 
-    throw new Error('Not implemented'); 
+  async updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined> { 
+    const existingUser = this.users.get(id);
+    if (!existingUser) return undefined;
+    
+    const updatedUser: User = {
+      ...existingUser,
+      ...userData,
+      updatedAt: new Date()
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
   
   // Trip operations
-  async getTrip(_id: string, _organizationId: string): Promise<Trip | undefined> { 
-    throw new Error('Not implemented'); 
+  async getTrip(id: string, organizationId: string): Promise<Trip | undefined> { 
+    const trip = this.trips.get(id);
+    return (trip && trip.organizationId === organizationId) ? trip : undefined;
   }
   
-  async getTripsByUserId(_userId: string, _organizationId?: string | null): Promise<Trip[]> { 
-    throw new Error('Not implemented'); 
+  async getTripsByUserId(userId: string, organizationId?: string | null): Promise<Trip[]> { 
+    return Array.from(this.trips.values()).filter(trip => 
+      trip.userId === userId && 
+      (!organizationId || trip.organizationId === organizationId)
+    );
   }
   
-  async getTripsByOrganizationId(_organizationId: string): Promise<Trip[]> { 
-    throw new Error('Not implemented'); 
+  async getTripsByOrganizationId(organizationId: string): Promise<Trip[]> { 
+    return Array.from(this.trips.values()).filter(trip => 
+      trip.organizationId === organizationId
+    );
   }
   
-  async getUserTrips(_userId: string, _organizationId?: string | null): Promise<Trip[]> { 
-    throw new Error('Not implemented'); 
+  async getUserTrips(userId: string, organizationId?: string | null): Promise<Trip[]> { 
+    return this.getTripsByUserId(userId, organizationId);
   }
   
-  async getTripByShareCode(_shareCode: string): Promise<Trip | undefined> { 
-    throw new Error('Not implemented'); 
+  async getTripByShareCode(shareCode: string): Promise<Trip | undefined> { 
+    return Array.from(this.trips.values()).find(trip => trip.shareCode === shareCode);
   }
   
-  async createTrip(_trip: InsertTrip): Promise<Trip> { 
-    throw new Error('Not implemented'); 
+  async createTrip(tripData: InsertTrip): Promise<Trip> { 
+    const trip: Trip = {
+      id: crypto.randomUUID(),
+      shareCode: this.generateShareCode(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Handle optional fields properly with correct field names
+      organizationId: tripData.organizationId ?? null,
+      collaborators: tripData.collaborators ?? null,
+      isPublic: tripData.isPublic ?? false,
+      sharingEnabled: tripData.sharingEnabled ?? false,
+      sharePermission: tripData.sharePermission ?? 'read-only',
+      city: tripData.city ?? null,
+      country: tripData.country ?? null,
+      location: tripData.location ?? null,
+      cityLatitude: tripData.cityLatitude ?? null,
+      cityLongitude: tripData.cityLongitude ?? null,
+      hotel: tripData.hotel ?? null,
+      hotelLatitude: tripData.hotelLatitude ?? null,
+      hotelLongitude: tripData.hotelLongitude ?? null,
+      completed: tripData.completed ?? false,
+      completedAt: tripData.completedAt ?? null,
+      tripType: tripData.tripType ?? 'personal',
+      clientName: tripData.clientName ?? null,
+      projectType: tripData.projectType ?? null,
+      budget: tripData.budget ?? null,
+      // Required fields
+      title: tripData.title,
+      startDate: tripData.startDate,
+      endDate: tripData.endDate,
+      userId: tripData.userId
+    };
+    this.trips.set(trip.id, trip);
+    return trip;
   }
   
   async updateTrip(
-    _id: string, 
-    _organizationId: string, 
-    _trip: Partial<InsertTrip>
+    id: string, 
+    organizationId: string, 
+    tripData: Partial<InsertTrip>
   ): Promise<Trip | undefined> { 
-    throw new Error('Not implemented'); 
+    const existingTrip = this.trips.get(id);
+    if (!existingTrip || existingTrip.organizationId !== organizationId) {
+      return undefined;
+    }
+    
+    const updatedTrip: Trip = {
+      ...existingTrip,
+      ...tripData,
+      updatedAt: new Date()
+    };
+    this.trips.set(id, updatedTrip);
+    return updatedTrip;
   }
   
-  async deleteTrip(_id: string, _organizationId: string): Promise<boolean> { 
-    throw new Error('Not implemented'); 
+  async deleteTrip(id: string, organizationId: string): Promise<boolean> { 
+    const trip = this.trips.get(id);
+    if (!trip || trip.organizationId !== organizationId) {
+      return false;
+    }
+    return this.trips.delete(id);
+  }
+
+  private generateShareCode(): string {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
   
   // Activity operations
@@ -165,7 +239,7 @@ export class MemStorage implements IStorage {
   }
 
   async createActivity(activity: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>): Promise<Activity> {
-    const now = new Date().toISOString();
+    const now = new Date();
     const newActivity: Activity = {
       ...activity,
       id: crypto.randomUUID(),
@@ -186,7 +260,7 @@ export class MemStorage implements IStorage {
     const updatedActivity = {
       ...activity,
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date()
     };
     
     this.activities.set(id, updatedActivity);

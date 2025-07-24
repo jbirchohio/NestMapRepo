@@ -34,6 +34,14 @@ export const publicRoutes: RouteObject[] = [
     element: React.createElement(lazyLoad(() => import('@/pages/Home'))),
   },
   {
+    path: '/pricing',
+    element: React.createElement(lazyLoad(() => import('@/pages/Pricing'))),
+  },
+  {
+    path: '/shared/:shareCode',
+    element: React.createElement(lazyLoad(() => import('@/pages/SharedTrip'))),
+  },
+  {
     path: '/login',
     element: React.createElement(lazyLoad(() => import('@/pages/Login'))),
   },
@@ -99,6 +107,18 @@ export const protectedRoutes: RouteObject[] = [
     element: React.createElement(lazyLoad(() => import('@/pages/Approvals'))),
   },
   {
+    path: '/proposal-center',
+    element: React.createElement(lazyLoad(() => import('@/pages/ProposalCenter'))),
+  },
+  {
+    path: '/proposal-templates',
+    element: React.createElement(lazyLoad(() => import('@/pages/ProposalTemplates'))),
+  },
+  {
+    path: '/proposal-analytics',
+    element: React.createElement(lazyLoad(() => import('@/pages/ProposalAnalytics'))),
+  },
+  {
     path: '/invoice-center',
     element: React.createElement(lazyLoad(() => import('@/pages/InvoiceCenter'))),
   },
@@ -156,7 +176,17 @@ export const protectedRoutes: RouteObject[] = [
     path: '/finance',
     children: [
       { path: 'corporate-cards', element: React.createElement(lazyLoad(() => import('@/pages/CorporateCards'))) },
+      { path: 'corporate-cards-management', element: React.createElement(lazyLoad(() => import('@/pages/CorporateCardsManagement'))) },
       { path: 'funding', element: React.createElement(lazyLoad(() => import('@/pages/OrganizationFunding'))) },
+    ],
+  },
+
+  // White Label routes
+  {
+    path: '/white-label',
+    children: [
+      { index: true, element: React.createElement(lazyLoad(() => import('@/pages/WhiteLabelDashboard'))) },
+      { path: 'domains', element: React.createElement(lazyLoad(() => import('@/pages/WhiteLabelDomains'))) },
     ],
   },
 ];

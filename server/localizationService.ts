@@ -297,75 +297,59 @@ export class LocalizationService {
   }
 
   async initializeDefaultCurrencyRates(): Promise<void> {
-    // Mock currency rates - in production, fetch from a real API like exchangerate-api.com
-    const baseCurrency = 'USD';
-    const rates = {
-      'EUR': 0.85,
-      'GBP': 0.73,
-      'JPY': 110.0,
-      'CAD': 1.25,
-      'AUD': 1.35,
-      'CHF': 0.92,
-      'CNY': 6.45,
-      'INR': 74.5,
-      'BRL': 5.2,
-      'MXN': 20.1,
-      'KRW': 1180.0,
-      'SGD': 1.35,
-      'HKD': 7.8,
-      'SEK': 8.6,
-      'NOK': 8.9,
-      'DKK': 6.3,
-      'PLN': 3.9,
-      'CZK': 21.5,
-      'HUF': 295.0,
-      'RUB': 73.5,
-      'TRY': 8.4,
-      'ZAR': 14.2,
-      'AED': 3.67,
-      'SAR': 3.75
-    };
-
-    const timestamp = new Date();
-    
-    // USD to other currencies
-    for (const [currency, rate] of Object.entries(rates)) {
-      this.currencyRates.set(`${baseCurrency}-${currency}`, {
-        fromCurrency: baseCurrency,
-        toCurrency: currency,
-        rate,
-        timestamp,
-        source: 'mock'
-      });
+    try {
+      // Fetch real-time currency rates from Exchange Rate API
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
       
-      // Reverse rate
-      this.currencyRates.set(`${currency}-${baseCurrency}`, {
-        fromCurrency: currency,
-        toCurrency: baseCurrency,
-        rate: 1 / rate,
-        timestamp,
-        source: 'mock'
-      });
-    }
+      if (!response.ok) {
+        throw new Error(`Currency API request failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const timestamp = new Date();
+      
+      // Store USD to other currencies
+      for (const [currency, rate] of Object.entries(data.rates)) {
+        this.currencyRates.set(`USD-${currency}`, {
+          fromCurrency: 'USD',
+          toCurrency: currency as string,
+          rate: rate as number,
+          timestamp,
+          source: 'exchangerate-api.com'
+        });
+        
+        // Store reverse rate
+        this.currencyRates.set(`${currency}-USD`, {
+          fromCurrency: currency as string,
+          toCurrency: 'USD',
+          rate: 1 / (rate as number),
+          timestamp,
+          source: 'exchangerate-api.com'
+        });
+      }
 
-    // Cross-currency rates (simplified)
-    const currencies = Object.keys(rates);
-    for (const fromCurrency of currencies) {
-      for (const toCurrency of currencies) {
-        if (fromCurrency !== toCurrency) {
-          const fromRate = rates[fromCurrency as keyof typeof rates];
-          const toRate = rates[toCurrency as keyof typeof rates];
-          const crossRate = toRate / fromRate;
-          
-          this.currencyRates.set(`${fromCurrency}-${toCurrency}`, {
-            fromCurrency,
-            toCurrency,
-            rate: crossRate,
-            timestamp,
-            source: 'calculated'
-          });
+      // Calculate cross-currency rates
+      const currencies = Object.keys(data.rates);
+      for (const fromCurrency of currencies) {
+        for (const toCurrency of currencies) {
+          if (fromCurrency !== toCurrency) {
+            const fromRate = data.rates[fromCurrency];
+            const toRate = data.rates[toCurrency];
+            const crossRate = toRate / fromRate;
+            
+            this.currencyRates.set(`${fromCurrency}-${toCurrency}`, {
+              fromCurrency,
+              toCurrency,
+              rate: crossRate,
+              timestamp,
+              source: 'exchangerate-api.com'
+            });
+          }
         }
       }
+    } catch (error) {
+      console.error('Failed to fetch currency rates:', error);
+      throw new Error('Currency rate initialization failed - ensure internet connectivity and API access');
     }
   }
 

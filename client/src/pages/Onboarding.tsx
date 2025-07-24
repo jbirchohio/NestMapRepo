@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   const handleOnboardingComplete = () => {
     // Redirect to unified dashboard
@@ -13,7 +13,7 @@ export default function Onboarding() {
   };
 
   // Show loading state while authentication is being checked
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">
         <div className="text-center">

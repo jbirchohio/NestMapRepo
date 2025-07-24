@@ -1,10 +1,26 @@
 import { Request, Response } from 'express';
-import { db } from '../../db';
-import { userSessions } from '../../shared/src/schema';
-import { eq, and, desc, sql, isNull, inArray } from 'drizzle-orm';
+import { db } from '../../../src/db';
+import { users, organizations, userSessions } from '../../../src/db/schema';
+import { eq, and, desc, sql, isNull, inArray, like, or } from 'drizzle-orm';
 import { logSuperadminAction } from '../audit-logs/audit-service';
-import { hashPassword } from '../../shared/src/schema';
+import { hashPassword } from '../../../utils/auth';
 import { v4 as uuidv4 } from 'uuid';
+import { UserRole } from '../../../types/jwt';
+
+// Define a simple authenticated request type for superadmin operations
+interface SuperadminUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  organizationId: string; // Required for Express User compatibility
+  userId: string; // Required for Express User compatibility
+  jti: string; // Required for Express User compatibility  
+  iat: number; // Required for Express User compatibility
+}
+
+interface SuperadminRequest extends Request {
+  user: SuperadminUser;
+}
 
 // Define UserWithOrg type at the top level
 type UserWithOrg = {
@@ -24,7 +40,7 @@ type UserWithOrg = {
 };
 
 // Get all users with filtering and pagination
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers = async (req: SuperadminRequest, res: Response) => {
   try {
     const { 
       page = 1, 
@@ -36,27 +52,29 @@ export const getUsers = async (req: Request, res: Response) => {
     } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
-    const searchTerm = `%${search}%`;
 
     // Build where conditions
-    const conditions = [];
+    const conditions: any[] = [];
     if (search) {
       conditions.push(
-        sql`(LOWER(${users.email}) LIKE LOWER(${searchTerm}) OR 
-             LOWER(${users.username}) LIKE LOWER(${searchTerm}) OR
-             LOWER(${users.firstName} || ' ' || ${users.lastName}) LIKE LOWER(${searchTerm}))`
+        or(
+          like(users.email, `%${search}%`),
+          like(users.username, `%${search}%`),
+          sql`LOWER(${users.firstName} || ' ' || ${users.lastName}) LIKE LOWER(${`%${search}%`})`
+        )
       );
     }
     if (role) {
-      conditions.push(sql`${users.role} = ${role}`);
+      // Cast to the expected enum type - the role will be validated by the schema
+      conditions.push(eq(users.role, role as 'super_admin' | 'admin' | 'manager' | 'member' | 'guest'));
     }
     if (organizationId) {
-      conditions.push(sql`${users.organizationId} = ${organizationId}`);
+      conditions.push(eq(users.organizationId, organizationId as string));
     }
     if (status === 'active') {
-      conditions.push(sql`${users.isActive} = true`);
+      conditions.push(eq(users.isActive, true));
     } else if (status === 'deleted') {
-      conditions.push(sql`${users.isActive} = false`);
+      conditions.push(eq(users.isActive, false));
     }
 
     // Conditions for filtering users
@@ -65,6 +83,9 @@ export const getUsers = async (req: Request, res: Response) => {
     // First get the user IDs with pagination
     let userIds: any[] = [];
     try {
+      if (!db) {
+        throw new Error('Database connection not available');
+      }
       userIds = await db
         .select({ id: users.id })
         .from(users)
@@ -93,6 +114,9 @@ export const getUsers = async (req: Request, res: Response) => {
     // Get the full user data with organization info for the paginated user IDs
     let usersList: any[] = [];
     try {
+      if (!db) {
+        throw new Error('Database connection not available');
+      }
       usersList = await db
         .select({
           id: users.id,
@@ -145,6 +169,9 @@ export const getUsers = async (req: Request, res: Response) => {
 
     try {
       // Get total count for pagination
+      if (!db) {
+        throw new Error('Database connection not available');
+      }
       const [countResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(users)
@@ -173,11 +200,14 @@ export const getUsers = async (req: Request, res: Response) => {
 };
 
 // Get single user
-export const getUser = async (req: Request, res: Response) => {
+export const getUser = async (req: SuperadminRequest, res: Response) => {
   try {
     const userId = req.params.id;
 
     // Get user by ID
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available' });
+    }
     const [user] = await db
       .select({
         id: users.id,
@@ -234,12 +264,15 @@ export const getUser = async (req: Request, res: Response) => {
 };
 
 // Create new user
-export const createUser = async (req: Request, res: Response): Promise<Response> => {
+export const createUser = async (req: SuperadminRequest, res: Response): Promise<Response> => {
   try {
     const { email, password, username, firstName, lastName, role, organizationId } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user.id;
 
     // Check if user already exists
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available' });
+    }
     const [existingUser] = await db
       .select()
       .from(users)
@@ -274,9 +307,8 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
       return res.status(500).json({ error: 'Failed to create user' });
     }
 
-    // Use the provided userId or a default system user ID (as number)
-    // TODO: Update audit log service to use string UUIDs instead of numbers
-    const actorId = 1; // Default to system admin ID 1
+    // Use the user's UUID from the request (if authenticated) or default to system admin
+    const actorId = req.user.id; // Use authenticated user's UUID
     await logSuperadminAction(
       actorId,
       'CREATE_USER',
@@ -300,17 +332,20 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
 };
 
 // Update user
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: SuperadminRequest, res: Response) => {
   try {
     const userId = req.params.id;
     const updates = req.body;
-    const currentUserId = req.user?.id;
+    const currentUserId = req.user.id;
 
     // Don't allow updating password through this endpoint
     if (updates.password) {
       return res.status(400).json({ error: 'Use the change password endpoint to update password' });
     }
 
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available' });
+    }
     const [updatedUser] = await db
       .update(users)
       .set({
@@ -325,17 +360,13 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 
     // Log the action
-    if (currentUserId) {
-      await logSuperadminAction(
-        Number(currentUserId),
-        'UPDATE_USER',
-        'user',
-        userId,
-        updates
-      );
-    } else {
-      console.warn('No currentUserId provided for UPDATE_USER action');
-    }
+    await logSuperadminAction(
+      currentUserId,
+      'UPDATE_USER',
+      'user',
+      userId,
+      updates
+    );
     
     // Return updated user without sensitive information
     const { passwordHash, ...userWithoutPassword } = updatedUser;
@@ -352,10 +383,10 @@ export const updateUser = async (req: Request, res: Response) => {
 };
 
 // Delete user (soft delete)
-export const deleteUser = async (req: Request, res: Response): Promise<Response> => {
+export const deleteUser = async (req: SuperadminRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.params.id;
-    const currentUserId = req.user?.id;
+    const currentUserId = req.user.id;
 
     // Prevent self-deletion
     if (userId === currentUserId) {
@@ -363,6 +394,9 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
     }
 
     // Get user info before deletion for logging
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available' });
+    }
     const [user] = await db
       .select()
       .from(users)
@@ -387,17 +421,14 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Log the action if currentUserId is available
-    if (currentUserId) {
-      // TODO: Update audit log service to use string UUIDs instead of numbers
-      await logSuperadminAction(
-        1, // Default to system admin ID 1
-        'DELETE_USER',
-        'user',
-        userId,
-        {}
-      );
-    }
+    // Log the action
+    await logSuperadminAction(
+      currentUserId, // Use authenticated user's UUID
+      'DELETE_USER',
+      'user',
+      userId,
+      {}
+    );
     
     return res.status(200).json({ success: true, message: 'User deactivated successfully' });
   } catch (error) {
@@ -407,10 +438,13 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
 };
 
 // Get user sessions
-export const getUserSessions = async (req: Request, res: Response) => {
+export const getUserSessions = async (req: SuperadminRequest, res: Response) => {
   try {
     const userId = req.params.id;
 
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available' });
+    }
     const sessions = await db
       .select({
         id: userSessions.id,

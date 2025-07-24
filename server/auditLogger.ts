@@ -1,4 +1,4 @@
-import { db } from './db';
+import { getDatabase } from './db-connection';
 import { auditLogs } from './db/auditLog';
 
 interface AuditLogEntry {
@@ -51,6 +51,12 @@ export const auditLogger = {
 
   async log(entry: AuditLogEntry & { logType: string }) {
     try {
+      const db = getDatabase();
+      if (!db) {
+        console.warn('Database not available for audit logging');
+        return;
+      }
+      
       await db.insert(auditLogs).values({
         organizationId: entry.organizationId,
         userId: entry.userId,

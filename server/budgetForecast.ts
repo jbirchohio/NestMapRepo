@@ -1,4 +1,4 @@
-import { db } from './db';
+import { getDatabase } from './db-connection';
 import { trips } from "./db/schema";
 import { sql, and, eq } from 'drizzle-orm';
 
@@ -9,6 +9,12 @@ export async function forecastBudget(
   endDate: string,
   travelers: number
 ): Promise<{ dailyAverage: number; predictedTotal: number; dataPoints: number }> {
+  const db = getDatabase();
+  if (!db) {
+    // Return default estimates if database is not available
+    return { dailyAverage: 200, predictedTotal: travelers * 200, dataPoints: 0 };
+  }
+  
   const pastTrips = await db
     .select({
       budget: trips.budget,

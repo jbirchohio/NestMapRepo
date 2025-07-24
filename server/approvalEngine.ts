@@ -1,7 +1,16 @@
-import { db } from './db';
+import { getDatabase } from './db-connection';
 import { approvalRequests, approvalRules, users, organizations } from './db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import type { UserRole } from './db/schema';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
 
 interface ApprovalWorkflowConfig {
   organizationId: string;
@@ -59,7 +68,7 @@ export class ApprovalEngine {
    * Get applicable approval rules for organization and entity type
    */
   private async getApplicableRules(organizationId: string, entityType: string) {
-    return await db
+    return await getDB()
       .select()
       .from(approvalRules)
       .where(and(
@@ -109,7 +118,7 @@ export class ApprovalEngine {
 
     // User role check
     if (conditions.userRoles) {
-      const requester = await db
+      const requester = await getDB()
         .select({ role: users.role })
         .from(users)
         .where(eq(users.id, config.requesterId))
@@ -141,7 +150,7 @@ export class ApprovalEngine {
     const priority = this.calculatePriority(config.data, rule);
     const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Default 3 days
 
-    const [request] = await db
+    const [request] = await getDB()
       .insert(approvalRequests)
       .values({
         organizationId: config.organizationId,
@@ -172,7 +181,7 @@ export class ApprovalEngine {
    */
   private async findApprover(organizationId: string, approverRoles: string[]) {
     const targetRole = (approverRoles[0] || 'manager') as UserRole;
-    const approvers = await db
+    const approvers = await getDB()
       .select({ id: users.id, role: users.role })
       .from(users)
       .where(and(
@@ -213,7 +222,7 @@ export class ApprovalEngine {
    * Check if user can approve requests
    */
   async canUserApprove(userId: string, organizationId: string): Promise<boolean> {
-    const [user] = await db
+    const [user] = await getDB()
       .select({ role: users.role })
       .from(users)
       .where(and(
@@ -234,7 +243,7 @@ export class ApprovalEngine {
       throw new Error('User does not have approval permissions');
     }
 
-    const pending = await db
+    const pending = await getDB()
       .select()
       .from(approvalRequests)
       .where(and(
@@ -255,7 +264,7 @@ export class ApprovalEngine {
    * Process escalation for overdue requests
    */
   async processEscalations(): Promise<void> {
-    const overdueRequests = await db
+    const overdueRequests = await getDB()
       .select()
       .from(approvalRequests)
       .where(and(
@@ -274,7 +283,7 @@ export class ApprovalEngine {
    */
   private async escalateRequest(request: any): Promise<void> {
     // Find admin if current approver is manager
-    const escalatedApprover = await db
+    const escalatedApprover = await getDB()
       .select({ id: users.id })
       .from(users)
       .where(and(
@@ -284,7 +293,7 @@ export class ApprovalEngine {
       .limit(1);
 
     if (escalatedApprover[0]) {
-      await db
+      await getDB()
         .update(approvalRequests)
         .set({
           approverId: escalatedApprover[0].id,

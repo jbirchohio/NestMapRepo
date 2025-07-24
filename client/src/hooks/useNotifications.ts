@@ -30,7 +30,7 @@ export function useNotifications(): UseNotificationsReturn {
     try {
       const response = await fetch(`/api/notifications?userId=${user.id}`, {
         headers: {
-          'Authorization': `Bearer ${user.accessToken}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
         credentials: 'include',

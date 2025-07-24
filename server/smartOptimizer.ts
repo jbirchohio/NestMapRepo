@@ -1,6 +1,7 @@
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
 import { detectTripConflicts } from "./services/conflictDetector";
 import { Activity, OptimizedSchedule } from "../shared/interfaces";
+import { APP_CONFIG } from "../shared/src/config/constants.js";
 
 interface ConflictDetection {
   type: 'time_overlap' | 'location_conflict' | 'capacity_issue' | 'schedule_gap';
@@ -139,8 +140,8 @@ function checkActivityConflict(activity1: Activity, activity2: Activity): Confli
   
   if (!time1 || !time2) return null;
   
-  const duration1 = activity1.duration || 120; // Default 2 hours
-  const duration2 = activity2.duration || 120;
+  const duration1 = activity1.duration || APP_CONFIG.ACTIVITIES.DEFAULT_DURATION;
+  const duration2 = activity2.duration || APP_CONFIG.ACTIVITIES.DEFAULT_DURATION;
   
   const end1 = new Date(time1.getTime() + duration1 * 60000);
   const end2 = new Date(time2.getTime() + duration2 * 60000);
@@ -166,13 +167,13 @@ function checkActivityConflict(activity1: Activity, activity2: Activity): Confli
     
     const timeBetween = Math.abs(time2.getTime() - end1.getTime()) / 60000; // minutes
     
-    if (timeBetween < travelTime + 15) { // 15 min buffer
+    if (timeBetween < travelTime + APP_CONFIG.ACTIVITIES.TRAVEL_BUFFER) { // Travel buffer from config
       return {
         type: 'location_conflict',
-        severity: travelTime > timeBetween + 30 ? 'high' : 'medium',
+        severity: travelTime > timeBetween + APP_CONFIG.ACTIVITIES.HIGH_CONFLICT_THRESHOLD ? 'high' : 'medium',
         activities: [activity1, activity2],
         description: `Insufficient travel time between ${activity1.locationName} and ${activity2.locationName} (need ${travelTime} minutes, have ${timeBetween})`,
-        suggestion: `Add ${Math.ceil(travelTime + 15 - timeBetween)} minutes buffer or reorder activities`,
+        suggestion: `Add ${Math.ceil(travelTime + APP_CONFIG.ACTIVITIES.TRAVEL_BUFFER - timeBetween)} minutes buffer or reorder activities`,
         autoFixAvailable: true
       };
     }
@@ -185,14 +186,8 @@ async function checkVenueHours(activities: Activity[]): Promise<ConflictDetectio
   const conflicts: ConflictDetection[] = [];
   
   // This would normally check against a venues database or API
-  // For now, we'll use common venue hour patterns
-  const venueHours = {
-    'museum': { open: 9, close: 17, closedDays: ['monday'] },
-    'restaurant': { open: 11, close: 22, closedDays: [] },
-    'park': { open: 6, close: 20, closedDays: [] },
-    'church': { open: 8, close: 18, closedDays: [] },
-    'shopping': { open: 10, close: 21, closedDays: ['sunday'] }
-  };
+  // For now, we'll use common venue hour patterns from config
+  const venueHours = APP_CONFIG.VENUE_HOURS;
   
   for (const activity of activities) {
     const activityTime = parseTime(activity.time);
@@ -203,10 +198,11 @@ async function checkVenueHours(activities: Activity[]): Promise<ConflictDetectio
     
     // Guess venue type from activity title/location
     const venueType = guessVenueType(activity.title, activity.locationName);
-    const hours = venueType in venueHours ? venueHours[venueType as keyof typeof venueHours] : null;
+    const venueConfig = APP_CONFIG.VENUE_HOURS;
     
-    if (hours) {
-      if (hours.closedDays.includes(dayName as any)) {
+    if (venueType in venueConfig) {
+      const hours = venueConfig[venueType as keyof typeof venueConfig];
+      if (hours.closedDays.includes(dayName)) {
         conflicts.push({
           type: 'schedule_gap',
           severity: 'high',
@@ -240,9 +236,9 @@ export async function generateSmartReminders(activities: Activity[]): Promise<Sm
     
     // Departure reminder (30 min before considering travel time)
     const travelTime = activity.latitude && activity.longitude ? 
-      await estimateTravelTimeToActivity(activity) : 30;
+      await estimateTravelTimeToActivity(activity) : APP_CONFIG.ACTIVITIES.DEPARTURE_REMINDER_MINUTES;
     
-    const departureTime = new Date(activityTime.getTime() - (travelTime + 30) * 60000);
+    const departureTime = new Date(activityTime.getTime() - (travelTime + APP_CONFIG.ACTIVITIES.DEPARTURE_REMINDER_MINUTES) * 60000);
     reminders.push({
       id: `departure_${activity.id}`,
       activityId: activity.id,
@@ -256,7 +252,7 @@ export async function generateSmartReminders(activities: Activity[]): Promise<Sm
     
     // Preparation reminder (2 hours before)
     if (needsPreparation(activity)) {
-      const prepTime = new Date(activityTime.getTime() - 2 * 60 * 60000);
+      const prepTime = new Date(activityTime.getTime() - APP_CONFIG.ACTIVITIES.PREPARATION_REMINDER_HOURS * 60 * 60000);
       reminders.push({
         id: `prep_${activity.id}`,
         activityId: activity.id,
@@ -271,7 +267,7 @@ export async function generateSmartReminders(activities: Activity[]): Promise<Sm
     
     // Booking reminder (1 day before)
     if (needsBooking(activity)) {
-      const bookingTime = new Date(activityTime.getTime() - 24 * 60 * 60000);
+      const bookingTime = new Date(activityTime.getTime() - APP_CONFIG.ACTIVITIES.BOOKING_REMINDER_HOURS * 60 * 60000);
       reminders.push({
         id: `booking_${activity.id}`,
         activityId: activity.id,
@@ -359,12 +355,12 @@ function formatTime(date: Date): string {
 
 function calculateTravelTime(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const distance = calculateDistance(lat1, lon1, lat2, lon2);
-  // Assume average city travel speed of 20 km/h (walking + transit)
-  return Math.ceil(distance / 20 * 60); // Convert to minutes
+  // Use average city travel speed from config
+  return Math.ceil(distance / APP_CONFIG.TRAVEL.AVERAGE_CITY_SPEED * 60); // Convert to minutes
 }
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth's radius in kilometers
+  const R = APP_CONFIG.TRAVEL.EARTH_RADIUS; // Earth's radius in kilometers
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 

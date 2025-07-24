@@ -1,5 +1,14 @@
-import { db } from '../db/db';
+import { getDatabase } from '../db-connection';
 import { userActivityLogs } from '../db/schema';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
 
 /**
  * Logs a user activity to the database.
@@ -20,7 +29,7 @@ export const logUserActivity = async (
   userAgent?: string
 ) => {
   try {
-    await db.insert(userActivityLogs).values({
+    await getDB().insert(userActivityLogs).values({
       userId,
       organizationId,
       action,

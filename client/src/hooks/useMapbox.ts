@@ -1,11 +1,32 @@
 import { useCallback, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import { MapMarker, MapRoute } from "@/lib/types";
+import { mapLogger } from "@/lib/logger";
 
 // Import the Mapbox CSS
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+// Configuration constants (extracted from magic numbers)
+const MAP_CONFIG = {
+  DEFAULT_CENTER: [-74.006, 40.7128] as [number, number], // NYC coordinates
+  DEFAULT_ZOOM: 12,
+  DOM_READY_DELAY: 100, // milliseconds
+  RESIZE_DELAY: 100, // milliseconds
+} as const;
+
+class MapboxError extends Error {
+  code?: string;
+  status?: number;
+  
+  constructor(message: string, code?: string, status?: number) {
+    super(message);
+    this.name = 'MapboxError';
+    this.code = code;
+    this.status = status;
+  }
+}
 
 export default function useMapbox() {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
@@ -21,60 +42,60 @@ export default function useMapbox() {
     try {
       // Check if token is available
       if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === '') {
-        console.error('Mapbox token not configured');
-        return;
+        throw new MapboxError('Mapbox token not configured. Please check your environment variables.');
       }
       
       // Validate coordinates with strict checking
       if (!Array.isArray(center) || center.length !== 2 || 
           typeof center[0] !== 'number' || typeof center[1] !== 'number' ||
           isNaN(center[0]) || isNaN(center[1])) {
-        center = [-74.006, 40.7128]; // Default to NYC
+        mapLogger.warn('Invalid coordinates provided, using default center');
+        center = MAP_CONFIG.DEFAULT_CENTER;
       }
       
       // Set the access token
       mapboxgl.accessToken = MAPBOX_TOKEN;
-      console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
-      console.log('Map center coordinates:', center);
+      mapLogger.info('Mapbox initialization started');
       
       // Add a delay to ensure DOM is ready
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, MAP_CONFIG.DOM_READY_DELAY));
       
       // Create a new map instance with error handling
       let map: mapboxgl.Map;
       
       // Wrap in try-catch to handle Mapbox GL internal errors
       try {
-        console.log('Creating Mapbox map with:', { center, zoom, hasContainer: !!container });
+        mapLogger.debug('Creating Mapbox map', { center, zoom, hasContainer: !!container });
         
         map = new mapboxgl.Map({
           container,
           style: 'mapbox://styles/mapbox/streets-v12',
           center: center as [number, number],
-          zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
+          zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : MAP_CONFIG.DEFAULT_ZOOM,
           attributionControl: false,
           trackResize: false // Disable automatic resize tracking to prevent errors
         });
         
-        console.log('Mapbox map created successfully');
+        mapLogger.info('Mapbox map created successfully');
         
       } catch (mapboxError) {
-        console.error('Mapbox GL initialization failed:', mapboxError);
-        console.error('Error details:', {
-          message: (mapboxError as Error)?.message || 'Unknown error',
-          stack: (mapboxError as Error)?.stack || 'No stack trace',
-          center,
-          zoom,
-          containerExists: !!container
-        });
-        // Don't throw - just return silently to prevent React crashes
-        return;
+        const error = mapboxError as MapboxError;
+        mapLogger.error('Mapbox GL initialization failed', error);
+        
+        // Create a more descriptive error
+        const descriptiveError = new MapboxError(
+          `Failed to initialize Mapbox: ${error.message}. Please check your Mapbox token and network connection.`
+        );
+        descriptiveError.code = error.code;
+        descriptiveError.status = error.status;
+        
+        throw descriptiveError;
       }
       
       // Add error handler for the map
       map.on('error', (e) => {
-        console.error('Mapbox GL error:', e.error);
-        // Don't throw - just log the error
+        mapLogger.error('Mapbox GL runtime error', e.error);
+        // Don't throw runtime errors - just log them
       });
       
       // Wait for map to load before adding controls
@@ -82,7 +103,7 @@ export default function useMapbox() {
         try {
           map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
         } catch (controlError) {
-          console.warn('Failed to add navigation controls:', controlError);
+          mapLogger.warn('Failed to add navigation controls', controlError);
         }
       });
       
@@ -90,10 +111,14 @@ export default function useMapbox() {
       mapInstance.current = map;
       
     } catch (error) {
-      console.error('Error initializing Mapbox:', error);
-      console.error('Failed to initialize map:', error);
-      // Don't throw - just return to prevent React crashes
-      return;
+      mapLogger.error('Error initializing Mapbox', error);
+      
+      // Re-throw the error so it can be caught by error boundary
+      if (error instanceof MapboxError) {
+        throw error;
+      } else {
+        throw new MapboxError(`Map initialization failed: ${(error as Error).message}`);
+      }
     }
   }, []);
 
@@ -196,7 +221,7 @@ export default function useMapbox() {
       // Small delay to ensure container has been resized
       setTimeout(() => {
         mapInstance.current?.resize();
-      }, 100);
+      }, MAP_CONFIG.RESIZE_DELAY);
     }
   }, []);
 

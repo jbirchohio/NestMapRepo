@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
@@ -10,12 +10,9 @@ import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import OnboardingManager from '@/components/onboarding/OnboardingManager';
+import { publicRoutes, protectedRoutes, adminRoutes, superadminRoutes, notFoundRoute } from '@/config/routes';
 
-// Lazy load pages for better performance
-const Home = lazy(() => import('@/pages/Home'));
-const Login = lazy(() => import('@/pages/Login'));
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const SuperadminClean = lazy(() => import('@/pages/SuperadminClean'));
+// Lazy load core pages
 const MainLayout = lazy(() => import('@/layouts/MainLayout'));
 
 // Import Phase 1-3 Components
@@ -34,9 +31,9 @@ const PageLoading = () => (
   </div>
 );
 
-// Protected Route Component
-const ProtectedRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+// Protected Route Component with Role Check
+const ProtectedRoute = ({ roles }: { roles?: string[] }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <PageLoading />;
@@ -45,6 +42,13 @@ const ProtectedRoute = () => {
   if (!isAuthenticated) {
     // Redirect to login page with the return url
     return <Navigate to="/login" replace state={{ from: window.location.pathname }} />;
+  }
+
+  // Check role-based access
+  if (roles && user?.role && !roles.includes(user.role)) {
+    // Redirect to appropriate dashboard based on role
+    const redirectPath = user.role === 'super_admin' ? '/superadmin' : '/dashboard';
+    return <Navigate to={redirectPath} replace />;
   }
 
   return <Outlet />;
@@ -85,17 +89,44 @@ function App() {
                   <Suspense fallback={<PageLoading />}>
                     <Routes>
                       {/* Public routes */}
-                      <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+                      {publicRoutes.map((route: any, index: number) => (
+                        <Route
+                          key={`public-${index}`}
+                          path={route.path}
+                          element={<MainLayout>{route.element}</MainLayout>}
+                        />
+                      ))}
                       
                       {/* Auth routes - only accessible when not logged in */}
                       <Route element={<PublicOnlyRoute />}>
-                        <Route path="/login" element={<MainLayout hideNav><Login /></MainLayout>} />
+                        <Route path="/login" element={<MainLayout hideNav>{React.createElement(lazy(() => import('@/pages/Login')))}</MainLayout>} />
+                        <Route path="/signup" element={<MainLayout hideNav>{React.createElement(lazy(() => import('@/pages/Signup')))}</MainLayout>} />
                       </Route>
                       
                       {/* Protected routes - require authentication */}
                       <Route element={<ProtectedRoute />}>
-                        <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
-                        <Route path="/superadmin" element={<MainLayout><SuperadminClean /></MainLayout>} />
+                        {protectedRoutes.map((route: any, index: number) => {
+                          if (route.children) {
+                            return (
+                              <Route key={`protected-${index}`} path={route.path}>
+                                {route.children.map((child: any, childIndex: number) => (
+                                  <Route
+                                    key={`child-${childIndex}`}
+                                    {...child}
+                                    element={<MainLayout>{child.element}</MainLayout>}
+                                  />
+                                ))}
+                              </Route>
+                            );
+                          }
+                          return (
+                            <Route
+                              key={`protected-${index}`}
+                              path={route.path}
+                              element={<MainLayout>{route.element}</MainLayout>}
+                            />
+                          );
+                        })}
                         
                         {/* Phase 1: Voice Interface & AI Features */}
                         <Route path="/voice-assistant" element={<MainLayout><VoiceAssistant /></MainLayout>} />
@@ -111,8 +142,60 @@ function App() {
                         <Route path="/automation" element={<MainLayout><AutomationWorkflowBuilder /></MainLayout>} />
                       </Route>
                       
+                      {/* Admin routes - require admin role */}
+                      <Route element={<ProtectedRoute roles={['admin', 'super_admin']} />}>
+                        {adminRoutes.map((route: any, index: number) => {
+                          if (route.children) {
+                            return (
+                              <Route key={`admin-${index}`} path={route.path}>
+                                {route.children.map((child: any, childIndex: number) => (
+                                  <Route
+                                    key={`admin-child-${childIndex}`}
+                                    {...child}
+                                    element={<MainLayout>{child.element}</MainLayout>}
+                                  />
+                                ))}
+                              </Route>
+                            );
+                          }
+                          return (
+                            <Route
+                              key={`admin-${index}`}
+                              path={route.path}
+                              element={<MainLayout>{route.element}</MainLayout>}
+                            />
+                          );
+                        })}
+                      </Route>
+                      
+                      {/* Superadmin routes - require super_admin role */}
+                      <Route element={<ProtectedRoute roles={['super_admin']} />}>
+                        {superadminRoutes.map((route: any, index: number) => {
+                          if (route.children) {
+                            return (
+                              <Route key={`superadmin-${index}`} path={route.path}>
+                                {route.children.map((child: any, childIndex: number) => (
+                                  <Route
+                                    key={`superadmin-child-${childIndex}`}
+                                    {...child}
+                                    element={<MainLayout>{child.element}</MainLayout>}
+                                  />
+                                ))}
+                              </Route>
+                            );
+                          }
+                          return (
+                            <Route
+                              key={`superadmin-${index}`}
+                              path={route.path}
+                              element={<MainLayout>{route.element}</MainLayout>}
+                            />
+                          );
+                        })}
+                      </Route>
+                      
                       {/* 404 Not Found */}
-                      <Route path="*" element={<Navigate to="/" replace />} />
+                      <Route path="*" element={<MainLayout>{notFoundRoute.element}</MainLayout>} />
                     </Routes>
                   </Suspense>
                   <Toaster />

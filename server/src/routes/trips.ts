@@ -3,9 +3,18 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { and, or, desc } from 'drizzle-orm/expressions';
 import { getDatabase } from '../db/connection';
-import { trips } from '../db/tripSchema';
+import { trips, tripCollaborators } from '../db/tripSchema';
 import { logger } from '../utils/logger';
 import { authenticateJWT } from '../middleware/auth';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
 
 // Type for API response to ensure consistency
 type ApiResponse<T = any> = {
@@ -73,12 +82,17 @@ router.get('/', async (req: Request, res: Response) => {
     const tripsList = await db
       .select()
       .from(trips)
+      .leftJoin(tripCollaborators, eq(trips.id, tripCollaborators.tripId))
       .where(
         and(
           eq(trips.organizationId, user.organizationId),
           or(
-            eq(trips.createdById, user.userId)
-            // TODO: Add collaborator check when implementing collaborators table
+            eq(trips.createdById, user.userId),
+            // Include trips where user is a collaborator
+            and(
+              eq(tripCollaborators.userId, user.userId),
+              eq(tripCollaborators.isAccepted, true)
+            )
           )
         )
       )
@@ -150,7 +164,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Create trip
-    const [newTrip] = await db.insert(trips).values({
+    const [newTrip] = await getDB().insert(trips).values({
       title: tripData.title,
       description: tripData.description || null,
       startDate: new Date(tripData.startDate),
@@ -354,7 +368,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     updatePayload.updatedAt = new Date();
     
     // Update trip
-    const [updatedTrip] = await db.update(trips)
+    const [updatedTrip] = await getDB().update(trips)
       .set(updatePayload)
       .where(eq(trips.id, id))
       .returning();
@@ -433,7 +447,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
     }
 
     // Delete trip
-    await db.delete(trips).where(eq(trips.id, id));
+    await getDB().delete(trips).where(eq(trips.id, id));
 
     logger.info(`Trip deleted: ${trip.title} by user ${user.userId}`);
 

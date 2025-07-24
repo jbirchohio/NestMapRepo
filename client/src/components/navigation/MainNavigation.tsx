@@ -48,10 +48,31 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
       requiresAuth: true
     },
     {
+      name: 'Trips',
+      href: '/trip-planner',
+      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Trip Planner',
+      requiresAuth: true
+    },
+    {
+      name: 'Bookings',
+      href: '/bookings',
+      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Bookings',
+      requiresAuth: true
+    },
+    {
       name: 'Analytics',
       href: '/analytics',
       icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Analytics',
+      requiresAuth: true
+    },
+    {
+      name: 'Proposals',
+      href: '/proposal-center',
+      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Proposal Center',
       requiresAuth: true
     },
     {
@@ -86,7 +107,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
     },
     {
       name: 'Pricing',
-      href: '#pricing',
+      href: '/pricing',
       icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Pricing',
       requiresAuth: false

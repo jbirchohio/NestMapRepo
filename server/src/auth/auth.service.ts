@@ -17,6 +17,7 @@ import {
 } from './dtos/auth.dto.js';
 import { Logger } from '../utils/logger.js';
 import { addDays, addHours } from 'date-fns';
+import { EmailService } from '../services/email.service';
 
 // Database connection
 const connectionString = process.env.DATABASE_URL;
@@ -45,6 +46,7 @@ export class AuthService implements IAuthService {
   private readonly JWT_SECRET = process.env.JWT_SECRET;
   private readonly REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
   private readonly logger = new Logger('AuthService');
+  private readonly emailService = new EmailService();
 
   constructor() {
     if (!this.JWT_SECRET || !this.REFRESH_TOKEN_SECRET) {
@@ -384,8 +386,14 @@ export class AuthService implements IAuthService {
         })
         .where(eq(users.email, email));
 
-      // TODO: Send email with reset link
-      this.logger.info(`Password reset requested for user: ${user.id}`);
+      // Send password reset email
+      await this.emailService.sendPasswordResetEmail({
+        userEmail: email,
+        resetToken,
+        baseUrl: process.env.BASE_URL || 'http://localhost:3000'
+      });
+      
+      this.logger.info(`Password reset email sent to user: ${user.id}`);
     } catch (error) {
       this.logger.error('Error requesting password reset', {
         error: error instanceof Error ? error.message : 'Unknown error',

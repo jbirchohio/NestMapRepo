@@ -1,5 +1,5 @@
 import { Injectable } from 'injection-js';
-import { db } from '../../../db/db';
+import { getDatabase } from '../../../db/connection';
 import * as schema from '../../../db/schema';
 import { OrganizationRepository } from './organization.repository.interface';
 import { eq } from 'drizzle-orm';
@@ -14,6 +14,11 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
   async findBySlug(slug: string): Promise<schema.Organization | null> {
     this.logger.log(`Finding organization by slug: ${slug}`);
     
+    const db = getDatabase();
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
+    
     return db
       .select()
       .from(schema.organizations)
@@ -24,6 +29,11 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
 
   async getMembers(organizationId: string): Promise<schema.User[]> {
     this.logger.log(`Getting members for organization: ${organizationId}`);
+    
+    const db = getDatabase();
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
     
     const members = await db
       .select({
@@ -42,6 +52,11 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
     try {
       // Cast the role string to the expected enum type
       const validRole = role as "admin" | "manager" | "member" | "viewer" | "billing";
+      
+      const db = getDatabase();
+      if (!db) {
+        throw new Error('Database connection not available');
+      }
       
       await db.insert(schema.organizationMembers).values({
         organizationId,
@@ -63,14 +78,14 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
     
     try {
       // Using a simpler syntax for delete operation
-      const result = await db
+      const db = getDatabase(); if (!db) throw new Error("Database not available"); const result = await db
         .delete(schema.organizationMembers)
         .where(
           eq(schema.organizationMembers.organizationId, organizationId)
           .and(eq(schema.organizationMembers.userId, userId))
         );
       
-      return result.rowCount != null && result.rowCount > 0;
+      return result && result.length > 0;
     } catch (error) {
       this.logger.error(`Error removing member from organization: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return false;
@@ -85,7 +100,7 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
       const validRole = role as "admin" | "manager" | "member" | "viewer" | "billing";
       
       // Using a simpler syntax for update operation
-      const result = await db
+      const db = getDatabase(); if (!db) throw new Error("Database not available"); const result = await db
         .update(schema.organizationMembers)
         .set({
           role: validRole,
@@ -96,7 +111,7 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
           .and(eq(schema.organizationMembers.userId, userId))
         );
       
-      return result.rowCount != null && result.rowCount > 0;
+      return result && result.length > 0;
     } catch (error) {
       this.logger.error(`Error updating member role in organization: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return false;
@@ -106,7 +121,7 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
   async updatePlan(organizationId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<schema.Organization | null> {
     this.logger.log(`Updating plan for organization ${organizationId} to ${plan}`);
     
-    const [updatedOrg] = await db
+    const db = getDatabase(); if (!db) throw new Error("Database not available"); const [updatedOrg] = await db
       .update(schema.organizations)
       .set({
         plan,
@@ -122,7 +137,7 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
   // async updateSettings(organizationId: string, settings: any): Promise<schema.Organization | null> {
   //   this.logger.log(`Updating settings for organization ${organizationId}`);
   //   
-  //   const [updatedOrg] = await db
+  //   const db = getDatabase(); if (!db) throw new Error("Database not available"); const [updatedOrg] = await db
   //     .update(schema.organizations)
   //     .set({
   //       settings,

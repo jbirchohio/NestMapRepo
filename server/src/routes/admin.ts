@@ -4,6 +4,15 @@ import { users, organizations } from '../db/schema';
 import { logger } from '../utils/logger';
 import { authenticateJWT, requireRole } from '../middleware/auth';
 
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 const router = Router();
 
 // Apply JWT authentication and admin role requirement to all admin routes
@@ -30,8 +39,8 @@ router.get('/analytics', async (_req: Request, res: Response) => {
     }
 
     // Get basic analytics data
-    const totalUsers = await db.select().from(users).then(users => users.length);
-    const totalOrganizations = await db.select().from(organizations).then(orgs => orgs.length);
+    const totalUsers = await getDB().select().from(users).then(users => users.length);
+    const totalOrganizations = await getDB().select().from(organizations).then(orgs => orgs.length);
     
     // Mock analytics data for now - in a real app, this would come from actual data
     const analytics = {

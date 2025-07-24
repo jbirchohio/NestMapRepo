@@ -1,6 +1,15 @@
-import { db } from "./db";
+import { getDatabase } from "./db-connection";
 import { trips, users, activities } from "./db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
 
 export interface SimpleAnalyticsData {
   overview: {
@@ -65,24 +74,24 @@ export async function getSimpleAnalytics(organizationId?: string): Promise<Simpl
       : sql`1=1`;
 
     // Get basic counts
-    const [tripCountResult] = await db
+    const [tripCountResult] = await getDB()
       .select({ count: count() })
       .from(trips)
       .where(tripFilter);
 
-    const [userCountResult] = await db
+    const [userCountResult] = await getDB()
       .select({ count: count() })
       .from(users)
       .where(userFilter);
 
-    const [activityCountResult] = await db
+    const [activityCountResult] = await getDB()
       .select({ count: count() })
       .from(activities)
       .innerJoin(trips, eq(activities.tripId, trips.id))
       .where(tripFilter);
 
     // Get destination data
-    const destinationsData = await db
+    const destinationsData = await getDB()
       .select({
         city: trips.city,
         country: trips.country,

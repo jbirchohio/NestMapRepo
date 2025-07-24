@@ -1,30 +1,49 @@
-import { db } from '../../db';
-import { users, adminAuditLog, organizations, userSessions } from '../../shared/src/schema';
+import { db } from '../../../db';
+import { superadminAuditLogs } from '../../../src/db/superadminSchema';
+import { sql, eq, and, desc } from 'drizzle-orm';
+
+export interface LogActionOptions {
+  ipAddress?: string;
+  userAgent?: string;
+  targetUserId?: string;
+  targetOrganizationId?: string;
+  severity?: 'info' | 'warning' | 'error' | 'critical';
+}
 
 /**
  * Logs an admin action to the audit log
- * @param adminUserId The ID of the admin performing the action
+ * @param adminUserId The ID of the admin performing the action (string UUID)
  * @param action The action being performed (e.g., 'CREATE_ORGANIZATION')
- * @param targetType The type of resource being acted upon (e.g., 'organization')
- * @param targetId The ID of the resource being acted upon
+ * @param entityType The type of resource being acted upon (e.g., 'organization')
+ * @param entityId The ID of the resource being acted upon
  * @param details Additional details about the action
+ * @param options Additional options for logging
  */
 export const logSuperadminAction = async (
-  adminUserId: number,
+  adminUserId: string | number,
   action: string,
-  targetType: string,
-  targetId?: string | number,
-  details?: any
+  entityType: string,
+  entityId?: string | number,
+  details?: any,
+  options?: LogActionOptions
 ) => {
   try {
+    // Convert adminUserId to UUID string if it's a number
+    const adminUserIdString = typeof adminUserId === 'number' ? 
+      String(adminUserId) : // Convert number to string - the schema expects UUID
+      adminUserId;
+      
     await db.insert(superadminAuditLogs).values({
-      admin_user_id: adminUserId,
+      adminUserId: adminUserIdString,
       action,
-      target_type: targetType,
-      target_id: targetId?.toString(),
-      details: details ? JSON.stringify(details) : null,
-      ip_address: null, // Can be added from request if needed
-      user_agent: null, // Can be added from request if needed
+      entityType,
+      entityId: entityId?.toString(),
+      targetUserId: options?.targetUserId,
+      targetOrganizationId: options?.targetOrganizationId,
+      details: details || null,
+      ipAddress: options?.ipAddress || null,
+      userAgent: options?.userAgent || null,
+      severity: options?.severity || 'info',
     });
   } catch (error) {
     console.error('Failed to log superadmin action:', error);
@@ -39,35 +58,39 @@ export const getAuditLogs = async (options: {
   page?: number;
   limit?: number;
   action?: string;
-  targetType?: string;
-  adminUserId?: number;
-  targetId?: string | number;
+  entityType?: string;
+  adminUserId?: string;
+  entityId?: string | number;
 }) => {
-  const { page = 1, limit = 50, action, targetType, adminUserId, targetId } = options;
+  const { page = 1, limit = 50, action, entityType, adminUserId, entityId } = options;
   const offset = (page - 1) * limit;
 
-  const whereClause = [];
+  // Build where conditions using proper Drizzle syntax
+  const whereConditions: any[] = [];
   
-  if (action) whereClause.push(sql`action = ${action}`);
-  if (targetType) whereClause.push(sql`target_type = ${targetType}`);
-  if (adminUserId) whereClause.push(sql`admin_user_id = ${adminUserId}`);
-  if (targetId) whereClause.push(sql`target_id = ${targetId.toString()}`);
+  if (action) whereConditions.push(eq(superadminAuditLogs.action, action));
+  if (entityType) whereConditions.push(eq(superadminAuditLogs.entityType, entityType));
+  if (adminUserId) whereConditions.push(eq(superadminAuditLogs.adminUserId, adminUserId));
+  if (entityId) whereConditions.push(eq(superadminAuditLogs.entityId, entityId.toString()));
 
-  const [logs, [{ count }]] = await Promise.all([
+  const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+  const [logs, countResult] = await Promise.all([
     db
       .select()
       .from(superadminAuditLogs)
-      .where(whereClause.length > 0 ? and(...whereClause) : undefined)
-      .orderBy(desc(superadminAuditLogs.created_at))
+      .where(whereClause)
+      .orderBy(desc(superadminAuditLogs.createdAt))
       .limit(limit)
       .offset(offset),
     
     db
       .select({ count: sql<number>`count(*)` })
       .from(superadminAuditLogs)
-      .where(whereClause.length > 0 ? and(...whereClause) : undefined)
-      .then(rows => rows[0])
+      .where(whereClause)
   ]);
+
+  const count = countResult[0]?.count || 0;
 
   return {
     data: logs,

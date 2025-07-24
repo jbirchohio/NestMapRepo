@@ -534,7 +534,22 @@ const AITripGenerator: FC<AITripGeneratorProps> = () => {
     if (!trip) return;
     try {
       setIsUpdatingStatus(true);
-      // TODO: integrate real API call once backend ready
+      
+      // Make API call to update trip status
+      const response = await fetch(`/api/trips/${trip.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}` // Assuming token-based auth
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      await response.json();
       updateTripStatus(newStatus);
       showToast('Success', 'Trip status updated');
     } catch (error) {

@@ -1,8 +1,17 @@
 import { Router } from 'express';
-import { db } from './db';
+import { getDatabase } from './db-connection';
 import { users, organizations, userRoleEnum } from './db/schema';
 import { eq, and } from 'drizzle-orm';
 import { auditLogger } from './auditLogger';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
 
 type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 
@@ -135,7 +144,7 @@ export class SSOManager {
 
   async createOrUpdateSSOUser(ssoUser: SSOUser, organizationId: string): Promise<any> {
     // Check if user already exists
-    const [existingUser] = await db
+    const [existingUser] = await getDB()
       .select()
       .from(users)
       .where(and(
@@ -151,7 +160,7 @@ export class SSOManager {
         updatedAt: new Date()
       };
 
-      const [updatedUser] = await db
+      const [updatedUser] = await getDB()
         .update(users)
         .set(updateData)
         .where(eq(users.id, existingUser.id))
@@ -186,7 +195,7 @@ export class SSOManager {
         updatedAt: new Date()
       };
       
-      const [newUser] = await db
+      const [newUser] = await getDB()
         .insert(users)
         .values(userData)
         .returning();
@@ -254,7 +263,7 @@ export class SSOManager {
   private async getOrganizationFromEntityId(entityId: string): Promise<string> {
     try {
       // Try to find organization by slug first (assuming entityId is the organization's slug)
-      const [org] = await db
+      const [org] = await getDB()
         .select({ id: organizations.id })
         .from(organizations)
         .where(eq(organizations.slug, entityId))
@@ -266,7 +275,7 @@ export class SSOManager {
       const envMap = process.env.SAML_ENTITY_MAP ? JSON.parse(process.env.SAML_ENTITY_MAP) : {};
       if (envMap[entityId]) {
         // Verify the mapped organization exists
-        const [mappedOrg] = await db
+        const [mappedOrg] = await getDB()
           .select({ id: organizations.id })
           .from(organizations)
           .where(eq(organizations.id, envMap[entityId]))

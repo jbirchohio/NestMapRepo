@@ -7,6 +7,15 @@ import { getDatabase } from '../db/connection';
 import { users } from '../db/schema';
 import { logger } from '../utils/logger';
 
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 const router = express.Router();
 
 // Validation schemas
@@ -155,7 +164,7 @@ router.post('/login', async (req: Request, res: Response) => {
     let dbUser;
     try {
       logger.debug('Querying database for user', { email });
-      const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      const result = await getDB().select().from(users).where(eq(users.email, email)).limit(1);
       dbUser = result[0];
       logger.debug('User query result', { userFound: !!dbUser });
     } catch (error) {
@@ -236,7 +245,7 @@ router.post('/login', async (req: Request, res: Response) => {
     // Update last login
     try {
       logger.debug('Updating last login timestamp', { userId: user.id });
-      await db.update(users)
+      await getDB().update(users)
         .set({ lastLoginAt: new Date() })
         .where(eq(users.id, user.id));
     } catch (updateError) {
@@ -346,7 +355,7 @@ router.post('/register', async (req: Request, res: Response) => {
     // Check if user already exists
     let existingUser;
     try {
-      [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      [existingUser] = await getDB().select().from(users).where(eq(users.email, email)).limit(1);
     } catch (error) {
       logger.error('Database query error:', error);
       return res.status(500).json({
@@ -380,7 +389,7 @@ router.post('/register', async (req: Request, res: Response) => {
         organizationId: organizationId || null,
       };
 
-      const result = await db.insert(users)
+      const result = await getDB().insert(users)
         .values(userValues)
         .returning({
           id: users.id,
@@ -560,7 +569,7 @@ router.post('/signup', async (req: Request, res: Response) => {
     }
     
     // Check if user already exists
-    const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    const [existingUser] = await getDB().select().from(users).where(eq(users.email, email)).limit(1);
 
     if (existingUser) {
       return res.status(409).json({
@@ -573,7 +582,7 @@ router.post('/signup', async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
-    const [newUser] = await db.insert(users).values({
+    const [newUser] = await getDB().insert(users).values({
       email,
       passwordHash: hashedPassword,
       username: username,

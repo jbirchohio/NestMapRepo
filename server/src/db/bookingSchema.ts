@@ -23,7 +23,7 @@ export const bookingTypeEnum = pgEnum('booking_type', [
 export const bookings = pgTable('bookings', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }),
   type: bookingTypeEnum('type').notNull(),
   title: text('title').notNull(),
   description: text('description'),
