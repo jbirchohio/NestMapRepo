@@ -1,7 +1,7 @@
 import type { Application } from "express";
 import { db } from "../db";
 import { users, organizations, trips } from "../db/schema";
-import { eq, count, sql, gte, desc } from "drizzle-orm";
+import { eq, count, sql, gte, desc } from 'drizzle-orm';
 import { authenticate as validateJWT } from '../../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../../middleware/organizationContext';
 

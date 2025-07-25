@@ -3,9 +3,19 @@
  * Consolidated approach using users.organization_id directly
  */
 
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
+
 import { Router, Response } from 'express';
 import type { AuthenticatedRequest } from '../src/types/auth-user';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { users, organizationMembers } from '../shared/src/schema';
 import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';

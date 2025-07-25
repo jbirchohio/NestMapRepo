@@ -6,11 +6,10 @@
 import express from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { and, desc } from 'drizzle-orm/expressions';
 import { getDatabase } from '../db/connection';
-import { autonomousVehicles, vehicleBookings } from '../db/schema';
-import { authenticateJWT } from '../middleware/auth';
-import { logger } from '../utils/logger';
+import { autonomousVehicles, vehicleBookings } from '../db/schema.js';
+import { authenticateJWT } from '../middleware/auth.js';
+import { logger } from '../utils/logger.js';
 import AutonomousVehicleIntegrationService from '../services/autonomousVehicleIntegration';
 
 const router = express.Router();

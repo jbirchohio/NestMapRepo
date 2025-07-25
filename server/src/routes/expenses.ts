@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
-import { desc } from 'drizzle-orm';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { expenses, trips, users } from '../src/db/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
@@ -9,6 +8,16 @@ import { z } from 'zod';
 import { approvalEngine } from '../approvalEngine';
 import { ExpenseIntegrationService } from '../expenseIntegration';
 import { auditLogger } from '../auditLogger';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 // Validation schemas
 const insertExpenseSchema = z.object({

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { logger } from '../utils/logger';
-import { authenticateJWT } from '../middleware/auth';
+import { logger } from '../utils/logger.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
 const router = Router();
 

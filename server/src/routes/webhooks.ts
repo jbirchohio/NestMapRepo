@@ -1,11 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { eq } from 'drizzle-orm';
 import { NodemailerEmailService } from '../src/email/services/nodemailer-email.service';
 import { ConfigService } from '@nestjs/config';
 import { invoices } from '../db/invoiceSchema';
-import { organizations } from '../db/schema';
+import { organizations } from '../db/schema.js';
 import { stripe } from '../stripe';
 
 // Extend the Express Request type to include rawBody
@@ -245,8 +245,18 @@ router.post('/stripe-connect', async (req: Request & { rawBody?: Buffer }, res: 
   }
 });
 
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 async function handleAccountUpdated(account: Stripe.Account) {
   try {
+    const db = getDB();
     // Update the organization's Stripe Connect account status
     await db.update(organizations)
       .set({

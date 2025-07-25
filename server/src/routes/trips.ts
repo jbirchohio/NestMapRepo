@@ -1,11 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { and, or, desc } from 'drizzle-orm/expressions';
+import { eq, and, or, desc } from 'drizzle-orm';
 import { getDatabase } from '../db/connection';
-import { trips, tripCollaborators } from '../db/tripSchema';
-import { logger } from '../utils/logger';
-import { authenticateJWT } from '../middleware/auth';
+import { trips, tripCollaborators } from '../db/tripSchema.js';
+import { logger } from '../utils/logger.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
 // Helper to get database instance
 const getDB = () => {

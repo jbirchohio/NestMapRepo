@@ -1,9 +1,19 @@
 import express, { Request, Response, NextFunction, RequestHandler } from 'express';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { auditLogs } from '../db/auditLog';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin';
 import { injectOrganizationContext } from '../middleware/organizationContext';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 // Import route modules
 import organizationsRouter from './superadmin/organizations';
@@ -22,6 +32,8 @@ export const logSuperadminAction = async (
   metadata?: Record<string, unknown>
 ) => {
   try {
+    const db = getDB();
+
     await db.insert(auditLogs).values({
       organizationId: '00000000-0000-0000-0000-000000000000', // System organization for superadmin actions
       userId: adminUserId,

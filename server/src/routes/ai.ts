@@ -5,7 +5,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import { db } from "../db";
 import { trips, activities } from "../db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and } from 'drizzle-orm';
 import { findLocation } from "../aiLocations";
 import { fetchEarthquakeAlerts } from "../disasterMonitor";
 import { forecastBudget } from "../budgetForecast";

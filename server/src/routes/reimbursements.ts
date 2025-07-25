@@ -1,11 +1,10 @@
 import { Router } from 'express';
 import { eq } from 'drizzle-orm';
-import { and, desc, gte, lte, or, like } from 'drizzle-orm/expressions';
 import { sql } from 'drizzle-orm/sql';
 import { count } from 'drizzle-orm/sql/functions';
 import { db } from '../db/db';
-import { reimbursements, expenses, users } from '../db/schema';
-import { authenticateJWT } from '../middleware/auth';
+import { reimbursements, expenses, users } from '../db/schema.js';
+import { authenticateJWT } from '../middleware/auth.js';
 import { z } from 'zod';
 
 // Validation schemas

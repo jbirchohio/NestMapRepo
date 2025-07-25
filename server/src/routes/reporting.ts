@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { eq, and, desc, gte, lte, sql, count } from 'drizzle-orm';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { 
@@ -12,6 +12,16 @@ import {
   approvalRequests,
   activities
 } from '../src/db/schema';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 const router = Router();
 

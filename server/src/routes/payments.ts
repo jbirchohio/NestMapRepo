@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer';
 import { authenticate as authenticateJWT } from '../middleware/secureAuth';
 import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.js';
 import type { Invoice } from '../db/db';
 
 const router = Router();

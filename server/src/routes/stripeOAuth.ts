@@ -1,8 +1,18 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
-import { db } from '../db';
-import { organizations } from '../db/schema';
+import { getDatabase } from '../db/connection.js';
+import { organizations } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 const router = Router();
 

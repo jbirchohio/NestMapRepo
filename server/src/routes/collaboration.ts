@@ -1,10 +1,20 @@
 import { Router } from 'express';
 import { eq, and, desc, isNull } from 'drizzle-orm';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '../shared/src/schema';
 import { z } from 'zod';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 const router = Router();
 

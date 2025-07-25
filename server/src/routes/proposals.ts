@@ -1,11 +1,21 @@
 import { Router, Response } from 'express';
 import { proposals, insertProposalSchema, proposalStatusEnum } from '../db/proposalSchema';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation';
 import { z } from 'zod';
 import type { AuthenticatedRequest } from '../src/types/auth-user';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 const router = Router();
 

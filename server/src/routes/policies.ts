@@ -1,11 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { logger } from '../utils/logger';
-import { authenticateJWT } from '../middleware/auth';
+import { logger } from '../utils/logger.js';
+import { authenticateJWT } from '../middleware/auth.js';
 import { db } from '../db/db';
-import { spendPolicies } from '../db/schema';
+import { spendPolicies } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
-import { and } from 'drizzle-orm/expressions';
 
 const router = Router();
 

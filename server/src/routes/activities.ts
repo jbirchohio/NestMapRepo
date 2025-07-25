@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Import types and schemas
 import type { Activity, ActivityStatus, ActivityType } from '../types/activity';
 import { activitySchema, createActivitySchema, updateActivitySchema } from '../types/activity';
-import { User } from '../db/schema';
+import { User } from '../db/schema.js';
 
 // Import services
 import activityService from '../services/activity.service';
