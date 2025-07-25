@@ -16,8 +16,16 @@ import {
   Mail,
   Globe,
   Server,
-  RefreshCw
+  RefreshCw,
+  DollarSign,
+  PiggyBank,
+  Users,
+  Receipt
 } from 'lucide-react';
+import SpendPolicyManagement from '@/components/admin/SpendPolicyManagement';
+import BudgetManagement from '@/components/admin/BudgetManagement';
+import UserManagement from '@/components/admin/UserManagement';
+import ReimbursementProcessing from '@/components/admin/ReimbursementProcessing';
 
 interface SystemSettings {
   general: {
@@ -150,7 +158,7 @@ export default function AdminSettings() {
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
               General
@@ -166,6 +174,22 @@ export default function AdminSettings() {
             <TabsTrigger value="features" className="flex items-center gap-2">
               <Server className="w-4 h-4" />
               Features
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="reimbursements" className="flex items-center gap-2">
+              <Receipt className="w-4 h-4" />
+              Reimbursements
+            </TabsTrigger>
+            <TabsTrigger value="budgets" className="flex items-center gap-2">
+              <PiggyBank className="w-4 h-4" />
+              Budgets
+            </TabsTrigger>
+            <TabsTrigger value="policies" className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Policies
             </TabsTrigger>
           </TabsList>
 
@@ -416,6 +440,62 @@ export default function AdminSettings() {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>
+                  Manage organization users, roles, and permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reimbursements" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reimbursement Processing</CardTitle>
+                <CardDescription>
+                  Process expense reimbursements and manage payment workflows
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReimbursementProcessing />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="budgets" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Budget Management</CardTitle>
+                <CardDescription>
+                  Create and manage organizational budgets to track spending and control costs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BudgetManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="policies" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Spend Policies</CardTitle>
+                <CardDescription>
+                  Configure spending limits and approval workflows for your organization
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SpendPolicyManagement />
               </CardContent>
             </Card>
           </TabsContent>

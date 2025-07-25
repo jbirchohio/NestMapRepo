@@ -6,7 +6,20 @@ import { cn } from "@/lib/utils"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+const DropdownMenuTrigger = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger> & {
+    children?: React.ReactNode
+    asChild?: boolean
+  }
+>(({ children, ...props }, ref) => {
+  return (
+    <DropdownMenuPrimitive.Trigger ref={ref} {...props as any}>
+      {children}
+    </DropdownMenuPrimitive.Trigger>
+  );
+})
+DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName
 
 const DropdownMenuGroup = DropdownMenuPrimitive.Group
 
@@ -91,8 +104,10 @@ const DropdownMenuItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
     className?: string
+    children?: React.ReactNode
+    onClick?: () => void
   }
->(({ className, inset, ...props }, ref) => {
+>(({ className, inset, children, onClick, ...props }, ref) => {
   const itemProps = {
     ref,
     className: cn(
@@ -100,9 +115,10 @@ const DropdownMenuItem = React.forwardRef<
       inset && "pl-8",
       className
     ),
+    onClick,
     ...props
   };
-  return <DropdownMenuPrimitive.Item {...(itemProps as any)} />;
+  return <DropdownMenuPrimitive.Item {...(itemProps as any)}>{children}</DropdownMenuPrimitive.Item>;
 })
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
@@ -170,8 +186,9 @@ const DropdownMenuLabel = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
     inset?: boolean
     className?: string
+    children?: React.ReactNode
   }
->(({ className, inset, ...props }, ref) => {
+>(({ className, inset, children, ...props }, ref) => {
   const labelProps = {
     ref,
     className: cn(
@@ -181,7 +198,7 @@ const DropdownMenuLabel = React.forwardRef<
     ),
     ...props
   };
-  return <DropdownMenuPrimitive.Label {...(labelProps as any)} />;
+  return <DropdownMenuPrimitive.Label {...(labelProps as any)}>{children}</DropdownMenuPrimitive.Label>;
 })
 DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
 

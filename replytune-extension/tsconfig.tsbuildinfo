@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/content.tsx","./src/main.tsx","./src/setuptests.ts","./src/supabaseclient.ts","./src/vite-env.d.ts","./src/__mocks__/supabaseclient.ts","./src/components/replyeditor.tsx","./src/components/sidebar.tsx","./src/components/tonetrainer.tsx","./src/components/usagebar.tsx"],"version":"5.8.3"}

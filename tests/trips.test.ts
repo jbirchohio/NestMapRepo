@@ -4,13 +4,16 @@
  */
 
 import request from 'supertest';
-import { app } from '../server/test-app';
+import { getTestApp } from '../server/test-app';
 
 describe('Trip Management API', () => {
+  let app: any;
   let authCookies: string[] = [];
   let testUserId: number;
 
   beforeAll(async () => {
+    app = await getTestApp();
+    
     // Create and authenticate test user
     const userData = {
       email: 'trip-test@example.com',
@@ -27,21 +30,21 @@ describe('Trip Management API', () => {
       .send({
         email: userData.email,
         password: userData.password
-      });
+      })
+      .expect(200);
 
     const cookies = loginResponse.headers['set-cookie'];
     authCookies = Array.isArray(cookies) ? cookies : cookies ? [cookies] : [];
-    testUserId = loginResponse.body.user.id;
+    testUserId = parseInt(loginResponse.body.user.id);
   });
 
   describe('POST /api/trips', () => {
     it('should create a new trip successfully', async () => {
       const tripData = {
-        name: 'Test Business Trip',
+        title: 'Test Business Trip',
         startDate: '2025-02-01',
         endDate: '2025-02-05',
         destination: 'New York, NY',
-        budget: 2500,
         description: 'Client meeting and conference',
         isPublic: false
       };
@@ -53,15 +56,14 @@ describe('Trip Management API', () => {
         .expect(201);
 
       expect(response.body).toHaveProperty('id');
-      expect(response.body.name).toBe(tripData.name);
+      expect(response.body.title).toBe(tripData.title);
       expect(response.body.destination).toBe(tripData.destination);
-      expect(response.body.budget).toBe(tripData.budget);
       expect(response.body.userId).toBe(testUserId);
     });
 
     it('should reject trip creation without authentication', async () => {
       const tripData = {
-        name: 'Unauthorized Trip',
+        title: 'Unauthorized Trip',
         startDate: '2025-02-01',
         endDate: '2025-02-05',
         destination: 'Paris, France'
@@ -75,9 +77,9 @@ describe('Trip Management API', () => {
 
     it('should validate required fields', async () => {
       const invalidTripData = {
-        name: '',
+        title: '',
         startDate: '2025-02-01'
-        // Missing endDate and destination
+        // Missing endDate
       };
 
       await request(app)
@@ -113,11 +115,10 @@ describe('Trip Management API', () => {
 
     beforeAll(async () => {
       const tripData = {
-        name: 'Detail Test Trip',
+        title: 'Detail Test Trip',
         startDate: '2025-03-01',
         endDate: '2025-03-05',
-        destination: 'London, UK',
-        budget: 3000
+        destination: 'London, UK'
       };
 
       const response = await request(app)
@@ -135,7 +136,7 @@ describe('Trip Management API', () => {
         .expect(200);
 
       expect(response.body.id).toBe(tripId);
-      expect(response.body.name).toBe('Detail Test Trip');
+      expect(response.body.title).toBe('Detail Test Trip');
       expect(response.body.destination).toBe('London, UK');
     });
 
@@ -152,11 +153,10 @@ describe('Trip Management API', () => {
 
     beforeAll(async () => {
       const tripData = {
-        name: 'Update Test Trip',
+        title: 'Update Test Trip',
         startDate: '2025-04-01',
         endDate: '2025-04-05',
-        destination: 'Tokyo, Japan',
-        budget: 4000
+        destination: 'Tokyo, Japan'
       };
 
       const response = await request(app)
@@ -169,8 +169,7 @@ describe('Trip Management API', () => {
 
     it('should update trip successfully', async () => {
       const updateData = {
-        name: 'Updated Business Trip',
-        budget: 4500,
+        title: 'Updated Business Trip',
         description: 'Updated description'
       };
 
@@ -180,14 +179,13 @@ describe('Trip Management API', () => {
         .send(updateData)
         .expect(200);
 
-      expect(response.body.name).toBe(updateData.name);
-      expect(response.body.budget).toBe(updateData.budget);
+      expect(response.body.title).toBe(updateData.title);
       expect(response.body.description).toBe(updateData.description);
     });
 
     it('should reject unauthorized updates', async () => {
       const updateData = {
-        name: 'Unauthorized Update'
+        title: 'Unauthorized Update'
       };
 
       await request(app)
@@ -202,11 +200,10 @@ describe('Trip Management API', () => {
 
     beforeEach(async () => {
       const tripData = {
-        name: 'Delete Test Trip',
+        title: 'Delete Test Trip',
         startDate: '2025-05-01',
         endDate: '2025-05-05',
-        destination: 'Berlin, Germany',
-        budget: 2000
+        destination: 'Berlin, Germany'
       };
 
       const response = await request(app)

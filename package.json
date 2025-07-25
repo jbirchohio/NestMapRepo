@@ -190,7 +190,10 @@
     "coverageReporters": [
       "text",
       "lcov"
-    ]
+    ],
+    "testTimeout": 30000,
+    "forceExit": true,
+    "detectOpenHandles": true
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

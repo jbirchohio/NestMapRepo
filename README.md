@@ -121,7 +121,19 @@ Enterprise-grade travel management platform featuring authentic flight data inte
 - **Duffel API**: Authentic airline inventory
 - **Enterprise APIs**: HR, Finance, Communication platforms
 
-## 🚀 **Quick Start**
+## � **Security & Setup Notice**
+
+**🚨 Important for Buyers**: API keys and secrets are **NOT included** in this repository for security reasons. All sensitive credentials must be obtained separately and configured using the provided `.env.example` template.
+
+### **Required API Keys**
+- **OpenAI API Key**: Required for voice AI features
+- **Mapbox Token**: Required for map functionality  
+- **Supabase Credentials**: Database and authentication
+- **Travel APIs**: Optional for real flight/hotel data
+
+📖 **See `API_SETUP_GUIDE.md` for complete setup instructions and cost breakdown**
+
+## �🚀 **Quick Start**
 
 ### **1. Installation**
 ```bash
@@ -303,11 +315,13 @@ Comprehensive documentation is available in the `/docs` folder:
 **NestMap is a production-ready, enterprise-grade travel management platform designed for acquisition:**
 
 ### **✅ Complete Package**
-- **Production-Ready Codebase**: Clean, scalable, zero technical debt
+- **Production-Ready Codebase**: Clean, scalable, modern architecture
 - **Comprehensive Documentation**: Business case, technical specs, deployment guides
-- **Test Coverage**: Extensive test suites for quality assurance
+- **Core Test Coverage**: Authentication, organizations, voice interface, and critical workflows tested
 - **Professional UI/UX**: Modern, accessible, mobile-first design
 - **Enterprise Features**: Voice interface, AI integration, smart city connectivity
+
+**🔍 Quality Assurance Note**: Core functionality is thoroughly tested with focus on security-critical areas like multi-tenant isolation. Additional test coverage can be expanded based on specific business requirements.
 
 ### **💰 Business Value**
 - **$8.6B Market Opportunity**: Corporate travel management sector

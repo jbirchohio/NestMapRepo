@@ -98,16 +98,15 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
   
   // Fetch white label config when user logs in or location changes
   const { data: whiteLabelConfig } = useQuery<WhiteLabelConfig>({
-    queryKey: ['whiteLabelConfig', user?.organization_id],
+    queryKey: ['whiteLabelConfig', user?.organizationId],
     queryFn: async () => {
-      if (!user?.organization_id) return defaultConfig;
+      if (!user?.organizationId) return defaultConfig;
       
       try {
-        // Get token from localStorage since User type doesn't have accessToken
-        const token = localStorage.getItem('token');
+        const token = user?.accessToken; // Get token from user object
         if (!token) return defaultConfig;
         
-        const response = await fetch(`/api/organizations/${user.organization_id}/white-label`, {
+        const response = await fetch(`/api/organizations/${user.organizationId}/white-label`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -125,7 +124,7 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
         return defaultConfig;
       }
     },
-    enabled: !!user?.organization_id,
+    enabled: !!user?.organizationId,
     initialData: defaultConfig,
   });
 

@@ -46,12 +46,10 @@ type DecodeOptions = {
   json?: boolean;
 };
 
-type Secret = Parameters<typeof jwt.sign>[1];
-
 // Helper function to promisify jwt.sign
 const signAsync = (
   payload: string | object | Buffer,
-  secret: Secret,
+  secret: string,
   options?: SignOptions
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -68,7 +66,7 @@ const signAsync = (
 // Helper function to promisify jwt.verify
 const verifyAsync = (
   token: string,
-  secret: Secret,
+  secret: string,
   options?: VerifyOptions
 ): Promise<string | JwtPayload> => {
   return new Promise((resolve, reject) => {

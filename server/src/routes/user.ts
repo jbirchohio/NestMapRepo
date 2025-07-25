@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { getDatabase } from '../db/connection';
+import { db } from '../db/db';
 import { users } from '../db/schema';
 import { logger } from '../utils/logger';
 import { authenticateJWT } from '../middleware/auth';
@@ -143,11 +143,6 @@ router.get('/profile', async (req: Request, res: Response) => {
       });
     }
 
-    const db = getDatabase();
-    if (!db) {
-      throw new Error('Database connection not available');
-    }
-    
     const [user] = await db
       .select({
         id: users.id,
@@ -209,11 +204,6 @@ router.put('/profile', async (req: Request, res: Response) => {
     });
 
     const updateData = updateSchema.parse(req.body);
-    const db = getDatabase();
-    
-    if (!db) {
-      throw new Error('Database connection not available');
-    }
 
     const [updatedUser] = await db
       .update(users)
@@ -253,6 +243,57 @@ router.put('/profile', async (req: Request, res: Response) => {
     const response: ApiResponse = {
       success: false,
       error: { message: 'Failed to update user profile' },
+    };
+    res.status(500).json(response);
+  }
+});
+
+// GET /api/user/organization-users - Get users in the same organization
+router.get('/organization-users', async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    
+    if (!user || !user.organizationId) {
+      return res.status(401).json({
+        success: false,
+        error: { message: 'Organization membership required' },
+      });
+    }
+
+    // Get all users in the same organization
+    const organizationUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        isActive: users.isActive,
+      })
+      .from(users)
+      .where(eq(users.organizationId, user.organizationId));
+
+    // Format the response with combined name
+    const formattedUsers = organizationUsers.map(user => ({
+      id: user.id,
+      email: user.email,
+      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+      role: user.role,
+      isActive: user.isActive,
+    }));
+
+    const response: ApiResponse<{ users: typeof formattedUsers }> = {
+      success: true,
+      data: { users: formattedUsers },
+    };
+    res.json(response);
+
+  } catch (error) {
+    logger.error('Get organization users error:', error);
+    
+    const response: ApiResponse = {
+      success: false,
+      error: { message: 'Failed to fetch organization users' },
     };
     res.status(500).json(response);
   }

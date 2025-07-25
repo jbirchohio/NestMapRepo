@@ -33,39 +33,43 @@ export const authenticateJWT = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // In test mode, check for session cookies as well
-    if (process.env.NODE_ENV === 'test') {
-      const sessionCookie = req.headers.cookie;
-      if (sessionCookie && sessionCookie.includes('sessionId=')) {
-        // Mock authenticated user for tests
-        req.user = {
-          userId: '1',
-          organizationId: '1',
-          role: 'member',
-          email: 'trip-test@example.com',
-        };
-        return next();
+    let token: string | undefined;
+    
+    // Check Authorization header first
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    }
+    
+    // In test mode, also check for tokens in cookies and handle session cookies
+    if (process.env.NODE_ENV === 'test' && !token) {
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        // Try to extract JWT token from cookies if present
+        const tokenMatch = cookieHeader.match(/token=([^;]+)/);
+        if (tokenMatch) {
+          token = tokenMatch[1];
+        }
+        // Fallback to sessionId for simple trip tests
+        else if (cookieHeader.includes('sessionId=')) {
+          req.user = {
+            userId: '1',
+            organizationId: '1',
+            role: 'member',
+            email: 'trip-test@example.com',
+          };
+          return next();
+        }
       }
     }
     
-    const authHeader = req.headers.authorization;
-    
-    logger.debug('Auth headers:', { 
-      authorization: authHeader ? 'present' : 'missing',
-      method: req.method,
-      path: req.path,
-      headers: req.headers
-    });
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       logger.warn('Missing or invalid authorization header');
       return res.status(401).json({
         success: false,
         error: { message: 'Access token required' },
       });
     }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
     if (!process.env.JWT_SECRET) {
       logger.error('JWT_SECRET not configured');

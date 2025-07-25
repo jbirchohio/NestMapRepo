@@ -34,7 +34,7 @@ export default function AdminUserActivity() {
   const [filterAction, setFilterAction] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const orgId = user?.organization_id;
+  const orgId = user?.organizationId;
 
   const { data: logs, isLoading, refetch } = useQuery<UserActivityLog[]>({ 
     queryKey: ['userActivityLogs', orgId, currentPage, filterAction, searchTerm],

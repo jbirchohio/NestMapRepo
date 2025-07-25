@@ -35,6 +35,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
     "nodemailer": "^6.9.8",
+    "openai": "^4.104.0",
     "postgres": "^3.4.3",
     "puppeteer": "^21.0.0",
     "slugify": "^1.6.6",

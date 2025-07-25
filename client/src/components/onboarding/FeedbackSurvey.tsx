@@ -100,7 +100,7 @@ export const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
         ...feedback,
         role: flow?.role,
         userId: user?.id,
-        organizationId: user?.organization_id,
+        organizationId: user?.organizationId,
         completedSteps: flow?.completedSteps,
         totalSteps: flow?.totalSteps
       });
@@ -115,7 +115,7 @@ export const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
         body: JSON.stringify({
           ...feedback,
           userId: user?.id,
-          organizationId: user?.organization_id,
+          organizationId: user?.organizationId,
           role: flow?.role,
           onboardingFlow: {
             completedSteps: flow?.completedSteps,

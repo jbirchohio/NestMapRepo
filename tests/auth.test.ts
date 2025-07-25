@@ -4,9 +4,15 @@
  */
 
 import request from 'supertest';
-import { app } from '../server/test-app';
+import { getTestApp } from '../server/test-app';
 
 describe('Authentication API', () => {
+  let app: any;
+
+  beforeAll(async () => {
+    app = await getTestApp();
+  });
+
   describe('POST /api/auth/signup', () => {
     it('should create a new user successfully', async () => {
       const userData = {
@@ -170,27 +176,27 @@ describe('Authentication API', () => {
       expect(response.body.message).toContain('success');
     });
   });
-});
 
-describe('Organization Scoping in Auth', () => {
-  it('should associate user with organization during signup', async () => {
-    const userData = {
-      email: 'org@example.com',
-      password: 'password123',
-      username: 'orguser',
-      organizationId: '1' // Fix: organizationId should be string, not number
-    };
+  describe('Organization Scoping in Auth', () => {
+    it('should associate user with organization during signup', async () => {
+      const userData = {
+        email: 'org@example.com',
+        password: 'password123',
+        username: 'orguser',
+        organizationId: '1' // Fix: organizationId should be string, not number
+      };
 
-    const response = await request(app)
-      .post('/api/auth/signup')
-      .send(userData)
-      .expect(201);
+      const response = await request(app)
+        .post('/api/auth/signup')
+        .send(userData)
+        .expect(201);
 
-    expect(response.body.user.organizationId).toBe('1');
-  });
+      expect(response.body.user.organizationId).toBe('1');
+    });
 
-  it('should enforce organization access in protected routes', async () => {
-    // This test would verify that users can only access their org's data
-    // Implementation depends on specific middleware structure
+    it('should enforce organization access in protected routes', async () => {
+      // This test would verify that users can only access their org's data
+      // Implementation depends on specific middleware structure
+    });
   });
 });
