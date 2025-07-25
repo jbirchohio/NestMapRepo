@@ -1,10 +1,19 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';import { db } from '../db/db';
+import { getDatabase } from '../db/connection.js';
 import { users } from '../db/schema.js';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
 
 const router = Router();
 
@@ -143,6 +152,7 @@ router.get('/profile', async (req: Request, res: Response) => {
       });
     }
 
+    const db = getDB();
     const [user] = await db
       .select({
         id: users.id,
@@ -205,6 +215,7 @@ router.put('/profile', async (req: Request, res: Response) => {
 
     const updateData = updateSchema.parse(req.body);
 
+    const db = getDB();
     const [updatedUser] = await db
       .update(users)
       .set({
@@ -261,6 +272,7 @@ router.get('/organization-users', async (req: Request, res: Response) => {
     }
 
     // Get all users in the same organization
+    const db = getDB();
     const organizationUsers = await db
       .select({
         id: users.id,

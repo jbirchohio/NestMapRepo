@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';import { getDatabase } from '../db/connection';
+import { getDatabase } from '../db/connection';
 import { users } from '../db/schema.js';
 import { logger } from '../utils/logger.js';
 
