@@ -1,6 +1,8 @@
 import { Router } from 'express';
-import { eq, and, gte, lte, sql } from 'drizzle-orm';
-import { getDatabase } from '../db/connection.js';
+import { eq } from 'drizzle-orm';
+import { and, or, ne, gte, lte } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';
+// TODO: Fix count and sql imports - may need different approachimport { getDatabase } from '../db/connection.js';
 import { expenses, trips, users } from '../src/db/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

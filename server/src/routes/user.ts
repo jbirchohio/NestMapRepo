@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { db } from '../db/db';
+import { or } from 'drizzle-orm/sql/expressions/conditions';import { db } from '../db/db';
 import { users } from '../db/schema.js';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';

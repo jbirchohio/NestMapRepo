@@ -1,8 +1,8 @@
 import type { Express, Response } from "express";
 import { db } from "../db";
 import { organizations, whiteLabelSettings, customDomains } from "../db/schema";
-import { eq, and } from 'drizzle-orm';
-import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { eq } from 'drizzle-orm';
+import { or } from 'drizzle-orm/sql/expressions/conditions';import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { enforceWhiteLabelAccess } from '../middleware/subscription-limits';
 import type { AuthenticatedRequest } from '../src/types/auth-user';

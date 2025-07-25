@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq, and, or, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';
 import { getDatabase } from '../db/connection';
 import { trips, tripCollaborators } from '../db/tripSchema.js';
 import { logger } from '../utils/logger.js';

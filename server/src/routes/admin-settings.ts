@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import { db } from "../db";
-import { eq, count } from 'drizzle-orm';
-import { adminSettings, adminAuditLog, users } from "../db/schema";
+import { eq } from 'drizzle-orm';
+import { or } from 'drizzle-orm/sql/expressions/conditions';
+// TODO: Fix count and sql imports - may need different approachimport { adminSettings, adminAuditLog, users } from "../db/schema";
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import type { User } from '../db/schema.js';

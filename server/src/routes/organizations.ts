@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
+import { and, or, ne } from 'drizzle-orm/sql/expressions/conditions';import { and, ne } from 'drizzle-orm/sql/expressions/conditions';
 import { getDatabase } from '../db/connection';
 import { organizations } from '../db/schema.js';
 import { logger } from '../utils/logger.js';
@@ -310,9 +311,10 @@ router.put('/:id', async (req: Request, res: Response) => {
       .select()
       .from(organizations)
       .where(
-        // Using manual AND logic since and() function not available
-        eq(organizations.name, updateData.name!)
-        // TODO: Add check for id != current id when 'ne' function available
+        and(
+          eq(organizations.name, updateData.name!),
+          ne(organizations.id, id)
+        )
       );
 
       if (existingOrgs.length > 0) {

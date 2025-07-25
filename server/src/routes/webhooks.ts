@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe';
 import { getDatabase } from '../db/connection.js';
 import { eq } from 'drizzle-orm';
-import { NodemailerEmailService } from '../src/email/services/nodemailer-email.service';
+import { or } from 'drizzle-orm/sql/expressions/conditions';import { NodemailerEmailService } from '../src/email/services/nodemailer-email.service';
 import { ConfigService } from '@nestjs/config';
 import { invoices } from '../db/invoiceSchema';
 import { organizations } from '../db/schema.js';

@@ -5,7 +5,7 @@ import { stripe } from '../stripe';
 import { invoices } from '../db/invoiceSchema';
 import { billingEvents } from '../db/superadminSchema';
 import { eq } from 'drizzle-orm';
-import nodemailer from 'nodemailer';
+import { or } from 'drizzle-orm/sql/expressions/conditions';import nodemailer from 'nodemailer';
 import { authenticate as authenticateJWT } from '../middleware/secureAuth';
 import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

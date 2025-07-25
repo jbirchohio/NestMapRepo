@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { db } from '../../db';
 import { organizations, organizationMembers, users } from '../../shared/src/schema';
-import { eq, desc, sql } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service';
+import { eq } from 'drizzle-orm';
+import { or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';
+// TODO: Fix count and sql imports - may need different approachimport { logSuperadminAction } from '../audit-logs/audit-service';
 
 // Get all organizations
 export const getOrganizations = async (req: Request, res: Response) => {

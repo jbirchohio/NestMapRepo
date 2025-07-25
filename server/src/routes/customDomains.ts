@@ -4,8 +4,8 @@ import type { CustomRequest, RequestHandler } from '../types/custom-express'; //
 import { db } from '../db/db';
 import { organizations, customDomains } from '../db/schema.js';
 import { whiteLabelSettings } from '../db/schema.js';
-import { eq, and } from 'drizzle-orm';
-import { authenticate } from '../middleware/secureAuth';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';import { authenticate } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { z } from 'zod';

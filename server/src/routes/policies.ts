@@ -5,8 +5,7 @@ import { authenticateJWT } from '../middleware/auth.js';
 import { db } from '../db/db';
 import { spendPolicies } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
-
-const router = Router();
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';const router = Router();
 
 // Apply JWT authentication to all policy routes
 router.use(authenticateJWT);

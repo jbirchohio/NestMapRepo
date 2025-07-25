@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from '../../db';
 import { organizations } from '../../shared/src/schema';
 import { auditLogs } from '../../shared/src/schema';
-import { eq, sql } from 'drizzle-orm';
-import Stripe from 'stripe';
+import { eq } from 'drizzle-orm';
+import { or } from 'drizzle-orm/sql/expressions/conditions';import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-05-28.basil',

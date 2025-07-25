@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm/sql';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';
+// TODO: Fix count and sql imports - may need different approachimport { sql } from 'drizzle-orm/sql';
 import { count } from 'drizzle-orm/sql/functions';
 import { db } from '../db/db';
 import { users } from '../db/schema.js';

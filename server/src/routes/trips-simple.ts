@@ -2,9 +2,9 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../db-connection';
 import { trips, insertTripSchema } from '../db/schema.js';
-import { eq, and, desc } from 'drizzle-orm';
-
-const router = Router();
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';const router = Router();
 
 // Validation schemas
 const idParamSchema = z.object({

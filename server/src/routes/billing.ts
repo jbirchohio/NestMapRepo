@@ -11,8 +11,7 @@ import {
 import { getDatabase } from '../db/connection.js';
 import { organizations } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
-
-// Helper to get database instance
+import { or } from 'drizzle-orm/sql/expressions/conditions';// Helper to get database instance
 const getDB = () => {
   const db = getDatabase();
   if (!db) {

@@ -6,7 +6,8 @@
 import express from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { getDatabase } from '../db/connection';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';import { getDatabase } from '../db/connection';
 import { autonomousVehicles, vehicleBookings } from '../db/schema.js';
 import { authenticateJWT } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';

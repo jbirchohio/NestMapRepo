@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { db } from '../../../src/db';
 import { users, organizations, userSessions } from '../../../src/db/schema';
-import { eq, and, desc, sql, isNull, inArray, like, or } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';
+// TODO: Fix count and sql imports - may need different approachimport { logSuperadminAction } from '../audit-logs/audit-service';
 import { hashPassword } from '../../../utils/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../../../types/jwt';

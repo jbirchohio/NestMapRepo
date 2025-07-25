@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { eq, and, desc, isNull } from 'drizzle-orm';
-import { getDatabase } from '../db/connection.js';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';import { getDatabase } from '../db/connection.js';
 import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '../shared/src/schema';
 import { z } from 'zod';
 import { authenticate as validateJWT } from '../middleware/secureAuth';

@@ -1,8 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { db } from "../db";
 import { customDomains, organizations, whiteLabelSettings } from "../db/schema";
-import { eq, and } from 'drizzle-orm';
-import crypto from "crypto";
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';import crypto from "crypto";
 import { promises as dns } from 'dns';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

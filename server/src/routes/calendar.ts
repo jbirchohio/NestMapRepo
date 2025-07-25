@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { eq, and } from 'drizzle-orm';
-import { getDatabase } from '../db/connection.js';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';import { getDatabase } from '../db/connection.js';
 import { calendarIntegrations, trips, activities } from '../src/db/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
