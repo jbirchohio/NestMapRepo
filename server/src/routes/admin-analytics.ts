@@ -1,9 +1,10 @@
-import type { Application } from "express";
-import { db } from "../db";
-import { users, organizations, trips } from "../db/schema";
-import { eq, count, sql, gte, desc } from 'drizzle-orm';
-import { authenticate as validateJWT } from '../../middleware/secureAuth';
-import { injectOrganizationContext, validateOrganizationAccess } from '../../middleware/organizationContext';
+import type { Request, Response } from "express";
+import { getDatabase } from "../db/connection.js";
+import { users, organizations, trips } from "../db/schema.js";
+import { eq, desc } from 'drizzle-orm';
+// TODO: Fix these imports - count, sql not available in current drizzle-orm version
+// import { count, sql } from 'drizzle-orm';
+import { authenticateJWT } from '../middleware/auth.js';
 
 interface AdminAnalytics {
   overview: {
