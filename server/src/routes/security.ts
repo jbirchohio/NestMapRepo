@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db-connection';
 import { userSessions } from '../../shared/src/schema';
-import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
-import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import { and, or, gte } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';
+// TODO: Fix count and sql imports - may need different approachimport { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

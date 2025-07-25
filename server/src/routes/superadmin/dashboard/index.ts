@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { db } from '../../db';
 import { users, organizations } from '../../shared/src/schema';
 import { logSuperadminAction } from '../superadmin';
-import { eq, sql } from 'drizzle-orm';
-
-const router = Router();
+import { eq } from 'drizzle-orm';
+import { or } from 'drizzle-orm/sql/expressions/conditions';
+// TODO: Fix count and sql imports - may need different approachconst router = Router();
 
 // Get dashboard analytics
 router.get('/analytics', async (req, res) => {

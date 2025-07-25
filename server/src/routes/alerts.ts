@@ -2,8 +2,9 @@ import { Router } from 'express';
 import { authenticateJWT, requireRole } from '../middleware/auth.js';
 import { getDatabase } from '../db/connection.js';
 import { auditLogs } from '../db/schema.js';
-import { eq } from "drizzle-orm";
-import { and, gte } from "drizzle-orm/expressions";
+import { eq } from 'drizzle-orm';
+import { and, or, gte } from 'drizzle-orm/sql/expressions/conditions';
+// TODO: Fix count and sql imports - may need different approachimport { and, gte } from "drizzle-orm/expressions";
 import { count } from "drizzle-orm/sql";
 import { logger } from '../utils/logger.js';
 

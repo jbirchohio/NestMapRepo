@@ -1,6 +1,18 @@
-import { db } from '../../../db';
-import { superadminAuditLogs } from '../../../src/db/superadminSchema';
-import { sql, eq, and, desc } from 'drizzle-orm';
+import { getDatabase } from '../../../db/connection.js';
+import { superadminAuditLogs } from '../../../src/db/superadminSchema.js';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';
+// TODO: Fix count and sql imports - may need different approach
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
 
 export interface LogActionOptions {
   ipAddress?: string;
@@ -33,6 +45,7 @@ export const logSuperadminAction = async (
       String(adminUserId) : // Convert number to string - the schema expects UUID
       adminUserId;
       
+    const db = getDB();
     await db.insert(superadminAuditLogs).values({
       adminUserId: adminUserIdString,
       action,

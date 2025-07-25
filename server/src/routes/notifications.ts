@@ -1,9 +1,20 @@
 import { Router } from 'express';
-import { db } from '../db';
+import { getDatabase } from '../db/connection.js';
 import { notifications } from '../src/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
-import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+
+// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 const router = Router();
 
@@ -104,6 +115,7 @@ router.post('/test', async (req, res) => {
       return res.status(403).json({ message: 'Test endpoint not available in production' });
     }
 
+    const db = getDB();
     const testNotification = await db.insert(notifications).values({
       user_id: req.user.id,
       organization_id: req.user.organization_id,

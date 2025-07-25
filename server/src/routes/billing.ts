@@ -8,9 +8,18 @@ import {
   createSubscription, 
   updateSubscription 
 } from '../stripe';
-import { db } from '../db';
-import { organizations } from '../db/schema';
+import { getDatabase } from '../db/connection.js';
+import { organizations } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+import { or } from 'drizzle-orm/sql/expressions/conditions';// Helper to get database instance
+const getDB = () => {
+  const db = getDatabase();
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  return db;
+};
+
 
 const router = Router();
 
@@ -26,6 +35,7 @@ router.get("/", async (req: Request, res: Response): Promise<Response | void> =>
     }
 
     // Get organization details
+    const db = getDB();
     const org = await db.query.organizations.findFirst({
       where: eq(organizations.id, req.user.organizationId)
     });
@@ -103,6 +113,7 @@ router.post("/subscription", async (req: Request, res: Response) => {
     }
     
     // Get organization
+    const db = getDB();
     const org = await db.query.organizations.findFirst({
       where: eq(organizations.id, organizationId)
     });
@@ -119,6 +130,8 @@ router.post("/subscription", async (req: Request, res: Response) => {
       customerId = customer.id;
       
       // Update organization with customer ID
+      const db = getDB();
+
       await db.update(organizations)
         .set({ stripeCustomerId: customerId })
         .where(eq(organizations.id, organizationId));
@@ -141,6 +154,8 @@ router.post("/subscription", async (req: Request, res: Response) => {
       subscriptionResult = await createSubscription(customerId, priceId);
       
       // Update organization with subscription ID
+      const db = getDB();
+
       await db.update(organizations)
         .set({ stripeSubscriptionId: subscriptionResult.id })
         .where(eq(organizations.id, organizationId));

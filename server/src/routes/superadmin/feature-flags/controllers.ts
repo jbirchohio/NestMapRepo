@@ -5,8 +5,9 @@ import {
   organizationFeatureFlags,
   organizations
 } from '../../shared/src/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';import { logSuperadminAction } from '../audit-logs/audit-service';
 
 // Get all feature flags
 export const getFeatureFlags = async (req: Request, res: Response) => {

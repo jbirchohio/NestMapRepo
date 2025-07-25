@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { and, ne } from 'drizzle-orm/expressions';
+import { and, ne } from 'drizzle-orm/sql/expressions/conditions';
 import { getDatabase } from '../db/connection';
-import { organizations } from '../db/schema';
-import { logger } from '../utils/logger';
-import { authenticateJWT } from '../middleware/auth';
+import { organizations } from '../db/schema.js';
+import { logger } from '../utils/logger.js';
+import { authenticateJWT } from '../middleware/auth.js';
 import slugify from 'slugify';
 
 // Helper to get database instance

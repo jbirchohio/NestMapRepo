@@ -2,10 +2,10 @@
 import { Router, type Request as ExpressRequest, type Response, type NextFunction } from 'express';
 import type { CustomRequest, RequestHandler } from '../types/custom-express'; // Added .js extension for ES modules
 import { db } from '../db/db';
-import { organizations, customDomains } from '../db/schema';
-import { whiteLabelSettings } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
-import { authenticate } from '../middleware/secureAuth';
+import { organizations, customDomains } from '../db/schema.js';
+import { whiteLabelSettings } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';import { authenticate } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { z } from 'zod';

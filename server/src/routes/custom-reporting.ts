@@ -1,12 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { and, gte, lte } from 'drizzle-orm/expressions';
-import { sql } from 'drizzle-orm/sql';
+import { or } from 'drizzle-orm/sql/expressions/conditions';import { sql } from 'drizzle-orm/sql';
 import { getDatabase } from '../db/connection';
-import { trips, users, organizations, expenses, bookings } from '../db/schema';
-import { logger } from '../utils/logger';
-import { authenticateJWT } from '../middleware/auth';
+import { trips, users, organizations, expenses, bookings } from '../db/schema.js';
+import { logger } from '../utils/logger.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
 const router = Router();
 

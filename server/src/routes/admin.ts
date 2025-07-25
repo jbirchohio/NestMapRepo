@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getDatabase } from '../db/connection';
-import { users, organizations } from '../db/schema';
-import { logger } from '../utils/logger';
+import { users, organizations } from '../db/schema.js';
+import { logger } from '../utils/logger.js';
 import { authenticateJWT, requireRole } from '../middleware/auth';
 
 // Helper to get database instance

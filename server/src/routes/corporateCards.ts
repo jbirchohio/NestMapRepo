@@ -1,8 +1,9 @@
 import type { Express } from "express";
 import { db } from "../db";
 import { corporateCards, cardTransactions, users } from "../db/schema";
-import { eq, and, desc } from "drizzle-orm";
-import { authenticate as validateJWT } from '../../middleware/secureAuth';
+import { eq } from 'drizzle-orm';
+import { and, or } from 'drizzle-orm/sql/expressions/conditions';
+import { desc } from 'drizzle-orm/sql/expressions/select';import { authenticate as validateJWT } from '../../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../../middleware/organizationContext';
 
 export function registerCorporateCardRoutes(app: Express) {

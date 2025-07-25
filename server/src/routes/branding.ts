@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { authenticate } from '../middleware/secureAuth';
 import { validateRequest } from '../middleware/input-validation';
 import { whiteLabelService, WhiteLabelTheme } from '../services/whiteLabelService';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 

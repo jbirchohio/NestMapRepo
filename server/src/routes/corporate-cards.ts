@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.js';
 import { authenticateJWT, requireRole } from '../middleware/auth';
 
 const router = Router();

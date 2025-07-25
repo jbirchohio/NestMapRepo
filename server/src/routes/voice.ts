@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { logger } from '../utils/logger';
-import { authenticateJWT } from '../middleware/auth';
+import { logger } from '../utils/logger.js';
+import { authenticateJWT } from '../middleware/auth.js';
 import { db } from '../db/db';
 import { eq } from 'drizzle-orm';
-import { asc } from 'drizzle-orm/expressions';
-import { sql } from 'drizzle-orm/sql';
-import { voiceSessions, voiceCommands } from '../db/schema';
+import { or } from 'drizzle-orm/sql/expressions/conditions';
+// TODO: Fix count and sql imports - may need different approachimport { sql } from 'drizzle-orm/sql';
+import { voiceSessions, voiceCommands } from '../db/schema.js';
 
 const router = Router();
 

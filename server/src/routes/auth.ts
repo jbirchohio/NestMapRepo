@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { getDatabase } from '../db/connection';
-import { users } from '../db/schema';
-import { logger } from '../utils/logger';
+import { users } from '../db/schema.js';
+import { logger } from '../utils/logger.js';
 
 // Helper to get database instance
 const getDB = () => {
