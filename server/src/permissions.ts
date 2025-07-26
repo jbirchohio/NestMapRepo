@@ -144,7 +144,7 @@ export const DEPARTMENT_PERMISSIONS = {
 export async function getUserPermissionsByRole(userId: number, role: string, organizationId?: number): Promise<any> {
   const { db } = await import('./db.js');
   const { users, organizations } = await import('./db/schema.js');
-  const { eq } = await import('drizzle-orm');
+  const { eq } = await import('../utils/drizzle-shim.js');
 
   try {
     // Get user's actual role and organization status

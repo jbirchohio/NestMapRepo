@@ -1,5 +1,5 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm/sql';
+import { sql } from '../src/utils/drizzle-shim';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 

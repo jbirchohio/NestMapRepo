@@ -2,7 +2,7 @@
 
 import { db } from '../db/db';
 import { invoices } from '../db/invoiceSchema';
-import { eq } from 'drizzle-orm';
+import { eq } from '../src/utils/drizzle-shim';
 import type { Invoice, InvoiceItem } from '../types/invoice';
 import dotenv from 'dotenv';
 import { stripe } from '../stripe';

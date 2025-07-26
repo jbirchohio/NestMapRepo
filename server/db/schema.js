@@ -1,5 +1,5 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { sql } from '../src/utils/drizzle-shim';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { auditLogs as auditLogsTableDefinition } from "./auditLog"; // Assuming auditLog.ts is in the same directory

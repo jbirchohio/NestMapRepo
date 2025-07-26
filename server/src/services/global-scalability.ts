@@ -1,7 +1,7 @@
 import z from 'zod';
 import { db } from '../db-connection';
 import { organizations } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq } from '../utils/drizzle-shim';
 
 // Types for better type safety
 interface RegionConfig {
