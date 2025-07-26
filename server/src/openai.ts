@@ -1,8 +1,8 @@
-import { OpenAI as OpenAIApi } from "openai";
+import OpenAI from "openai";
 import { findLocation } from "./aiLocations";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+const openai = new openI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
 /**
  * Summarizes a daily itinerary
@@ -304,8 +304,8 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
 
     // Detect conflicts and opportunities
     const detectConflicts = (trips: any[]) => {
-      const conflicts: Array<{ trips: string[]; type: string; users: string[]; departments: string[] }> = [];
-      const opportunities: Array<{ trips: string[]; type: string; city: string; potentialSavings: number }> = [];
+      const conflicts = [];
+      const opportunities = [];
       
       for (let i = 0; i < trips.length; i++) {
         for (let j = i + 1; j < trips.length; j++) {
@@ -319,7 +319,43 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
           const end2 = new Date(trip2.endDate);
           
           if (start1 <= end2 && start2 <= end1) {
-    // Removed unused template string
+            conflicts.push({
+              trips: [trip1.id, trip2.id],
+              type: 'date_overlap',
+              users: [trip1.user_id, trip2.user_id],
+              departments: [trip1.department, trip2.department]
+            });
+          }
+          
+          // Geo-clustering opportunity
+          if (trip1.city === trip2.city && Math.abs(start1.getTime() - start2.getTime()) <= 7 * 24 * 60 * 60 * 1000) {
+            opportunities.push({
+              trips: [trip1.id, trip2.id],
+              type: 'geo_clustering',
+              city: trip1.city,
+              potentialSavings: calculateTripCost(trip1) * PRICING.groupDiscount
+            });
+          }
+        }
+      }
+      
+      return { conflicts, opportunities };
+    };
+
+    // AI analysis prompt
+    const prompt = `
+    Analyze these corporate trips for optimization opportunities:
+    
+    ${JSON.stringify(trips.map(t => ({
+      id: t.id,
+      destination: t.city,
+      dates: `${t.startDate} to ${t.endDate}`,
+      department: t.department,
+      budget: t.budget,
+      travelMode: t.travelMode || 'flight'
+    })), null, 2)}
+    
+    Provide optimization recommendations focusing on:
     1. Date adjustments to avoid conflicts and reduce costs
     2. Travel mode optimization (flight vs train vs drive)
     3. Group booking opportunities
@@ -358,36 +394,38 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     // Apply optimizations to trips
     const optimizedTrips = trips.map(trip => {
       const originalCost = calculateTripCost(trip);
-      const optimization = aiResult.optimizations?.find((opt: any) => opt.tripId === trip.id);
+      const optimization = aiResult.optimizations?.find((opt: any) => opt.trip_id === trip.id);
+      
       if (optimization) {
         const hasGroupBooking = opportunities.some(opp => opp.trips.includes(trip.id));
-        const [suggestedStartDate, suggestedEndDate] = optimization.suggestedDates.split(' to ');
         const optimizedCost = calculateTripCost({
           ...trip,
-          startDate: suggestedStartDate,
-          endDate: suggestedEndDate
+          startDate: optimization.suggestedDates.split(' to ')[0],
+          endDate: optimization.suggestedDates.split(' to ')[1]
         }, { hasGroupBooking });
+
         return {
           ...trip,
           originalStartDate: trip.startDate,
           originalEndDate: trip.endDate,
-          suggestedStartDate,
-          suggestedEndDate,
+          suggestedStartDate: optimization.suggestedDates.split(' to ')[0],
+          suggestedEndDate: optimization.suggestedDates.split(' to ')[1],
           originalCost,
           optimizedCost,
           savings: originalCost - optimizedCost,
           reasoning: optimization.reasoning,
-          conflictFlags: conflicts.filter((c: any) => c.trips.includes(trip.id)),
+          conflictFlags: conflicts.filter(c => c.trips.includes(trip.id)),
           hasOptimization: true
         };
       }
+
       return {
         ...trip,
         originalCost: calculateTripCost(trip),
         optimizedCost: calculateTripCost(trip),
         savings: 0,
         hasOptimization: false,
-        conflictFlags: conflicts.filter((c: any) => c.trips.includes(trip.id))
+        conflictFlags: conflicts.filter(c => c.trips.includes(trip.id))
       };
     });
 
@@ -546,7 +584,11 @@ export async function tripAssistant(question: string, tripContext: any): Promise
     const hasTimePatterns = (question.match(/\d{1,2}[\s]*[:-][\s]*\d{2}/g) || []).length > 2 ||  // 9:30, 10-30 formats
                            (question.match(/\d{1,2}[\s]*[AP]M/g) || []).length > 2;  // 9AM, 10 PM formats
     
-    // Removed unused hasDayPatterns variable
+    const hasDayPatterns = question.includes("Day") || 
+                          question.includes("Monday") || question.includes("Tuesday") || 
+                          question.includes("Wednesday") || question.includes("Thursday") || 
+                          question.includes("Friday") || question.includes("Saturday") || 
+                          question.includes("Sunday");
                           
     const hasMultipleLines = question.split('\n').length > 5;
     
@@ -564,8 +606,36 @@ export async function tripAssistant(question: string, tripContext: any): Promise
     }
     
     // Detect weather-related queries
-    // (Unused variables removed)
-    // Removed unused prompt variable
+    const isWeatherQuery = question.toLowerCase().includes("weather") ||
+                          question.toLowerCase().includes("rain") ||
+                          question.toLowerCase().includes("sunny") ||
+                          question.toLowerCase().includes("hot") ||
+                          question.toLowerCase().includes("cold") ||
+                          question.toLowerCase().includes("temperature") ||
+                          question.toLowerCase().includes("forecast");
+                          
+    // Detect budget-related queries
+    const isBudgetQuery = question.toLowerCase().includes("budget") ||
+                         question.toLowerCase().includes("cheap") ||
+                         question.toLowerCase().includes("expensive") ||
+                         question.toLowerCase().includes("cost") ||
+                         question.toLowerCase().includes("money") ||
+                         question.toLowerCase().includes("affordable") ||
+                         question.toLowerCase().includes("save") ||
+                         question.toLowerCase().includes("price");
+    
+    const prompt = `
+    You are a travel assistant helping with trip planning. You have access to the following trip information:
+    
+    ${JSON.stringify(tripContext, null, 2)}
+    
+    Question: ${question}
+    
+    Please provide a helpful, concise response to the user's question based on the trip information.
+    If the question is about weather, provide weather-appropriate activities.
+    If the question is about budget, suggest budget-friendly options.
+    Consider the location and dates of the trip when providing personalized recommendations.
+    `;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -591,7 +661,17 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
     const tripStartDate = tripContext.trip?.startDate ? new Date(tripContext.trip.startDate) : new Date();
     const tripEndDate = tripContext.trip?.endDate ? new Date(tripContext.trip.endDate) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
     
-    // Removed unused prompt variable
+    const prompt = `
+    You are an expert itinerary parser and ACTIVITY CREATOR for a travel planning app. The user wants you to CREATE ACTUAL ACTIVITIES from their pasted itinerary.
+    
+    Trip Information:
+    - City: ${city}
+    - Trip Start Date: ${tripStartDate.toISOString().split('T')[0]}
+    - Trip End Date: ${tripEndDate.toISOString().split('T')[0]}
+    
+    Itinerary Text:
+    ${itineraryText}
+    
     EXTREMELY IMPORTANT INSTRUCTIONS:
     1. You MUST create structured activities that will be ADDED TO THE DATABASE. This is NOT just a summary - these will become real activities in the app.
     2. EACH activity needs a specific date, time, title and real location name that can be found on a map.
@@ -708,7 +788,7 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
     });
 
     // Handle the function call response format
-    let activities: Array<{ [key: string]: any }> = [];
+    let activities = [];
     let answer = "I've processed your itinerary and extracted activities.";
     
     // Parse the function call arguments
@@ -745,13 +825,26 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
     if (result.activities && Array.isArray(result.activities)) {
       // For each activity location, try to get coordinates
       for (let i = 0; i < result.activities.length; i++) {
-        const activity = result.activities[i] as { locationName?: string };
+        const activity = result.activities[i];
+        
+        // Skip if no location
         if (!activity.locationName) continue;
+        
         try {
+          // Try to find the location
           const locationResult = await findLocation(activity.locationName, city);
+          // Location search completed for activity
+          
+          // If we have location results, use the first one
           if (locationResult.locations && locationResult.locations.length > 0) {
             const firstLocation = locationResult.locations[0];
+            
+            // Add location details to the activity
             result.activities[i].locationName = firstLocation.name;
+            
+            // We need to geocode this location to get coordinates
+            // This would use our existing geocoding function, but for now we'll skip it
+            // as it would require importing additional modules
           }
         } catch (locError) {
           console.error(`Error finding location for "${activity.locationName}":`, locError);
@@ -774,4 +867,3 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
 
 
 export { OpenAI };
-// (No default export, only named export for OpenAI)
