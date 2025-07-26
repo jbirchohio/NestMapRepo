@@ -87,3 +87,4 @@ export const jwtUtils = {
     return jwt.decode(token, options);
   }
 };
+

@@ -2,7 +2,7 @@ import express from 'express';
 import { PolicyEngine } from '../policyEngine';
 import { ComplianceService } from '../complianceService';
 import { EnhancedApprovalWorkflow } from '../enhancedApprovalWorkflow';
-import { authenticateJWT as requireAuth, requireRole } from '../src/middleware/auth';
+import { authenticateJWT as requireAuth, requireRole } from '../middleware/auth';
 import { auditLogger } from '../auditLogger';
 
 const router = express.Router();
@@ -241,3 +241,4 @@ router.post('/run-checks', requireAuth, requireRole(['admin', 'compliance_office
 });
 
 export default router;
+

@@ -1,106 +1,111 @@
-// Import directly to avoid TypeScript ESM compatibility issues
 import winston from 'winston';
-import { TransformableInfo } from 'logform';
-import { StreamOptions } from 'morgan';
+import path from 'path';
+import fs from 'fs';
 
-// Use explicit typing to avoid TypeScript errors with ESM modules
-type LoggerType = {
-  info: (message: string, meta?: any) => void;
-  error: (message: string, meta?: any) => void;
-  warn: (message: string, meta?: any) => void;
-  debug: (message: string, meta?: any) => void;
-  log: (message: string, meta?: any) => void;
+// Morgan uses a writable stream for logging HTTP requests. Define a simple
+// type for that stream rather than augmenting the existing Winston types,
+// which already declare a `stream` property with a different signature.
+export interface MorganStream {
+  write: (message: string) => void;
+}
+
+// Create logs directory if it doesn't exist
+const logDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+// Define log levels and colors
+const logLevels = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  http: 3,
+  debug: 4
+} as const;
+
+type LogLevel = keyof typeof logLevels;
+
+const colors: Record<LogLevel, string> = {
+  error: 'red',
+  warn: 'yellow',
+  info: 'green',
+  http: 'magenta',
+  debug: 'blue'
 };
 
-// Use type assertion to satisfy TypeScript
-const winstonLogger = winston as unknown as {
-  format: {
-    printf: (fn: any) => any;
-    timestamp: (opts?: any) => any;
-    colorize: (opts?: any) => any;
-    align: () => any;
-    combine: (...args: any[]) => any;
-  };
-  createLogger: (opts: any) => any;
-  transports: {
-    Console: any;
-    File: any;
-  };
-};
+// Add colors to winston
+winston.addColors(colors);
 
-// Create a type-safe printf function that handles the log format
-const createLogFormat = () => {
-  return winstonLogger.format.printf((info: TransformableInfo) => {
-    const { timestamp, level, message, ...metadata } = info;
-    const metaString = Object.keys(metadata).length ? `\n${JSON.stringify(metadata, null, 2)}` : '';
-    return `[${timestamp}] ${level}: ${message}${metaString}`;
-  });
-};
+// Define log format
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.splat(),
+  winston.format.json()
+);
 
-// Create the logger with proper typing that works in ESM
-const logger = winstonLogger.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winstonLogger.format.combine(
-    winstonLogger.format.colorize({ all: true }),
-    winstonLogger.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winstonLogger.format.align(),
-    createLogFormat()
-  ),
+// Create a console transport for development
+const consoleFormat = winston.format.combine(
+  winston.format.colorize({ all: true }),
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.printf(
+    (info) => `${info.timestamp} ${info.level}: ${info.message}`
+  )
+);
+
+const consoleTransport = new winston.transports.Console({
+  format: consoleFormat
+});
+
+// Create the logger instance with proper type assertion
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: logFormat,
+  defaultMeta: { service: 'nestmap-api' },
   transports: [
-    new winstonLogger.transports.Console(),
-    new winstonLogger.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winstonLogger.transports.File({ filename: 'logs/combined.log' }),
+    // Write all logs with level `error` and below to `error.log`
+    new winston.transports.File({
+      filename: path.join(logDir, 'error.log'),
+      level: 'error',
+      maxsize: 5 * 1024 * 1024, // 5MB
+      maxFiles: 5,
+    }),
+    // Write all logs to `combined.log`
+    new winston.transports.File({
+      filename: path.join(logDir, 'combined.log'),
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 5,
+    }),
   ],
-  exceptionHandlers: [
-    new winstonLogger.transports.File({ filename: 'logs/exceptions.log' }),
-  ],
-  rejectionHandlers: [
-    new winstonLogger.transports.File({ filename: 'logs/rejections.log' }),
-  ],
-}) as LoggerType;
+  exitOnError: false, // Don't exit on handled exceptions
+});
+
+// Add console transport in non-production environments
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(consoleTransport);
+}
 
 // Create a stream for morgan
-const stream: StreamOptions = {
+const morganStream: MorganStream = {
   write: (message: string) => {
-    logger.info(message.trim(), {});
+    const logMessage = message.trim();
+    if (!logMessage) return;
+    
+    // Log based on HTTP status code
+    if (logMessage.includes(' 500 ') || logMessage.match(/ 5\d\d /)) {
+      logger.error(logMessage);
+    } else if (logMessage.match(/ 4\d\d /)) {
+      logger.warn(logMessage);
+    } else if (logMessage.match(/ 3\d\d /)) {
+      logger.info(logMessage);
+    } else {
+      logger.info(logMessage);
+    }
   },
 };
 
-// Export Logger class
-export class Logger {
-  constructor(private context: string) {}
-  
-  private formatMessage(message: string, meta?: Record<string, unknown>): string {
-    return meta 
-      ? `[${this.context}] ${message} ${JSON.stringify(meta)}`
-      : `[${this.context}] ${message}`;
-  }
-  
-  info(message: string, meta?: Record<string, unknown>): void {
-    logger.info(this.formatMessage(message, meta));
-  }
-  
-  error(message: string, error?: unknown): void {
-    if (error) {
-      logger.error(this.formatMessage(message, { error }));
-    } else {
-      logger.error(this.formatMessage(message));
-    }
-  }
-  
-  warn(message: string, meta?: Record<string, unknown>): void {
-    logger.warn(this.formatMessage(message, meta));
-  }
-  
-  log(level: 'info' | 'warn' | 'error' | 'debug', message: string, meta?: Record<string, unknown>): void {
-    const logMessage = this.formatMessage(message, meta);
-    logger.log(level, logMessage);
-  }
-  
-  debug(message: string, meta?: Record<string, unknown>): void {
-    logger.debug(this.formatMessage(message, meta));
-  }
-}
+export { logger, morganStream as stream };
 
-export { logger, stream };
 export default logger;
+

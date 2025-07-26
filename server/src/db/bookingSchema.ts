@@ -46,3 +46,4 @@ export const bookings = pgTable('bookings', {
 // Types
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = typeof bookings.$inferInsert;
+

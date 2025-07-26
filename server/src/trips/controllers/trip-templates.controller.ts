@@ -223,3 +223,4 @@ router.post('/:templateId/create-trip', async (req: Request, res: Response) => {
 });
 
 export default router;
+

@@ -18,3 +18,4 @@ import { ErrorService } from '../common/services/error.service';
   exports: ['EmailService'],
 })
 export class EmailModule {}
+

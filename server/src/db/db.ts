@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { getDatabaseUrl } from '../../config';
+import { getDatabaseUrl } from '../config';
 import * as schema from './schema';
 import * as invoiceSchema from './invoiceSchema';
 import * as proposalSchema from './proposalSchema';
@@ -22,3 +22,4 @@ export type Invoice = typeof invoiceSchema.invoices.$inferSelect;
 export type NewInvoice = typeof invoiceSchema.invoices.$inferInsert;
 export type Proposal = typeof proposalSchema.proposals.$inferSelect;
 export type NewProposal = typeof proposalSchema.proposals.$inferInsert;
+

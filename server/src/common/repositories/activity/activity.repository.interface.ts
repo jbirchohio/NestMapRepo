@@ -21,3 +21,4 @@ export interface ActivityRepository extends BaseRepository<ActivityType, string,
   findByDateRange(tripId: string, startDate: Date, endDate: Date): Promise<ActivityType[]>;
   reschedule(activityId: string, startTime: Date, endTime: Date): Promise<ActivityType | null>;
 }
+

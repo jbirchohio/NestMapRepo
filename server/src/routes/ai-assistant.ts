@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { z } from 'zod';
+import z from 'zod';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 
@@ -205,7 +205,7 @@ router.post('/query', async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Invalid request data', details: error.errors }
+        error: { message: 'Invalid request data', details: (error as z.ZodError).errors }
       });
     }
     
@@ -308,3 +308,4 @@ router.get('/capabilities', async (_req: Request, res: Response) => {
 });
 
 export default router;
+

@@ -1,22 +1,13 @@
 import { Router } from 'express';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';import { getDatabase } from '../db/connection.js';
-import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '../shared/src/schema';
+import { db } from "../db-connection";
+
+import { eq } from '../utils/drizzle-shim';
+import { and } from '../utils/drizzle-shim';
+import { desc } from '../utils/drizzle-shim';
+import { tripComments, userActivityLogs, trips, users, insertTripCommentSchema } from '../db/schema';
 import { z } from 'zod';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-
-// Helper to get database instance
-const getDB = () => {
-  const db = getDatabase();
-  if (!db) {
-    throw new Error('Database connection not available');
-  }
-  return db;
-};
-
-
 const router = Router();
 
 // Get comments for a trip (organization-scoped)
@@ -148,11 +139,12 @@ router.post('/trips/:tripId/comments', async (req, res) => {
       .where(eq(tripComments.id, newComment.id));
     
     res.status(201).json(commentWithUser);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
+      const zodError = error as any; // Type assertion to bypass strict typing
       return res.status(400).json({ 
         error: "Invalid input", 
-        details: error.errors 
+        details: zodError.errors 
       });
     }
     
@@ -229,26 +221,26 @@ router.get('/trips/:tripId/activity', async (req, res) => {
     // Get activity log with user information
     const activities = await db
       .select({
-        id: activityLog.id,
-        action: activityLog.action,
-        entityType: activityLog.entityType,
-        entityId: activityLog.entityId,
-        changes: activityLog.changes,
-        metadata: activityLog.metadata,
-        timestamp: activityLog.timestamp,
+        id: userActivityLogs.id,
+        action: userActivityLogs.action,
+        entityType: userActivityLogs.entityType,
+        entityId: userActivityLogs.entityId,
+        changes: userActivityLogs.changes,
+        metadata: userActivityLogs.metadata,
+        timestamp: userActivityLogs.createdAt,
         user: {
           id: users.id,
           displayName: users.display_name,
           email: users.email
         }
       })
-      .from(activityLog)
-      .leftJoin(users, eq(activityLog.userId, users.id))
+      .from(userActivityLogs)
+      .leftJoin(users, eq(userActivityLogs.userId, users.id))
       .where(and(
-        eq(activityLog.tripId, tripId),
-        eq(activityLog.organizationId, organizationId)
+        eq(userActivityLogs.entityId, tripId),
+        eq(userActivityLogs.organizationId, organizationId)
       ))
-      .orderBy(desc(activityLog.timestamp))
+      .orderBy(desc(userActivityLogs.createdAt))
       .limit(limit);
     
     res.json(activities);
@@ -273,14 +265,13 @@ export async function logTripActivity(
 ) {
   try {
     await db
-      .insert(activityLog)
+      .insert(userActivityLogs)
       .values({
-        tripId,
         userId,
         organizationId,
         action: activityData.action,
         entityType: activityData.entityType,
-        entityId: activityData.entityId || null,
+        entityId: activityData.entityId || tripId,
         changes: activityData.changes || null,
         metadata: activityData.metadata || null
       });
@@ -290,3 +281,6 @@ export async function logTripActivity(
 }
 
 export default router;
+
+
+

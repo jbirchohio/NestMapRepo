@@ -4,10 +4,10 @@ import { db } from '../db/db';
 import { stripe } from '../stripe';
 import { invoices } from '../db/invoiceSchema';
 import { billingEvents } from '../db/superadminSchema';
-import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';import nodemailer from 'nodemailer';
+import { eq } from '../utils/drizzle-shim';;
+import { or } from '../utils/drizzle-shim';import nodemailer from 'nodemailer';
 import { authenticate as authenticateJWT } from '../middleware/secureAuth';
-import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user';
+import type { AuthenticatedRequest as AuthRequest } from '../types/auth-user';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { logger } from '../utils/logger.js';
 import type { Invoice } from '../db/db';
@@ -421,3 +421,6 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 }
 
 export default router;
+
+
+

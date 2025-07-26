@@ -1493,3 +1493,4 @@ export declare const selectProposalSchema: import("drizzle-zod").BuildSchema<"se
 export type Proposal = typeof proposals.$inferSelect;
 export type NewProposal = typeof proposals.$inferInsert;
 //# sourceMappingURL=proposalSchema.d.ts.map
+

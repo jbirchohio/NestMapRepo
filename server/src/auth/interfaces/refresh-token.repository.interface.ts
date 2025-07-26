@@ -18,3 +18,4 @@ export interface RefreshTokenRepository {
   revokeTokensForUser(userId: string): Promise<void>;
   deleteExpiredTokens(): Promise<void>;
 }
+

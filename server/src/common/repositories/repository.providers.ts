@@ -50,3 +50,4 @@ export const RepositoryProviders = [
   BookingRepositoryProvider,
   RefreshTokenRepositoryProvider,
 ];
+

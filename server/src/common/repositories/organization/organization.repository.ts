@@ -2,7 +2,7 @@ import { Injectable } from 'injection-js';
 import { getDatabase } from '../../../db/connection';
 import * as schema from '../../../db/schema';
 import { OrganizationRepository } from './organization.repository.interface';
-import { eq } from 'drizzle-orm';
+import { eq } from '../../../utils/drizzle-shim';
 import { BaseRepositoryImpl } from '../base.repository';
 
 @Injectable()
@@ -149,3 +149,6 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organi
   //   return updatedOrg || null;
   // }
 }
+
+
+

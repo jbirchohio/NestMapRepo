@@ -4,11 +4,11 @@
  */
 
 import express from 'express';
-import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';import { getDatabase } from '../db/connection';
-import { autonomousVehicles, vehicleBookings } from '../db/schema.js';
+import z from 'zod';
+import { eq } from '../utils/drizzle-shim';;
+import { and } from '../utils/drizzle-shim';
+import { desc } from '../utils/drizzle-shim';import { getDatabase } from '../db/connection';
+import { autonomousVehicles, vehicleBookings } from '../db/schema';
 import { authenticateJWT } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
 import AutonomousVehicleIntegrationService from '../services/autonomousVehicleIntegration';
@@ -137,7 +137,7 @@ router.get('/search', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Invalid search parameters',
-        errors: error.errors
+        errors: (error as z.ZodError).errors
       });
     }
 
@@ -599,3 +599,6 @@ function getProviderFeatures(provider: string): string[] {
 }
 
 export default router;
+
+
+

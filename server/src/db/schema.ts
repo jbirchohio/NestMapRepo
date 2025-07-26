@@ -1,5 +1,5 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm/sql';
+import { sql } from '../utils/drizzle-shim';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -99,15 +99,7 @@ export const organizations = pgTable('organizations', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   plan: organizationPlanEnum('plan').notNull().default('free'),
-  settings: jsonb('settings').$type<{
-    timezone?: string;
-    locale?: string;
-    whiteLabel?: {
-      enabled: boolean;
-      logoUrl?: string;
-      primaryColor?: string;
-    };
-  }>(),
+  settings: jsonb('settings'),
   // Stripe fields
   stripeCustomerId: text('stripe_customer_id').unique(),
   stripeSubscriptionId: text('stripe_subscription_id').unique(),
@@ -118,22 +110,13 @@ export const organizations = pgTable('organizations', {
   stripeConnectAccountId: text('stripe_connect_account_id').unique(),
   stripeExternalAccountId: text('stripe_external_account_id'),
   stripePayoutId: text('stripe_payout_id'),
-  stripePayoutStatus: text('stripe_payout_status').$type<'pending' | 'paid' | 'failed' | null>(),
+  stripePayoutStatus: text('stripe_payout_status'),
   stripePayoutFailureReason: text('stripe_payout_failure_reason'),
   // Billing details
   billingEmail: text('billing_email'),
-  billingAddress: jsonb('billing_address').$type<{
-    line1?: string;
-    line2?: string;
-    city?: string;
-    state?: string;
-    postal_code?: string;
-    country?: string;
-  }>(),
+  billingAddress: jsonb('billing_address'),
   // Subscription status
-  subscriptionStatus: text('subscription_status').$type<
-    'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'incomplete_expired' | null
-  >(),
+  subscriptionStatus: text('subscription_status'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -241,7 +224,7 @@ export const trips = pgTable('trips', {
   endDate: timestamp('end_date').notNull(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }), // Nullable, set null if org deleted
-  collaborators: jsonb('collaborators').$type<Array<{ userId: string; role: string }>>().default(sql`'[]'::jsonb`), // e.g., [{ userId: 'uuid', role: 'editor' }]
+  collaborators: jsonb('collaborators').default(sql`'[]'::jsonb`), // e.g., [{ userId: 'uuid', role: 'editor' }]
   isPublic: boolean('is_public').default(false),
   shareCode: text('share_code').unique(),
   sharingEnabled: boolean('sharing_enabled').default(false),
@@ -334,7 +317,7 @@ export const organizationRoles = pgTable('organization_roles', {
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
   name: text('name').notNull(), // e.g., 'Trip Planner', 'Finance Approver'
   description: text('description'),
-  permissions: jsonb('permissions').$type<string[]>().notNull().default(sql`'[]'::jsonb`), // List of permission keys
+  permissions: jsonb('permissions').notNull().default(sql`'[]'::jsonb`), // List of permission keys
   isDefault: boolean('is_default').default(false), // Is this a default role for new members?
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -347,7 +330,7 @@ export const organizationMembers = pgTable('organization_members', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   role: organizationMemberRoleEnum('role').notNull().default('member'), // Role within the organization
   // customRoleId: uuid('custom_role_id').references(() => organizationRoles.id, { onDelete: 'set null' }), // Optional: for more granular custom roles
-  permissionsOverride: jsonb('permissions_override').$type<string[]>().default(sql`'[]'::jsonb`), // Specific permissions that override the role
+  permissionsOverride: jsonb('permissions_override').default(sql`'[]'::jsonb`), // Specific permissions that override the role
   invitedBy: uuid('invited_by').references(() => users.id, { onDelete: 'set null' }),
   invitedAt: timestamp('invited_at'),
   joinedAt: timestamp('joined_at'),
@@ -391,7 +374,7 @@ export const cardTransactions = pgTable('card_transactions', {
   status: cardTransactionStatusEnum('status').notNull().default('pending'),
   description: text('description'),
   notes: text('notes'),
-  metadata: jsonb('metadata').$type<Record<string, any>>(),
+  metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -418,7 +401,7 @@ export const expenses = pgTable("expenses", {
   approvedBy: uuid("approved_by").references(() => users.id, { onDelete: 'set null' }),
   approvedAt: timestamp("approved_at"),
   reimbursedAt: timestamp("reimbursed_at"),
-  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -439,7 +422,7 @@ export const budgets = pgTable("budgets", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
   ownerId: uuid("owner_id").references(() => users.id, { onDelete: 'set null' }), // User responsible for the budget
-  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -456,7 +439,7 @@ export const customDomains = pgTable("custom_domains", {
   verificationRecordValue: text("verification_record_value"), // e.g., TXT record value
   sslEnabled: boolean("ssl_enabled").default(false),
   sslCertificateArn: text("ssl_certificate_arn"), // If using AWS ACM or similar
-  dnsRecords: jsonb("dns_records").$type<Array<{ type: string; name: string; value: string; ttl?: number }>>(), // Required DNS records for setup
+  dnsRecords: jsonb("dns_records"), // Required DNS records for setup
   verifiedAt: timestamp("verified_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -470,24 +453,24 @@ export const spendPolicies = pgTable("spend_policies", {
   description: text("description"),
   isActive: boolean("is_active").default(true),
   appliesTo: text("applies_to").default("all"),
-  targetDepartments: jsonb("target_departments").$type<Record<string, any>>(),
-  targetUsers: jsonb("target_users").$type<Record<string, any>>(),
-  targetRoles: jsonb("target_roles").$type<Record<string, any>>(),
+  targetDepartments: jsonb("target_departments"),
+  targetUsers: jsonb("target_users"),
+  targetRoles: jsonb("target_roles"),
   dailyLimit: integer("daily_limit"),
   weeklyLimit: integer("weekly_limit"),
   monthlyLimit: integer("monthly_limit"),
   annualLimit: integer("annual_limit"),
-  categoryLimits: jsonb("category_limits").$type<Record<string, any>>(),
-  merchantRestrictions: jsonb("merchant_restrictions").$type<Record<string, any>>(),
+  categoryLimits: jsonb("category_limits"),
+  merchantRestrictions: jsonb("merchant_restrictions"),
   requiresApprovalOver: integer("requires_approval_over"),
   autoApproveUnder: integer("auto_approve_under"),
-  approvalChain: jsonb("approval_chain").$type<Record<string, any>>(),
+  approvalChain: jsonb("approval_chain"),
   receiptRequiredOver: integer("receipt_required_over"),
   businessPurposeRequired: boolean("business_purpose_required").default(false),
-  allowedDays: jsonb("allowed_days").$type<Record<string, any>>(),
-  allowedHours: jsonb("allowed_hours").$type<Record<string, any>>(),
-  allowedCountries: jsonb("allowed_countries").$type<Record<string, any>>(),
-  blockedCountries: jsonb("blocked_countries").$type<Record<string, any>>(),
+  allowedDays: jsonb("allowed_days"),
+  allowedHours: jsonb("allowed_hours"),
+  allowedCountries: jsonb("allowed_countries"),
+  blockedCountries: jsonb("blocked_countries"),
   createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -515,7 +498,7 @@ export const reimbursements = pgTable("reimbursements", {
   batchId: text("batch_id"),
   totalAmount: integer("total_amount").notNull(),
   currency: text("currency").default("USD"),
-  expenseIds: jsonb("expense_ids").$type<string[]>(),
+  expenseIds: jsonb("expense_ids"),
   paymentMethod: text("payment_method"),
   paymentStatus: text("payment_status").default("pending"),
   paymentReference: text("payment_reference"),
@@ -556,7 +539,7 @@ export const whiteLabelRequests = pgTable("white_label_requests", {
   organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
   requestedBy: uuid("requested_by").references(() => users.id).notNull(),
   requestType: text("request_type").notNull(),
-  requestData: jsonb("request_data").$type<Record<string, any>>(),
+  requestData: jsonb("request_data"),
   status: text("status").default("pending"),
   reviewedBy: uuid("reviewed_by").references(() => users.id),
   reviewedAt: timestamp("reviewed_at"),
@@ -577,12 +560,12 @@ export const bookings = pgTable("bookings", {
   provider: text("provider").notNull(), // e.g., 'duffel', 'amadeus', 'expedia'
   providerBookingId: text("provider_booking_id"),
   status: bookingStatusEnum("status").default('pending'),
-  bookingData: jsonb("booking_data").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  bookingData: jsonb("booking_data").default(sql`'{}'::jsonb`),
   totalAmount: integer("total_amount"), // in cents
   currency: text("currency").default('USD'),
-  passengerDetails: jsonb("passenger_details").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  passengerDetails: jsonb("passenger_details").default(sql`'{}'::jsonb`),
   bookingReference: text("booking_reference"),
-  cancellationPolicy: jsonb("cancellation_policy").$type<Record<string, any>>(),
+  cancellationPolicy: jsonb("cancellation_policy"),
   departureDate: timestamp("departure_date"),
   returnDate: timestamp("return_date"),
   checkInDate: timestamp("check_in_date"),
@@ -610,13 +593,7 @@ export const calendarIntegrations = pgTable("calendar_integrations", {
   calendarId: text("calendar_id"),
   syncEnabled: boolean("sync_enabled").default(true),
   lastSyncAt: timestamp("last_sync_at"),
-  settings: jsonb("settings").$type<{
-    defaultReminders?: boolean;
-    reminderMinutes?: number[];
-    syncHistorical?: boolean;
-    syncFuture?: boolean;
-    syncDays?: number;
-  }>().default(sql`'{}'::jsonb`),
+  settings: jsonb("settings").default(sql`'{}'::jsonb`),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -665,8 +642,8 @@ export const featureFlags = pgTable("feature_flags", {
   enabled: boolean("enabled").default(false),
   organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }),
   scope: text("scope").default('global'), // global, organization, user
-  conditions: jsonb("conditions").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
-  metadata: jsonb("metadata").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  conditions: jsonb("conditions").default(sql`'{}'::jsonb`),
+  metadata: jsonb("metadata").default(sql`'{}'::jsonb`),
   expiresAt: timestamp("expires_at"),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
@@ -682,7 +659,7 @@ export const userActivityLogs = pgTable("user_activity_logs", {
   userId: uuid("user_id").references(() => users.id).notNull(),
   organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
   action: text("action").notNull(),
-  details: jsonb("details").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  details: jsonb("details").default(sql`'{}'::jsonb`),
   ip: text("ip"),
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -704,7 +681,7 @@ export const notifications = pgTable("notifications", {
   action_url: text("action_url"),
   entity_type: text("entity_type"), // 'trip', 'expense', 'comment', etc.
   entity_id: uuid("entity_id"),
-  metadata: jsonb("metadata").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  metadata: jsonb("metadata").default(sql`'{}'::jsonb`),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -722,7 +699,7 @@ export const tripComments = pgTable("trip_comments", {
   parentId: uuid("parent_id").references((): AnyPgColumn => tripComments.id, { onDelete: 'cascade' }), // For threaded comments
   content: text("content").notNull(),
   mentionedUserIds: uuid("mentioned_user_ids").array(), // Store as array of UUIDs
-  reactions: jsonb("reactions").$type<Record<string, number>>(), // e.g., { '👍': 10, '❤️': 5 }
+  reactions: jsonb("reactions"), // e.g., { '👍': 10, '❤️': 5 }
   isEdited: boolean("is_edited").default(false),
   isDeleted: boolean("is_deleted").default(false), // Soft delete
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -739,16 +716,10 @@ export const approvalRules = pgTable("approval_rules", {
   name: text("name").notNull(),
   description: text("description"),
   entityType: text("entity_type").notNull(), // 'trip', 'expense', 'budget', 'booking', etc.
-  conditions: jsonb("conditions").$type<{
-    budgetThreshold?: number;
-    tripDuration?: number;
-    destinationCountries?: string[];
-    expenseCategories?: string[];
-    [key: string]: any;
-  }>().default(sql`'{}'::jsonb`),
+  conditions: jsonb("conditions").default(sql`'{}'::jsonb`),
   priority: integer("priority").default(10),
   autoApprove: boolean("auto_approve").default(false),
-  approverRoles: jsonb("approver_roles").$type<string[]>().default(sql`'["manager"]'::jsonb`),
+  approverRoles: jsonb("approver_roles").default(sql`'["manager"]'::jsonb`),
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -766,7 +737,7 @@ export const approvalRequests = pgTable("approval_requests", {
   requesterId: uuid("requester_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
   approverId: uuid("approver_id").references(() => users.id, { onDelete: 'set null' }),
   ruleId: uuid("rule_id").references(() => approvalRules.id, { onDelete: 'set null' }),
-  proposedData: jsonb("proposed_data").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  proposedData: jsonb("proposed_data").default(sql`'{}'::jsonb`),
   reason: text("reason"),
   businessJustification: text("business_justification"),
   status: approvalStatusEnum("status").default('pending'),
@@ -793,7 +764,7 @@ export const auditLogsTableDefinition = pgTable('audit_logs', {
   entityId: uuid('entity_id'),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
-  metadata: jsonb('metadata').$type<Record<string, any>>(),
+  metadata: jsonb('metadata'),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -990,11 +961,7 @@ export const voiceSessions = pgTable('voice_sessions', {
   totalCommands: integer('total_commands').default(0),
   successfulCommands: integer('successful_commands').default(0),
   language: text('language').default('en'),
-  metadata: jsonb('metadata').$type<{
-    deviceInfo?: string;
-    browserInfo?: string;
-    location?: { lat: number; lng: number };
-  }>().default(sql`'{}'::jsonb`),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
@@ -1016,11 +983,7 @@ export const voiceCommands = pgTable('voice_commands', {
   response: text('response'), // AI response
   success: boolean('success').default(false),
   executionTime: integer('execution_time'), // Time in milliseconds
-  metadata: jsonb('metadata').$type<{
-    entities?: Record<string, any>;
-    context?: Record<string, any>;
-    audioData?: string;
-  }>().default(sql`'{}'::jsonb`),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   sessionIdIdx: index('voice_commands_session_id_idx').on(table.sessionId),
@@ -1039,12 +1002,7 @@ export const aiConversations = pgTable('ai_conversations', {
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
   title: text('title'),
   status: aiConversationStatusEnum('status').default('active'),
-  context: jsonb('context').$type<{
-    currentTrip?: string;
-    currentBooking?: string;
-    userPreferences?: Record<string, any>;
-    sessionData?: Record<string, any>;
-  }>().default(sql`'{}'::jsonb`),
+  context: jsonb('context').default(sql`'{}'::jsonb`),
   totalMessages: integer('total_messages').default(0),
   lastMessageAt: timestamp('last_message_at'),
   archivedAt: timestamp('archived_at'),
@@ -1064,11 +1022,7 @@ export const aiMessages = pgTable('ai_messages', {
   tokenCount: integer('token_count'),
   model: text('model').default('gpt-4'),
   responseTime: integer('response_time'), // Time in milliseconds
-  metadata: jsonb('metadata').$type<{
-    functionCalls?: Record<string, any>[];
-    toolUse?: Record<string, any>[];
-    attachments?: string[];
-  }>().default(sql`'{}'::jsonb`),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   conversationIdIdx: index('ai_messages_conversation_id_idx').on(table.conversationId),
@@ -1076,81 +1030,8 @@ export const aiMessages = pgTable('ai_messages', {
   createdAtIdx: index('ai_messages_created_at_idx').on(table.createdAt),
 }));
 
-// Smart City Integration Tables
-export const smartCityDataTypeEnum = pgEnum('smart_city_data_type', ['weather', 'traffic', 'air_quality', 'public_transport', 'events', 'emergency']);
-export const iotDeviceTypeEnum = pgEnum('iot_device_type', ['sensor', 'camera', 'beacon', 'display', 'kiosk']);
-
-export const smartCities = pgTable('smart_cities', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  country: text('country').notNull(),
-  latitude: text('latitude').notNull(),
-  longitude: text('longitude').notNull(),
-  timezone: text('timezone').notNull(),
-  isActive: boolean('is_active').default(true),
-  apiEndpoints: jsonb('api_endpoints').$type<{
-    weather?: string;
-    traffic?: string;
-    transport?: string;
-    events?: string;
-  }>().default(sql`'{}'::jsonb`),
-  configuration: jsonb('configuration').$type<{
-    refreshInterval?: number;
-    dataRetention?: number;
-    alertThresholds?: Record<string, any>;
-  }>().default(sql`'{}'::jsonb`),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  nameIdx: index('smart_cities_name_idx').on(table.name),
-  countryIdx: index('smart_cities_country_idx').on(table.country),
-  activeIdx: index('smart_cities_active_idx').on(table.isActive),
-}));
-
-export const smartCityData = pgTable('smart_city_data', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  cityId: uuid('city_id').references(() => smartCities.id, { onDelete: 'cascade' }).notNull(),
-  dataType: smartCityDataTypeEnum('data_type').notNull(),
-  data: jsonb('data').$type<Record<string, any>>().notNull(),
-  location: jsonb('location').$type<{
-    lat: number;
-    lng: number;
-    address?: string;
-  }>(),
-  quality: integer('quality'), // Data quality score (0-100)
-  source: text('source'), // Data source identifier
-  expiresAt: timestamp('expires_at'),
-  collectedAt: timestamp('collected_at').notNull().defaultNow(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-}, (table) => ({
-  cityDataTypeIdx: index('smart_city_data_city_type_idx').on(table.cityId, table.dataType),
-  collectedAtIdx: index('smart_city_data_collected_at_idx').on(table.collectedAt),
-  expiresAtIdx: index('smart_city_data_expires_at_idx').on(table.expiresAt),
-}));
-
-export const iotDevices = pgTable('iot_devices', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  cityId: uuid('city_id').references(() => smartCities.id, { onDelete: 'cascade' }).notNull(),
-  deviceId: text('device_id').notNull().unique(),
-  deviceType: iotDeviceTypeEnum('device_type').notNull(),
-  name: text('name').notNull(),
-  location: jsonb('location').$type<{
-    lat: number;
-    lng: number;
-    address?: string;
-  }>().notNull(),
-  isOnline: boolean('is_online').default(true),
-  lastSeen: timestamp('last_seen'),
-  capabilities: jsonb('capabilities').$type<string[]>().default(sql`'[]'::jsonb`),
-  metadata: jsonb('metadata').$type<Record<string, any>>().default(sql`'{}'::jsonb`),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  cityIdIdx: index('iot_devices_city_id_idx').on(table.cityId),
-  deviceIdIdx: index('iot_devices_device_id_idx').on(table.deviceId),
-  typeIdx: index('iot_devices_type_idx').on(table.deviceType),
-  onlineIdx: index('iot_devices_online_idx').on(table.isOnline),
-}));
+// Smart City Integration Tables - REMOVED
+// These features have been removed to focus on core travel SaaS functionality
 
 // Autonomous Vehicle Integration Tables
 export const vehicleTypeEnum = pgEnum('vehicle_type', ['sedan', 'suv', 'van', 'truck', 'bus', 'motorcycle']);
@@ -1165,24 +1046,11 @@ export const autonomousVehicles = pgTable('autonomous_vehicles', {
   vehicleType: vehicleTypeEnum('vehicle_type').notNull(),
   autonomyLevel: autonomyLevelEnum('autonomy_level').notNull(),
   status: vehicleStatusEnum('status').default('available'),
-  currentLocation: jsonb('current_location').$type<{
-    lat: number;
-    lng: number;
-    address?: string;
-    heading?: number;
-  }>(),
+  currentLocation: jsonb('current_location'),
   capacity: integer('capacity').notNull(),
   batteryLevel: integer('battery_level'), // For electric vehicles (0-100)
-  features: jsonb('features').$type<{
-    accessibility?: boolean;
-    wifi?: boolean;
-    entertainment?: boolean;
-    climate?: boolean;
-  }>().default(sql`'{}'::jsonb`),
-  operatingZones: jsonb('operating_zones').$type<Array<{
-    name: string;
-    bounds: { north: number; south: number; east: number; west: number };
-  }>>().default(sql`'[]'::jsonb`),
+  features: jsonb('features').default(sql`'{}'::jsonb`),
+  operatingZones: jsonb('operating_zones').default(sql`'[]'::jsonb`),
   lastMaintenance: timestamp('last_maintenance'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -1202,16 +1070,8 @@ export const vehicleBookings = pgTable('vehicle_bookings', {
   tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'set null' }),
   vehicleId: uuid('vehicle_id').references(() => autonomousVehicles.id, { onDelete: 'cascade' }).notNull(),
   status: vehicleBookingStatusEnum('status').default('pending'),
-  pickupLocation: jsonb('pickup_location').$type<{
-    lat: number;
-    lng: number;
-    address: string;
-  }>().notNull(),
-  dropoffLocation: jsonb('dropoff_location').$type<{
-    lat: number;
-    lng: number;
-    address: string;
-  }>().notNull(),
+  pickupLocation: jsonb('pickup_location').notNull(),
+  dropoffLocation: jsonb('dropoff_location').notNull(),
   scheduledPickup: timestamp('scheduled_pickup').notNull(),
   actualPickup: timestamp('actual_pickup'),
   actualDropoff: timestamp('actual_dropoff'),
@@ -1220,17 +1080,8 @@ export const vehicleBookings = pgTable('vehicle_bookings', {
   estimatedCost: integer('estimated_cost'), // in cents
   actualCost: integer('actual_cost'), // in cents
   passengerCount: integer('passenger_count').default(1),
-  specialRequirements: jsonb('special_requirements').$type<{
-    accessibility?: boolean;
-    childSeat?: boolean;
-    pet?: boolean;
-    luggage?: number;
-  }>(),
-  routeData: jsonb('route_data').$type<{
-    distance?: number;
-    waypoints?: Array<{ lat: number; lng: number }>;
-    trafficConditions?: string;
-  }>(),
+  specialRequirements: jsonb('special_requirements'),
+  routeData: jsonb('route_data'),
   providerBookingId: text('provider_booking_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -1242,157 +1093,11 @@ export const vehicleBookings = pgTable('vehicle_bookings', {
   scheduledPickupIdx: index('vehicle_bookings_scheduled_pickup_idx').on(table.scheduledPickup),
 }));
 
-// Platform Marketplace Tables
-export const appCategoryEnum = pgEnum('app_category', ['travel', 'expense', 'productivity', 'communication', 'analytics', 'automation', 'other']);
-export const appStatusEnum = pgEnum('app_status', ['active', 'inactive', 'pending_review', 'suspended', 'deprecated']);
-export const installationStatusEnum = pgEnum('installation_status', ['installed', 'uninstalled', 'updating', 'failed']);
+// Platform Marketplace Tables - REMOVED
+// These features have been removed to focus on core travel SaaS functionality
 
-export const marketplaceApps = pgTable('marketplace_apps', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
-  category: appCategoryEnum('category').notNull(),
-  status: appStatusEnum('status').default('pending_review'),
-  developerId: uuid('developer_id').references(() => users.id, { onDelete: 'set null' }),
-  description: text('description'),
-  longDescription: text('long_description'),
-  version: text('version').notNull(),
-  iconUrl: text('icon_url'),
-  screenshotUrls: jsonb('screenshot_urls').$type<string[]>().default(sql`'[]'::jsonb`),
-  pricing: jsonb('pricing').$type<{
-    type: 'free' | 'paid' | 'freemium';
-    monthlyPrice?: number;
-    yearlyPrice?: number;
-    oneTimePrice?: number;
-  }>().notNull(),
-  permissions: jsonb('permissions').$type<string[]>().default(sql`'[]'::jsonb`),
-  apiEndpoints: jsonb('api_endpoints').$type<{
-    webhook?: string;
-    oauth?: string;
-    settings?: string;
-  }>(),
-  configuration: jsonb('configuration').$type<Record<string, any>>().default(sql`'{}'::jsonb`),
-  installCount: integer('install_count').default(0),
-  rating: integer('rating'), // Average rating (1-5 stars * 100)
-  reviewCount: integer('review_count').default(0),
-  publishedAt: timestamp('published_at'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  slugIdx: index('marketplace_apps_slug_idx').on(table.slug),
-  categoryIdx: index('marketplace_apps_category_idx').on(table.category),
-  statusIdx: index('marketplace_apps_status_idx').on(table.status),
-  ratingIdx: index('marketplace_apps_rating_idx').on(table.rating),
-}));
-
-export const appInstallations = pgTable('app_installations', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
-  appId: uuid('app_id').references(() => marketplaceApps.id, { onDelete: 'cascade' }).notNull(),
-  installedBy: uuid('installed_by').references(() => users.id, { onDelete: 'set null' }),
-  status: installationStatusEnum('status').default('installed'),
-  version: text('version').notNull(),
-  configuration: jsonb('configuration').$type<Record<string, any>>().default(sql`'{}'::jsonb`),
-  permissions: jsonb('permissions').$type<string[]>().default(sql`'[]'::jsonb`),
-  apiKey: text('api_key'),
-  webhookUrl: text('webhook_url'),
-  lastUsed: timestamp('last_used'),
-  usageCount: integer('usage_count').default(0),
-  installedAt: timestamp('installed_at').notNull().defaultNow(),
-  uninstalledAt: timestamp('uninstalled_at'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  orgAppIdx: index('app_installations_org_app_idx').on(table.organizationId, table.appId),
-  statusIdx: index('app_installations_status_idx').on(table.status),
-  lastUsedIdx: index('app_installations_last_used_idx').on(table.lastUsed),
-}));
-
-export const appReviews = pgTable('app_reviews', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  appId: uuid('app_id').references(() => marketplaceApps.id, { onDelete: 'cascade' }).notNull(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
-  rating: integer('rating').notNull(), // 1-5 stars
-  title: text('title'),
-  review: text('review'),
-  isVerified: boolean('is_verified').default(false),
-  helpfulCount: integer('helpful_count').default(0),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  appIdIdx: index('app_reviews_app_id_idx').on(table.appId),
-  userIdIdx: index('app_reviews_user_id_idx').on(table.userId),
-  ratingIdx: index('app_reviews_rating_idx').on(table.rating),
-}));
-
-// Advanced Automation Workflows Tables
-export const workflowStatusEnum = pgEnum('workflow_status', ['draft', 'active', 'inactive', 'archived']);
-export const workflowTriggerTypeEnum = pgEnum('workflow_trigger_type', ['manual', 'schedule', 'event', 'webhook', 'condition']);
-export const workflowActionTypeEnum = pgEnum('workflow_action_type', ['email', 'sms', 'api_call', 'approval', 'delay', 'condition', 'notification']);
-
-export const automationWorkflows = pgTable('automation_workflows', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
-  name: text('name').notNull(),
-  description: text('description'),
-  status: workflowStatusEnum('status').default('draft'),
-  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
-  triggerType: workflowTriggerTypeEnum('trigger_type').notNull(),
-  triggerConfig: jsonb('trigger_config').$type<{
-    schedule?: string; // cron expression
-    event?: string; // event name
-    webhook?: string; // webhook URL
-    conditions?: Record<string, any>[];
-  }>().notNull(),
-  actions: jsonb('actions').$type<Array<{
-    id: string;
-    type: string;
-    config: Record<string, any>;
-    order: number;
-  }>>().default(sql`'[]'::jsonb`),
-  isTemplate: boolean('is_template').default(false),
-  executionCount: integer('execution_count').default(0),
-  lastExecuted: timestamp('last_executed'),
-  nextExecution: timestamp('next_execution'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  orgIdIdx: index('automation_workflows_org_id_idx').on(table.organizationId),
-  statusIdx: index('automation_workflows_status_idx').on(table.status),
-  triggerTypeIdx: index('automation_workflows_trigger_type_idx').on(table.triggerType),
-  nextExecutionIdx: index('automation_workflows_next_execution_idx').on(table.nextExecution),
-}));
-
-export const workflowExecutionStatusEnum = pgEnum('workflow_execution_status', ['pending', 'running', 'completed', 'failed', 'cancelled']);
-
-export const workflowExecutions = pgTable('workflow_executions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  workflowId: uuid('workflow_id').references(() => automationWorkflows.id, { onDelete: 'cascade' }).notNull(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
-  triggeredBy: uuid('triggered_by').references(() => users.id, { onDelete: 'set null' }),
-  status: workflowExecutionStatusEnum('status').default('pending'),
-  triggerData: jsonb('trigger_data').$type<Record<string, any>>(),
-  executionData: jsonb('execution_data').$type<{
-    actions: Array<{
-      id: string;
-      status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
-      startTime?: string;
-      endTime?: string;
-      result?: any;
-      error?: string;
-    }>;
-  }>().default(sql`'{"actions": []}'::jsonb`),
-  startedAt: timestamp('started_at').defaultNow(),
-  completedAt: timestamp('completed_at'),
-  duration: integer('duration'), // in milliseconds
-  errorMessage: text('error_message'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-}, (table) => ({
-  workflowIdIdx: index('workflow_executions_workflow_id_idx').on(table.workflowId),
-  statusIdx: index('workflow_executions_status_idx').on(table.status),
-  startedAtIdx: index('workflow_executions_started_at_idx').on(table.startedAt),
-}));
+// Advanced Automation Workflows Tables - REMOVED  
+// These features have been removed to focus on core travel SaaS functionality
 
 // Carbon Footprint Tracking Tables
 export const emissionSourceEnum = pgEnum('emission_source', ['flight', 'hotel', 'car', 'train', 'taxi', 'food', 'other']);
@@ -1405,13 +1110,7 @@ export const carbonFootprints = pgTable('carbon_footprints', {
   tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }),
   bookingId: uuid('booking_id').references(() => bookings.id, { onDelete: 'cascade' }),
   source: emissionSourceEnum('source').notNull(),
-  sourceDetails: jsonb('source_details').$type<{
-    distance?: number;
-    duration?: number;
-    vehicleType?: string;
-    fuelType?: string;
-    occupancy?: number;
-  }>(),
+  sourceDetails: jsonb('source_details'),
   co2Emissions: integer('co2_emissions').notNull(), // in grams
   ch4Emissions: integer('ch4_emissions'), // in grams
   n2oEmissions: integer('n2o_emissions'), // in grams
@@ -1422,11 +1121,7 @@ export const carbonFootprints = pgTable('carbon_footprints', {
   offsetCost: integer('offset_cost'), // in cents
   offsetProvider: text('offset_provider'),
   offsetCertificate: text('offset_certificate'),
-  metadata: jsonb('metadata').$type<{
-    coordinates?: { from: { lat: number; lng: number }; to: { lat: number; lng: number } };
-    emissionFactors?: Record<string, number>;
-    calculationNotes?: string;
-  }>(),
+  metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
@@ -1440,7 +1135,7 @@ export const carbonOffsets = pgTable('carbon_offsets', {
   id: uuid('id').primaryKey().defaultRandom(),
   organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
-  footprintIds: jsonb('footprint_ids').$type<string[]>().notNull(),
+  footprintIds: jsonb('footprint_ids').notNull(),
   totalCo2Offset: integer('total_co2_offset').notNull(), // in grams
   cost: integer('cost').notNull(), // in cents
   provider: text('provider').notNull(),
@@ -1450,11 +1145,7 @@ export const carbonOffsets = pgTable('carbon_offsets', {
   purchaseDate: timestamp('purchase_date').notNull(),
   retirementDate: timestamp('retirement_date'),
   status: offsetStatusEnum('status').default('pending'),
-  metadata: jsonb('metadata').$type<{
-    projectLocation?: string;
-    projectDescription?: string;
-    vintageYear?: number;
-  }>(),
+  metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
@@ -1478,13 +1169,8 @@ export const analyticsModels = pgTable('analytics_models', {
   version: text('version').notNull(),
   description: text('description'),
   algorithm: text('algorithm').notNull(), // 'linear_regression', 'random_forest', etc.
-  parameters: jsonb('parameters').$type<Record<string, any>>().default(sql`'{}'::jsonb`),
-  trainingData: jsonb('training_data').$type<{
-    dataSource: string;
-    features: string[];
-    target: string;
-    dataRange: { start: string; end: string };
-  }>(),
+  parameters: jsonb('parameters').default(sql`'{}'::jsonb`),
+  trainingData: jsonb('training_data'),
   accuracy: integer('accuracy'), // percentage (0-100)
   lastTraining: timestamp('last_training'),
   nextTraining: timestamp('next_training'),
@@ -1505,19 +1191,11 @@ export const predictions = pgTable('predictions', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   entityType: text('entity_type'), // 'trip', 'expense', 'booking', etc.
   entityId: uuid('entity_id'),
-  inputData: jsonb('input_data').$type<Record<string, any>>().notNull(),
-  prediction: jsonb('prediction').$type<{
-    value: any;
-    confidence: number;
-    alternatives?: Array<{ value: any; confidence: number }>;
-  }>().notNull(),
+  inputData: jsonb('input_data').notNull(),
+  prediction: jsonb('prediction').notNull(),
   status: predictionStatusEnum('status').default('pending'),
   accuracy: integer('accuracy'), // actual vs predicted accuracy (0-100)
-  feedback: jsonb('feedback').$type<{
-    actualValue?: any;
-    userRating?: number;
-    comments?: string;
-  }>(),
+  feedback: jsonb('feedback'),
   expiresAt: timestamp('expires_at'),
   processedAt: timestamp('processed_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -1534,13 +1212,8 @@ export const analyticsReports = pgTable('analytics_reports', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   reportType: text('report_type').notNull(), // 'dashboard', 'scheduled', 'ad_hoc'
-  configuration: jsonb('configuration').$type<{
-    metrics: string[];
-    filters: Record<string, any>;
-    dateRange: { start: string; end: string };
-    visualizations: Array<{ type: string; config: Record<string, any> }>;
-  }>().notNull(),
-  data: jsonb('data').$type<Record<string, any>>(),
+  configuration: jsonb('configuration').notNull(),
+  data: jsonb('data'),
   schedule: text('schedule'), // cron expression for scheduled reports
   lastGenerated: timestamp('last_generated'),
   nextGeneration: timestamp('next_generation'),
@@ -1568,35 +1241,14 @@ export const selectAiConversationSchema = createSelectSchema(aiConversations);
 export const insertAiMessageSchema = createInsertSchema(aiMessages);
 export const selectAiMessageSchema = createSelectSchema(aiMessages);
 
-export const insertSmartCitySchema = createInsertSchema(smartCities);
-export const selectSmartCitySchema = createSelectSchema(smartCities);
-
-export const insertSmartCityDataSchema = createInsertSchema(smartCityData);
-export const selectSmartCityDataSchema = createSelectSchema(smartCityData);
-
-export const insertIotDeviceSchema = createInsertSchema(iotDevices);
-export const selectIotDeviceSchema = createSelectSchema(iotDevices);
+// Smart City, Marketplace, and Automation schemas - REMOVED
+// These schemas have been removed to focus on core travel SaaS functionality
 
 export const insertAutonomousVehicleSchema = createInsertSchema(autonomousVehicles);
 export const selectAutonomousVehicleSchema = createSelectSchema(autonomousVehicles);
 
 export const insertVehicleBookingSchema = createInsertSchema(vehicleBookings);
 export const selectVehicleBookingSchema = createSelectSchema(vehicleBookings);
-
-export const insertMarketplaceAppSchema = createInsertSchema(marketplaceApps);
-export const selectMarketplaceAppSchema = createSelectSchema(marketplaceApps);
-
-export const insertAppInstallationSchema = createInsertSchema(appInstallations);
-export const selectAppInstallationSchema = createSelectSchema(appInstallations);
-
-export const insertAppReviewSchema = createInsertSchema(appReviews);
-export const selectAppReviewSchema = createSelectSchema(appReviews);
-
-export const insertAutomationWorkflowSchema = createInsertSchema(automationWorkflows);
-export const selectAutomationWorkflowSchema = createSelectSchema(automationWorkflows);
-
-export const insertWorkflowExecutionSchema = createInsertSchema(workflowExecutions);
-export const selectWorkflowExecutionSchema = createSelectSchema(workflowExecutions);
 
 export const insertCarbonFootprintSchema = createInsertSchema(carbonFootprints);
 export const selectCarbonFootprintSchema = createSelectSchema(carbonFootprints);
@@ -1707,33 +1359,16 @@ export type NewAiConversation = typeof aiConversations.$inferInsert;
 export type AiMessage = typeof aiMessages.$inferSelect;
 export type NewAiMessage = typeof aiMessages.$inferInsert;
 
-// Types for Smart City Integration
-export type SmartCity = typeof smartCities.$inferSelect;
-export type NewSmartCity = typeof smartCities.$inferInsert;
-export type SmartCityData = typeof smartCityData.$inferSelect;
-export type NewSmartCityData = typeof smartCityData.$inferInsert;
-export type IotDevice = typeof iotDevices.$inferSelect;
-export type NewIotDevice = typeof iotDevices.$inferInsert;
+// Types for Smart City Integration - REMOVED
+// Types for Platform Marketplace - REMOVED  
+// Types for Advanced Automation - REMOVED
+// These types have been removed to focus on core travel SaaS functionality
 
 // Types for Autonomous Vehicle Integration
 export type AutonomousVehicle = typeof autonomousVehicles.$inferSelect;
 export type NewAutonomousVehicle = typeof autonomousVehicles.$inferInsert;
 export type VehicleBooking = typeof vehicleBookings.$inferSelect;
 export type NewVehicleBooking = typeof vehicleBookings.$inferInsert;
-
-// Types for Platform Marketplace
-export type MarketplaceApp = typeof marketplaceApps.$inferSelect;
-export type NewMarketplaceApp = typeof marketplaceApps.$inferInsert;
-export type AppInstallation = typeof appInstallations.$inferSelect;
-export type NewAppInstallation = typeof appInstallations.$inferInsert;
-export type AppReview = typeof appReviews.$inferSelect;
-export type NewAppReview = typeof appReviews.$inferInsert;
-
-// Types for Advanced Automation
-export type AutomationWorkflow = typeof automationWorkflows.$inferSelect;
-export type NewAutomationWorkflow = typeof automationWorkflows.$inferInsert;
-export type WorkflowExecution = typeof workflowExecutions.$inferSelect;
-export type NewWorkflowExecution = typeof workflowExecutions.$inferInsert;
 
 // Types for Carbon Footprint Tracking
 export type CarbonFootprint = typeof carbonFootprints.$inferSelect;
@@ -1748,3 +1383,5 @@ export type Prediction = typeof predictions.$inferSelect;
 export type NewPrediction = typeof predictions.$inferInsert;
 export type AnalyticsReport = typeof analyticsReports.$inferSelect;
 export type NewAnalyticsReport = typeof analyticsReports.$inferInsert;
+
+

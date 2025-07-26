@@ -66,10 +66,11 @@ declare module 'nodemailer' {
 
 // Add type declarations for drizzle-orm
 declare module 'drizzle-orm' {
-  export * from 'drizzle-orm';
+  export * from '../utils/drizzle-shim';
 }
 
 // Add type declarations for @shared/schema
 declare module '@shared/schema' {
   export * from '@shared/schema';
 }
+

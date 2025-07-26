@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { and, ne } from 'drizzle-orm/sql/expressions/conditions';
+import { eq } from '../utils/drizzle-shim';;
+import { and, ne } from '../utils/drizzle-shim';
 import { getDatabase } from '../db/connection';
-import { organizations } from '../db/schema.js';
+import { organizations } from '../db/schema';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 import slugify from 'slugify';
@@ -498,3 +498,6 @@ router.post('/:id/invite', async (req: Request, res: Response) => {
 });
 
 export default router;
+
+
+

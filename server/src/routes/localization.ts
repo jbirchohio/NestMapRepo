@@ -1,6 +1,6 @@
 import express from 'express';
 import { LocalizationService as ImportedLocalizationService } from '../localizationService';
-import { authenticateJWT as requireAuth, requireRole } from '../src/middleware/auth';
+import { authenticateJWT as requireAuth, requireRole } from '../middleware/auth';
 import { auditLogger } from '../auditLogger';
 
 const router = express.Router();
@@ -476,4 +476,5 @@ class LocalizationService {
 }
 
 export default router;
+
 

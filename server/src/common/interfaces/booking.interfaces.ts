@@ -79,3 +79,4 @@ export interface BookingConfirmationDetails {
   confirmationDate?: Date;
   confirmationCode?: string;
 }
+

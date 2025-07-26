@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { authenticateJWT, requireRole } from '../middleware/auth.js';
 import { getDatabase } from '../db/connection.js';
-import { auditLogs } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
-import { and, or, gte } from 'drizzle-orm/sql/expressions/conditions';
-// TODO: Fix count and sql imports - may need different approachimport { and, gte } from "drizzle-orm/expressions";
-import { count } from "drizzle-orm/sql";
+import { auditLogs } from '../db/schema';
+import { eq } from '../utils/drizzle-shim';;
+import { and, gte } from '../utils/drizzle-shim';
+// TODO: Fix count and sql imports - may need different approachimport { and, gte } from "drizzle-orm";
+import { count } from "../utils/drizzle-shim";
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -438,3 +438,6 @@ router.get('/stats', async (_req, res) => {
 });
 
 export default router;
+
+
+

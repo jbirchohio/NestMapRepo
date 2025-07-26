@@ -1,28 +1,15 @@
-/**
- * Organization Members API Routes
- * Consolidated approach using users.organization_id directly
- */
 
-// Helper to get database instance
-const getDB = () => {
-  const db = getDatabase();
-  if (!db) {
-    throw new Error('Database connection not available');
-  }
-  return db;
-};
-
+import { db } from "../db-connection";
 
 import { Router, Response } from 'express';
-import type { AuthenticatedRequest } from '../src/types/auth-user';
-import { getDatabase } from '../db/connection.js';
-import { users, organizationMembers } from '../shared/src/schema';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
+import type { AuthenticatedRequest } from '../types/auth-user';
+import { users, organizationMembers } from '../db/schema';
+import { eq } from '../utils/drizzle-shim';;
+import { and, sql } from '../utils/drizzle-shim';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { z } from 'zod';
+import z from 'zod';
 
 const router = Router();
 
@@ -163,7 +150,7 @@ router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req
     // Note: Email invitation functionality requires SMTP configuration
     console.log(`Member invitation created for ${email} with role ${orgRole}`);
 
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         error: 'Invalid invitation data', 
@@ -261,7 +248,7 @@ router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (r
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         error: 'Invalid update data', 
-        details: error.errors 
+        details: (typeof error === 'object' && error !== null && 'errors' in error) ? (error as z.ZodError).errors : undefined
       });
     }
     console.error('Error updating member:', error);
@@ -343,3 +330,6 @@ router.get('/roles', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 export default router;
+
+
+

@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';import { sql } from 'drizzle-orm/sql';
+import { eq } from '../utils/drizzle-shim';;
+import { or } from '../utils/drizzle-shim';import { sql } from '../utils/drizzle-shim';
 import { getDatabase } from '../db/connection';
-import { trips, users, organizations, expenses, bookings } from '../db/schema.js';
+import { trips, users, organizations, expenses, bookings } from '../db/schema';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 
@@ -430,3 +430,6 @@ router.get('/reports/:reportId', async (req: Request, res: Response) => {
 });
 
 export default router;
+
+
+

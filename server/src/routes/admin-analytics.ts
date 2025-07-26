@@ -1,12 +1,8 @@
-import type { Request, Response } from "express";
-import { getDatabase } from "../db/connection.js";
-import { users, organizations, trips } from "../db/schema.js";
-import { eq } from 'drizzle-orm';
-import { or, gte } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';
-// TODO: Fix count and sql imports - may need different approach// TODO: Fix these imports - count, sql not available in current drizzle-orm version
-// import { count, sql } from 'drizzle-orm';
-import { authenticateJWT } from '../middleware/auth.js';
+import { users, organizations, trips } from "../db/schema";
+import { eq, gte, desc, count, sql } from '../utils/drizzle-shim';
+import { db } from '../db/db';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { authenticateJWT as validateJWT } from '../middleware/auth.js';
 
 interface AdminAnalytics {
   overview: {
@@ -42,7 +38,7 @@ interface AdminAnalytics {
   }[];
 }
 
-export function registerAdminAnalyticsRoutes(app: Application) {
+export function registerAdminAnalyticsRoutes(app: any) {
   // Apply middleware to all admin analytics routes
   app.use('/api/admin/analytics', validateJWT);
   app.use('/api/admin/analytics', injectOrganizationContext);
@@ -250,3 +246,6 @@ export function registerAdminAnalyticsRoutes(app: Application) {
     }
   });
 }
+
+
+

@@ -23,3 +23,4 @@ export interface UserRepository extends BaseRepository<User, string, Omit<User, 
   // Preferences (commented out as preferences field doesn't exist in schema)
   // updatePreferences(id: string, preferences: UserBookingPreferences): Promise<User | null>;
 }
+

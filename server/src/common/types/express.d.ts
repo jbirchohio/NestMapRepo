@@ -23,3 +23,4 @@ export type AuthenticatedRequest = Request<ParamsDictionary, any, any, Query> & 
   user: AuthUser;
   params: ParamsDictionary & { id?: string };
 };
+

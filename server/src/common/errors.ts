@@ -98,3 +98,4 @@ export function isAppError(error: unknown): error is AppError {
 export function isOperationalError(error: unknown): boolean {
   return isAppError(error) && error.isOperational === true;
 }
+

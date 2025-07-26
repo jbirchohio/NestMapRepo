@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq } from '../utils/drizzle-shim';;
 import { getDatabase } from '../db/connection.js';
-import { users } from '../db/schema.js';
+import { users } from '../db/schema';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 
@@ -312,3 +312,6 @@ router.get('/organization-users', async (req: Request, res: Response) => {
 });
 
 export default router;
+
+
+

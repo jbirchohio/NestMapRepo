@@ -18,3 +18,4 @@ class AppModule {}
 export { AppModule };
 // Also export as default for compatibility
 export default AppModule;
+

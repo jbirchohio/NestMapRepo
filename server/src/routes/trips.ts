@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';
+import { eq } from '../utils/drizzle-shim';;
+import { and, or } from '../utils/drizzle-shim';
+import { desc } from '../utils/drizzle-shim';
 import { getDatabase } from '../db/connection';
 import { trips, tripCollaborators } from '../db/tripSchema.js';
 import { logger } from '../utils/logger.js';
@@ -528,3 +528,6 @@ router.delete('/:id', async (req: Request, res: Response) => {
 });
 
 export default router;
+
+
+

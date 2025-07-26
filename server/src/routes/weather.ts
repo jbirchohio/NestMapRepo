@@ -448,3 +448,4 @@ router.get('/current/:location', async (req: Request, res: Response) => {
 });
 
 export default router;
+

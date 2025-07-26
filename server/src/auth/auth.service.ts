@@ -1,6 +1,6 @@
 import { hash, compare } from 'bcrypt';
 import { jwtUtils } from '../utils/jwt.js';
-import { eq, and, gt } from 'drizzle-orm/expressions';
+import { eq, and, gt } from '../utils/drizzle-shim';
 import { v4 as uuidv4 } from 'uuid';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -15,7 +15,7 @@ import {
   RegisterDto,
   UserResponse
 } from './dtos/auth.dto.js';
-import { Logger } from '../utils/logger.js';
+import { logger } from '../utils/logger.js';
 import { addDays, addHours } from 'date-fns';
 import { EmailService } from '../services/email.service';
 
@@ -45,7 +45,7 @@ export class AuthService implements IAuthService {
   private readonly REFRESH_TOKEN_EXPIRY = '7d';
   private readonly JWT_SECRET = process.env.JWT_SECRET;
   private readonly REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
-  private readonly logger = new Logger('AuthService');
+  private readonly logger = logger;
   private readonly emailService = new EmailService();
 
   constructor() {
@@ -144,7 +144,7 @@ export class AuthService implements IAuthService {
   }
 
   private async revokeToken(tokenId: string, ttl: number): Promise<void> {
-    this.logger.debug(`Token revocation requested for: ${tokenId} with TTL: ${ttl}`);
+    this.logger.info(`Token revocation requested for: ${tokenId} with TTL: ${ttl}`);
     try {
       await db
         .update(refreshTokens)
@@ -480,3 +480,4 @@ export class AuthService implements IAuthService {
     };
   }
 }
+

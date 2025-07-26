@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import { logger } from '../utils/logger';
 import * as schema from './schema';
 import * as tripSchema from './tripSchema';
-import { getDatabaseUrl } from '../../config';
+import { getDatabaseUrl } from '../config';
 
 // Combine all schemas
 const allSchemas = { ...schema, ...tripSchema };
@@ -107,3 +107,4 @@ const closeDatabase = async (): Promise<void> => {
 
 export { connectDatabase, getDatabase, closeDatabase };
 export default { connectDatabase, getDatabase, closeDatabase };
+

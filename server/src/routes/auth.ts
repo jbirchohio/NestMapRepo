@@ -2,9 +2,9 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq } from '../utils/drizzle-shim';;
 import { getDatabase } from '../db/connection';
-import { users } from '../db/schema.js';
+import { users } from '../db/schema';
 import { logger } from '../utils/logger.js';
 
 // Helper to get database instance
@@ -64,14 +64,14 @@ const generateToken = (user: TokenUser): string => {
 // POST /api/auth/login
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    logger.info('Login attempt started', { email: req.body.email });
+    logger.info(`Login attempt started: ${req.body.email}`);
     
     // Validate request body
     let loginData;
     try {
       loginData = loginSchema.parse(req.body);
     } catch (validationError) {
-      logger.warn('Login validation failed', { error: validationError });
+      logger.warn('Login validation failed: ' + (validationError instanceof Error ? validationError.message : String(validationError)));
       return res.status(400).json({
         success: false,
         error: { 
@@ -85,7 +85,7 @@ router.post('/login', async (req: Request, res: Response) => {
     
     // In test environment, use mock data
     if (process.env.NODE_ENV === 'test') {
-      logger.debug('Using test environment login handler');
+      // debug logging skipped (logger.debug not available)
       // Mock successful login for test emails
       if (email.includes('test@') || email.includes('login@') || email.includes('auth@') || email.includes('logout@') || email.includes('org1-') || email.includes('org2-') || email.includes('voice@') || email.includes('trip-')) {
         // Determine organization based on email
@@ -164,11 +164,11 @@ router.post('/login', async (req: Request, res: Response) => {
           }
         };
         
-        logger.info('Test login successful', { email });
+        logger.info(`Test login successful: ${email}`);
         return res.json(response);
       } else {
         // Return 401 for non-test emails
-        logger.warn('Test login failed - invalid test email', { email });
+        logger.warn(`Test login failed - invalid test email: ${email}`);
         return res.status(401).json({
           success: false,
           error: { message: 'Invalid credentials' },
@@ -191,12 +191,12 @@ router.post('/login', async (req: Request, res: Response) => {
     // Find user by email
     let dbUser;
     try {
-      logger.debug('Querying database for user', { email });
+      // debug logging skipped (logger.debug not available)
       const result = await getDB().select().from(users).where(eq(users.email, email)).limit(1);
       dbUser = result[0];
-      logger.debug('User query result', { userFound: !!dbUser });
+      // debug logging skipped (logger.debug not available)
     } catch (error) {
-      logger.error('Database query error during login', { error, email });
+      logger.error('Database query error during login: ' + (error instanceof Error ? error.message : String(error)));
       return res.status(500).json({
         success: false,
         error: { 
@@ -207,7 +207,7 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     if (!dbUser) {
-      logger.warn('Login failed - user not found', { email });
+      logger.warn(`Login failed - user not found: ${email}`);
       return res.status(401).json({
         success: false,
         error: { 
@@ -221,10 +221,10 @@ router.post('/login', async (req: Request, res: Response) => {
     // Verify password
     let isValidPassword = false;
     try {
-      logger.debug('Verifying password');
+      // debug logging skipped (logger.debug not available)
       isValidPassword = await bcrypt.compare(password, dbUser.passwordHash || '');
     } catch (bcryptError) {
-      logger.error('Password verification error', { error: bcryptError });
+      logger.error('Password verification error: ' + (bcryptError instanceof Error ? bcryptError.message : String(bcryptError)));
       return res.status(500).json({
         success: false,
         error: { 
@@ -235,7 +235,7 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     if (!isValidPassword) {
-      logger.warn('Login failed - invalid password', { email });
+      logger.warn(`Login failed - invalid password: ${email}`);
       return res.status(401).json({
         success: false,
         error: { 
@@ -259,10 +259,10 @@ router.post('/login', async (req: Request, res: Response) => {
     // Generate JWT token
     let token;
     try {
-      logger.debug('Generating JWT token');
+      // debug logging skipped (logger.debug not available)
       token = generateToken(user);
     } catch (tokenError) {
-      logger.error('Failed to generate JWT token', { error: tokenError, userId: user.id });
+      logger.error('Failed to generate JWT token: ' + (tokenError instanceof Error ? tokenError.message : String(tokenError)) + ` userId: ${user.id}`);
       return res.status(500).json({
         success: false,
         error: { 
@@ -274,15 +274,12 @@ router.post('/login', async (req: Request, res: Response) => {
 
     // Update last login
     try {
-      logger.debug('Updating last login timestamp', { userId: user.id });
+      // debug logging skipped (logger.debug not available)
       await getDB().update(users)
         .set({ lastLoginAt: new Date() })
         .where(eq(users.id, user.id));
     } catch (updateError) {
-      logger.error('Failed to update last login timestamp', { 
-        error: updateError, 
-        userId: user.id 
-      });
+      logger.error('Failed to update last login timestamp: ' + (updateError instanceof Error ? updateError.message : String(updateError)) + ` userId: ${user.id}`);
       // Continue execution even if this fails
     }
 
@@ -387,7 +384,7 @@ router.post('/register', async (req: Request, res: Response) => {
     try {
       [existingUser] = await getDB().select().from(users).where(eq(users.email, email)).limit(1);
     } catch (error) {
-      logger.error('Database query error:', error);
+      logger.error('Database query error: ' + (error instanceof Error ? error.message : String(error)));
       return res.status(500).json({
         success: false,
         error: { message: 'Internal server error during registration' },
@@ -465,7 +462,7 @@ router.post('/register', async (req: Request, res: Response) => {
 
       return res.status(201).json(responseData);
     } catch (error) {
-      logger.error('Registration error:', error);
+      logger.error('Registration error: ' + (error instanceof Error ? error.message : String(error)));
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({
@@ -516,7 +513,7 @@ router.get('/user', async (req: Request, res: Response) => {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtError) {
-      logger.warn('Invalid JWT token', { error: jwtError });
+      logger.warn('Invalid JWT token: ' + (jwtError instanceof Error ? jwtError.message : String(jwtError)));
       return res.status(401).json({
         success: false,
         error: { message: 'Invalid or expired token' },
@@ -549,7 +546,7 @@ router.get('/user', async (req: Request, res: Response) => {
       
       user = result[0];
     } catch (error) {
-      logger.error('Database error while fetching user', { error, userId: decoded.userId });
+      logger.error('Database error while fetching user: ' + (error instanceof Error ? error.message : String(error)) + ` userId: ${decoded.userId}`);
       return res.status(500).json({
         success: false,
         error: { message: 'Internal server error' },
@@ -760,22 +757,22 @@ router.post('/signup', async (req: Request, res: Response) => {
       user: newUser,
     });
   } catch (error) {
-    logger.error('Signup error:', error);
+    logger.error('Signup error: ' + (error instanceof Error ? error.message : String(error)));
     
     if (error instanceof z.ZodError) {
       const emailError = error.issues.find(issue => issue.path.includes('email'));
       const passwordError = error.issues.find(issue => issue.path.includes('password'));
-      
       let message = 'Invalid input';
       if (emailError) {
         message = 'Invalid email';
       } else if (passwordError) {
         message = 'Password must be at least 6 characters';
       }
-      
+      const err: any = error;
+      const details = err instanceof z.ZodError ? err.errors : [];
       return res.status(400).json({
         success: false,
-        error: { message, details: error.errors },
+        error: { message, details },
         message, // For test compatibility
       });
     }
@@ -817,3 +814,6 @@ router.post('/logout', (_req: Request, res: Response) => {
 });
 
 export default router;
+
+
+

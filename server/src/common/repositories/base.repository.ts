@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger';
 import { BaseRepository } from './base.repository.interface';
-import { eq } from 'drizzle-orm';
+import { eq } from '../../utils/drizzle-shim';
 import { getDatabase } from '../../db/connection';
 import { ServiceUnavailableError } from '../../common/errors';
 
@@ -132,3 +132,6 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
     return entity !== null;
   }
 }
+
+
+

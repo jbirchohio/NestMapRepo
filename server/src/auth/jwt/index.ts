@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { Logger } from '../../utils/logger.js';
+import { logger } from '../../utils/logger.js';
 
 // Redis interface for token blacklisting
 interface RedisClient {
@@ -37,9 +37,6 @@ class MockRedisClient implements RedisClient {
 
 // Initialize Redis client - replace with actual Redis connection in production
 const redis: RedisClient = new MockRedisClient();
-
-// Initialize logger
-const logger = new Logger('JWTService');
 
 // Import types
 import {
@@ -102,7 +99,7 @@ const generateToken = async (
       throw new Error('Token generation failed - invalid token type');
     }
     
-    logger.debug('Token generated successfully', { tokenId, type: payload.type });
+    logger.info(`Token generated successfully - tokenId: ${tokenId}, type: ${payload.type}`);
     return token;
   } catch (error) {
     logger.error('Error generating token:', error);
@@ -185,11 +182,7 @@ const verifyToken = async <T extends TokenPayload = TokenPayload>(
       return { valid: false, error: 'Token missing required fields' };
     }
 
-    logger.debug('Token verified successfully', { 
-      tokenId: verified.jti, 
-      type: verified.type, 
-      userId: verified.sub 
-    });
+    logger.info('Token verified successfully');
 
     return { valid: true, payload: verified };
   } catch (error: unknown) {
@@ -227,7 +220,7 @@ const blacklistToken = async (
     const key = `${TOKEN_BLACKLIST_PREFIX}${tokenId}`;
     await redis.set(key, 'blacklisted', { EX: expiresInSeconds });
     
-    logger.debug('Token blacklisted successfully', { tokenId, expiresInSeconds });
+    logger.info(`Token blacklisted successfully - tokenId: ${tokenId}, expiresInSeconds: ${expiresInSeconds}`);
   } catch (error) {
     logger.error('Error blacklisting token:', error);
     throw new Error(`Failed to blacklist token: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -284,7 +277,7 @@ const generateTokenPair = async (
       refreshTokenExpiresAt: now + refreshExpiresIn,
     };
 
-    logger.debug('Token pair generated successfully', { userId, role });
+    logger.info(`Token pair generated successfully - userId: ${userId}, role: ${role}`);
     return authTokens;
   } catch (error) {
     logger.error('Error generating token pair:', error);
@@ -330,7 +323,7 @@ const revokeAllUserTokens = async (userIdToRevoke: string): Promise<void> => {
     // 3. Or implement a user-based blacklist check in verifyToken
     
     // For now, just log the action
-    logger.info('User token revocation requested', { userId: userIdToRevoke });
+    logger.info(`User token revocation requested - userId: ${userIdToRevoke}`);
   } catch (error) {
     logger.error('Error revoking user tokens:', error);
     throw new Error(`Failed to revoke user tokens: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -427,3 +420,4 @@ export {
   refreshAccessToken,
   defaultJwtConfig as jwtConfig,
 };
+

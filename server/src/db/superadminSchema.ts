@@ -143,3 +143,4 @@ export type BillingEvent = typeof billingEvents.$inferSelect;
 export type NewBillingEvent = typeof billingEvents.$inferInsert;
 export type SystemActivitySummary = typeof systemActivitySummary.$inferSelect;
 export type NewSystemActivitySummary = typeof systemActivitySummary.$inferInsert;
+

@@ -19,3 +19,4 @@ import { RepositoriesModule } from '../repositories/repositories.module';
   exports: ['BookingService'],
 })
 export class BookingModule {}
+

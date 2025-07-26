@@ -45,3 +45,4 @@ export interface EmailService {
     options: PaymentReceiptEmailOptions
   ): Promise<void>;
 }
+

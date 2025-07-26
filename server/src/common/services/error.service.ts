@@ -145,3 +145,4 @@ export class ErrorService {
     throw this.createInternalServerError(message, details, stack);
   }
 }
+

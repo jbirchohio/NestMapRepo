@@ -9,9 +9,9 @@ import {
   updateSubscription 
 } from '../stripe';
 import { getDatabase } from '../db/connection.js';
-import { organizations } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';// Helper to get database instance
+import { organizations } from '../db/schema';
+import { eq } from '../utils/drizzle-shim';;
+import { or } from '../utils/drizzle-shim';// Helper to get database instance
 const getDB = () => {
   const db = getDatabase();
   if (!db) {
@@ -200,3 +200,6 @@ router.post("/portal", async (req: Request, res: Response) => {
 });
 
 export default router;
+
+
+

@@ -94,3 +94,4 @@ export const selectProposalSchema = createSelectSchema(proposals);
 // Types
 export type Proposal = typeof proposals.$inferSelect;
 export type NewProposal = typeof proposals.$inferInsert;
+

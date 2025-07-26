@@ -15,7 +15,7 @@
     "strict": true,
     "moduleResolution": "node16",
     "module": "Node16",
-    "target": "es2022",
+    "target": "ES2022",
     "noEmit": false,
     "types": ["node"],
     "emitDecoratorMetadata": true,

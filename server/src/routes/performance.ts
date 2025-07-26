@@ -190,3 +190,4 @@ function generateOptimizationRecommendations(report: any): any[] {
 
   return recommendations;
 }
+

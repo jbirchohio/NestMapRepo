@@ -10,3 +10,4 @@ export interface BaseRepository<T, ID, CreateData, UpdateData> {
   count(filter?: Partial<T>): Promise<number>;
   exists(id: ID): Promise<boolean>;
 }
+

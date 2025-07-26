@@ -49,3 +49,4 @@ export interface SessionData {
   lastActive: Date;
   createdAt: Date;
 }
+

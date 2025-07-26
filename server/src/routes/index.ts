@@ -26,14 +26,6 @@ let policiesRoutes: any = null;
 let weatherRoutes: any = null;
 let customReportingRoutes: any = null;
 let flightRoutes: any = null;
-let disruptionAlertsRoutes: any = null;
-let offlineRoutes: any = null;
-let advancedAnalyticsRoutes: any = null;
-let enterpriseIntegrationRoutes: any = null;
-let platformEcosystemRoutes: any = null;
-let predictiveBusinessIntelligenceRoutes: any = null;
-let iotSmartCityRoutes: any = null;
-let automationOrchestrationRoutes: any = null;
 let autonomousVehicleRoutes: any = null;
 
 // Newly migrated route modules
@@ -140,15 +132,6 @@ async function loadRoutes(): Promise<void> {
     
     flightRoutes = await import('./flights.js').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load flights routes:', e?.message); return null; });
     if (isJestTeardown()) return;
-    // Skip non-existent route files for now
-    // disruptionAlertsRoutes = await import('./disruption-alerts.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load disruption-alerts routes:', e?.message); return null; });
-    // offlineRoutes = await import('./offline.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load offline routes:', e?.message); return null; });
-    // advancedAnalyticsRoutes = await import('./advanced-analytics.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load advanced-analytics routes:', e?.message); return null; });
-    // enterpriseIntegrationRoutes = await import('./enterprise-integration.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load enterprise-integration routes:', e?.message); return null; });
-    // platformEcosystemRoutes = await import('./platform-ecosystem.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load platform-ecosystem routes:', e?.message); return null; });
-    // predictiveBusinessIntelligenceRoutes = await import('./predictive-business-intelligence.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load predictive-business-intelligence routes:', e?.message); return null; });
-    // iotSmartCityRoutes = await import('./iot-smart-city.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load iot-smart-city routes:', e?.message); return null; });
-    // automationOrchestrationRoutes = await import('./automation-orchestration.ts').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load automation-orchestration routes:', e?.message); return null; });
     autonomousVehicleRoutes = await import('./autonomous-vehicles.js').then(m => m.default).catch((e) => { if (process.env.NODE_ENV !== 'test') console.log('Failed to load autonomous-vehicles routes:', e?.message); return null; });
     
     // Load newly migrated routes
@@ -345,51 +328,9 @@ export async function setupRoutes(app: any): Promise<void> {
     logger.info('✅ Flight routes registered');
   }
 
-  if (disruptionAlertsRoutes) {
-    app.use('/api/disruption-alerts', authenticate, disruptionAlertsRoutes);
-    logger.info('✅ Disruption alerts routes registered');
-  }
-
-  if (offlineRoutes) {
-    app.use('/api/offline', authenticate, offlineRoutes);
-    logger.info('✅ Offline routes registered');
-  }
-
-  if (advancedAnalyticsRoutes) {
-    app.use('/api/advanced-analytics', authenticate, advancedAnalyticsRoutes);
-    logger.info('✅ Advanced analytics routes registered');
-  }
-
   if (customReportingRoutes) {
     app.use('/api/custom-reporting', authenticate, customReportingRoutes);
     logger.info('✅ Custom reporting routes registered');
-  }
-
-  if (enterpriseIntegrationRoutes) {
-    app.use('/api/enterprise-integration', authenticate, enterpriseIntegrationRoutes);
-    logger.info('✅ Enterprise integration routes registered');
-  }
-
-  if (platformEcosystemRoutes) {
-    app.use('/api/platform-ecosystem', authenticate, platformEcosystemRoutes);
-    // Add marketplace alias for frontend compatibility
-    app.use('/api/marketplace', authenticate, platformEcosystemRoutes);
-    logger.info('✅ Platform ecosystem routes registered (accessible via /api/platform-ecosystem and /api/marketplace)');
-  }
-
-  if (predictiveBusinessIntelligenceRoutes) {
-    app.use('/api/predictive-business-intelligence', authenticate, predictiveBusinessIntelligenceRoutes);
-    logger.info('✅ Predictive business intelligence routes registered');
-  }
-
-  if (iotSmartCityRoutes) {
-    app.use('/api/iot-smart-city', authenticate, iotSmartCityRoutes);
-    logger.info('✅ IoT smart city routes registered');
-  }
-
-  if (automationOrchestrationRoutes) {
-    app.use('/api/automation-orchestration', authenticate, automationOrchestrationRoutes);
-    logger.info('✅ Automation orchestration routes registered');
   }
 
   if (autonomousVehicleRoutes) {
@@ -515,3 +456,4 @@ export async function setupRoutes(app: any): Promise<void> {
 
   logger.info('✅ All available routes registered successfully');
 }
+

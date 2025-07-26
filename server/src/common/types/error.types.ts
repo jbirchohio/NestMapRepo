@@ -37,3 +37,4 @@ export const createApiError = (
   error.details = details;
   return error;
 };
+

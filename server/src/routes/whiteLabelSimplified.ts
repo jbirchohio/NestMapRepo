@@ -1,10 +1,10 @@
 import type { Express, Response } from "express";
 import { db } from "../db";
 import { organizations, users, whiteLabelSettings } from "../db/schema";
-import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { eq } from '../utils/drizzle-shim';;
+import { or } from '../utils/drizzle-shim';import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import type { AuthenticatedRequest } from '../src/types/auth-user';
+import type { AuthenticatedRequest } from '../types/auth-user';
 
 
 export function registerSimplifiedWhiteLabelRoutes(app: Express) {
@@ -386,3 +386,6 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
     }
   });
 }
+
+
+

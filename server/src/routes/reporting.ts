@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { eq } from 'drizzle-orm';
-import { and, or, gte, lte } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';
+import { eq } from '../utils/drizzle-shim';;
+import { and, or, gte, lte } from '../utils/drizzle-shim';
+import { desc } from '../utils/drizzle-shim';
 // TODO: Fix count and sql imports - may need different approachimport { getDatabase } from '../db/connection.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
@@ -13,7 +13,7 @@ import {
   organizations,
   approvalRequests,
   activities
-} from '../src/db/schema';
+} from '../db/schema';
 
 // Helper to get database instance
 const getDB = () => {
@@ -723,3 +723,6 @@ async function buildCustomReport(organizationId: number, config: any) {
 }
 
 export default router;
+
+
+

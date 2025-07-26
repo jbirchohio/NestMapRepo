@@ -1,4 +1,5 @@
 import { Request as ExpressRequest } from 'express';
+import { AuthenticatedUser } from '../rbac';
 
 declare global {
   namespace Express {
@@ -12,13 +13,7 @@ declare global {
       originalUrl: string;
       
       // User authentication (from your auth system)
-      user?: {
-        id: string;
-        email: string;
-        organizationId: string;
-        role: string;
-        // Add other user properties as needed
-      };
+      user?: AuthenticatedUser;
       
       // Add other custom request properties here
     }
@@ -26,3 +21,4 @@ declare global {
 }
 
 export {}; // This ensures the file is treated as a module
+

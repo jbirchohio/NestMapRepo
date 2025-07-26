@@ -24,9 +24,6 @@
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "drizzle-orm": "^0.29.3"
-  },
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "glob": "^11.0.3",
@@ -35,5 +32,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.39.3"
   }
 }

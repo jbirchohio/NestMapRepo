@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { logger } from '../../utils/logger';
 import { getDatabase } from '../../db/connection';
 import { trips } from '../../db/tripSchema';
-import { and, eq } from 'drizzle-orm/expressions';
+import { and, eq } from '../../utils/drizzle-shim';
 
 const router = Router();
 
@@ -76,4 +76,5 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 export default router;
+
 

@@ -122,3 +122,4 @@ router.get('/health', (_req: ExpressRequest, res: Response) => {
 });
 
 export { router as authRouter };
+

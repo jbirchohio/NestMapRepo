@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { getDatabase } from '../db/connection.js';
-import { notifications } from '../src/db/schema';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { notifications } from '../db/schema';
+import { eq } from '../utils/drizzle-shim';;
+import { and, or } from '../utils/drizzle-shim';
+import { desc } from '../utils/drizzle-shim';import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 // Helper to get database instance
@@ -143,3 +143,6 @@ router.post('/test', async (req, res) => {
 });
 
 export default router;
+
+
+

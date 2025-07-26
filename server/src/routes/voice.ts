@@ -3,10 +3,10 @@ import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 import { db } from '../db/db';
-import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';
-// TODO: Fix count and sql imports - may need different approachimport { sql } from 'drizzle-orm/sql';
-import { voiceSessions, voiceCommands } from '../db/schema.js';
+import { eq } from '../utils/drizzle-shim';;
+import { or } from '../utils/drizzle-shim';
+// TODO: Fix count and sql imports - may need different approachimport { sql } from '../utils/drizzle-shim';
+import { voiceSessions, voiceCommands } from '../db/schema';
 
 const router = Router();
 
@@ -687,3 +687,6 @@ router.post('/action/execute', async (req, res) => {
 });
 
 export default router;
+
+
+

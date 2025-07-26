@@ -1,8 +1,7 @@
 import { Injectable } from 'injection-js';
-import { eq } from 'drizzle-orm';
+import { eq } from '../../../utils/drizzle-shim';
 import { getDatabase } from '../../../db/connection';
-import { users, organizationMembers } from '../../../db/schema';
-import { type User } from '../../../db/schema';
+import { users, organizationMembers, User } from '../../../db/schema';
 import { UserRepository } from './user.repository.interface';
 import { BaseRepositoryImpl } from '../base.repository';
 
@@ -104,3 +103,6 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
   //   return updatedUser || null;
   // }
 }
+
+
+

@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';
-// TODO: Fix count and sql imports - may need different approachimport { sql } from 'drizzle-orm/sql';
-import { count } from 'drizzle-orm/sql/functions';
+import { eq } from '../utils/drizzle-shim';;
+import { and, or } from '../utils/drizzle-shim';
+import { desc } from '../utils/drizzle-shim';
+// TODO: Fix count and sql imports - may need different approachimport { sql } from '../utils/drizzle-shim';
+import { count } from '../utils/drizzle-shim';
 import { db } from '../db/db';
-import { users } from '../db/schema.js';
+import { users } from '../db/schema';
 import { authenticateJWT } from '../middleware/auth.js';
 import { z } from 'zod';
 
@@ -587,3 +587,6 @@ function generateTemporaryPassword(): string {
 }
 
 export default router;
+
+
+

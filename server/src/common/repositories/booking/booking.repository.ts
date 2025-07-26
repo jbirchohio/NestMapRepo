@@ -1,6 +1,6 @@
 import { Injectable } from 'injection-js';
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm/sql';
+import { eq } from '../../../utils/drizzle-shim';
+import { sql } from '../../../utils/drizzle-shim';
 import { getDatabase } from '../../../db';
 import { bookings, type Booking } from '../../../db/schema';
 import { users } from '../../../db/schema';
@@ -211,3 +211,6 @@ export class BookingRepositoryImpl extends BaseRepositoryImpl<Booking, string, O
     }
   }
 }
+
+
+

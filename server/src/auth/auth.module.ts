@@ -25,3 +25,4 @@ import { EmailModule } from '../email/email.module';
   exports: [JwtAuthService],
 })
 export class AuthModule {}
+

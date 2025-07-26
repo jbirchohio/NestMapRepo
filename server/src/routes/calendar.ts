@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';import { getDatabase } from '../db/connection.js';
-import { calendarIntegrations, trips, activities } from '../src/db/schema';
+import { eq } from '../utils/drizzle-shim';;
+import { and, or } from '../utils/drizzle-shim';import { getDatabase } from '../db/connection.js';
+import { calendarIntegrations, trips, activities } from '../db/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
@@ -248,3 +248,6 @@ function addHour(timeString: string): string {
 }
 
 export default router;
+
+
+

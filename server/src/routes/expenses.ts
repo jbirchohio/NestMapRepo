@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { eq } from 'drizzle-orm';
-import { and, or, ne, gte, lte } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';
-// TODO: Fix count and sql imports - may need different approachimport { getDatabase } from '../db/connection.js';
-import { expenses, trips, users } from '../src/db/schema';
+import { db } from "../db-connection";
+
+import { eq, and, gte, lte, sql, desc } from '../utils/drizzle-shim';
+import { expenses, trips, users } from '../db/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
@@ -11,20 +10,10 @@ import { approvalEngine } from '../approvalEngine';
 import { ExpenseIntegrationService } from '../expenseIntegration';
 import { auditLogger } from '../auditLogger';
 
-// Helper to get database instance
-const getDB = () => {
-  const db = getDatabase();
-  if (!db) {
-    throw new Error('Database connection not available');
-  }
-  return db;
-};
-
-
 // Validation schemas
 const insertExpenseSchema = z.object({
   amount: z.union([
-    z.number(),
+    z.number().positive("Amount must be positive"),
     z.string().transform((val, ctx) => {
       const parsed = parseFloat(val);
       if (isNaN(parsed)) {
@@ -264,7 +253,7 @@ router.post('/', async (req, res) => {
       approvalRequired: approvalResult.requiresApproval,
       approvalRequestId: approvalResult.requestId
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         error: "Invalid input", 
@@ -619,6 +608,7 @@ router.post('/integrations/providers', async (req, res) => {
     );
 
     await auditLogger.log({
+      logType: 'integration',
       action: 'expense_integration_configured',
       userId: req.user.id,
       organizationId,
@@ -649,18 +639,20 @@ router.post('/integrations/sync', async (req, res) => {
     const result = await expenseIntegrationService.syncExpenses(
       organizationId,
       req.user.id,
-      provider,
-      { startDate, endDate }
+      provider
     );
 
     await auditLogger.log({
+      logType: 'sync',
       action: 'expenses_synced',
       userId: req.user.id,
       organizationId,
       details: { 
         provider, 
-        syncedCount: result.syncedCount,
-        errorCount: result.errors.length
+        syncedCount: (result as any).syncedCount || 0,
+        errorCount: result.errors?.length || 0,
+        startDate,
+        endDate
       }
     });
 
@@ -689,11 +681,11 @@ router.post('/integrations/export', async (req, res) => {
       organizationId,
       req.user.id,
       provider,
-      expenseIds,
-      reportName
+      expenseIds
     );
 
     await auditLogger.log({
+      logType: 'export',
       action: 'expenses_exported',
       userId: req.user.id,
       organizationId,
@@ -701,7 +693,7 @@ router.post('/integrations/export', async (req, res) => {
         provider, 
         expenseCount: expenseIds.length,
         reportName,
-        exportId: result.exportId
+        exportId: (result as any).exportId || 'unknown'
       }
     });
 
@@ -725,10 +717,10 @@ router.get('/integrations/sync-history', async (req, res) => {
     const history = await expenseIntegrationService.getSyncHistory(
       organizationId,
       provider as string,
-      parseInt(limit as string)
+      limit as string
     );
 
-    res.json(history);
+    res.json({ history });
   } catch (error) {
     console.error('Error fetching sync history:', error);
     res.status(500).json({ error: 'Failed to fetch sync history' });
@@ -756,10 +748,11 @@ router.post('/integrations/test/:provider', async (req, res) => {
     );
 
     await auditLogger.log({
+      logType: 'test',
       action: 'expense_integration_tested',
       userId: req.user.id,
       organizationId,
-      details: { provider, success: result.success }
+      details: { provider, success: result as boolean }
     });
 
     res.json(result);
@@ -785,7 +778,7 @@ router.get('/integrations/stats', async (req, res) => {
       endDate as string
     );
 
-    res.json(stats);
+    res.json({ stats });
   } catch (error) {
     console.error('Error fetching integration statistics:', error);
     res.status(500).json({ error: 'Failed to fetch integration statistics' });
@@ -813,6 +806,7 @@ router.post('/integrations/refresh-tokens', async (req, res) => {
     );
 
     await auditLogger.log({
+      logType: 'maintenance',
       action: 'expense_integration_tokens_refreshed',
       userId: req.user.id,
       organizationId,
@@ -868,13 +862,22 @@ router.post('/integrations/:provider/categories/map', async (req, res) => {
       return res.status(400).json({ error: 'Category mappings are required' });
     }
 
+    // Convert array to Record<string, string> format
+    const mappingsRecord = categoryMappings.reduce((acc: Record<string, string>, mapping: any) => {
+      if (mapping.from && mapping.to) {
+        acc[mapping.from] = mapping.to;
+      }
+      return acc;
+    }, {});
+
     const result = await expenseIntegrationService.mapExpenseCategories(
       organizationId,
       provider,
-      categoryMappings
+      mappingsRecord
     );
 
     await auditLogger.log({
+      logType: 'mapping',
       action: 'expense_categories_mapped',
       userId: req.user.id,
       organizationId,
@@ -889,3 +892,6 @@ router.post('/integrations/:provider/categories/map', async (req, res) => {
 });
 
 export default router;
+
+
+

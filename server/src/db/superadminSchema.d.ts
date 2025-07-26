@@ -2958,3 +2958,4 @@ export type NewBillingEvent = typeof billingEvents.$inferInsert;
 export type SystemActivitySummary = typeof systemActivitySummary.$inferSelect;
 export type NewSystemActivitySummary = typeof systemActivitySummary.$inferInsert;
 //# sourceMappingURL=superadminSchema.d.ts.map
+

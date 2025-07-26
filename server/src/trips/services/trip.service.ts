@@ -40,3 +40,4 @@ export class TripServiceImpl implements TripService {
     return trip;
   }
 }
+

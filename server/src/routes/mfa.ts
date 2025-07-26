@@ -1,6 +1,6 @@
 import express from 'express';
 import { MFAService } from '../mfaService';
-import { authenticateJWT as requireAuth } from '../src/middleware/auth';
+import { authenticateJWT as requireAuth } from '../middleware/auth';
 import { auditLogger } from '../auditLogger';
 
 const router = express.Router();
@@ -276,3 +276,4 @@ router.post('/reset/:userId', requireAuth, async (req, res) => {
 });
 
 export default router;
+

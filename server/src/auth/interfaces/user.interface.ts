@@ -61,3 +61,4 @@ export function isUserRole(role: string): role is UserRole {
 export function getDefaultUserRole(): UserRole {
   return UserRoles.MEMBER;
 }
+

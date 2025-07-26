@@ -106,3 +106,4 @@ export class BookingService {
     return this.bookingRepository.getBookingStatsByOrgId(orgId);
   }
 }
+

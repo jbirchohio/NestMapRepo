@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 import { db } from '../db/db';
-import { spendPolicies } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';const router = Router();
+import { spendPolicies } from '../db/schema';
+import { eq } from '../utils/drizzle-shim';;
+import { and, or } from '../utils/drizzle-shim';const router = Router();
 
 // Apply JWT authentication to all policy routes
 router.use(authenticateJWT);
@@ -592,3 +592,6 @@ router.delete('/spend/:id', async (req: Request, res: Response) => {
 });
 
 export default router;
+
+
+

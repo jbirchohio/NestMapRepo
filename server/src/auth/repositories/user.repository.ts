@@ -2,8 +2,8 @@ import { getDatabase } from '../../db';
 import { users } from '../../db/schema';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../../db/schema';
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm/sql';
+import { eq } from '../../utils/drizzle-shim';
+import { sql } from '../../utils/drizzle-shim';
 
 // Define user interface based on DB schema structure
 export interface IUser {
@@ -343,3 +343,6 @@ export class UserRepositoryImpl implements IUserRepository {
     return !!result?.exists;
   }
 }
+
+
+

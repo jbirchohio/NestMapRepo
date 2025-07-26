@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { eq } from 'drizzle-orm';
-import { and, or, ne, gte, lte } from 'drizzle-orm/sql/expressions/conditions';
-import { desc } from 'drizzle-orm/sql/expressions/select';
-// TODO: Fix count and sql imports - may need different approachimport { sql } from 'drizzle-orm/sql';
-import { count } from 'drizzle-orm/sql/functions';
+import { eq } from '../utils/drizzle-shim';;
+import { and, or, ne, gte, lte } from '../utils/drizzle-shim';
+import { desc } from '../utils/drizzle-shim';
+// TODO: Fix count and sql imports - may need different approachimport { sql } from '../utils/drizzle-shim';
+import { count } from '../utils/drizzle-shim';
 import { db } from '../db/db';
-import { budgets, expenses, users } from '../db/schema.js';
+import { budgets, expenses, users } from '../db/schema';
 import { authenticateJWT } from '../middleware/auth.js';
 import { z } from 'zod';
 // import { auditLogger } from '../auditLogger';
@@ -518,3 +518,6 @@ async function generateBudgetAnalytics(budgetId: string, organizationId: string,
 }
 
 export default router;
+
+
+

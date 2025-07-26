@@ -22,3 +22,4 @@ export interface BookingRepository extends BaseRepository<Booking, string, Omit<
   getBookingStatsByUserId(userId: string): Promise<{total: number, statusCounts: Record<string, number>}>;
   getBookingStatsByOrgId(orgId: string): Promise<{total: number, statusCounts: Record<string, number>}>;
 }
+

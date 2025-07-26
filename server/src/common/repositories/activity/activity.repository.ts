@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq } from '../../../utils/drizzle-shim';;
 // import { db } from '../../db/db';
 // import { activities, type Activity } from '../../db/schema';
 import type { ActivityRepository } from './activity.repository.interface';
@@ -73,3 +73,6 @@ export class ActivityRepositoryImpl extends BaseRepositoryImpl<Activity, string,
     return updatedActivity || null;
   }
 }
+
+
+

@@ -67,3 +67,4 @@ export function logAndFormatError(error: unknown): FormattedError {
   logger.error(err.message, err);
   return formatErrorResponse(err);
 }
+

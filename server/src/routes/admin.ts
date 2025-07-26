@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDatabase } from '../db/connection';
-import { users, organizations } from '../db/schema.js';
+import { users, organizations } from '../db/schema';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT, requireRole } from '../middleware/auth';
 
@@ -276,3 +276,4 @@ router.get('/permissions', async (req: Request, res: Response) => {
 });
 
 export default router;
+

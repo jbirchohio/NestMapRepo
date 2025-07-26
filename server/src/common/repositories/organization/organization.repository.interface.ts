@@ -26,3 +26,4 @@ export interface OrganizationRepository extends BaseRepository<schema.Organizati
   updatePlan(organizationId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<schema.Organization | null>;
   // updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<schema.Organization | null>;
 }
+

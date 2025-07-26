@@ -6,7 +6,7 @@ import { Booking } from '../../db/schema';
 
 // Services and utilities
 import { BookingService } from '../services/booking.service';
-import { ResponseFormatter } from '../utils/response-formatter.util';
+import  ResponseHandler  from '../../utils/response';
 
 // Middleware
 import { requireAuth, requireOrgContext } from '../middleware/auth.middleware';
@@ -51,7 +51,7 @@ export class BookingController {
    */
   private getBookingById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
@@ -59,17 +59,17 @@ export class BookingController {
     const booking = await this.bookingService.getBookingById(id);
     
     if (!booking) {
-      ResponseFormatter.notFound(res, 'Booking not found');
+      ResponseHandler.notFound(res, 'Booking not found');
       return;
     }
 
     // Check if user has access to this booking
     if (booking.userId !== req.user.id && !req.user.isAdmin) {
-      ResponseFormatter.forbidden(res, 'Not authorized to view this booking');
+      ResponseHandler.forbidden(res, 'Not authorized to view this booking');
       return;
     }
 
-    ResponseFormatter.success(res, { booking });
+    ResponseHandler.success(res, { booking });
   });
 
   /**
@@ -77,12 +77,12 @@ export class BookingController {
    */
   private getAllBookings = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
     const bookings = await this.bookingService.getAllBookings();
-    ResponseFormatter.success(res, { bookings });
+    ResponseHandler.success(res, { bookings });
   });
 
   /**
@@ -90,13 +90,13 @@ export class BookingController {
    */
   private getBookingsByTripId = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
     const { tripId } = req.params;
     const bookings = await this.bookingService.getBookingsByTripId(tripId);
-    ResponseFormatter.success(res, { bookings });
+    ResponseHandler.success(res, { bookings });
   });
 
   /**
@@ -104,19 +104,19 @@ export class BookingController {
    */
   private getBookingsByUserId = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
     const { userId } = req.params;
     
     if (userId !== req.user.id && !req.user.isAdmin) {
-      ResponseFormatter.forbidden(res, 'Not authorized to access these bookings');
+      ResponseHandler.forbidden(res, 'Not authorized to access these bookings');
       return;
     }
 
     const bookings = await this.bookingService.getBookingsByUserId(userId);
-    ResponseFormatter.success(res, { bookings });
+    ResponseHandler.success(res, { bookings });
   });
 
   /**
@@ -124,7 +124,7 @@ export class BookingController {
    */
   private createBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
@@ -152,7 +152,7 @@ export class BookingController {
     };
 
     const booking = await this.bookingService.createBooking(bookingDataWithUser);
-    ResponseFormatter.created(res, { booking });
+    ResponseHandler.created(res, { booking });
   });
 
   /**
@@ -160,7 +160,7 @@ export class BookingController {
    */
   private updateBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
@@ -169,17 +169,17 @@ export class BookingController {
 
     const existingBooking = await this.bookingService.getBookingById(id);
     if (!existingBooking) {
-      ResponseFormatter.notFound(res, 'Booking not found');
+      ResponseHandler.notFound(res, 'Booking not found');
       return;
     }
 
     if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-      ResponseFormatter.forbidden(res, 'Not authorized to update this booking');
+      ResponseHandler.forbidden(res, 'Not authorized to update this booking');
       return;
     }
 
     const booking = await this.bookingService.updateBooking(id, updateData as Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>>);
-    ResponseFormatter.success(res, { booking });
+    ResponseHandler.success(res, { booking });
   });
 
   /**
@@ -187,7 +187,7 @@ export class BookingController {
    */
   private deleteBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
@@ -195,17 +195,17 @@ export class BookingController {
     const existingBooking = await this.bookingService.getBookingById(id);
     
     if (!existingBooking) {
-      ResponseFormatter.notFound(res, 'Booking not found');
+      ResponseHandler.notFound(res, 'Booking not found');
       return;
     }
 
     if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-      ResponseFormatter.forbidden(res, 'Not authorized to delete this booking');
+      ResponseHandler.forbidden(res, 'Not authorized to delete this booking');
       return;
     }
 
     await this.bookingService.deleteBooking(id);
-    ResponseFormatter.noContent(res);
+    ResponseHandler.noContent(res);
   });
 
   /**
@@ -213,7 +213,7 @@ export class BookingController {
    */
   private confirmBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
@@ -222,17 +222,17 @@ export class BookingController {
     
     const existingBooking = await this.bookingService.getBookingById(id);
     if (!existingBooking) {
-      ResponseFormatter.notFound(res, 'Booking not found');
+      ResponseHandler.notFound(res, 'Booking not found');
       return;
     }
 
     if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-      ResponseFormatter.forbidden(res, 'Not authorized to confirm this booking');
+      ResponseHandler.forbidden(res, 'Not authorized to confirm this booking');
       return;
     }
 
     const booking = await this.bookingService.confirmBooking(id, confirmationDetails);
-    ResponseFormatter.success(res, { booking });
+    ResponseHandler.success(res, { booking });
   });
 
   /**
@@ -240,7 +240,7 @@ export class BookingController {
    */
   private cancelBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
@@ -249,20 +249,20 @@ export class BookingController {
 
     const existingBooking = await this.bookingService.getBookingById(id);
     if (!existingBooking) {
-      ResponseFormatter.notFound(res, 'Booking not found');
+      ResponseHandler.notFound(res, 'Booking not found');
       return;
     }
 
     if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-      ResponseFormatter.forbidden(res, 'Not authorized to cancel this booking');
+      ResponseHandler.forbidden(res, 'Not authorized to cancel this booking');
       return;
     }
 
     const booking = await this.bookingService.cancelBooking(id, reason || '');
     if (booking) {
-      ResponseFormatter.success(res, { booking });
+      ResponseHandler.success(res, { booking });
     } else {
-      ResponseFormatter.error(res, 'Failed to cancel booking');
+      ResponseHandler.error(res, 'Failed to cancel booking');
     }
   });
 
@@ -271,7 +271,7 @@ export class BookingController {
    */
   private getBookingStatistics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {
-      ResponseFormatter.unauthorized(res, 'Authentication required');
+      ResponseHandler.unauthorized(res, 'Authentication required');
       return;
     }
 
@@ -279,12 +279,12 @@ export class BookingController {
     
     if (userId) {
       const stats = await this.bookingService.getBookingStatsByUserId(userId as string);
-      ResponseFormatter.success(res, { stats });
+      ResponseHandler.success(res, { stats });
     } else if (orgId) {
       const stats = await this.bookingService.getBookingStatsByOrgId(orgId as string);
-      ResponseFormatter.success(res, { stats });
+      ResponseHandler.success(res, { stats });
     } else {
-      ResponseFormatter.badRequest(res, 'Either userId or orgId query parameter is required');
+      ResponseHandler.badRequest(res, 'Either userId or orgId query parameter is required');
     }
   });
 
@@ -297,3 +297,4 @@ export class BookingController {
     return this.router;
   }
 }
+

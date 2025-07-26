@@ -80,3 +80,4 @@ export const selectInvoiceSchema = createSelectSchema(invoices);
 // Types
 export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
+

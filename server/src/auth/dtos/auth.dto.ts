@@ -46,3 +46,4 @@ export interface AuthResponse {
   tokenType: string;
   expiresIn: number;
 }
+

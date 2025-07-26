@@ -75,3 +75,4 @@ router.get('/', handleMetricsRequest);
 router.post('/', handleMetricsRequest);
 
 export default router;
+

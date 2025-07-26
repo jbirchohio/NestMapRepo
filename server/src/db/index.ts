@@ -65,11 +65,12 @@ process.on('SIGTERM', closeConnections);
 process.on('SIGINT', closeConnections);
 
 export * from './schema';
-export * from 'drizzle-orm';
-export { sql } from 'drizzle-orm/sql';
+export * from '../utils/drizzle-shim';
+export { sql } from '../utils/drizzle-shim';
 
 export default {
   getPool,
   getDb,
   closeConnections,
 };
+

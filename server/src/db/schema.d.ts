@@ -22302,3 +22302,4 @@ export type NewApprovalRule = typeof approvalRules.$inferInsert;
 export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
 export type NewAdminAuditLog = typeof adminAuditLog.$inferInsert;
 //# sourceMappingURL=schema.d.ts.map
+

@@ -142,3 +142,4 @@ export declare const auditLogs: import("drizzle-orm/pg-core").PgTableWithColumns
     dialect: "pg";
 }>;
 //# sourceMappingURL=auditLog.d.ts.map
+

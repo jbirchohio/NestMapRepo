@@ -1,11 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe';
 import { getDatabase } from '../db/connection.js';
-import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';import { NodemailerEmailService } from '../src/email/services/nodemailer-email.service';
+import { eq } from '../utils/drizzle-shim';;
+import { or } from '../utils/drizzle-shim';import { NodemailerEmailService } from '../email/services/nodemailer-email.service';
 import { ConfigService } from '@nestjs/config';
 import { invoices } from '../db/invoiceSchema';
-import { organizations } from '../db/schema.js';
+import { organizations } from '../db/schema';
 import { stripe } from '../stripe';
 
 // Extend the Express Request type to include rawBody
@@ -421,3 +421,6 @@ async function handlePayoutFailed(payout: Stripe.Payout) {
 
 // Export the router
 export default router;
+
+
+

@@ -24,3 +24,4 @@ export interface TripRepository extends BaseRepository<tripSchema.Trip, string, 
   // Access control helper
   checkTripAccess(tripId: string, user: schema.User): Promise<boolean>;
 }
+

@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 import { getDatabase } from '../db/connection';
 import { autonomousVehicles, vehicleBookings } from '../db/schema';
-import { eq } from 'drizzle-orm';
-import { and } from 'drizzle-orm/expressions';
+import { eq } from '../utils/drizzle-shim';;
+import { and } from '../utils/drizzle-shim';
 
 export interface AutonomousVehicleIntegration {
   vehicleId: string;
@@ -889,3 +889,6 @@ class AutonomousVehicleIntegrationService extends EventEmitter {
 }
 
 export default AutonomousVehicleIntegrationService;
+
+
+

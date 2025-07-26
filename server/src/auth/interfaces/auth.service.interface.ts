@@ -9,3 +9,4 @@ export interface IAuthService {
   resetPassword(token: string, newPassword: string): Promise<void>;
   revokeAllSessions(userId: string): Promise<void>;
 }
+

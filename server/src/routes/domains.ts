@@ -1,12 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { db } from "../db";
 import { customDomains, organizations, whiteLabelSettings } from "../db/schema";
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';import crypto from "crypto";
+import { eq } from '../utils/drizzle-shim';;
+import { and, or } from '../utils/drizzle-shim';import crypto from "crypto";
 import { promises as dns } from 'dns';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import type { AuthenticatedRequest } from '../src/types/auth-user';
+import type { AuthenticatedRequest } from '../types/auth-user';
 
 interface Domain {
   id: number;
@@ -350,3 +350,6 @@ export function registerDomainRoutes(app: Express) {
 }
 
 export default { registerDomainRoutes };
+
+
+

@@ -24,3 +24,4 @@ export interface TripService {
   getCorporateTrips(orgId: string): Promise<CorporateTripDto[]>;
   getTripById(tripId: string, user: schema.User): Promise<tripSchema.Trip | null>;
 }
+

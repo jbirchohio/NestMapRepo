@@ -1,5 +1,4 @@
 import { Router, type Response, type NextFunction, type RequestHandler, type Request } from 'express';
-import { ParamsDictionary } from 'express-serve-static-core';
 import { getAuthContext, requireAuth } from '../utils/authContext';
 import { logUserActivity } from '../utils/activityLogger';
 
@@ -11,35 +10,17 @@ import { v4 as uuidv4 } from 'uuid';
 // Import types and schemas
 import type { Activity, ActivityStatus, ActivityType } from '../types/activity';
 import { activitySchema, createActivitySchema, updateActivitySchema } from '../types/activity';
-import { User } from '../db/schema.js';
+// ...existing code...
 
 // Import services
 import activityService from '../services/activity.service';
 import { validateOrganizationAccess } from '../middleware/organization';
 
 // Define JWTUser interface for this file
-interface JWTUser {
-  id: string;
-  userId?: string; // For backward compatibility
-  email: string;
-  role: string;
-  organizationId?: string;
-}
+// ...existing code...
 
 // Type for authenticated user (either JWTUser or DB User)
-type AuthenticatedUser = JWTUser | User;
-
-// Type guard to check if user is JWTUser
-function isJWTUser(user: unknown): user is JWTUser {
-  return typeof user === 'object' && user !== null && 
-    'id' in user && typeof (user as JWTUser).id === 'string' && 
-    'email' in user && typeof (user as JWTUser).email === 'string' && 
-    'role' in user && typeof (user as JWTUser).role === 'string';
-}
-
-// Define types for request parameters, body, and query
-type ActivityIdParam = { activityId: string };
-type TripIdParam = { tripId: string };
+// ...existing code...
 
 // Field transforms
 function transformActivityToFrontend(activity: Activity): any {
@@ -102,15 +83,11 @@ router.use((req, res, next) => {
 });
 
 // Extend the Express Request type to include ip and other common properties
-type ExtendedRequest<P = {}, ResBody = any, ReqBody = any> = Request<P, ResBody, ReqBody> & {
-  ip?: string;
-  get(header: string): string | undefined;
-}
 
 // Get all activities for a trip
-router.get<{ tripId: string }>(
+router.get(
   '/trip/:tripId',
-  async (req: ExtendedRequest<{ tripId: string }> & { params: { tripId: string } }, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = tripIdParamSchema.safeParse({ tripId: req.params.tripId });
       if (!result.success) {
@@ -155,11 +132,9 @@ router.get<{ tripId: string }>(
 );
 
 // Create activity
-router.post<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>(
+router.post(
   '/create', 
-  async (req: ExtendedRequest<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>> & { 
-    body: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'> 
-  }, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = createActivitySchema.safeParse(req.body);
     if (!result.success) {
@@ -229,9 +204,9 @@ router.post<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedA
 });
 
 // Get activity by ID
-router.get<{ activityId: string }>(
+router.get(
   '/:activityId', 
-  async (req: ExtendedRequest<{ activityId: string }> & { params: { activityId: string } }, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
     if (!result.success) {
@@ -274,28 +249,10 @@ router.get<{ activityId: string }>(
 });
 
 // Update activity
-type UpdateActivityBody = {
-  name?: string;
-  description?: string;
-  status?: string;
-  type?: ActivityType;
-  startTime?: string;
-  endTime?: string;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
-  cost?: number;
-  currency?: string;
-  notes?: string;
-  tripId?: string;
-};
 
-router.put<{ activityId: string }, any, UpdateActivityBody>(
-  '/:activityId', 
-  async (req: ExtendedRequest<{ activityId: string }, any, UpdateActivityBody> & { 
-    params: { activityId: string };
-    body: UpdateActivityBody;
-  }, res: Response, next: NextFunction) => {
+router.put(
+  '/:activityId',
+  async (req: Request, res: Response, next: NextFunction) => {
   try {
     const paramResult = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
     if (!paramResult.success) {
@@ -377,9 +334,9 @@ router.put<{ activityId: string }, any, UpdateActivityBody>(
 });
 
 // Delete activity by ID
-router.delete<{ activityId: string }>(
+router.delete(
   '/:activityId', 
-  async (req: ExtendedRequest<{ activityId: string }> & { params: { activityId: string } }, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
     if (!result.success) {
@@ -426,3 +383,4 @@ router.delete<{ activityId: string }>(
 });
 
 export default router;
+

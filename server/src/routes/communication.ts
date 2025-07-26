@@ -1,6 +1,6 @@
 import express from 'express';
 import { CommunicationIntegrationService } from '../communicationIntegration';
-import { authenticateJWT as requireAuth, requireRole } from '../src/middleware/auth';
+import { authenticateJWT as requireAuth, requireRole } from '../middleware/auth';
 import { auditLogger } from '../auditLogger';
 
 const router = express.Router();
@@ -351,3 +351,4 @@ router.get('/teams/channels', requireAuth, async (req, res) => {
 });
 
 export default router;
+

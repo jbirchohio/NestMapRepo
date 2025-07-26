@@ -1,11 +1,10 @@
 import type { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import { db } from "../db";
-import { eq } from 'drizzle-orm';
-import { or } from 'drizzle-orm/sql/expressions/conditions';
-// TODO: Fix count and sql imports - may need different approachimport { adminSettings, adminAuditLog, users } from "../db/schema";
+import { eq, count } from '../utils/drizzle-shim';
+import { adminSettings, adminAuditLog } from "../db/schema";
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import type { User } from '../db/schema.js';
+import type { User } from '../db/schema';
 
 // Extend Express Request type to include user
 declare module 'express-serve-static-core' {
@@ -23,7 +22,6 @@ type AuthenticatedRequest = Request;
 
 // Type-safe middleware type for authenticated requests
 type Middleware = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
-type AuthMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => void | Promise<void>;
 
 interface SystemSettings {
   general: {
@@ -291,3 +289,6 @@ export function registerAdminSettingsRoutes(app: Express) {
     }
   }) as RequestHandler);
 }
+
+
+

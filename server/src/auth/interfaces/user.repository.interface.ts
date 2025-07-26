@@ -60,3 +60,4 @@ export interface UserRepository extends BaseRepository<User, string, Omit<User, 
   setPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void>;
   clearPasswordResetToken(userId: string): Promise<void>;
 }
+

@@ -1,5 +1,4 @@
-import { eq } from 'drizzle-orm';
-import { and } from 'drizzle-orm/expressions';
+import { eq, and } from '../../utils/drizzle-shim';
 import { db } from '../../db/db';
 import * as tripSchema from '../../db/tripSchema';
 import * as schema from '../../db/schema';
@@ -104,3 +103,6 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<tripSchema.Trip, stri
     return trip.organizationId === user.organizationId;
   }
 }
+
+
+

@@ -6,3 +6,4 @@ const tripRepository = new TripRepositoryImpl();
 
 // Initialize service with its dependencies
 export const tripService = new TripServiceImpl(tripRepository);
+

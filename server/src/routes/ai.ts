@@ -2,11 +2,12 @@ import { Router } from "express";
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from "zod";
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { db } from "../db";
 import { trips, activities } from "../db/schema";
-import { eq } from 'drizzle-orm';
-import { and, or } from 'drizzle-orm/sql/expressions/conditions';import { findLocation } from "../aiLocations";
+import { eq } from '../utils/drizzle-shim';;
+import { and } from '../utils/drizzle-shim';
+import { findLocation } from "../aiLocations";
 import { fetchEarthquakeAlerts } from "../disasterMonitor";
 import { forecastBudget } from "../budgetForecast";
 import { reconcilePreferences, type TravelerPreference, generateConsensusItinerary } from "../groupReconciler";
@@ -524,3 +525,6 @@ router.post('/group-itinerary', async (req, res) => {
 });
 
 export default router;
+
+
+

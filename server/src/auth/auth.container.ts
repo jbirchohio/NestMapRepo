@@ -53,3 +53,4 @@ export class AuthContainer {
 
 // Export singleton instance
 export const authContainer = AuthContainer.getInstance();
+

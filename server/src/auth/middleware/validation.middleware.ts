@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { z, ZodError, AnyZodObject, ZodEffects } from 'zod';
+import { z, ZodError, AnyZodObject, ZodEffects, ZodSchema } from 'zod';
 
 // Export the AnyZodObject type so it can be imported by other modules
 export type { AnyZodObject };
@@ -54,7 +54,7 @@ export const validateRequest = (schema: ValidationSchema): ((req: Request, res: 
 /**
  * Validation for request body only
  */
-export const validateBody = (schema: z.ZodSchema) => {
+export const validateBody = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = schema.parse(req.body || {});
@@ -81,7 +81,7 @@ export const validateBody = (schema: z.ZodSchema) => {
 /**
  * Validation for query parameters only
  */
-export const validateQuery = (schema: z.ZodSchema) => {
+export const validateQuery = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       req.query = schema.parse(req.query || {});
@@ -108,7 +108,7 @@ export const validateQuery = (schema: z.ZodSchema) => {
 /**
  * Validation for URL parameters only
  */
-export const validateParams = (schema: z.ZodSchema) => {
+export const validateParams = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       req.params = schema.parse(req.params || {});
@@ -168,3 +168,4 @@ export const commonSchemas = {
   // User ID  
   userId: z.string().uuid('Invalid user ID')
 };
+

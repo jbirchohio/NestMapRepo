@@ -44,3 +44,4 @@ router.get('/trip/:tripId/ics', validateAndSanitizeRequest({ params: tripIdParam
 });
 
 export default router;
+

@@ -105,3 +105,4 @@ export type NewTripTraveler = typeof tripTravelers.$inferInsert;
 
 export type TripItineraryItem = typeof tripItineraryItems.$inferSelect;
 export type NewTripItineraryItem = typeof tripItineraryItems.$inferInsert;
+
