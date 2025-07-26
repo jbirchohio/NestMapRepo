@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import fs from 'fs/promises';
 import { db } from '../db/db';
 import { trips, activities, expenses } from '../db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql } from '../src/utils/drizzle-shim';
 import { GaussianNB } from 'ml-naivebayes';
 import MLR from 'ml-regression-multivariate-linear';
 

@@ -713,7 +713,7 @@ Format as JSON with arrays for restaurants, activities, and hotels. Include only
       // Import database connection
       const { db } = await import('../db/db.js');
       const { trips } = await import('../db/schema.js');
-      const { eq, desc } = await import('drizzle-orm');
+      const { eq, desc } = await import('../utils/drizzle-shim.js');
 
       if (tripId) {
         const trip = await db.select().from(trips).where(eq(trips.id, tripId)).limit(1);

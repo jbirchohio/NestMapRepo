@@ -294,7 +294,7 @@ export const resolveDomainOrganization = async (
     // Import database connection
     const { db } = await import('../db.js');
     const { customDomains } = await import('../db/schema');
-    const { eq } = await import('drizzle-orm');
+    const { eq } = await import('../utils/drizzle-shim.js');
 
     // Look up organization by custom domain
     const [domainConfig] = await db
