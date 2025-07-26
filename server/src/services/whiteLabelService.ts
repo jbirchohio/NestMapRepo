@@ -5,7 +5,7 @@
 
 import { db } from '../db/db';
 import { organizations } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { logger } from '../utils/logger';
 
 export interface WhiteLabelTheme {

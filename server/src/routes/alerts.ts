@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { authenticateJWT, requireRole } from '../middleware/auth.js';
 import { getDatabase } from '../db/connection.js';
 import { auditLogs } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and, gte } from '../utils/drizzle-shim';
-// TODO: Fix count and sql imports - may need different approachimport { and, gte } from "drizzle-orm";
+// TODO: Fix count and sql imports - may need different approach
+import { and, gte } from "drizzle-orm";
 import { count } from "../utils/drizzle-shim";
 import { logger } from '../utils/logger.js';
 

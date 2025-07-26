@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { getDatabase } from '../db/connection.js';
 import { users } from '../db/schema';
 import { logger } from '../utils/logger.js';

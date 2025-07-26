@@ -1,7 +1,7 @@
 import { db } from '../db/db';
 import { activities } from '../db/schema';
 import { and, eq } from '../utils/drizzle-shim';
-import { sql } from '../utils/drizzle-shim';;
+import { sql } from '../utils/drizzle-shim';
 import type { Activity } from '../types/activity';
 import { v4 as uuidv4 } from 'uuid';
 import type { InferSelectModel } from '../utils/drizzle-shim';

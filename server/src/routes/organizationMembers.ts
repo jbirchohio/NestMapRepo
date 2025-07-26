@@ -4,7 +4,7 @@ import { db } from "../db-connection";
 import { Router, Response } from 'express';
 import type { AuthenticatedRequest } from '../types/auth-user';
 import { users, organizationMembers } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and, sql } from '../utils/drizzle-shim';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';

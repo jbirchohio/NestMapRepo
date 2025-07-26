@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { db } from '../db';
 import { organizations } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');

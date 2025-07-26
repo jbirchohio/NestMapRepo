@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and, or } from '../utils/drizzle-shim';
 import { desc } from '../utils/drizzle-shim';
-// TODO: Fix count and sql imports - may need different approachimport { sql } from '../utils/drizzle-shim';
+// TODO: Fix count and sql imports - may need different approach
+import { sql } from '../utils/drizzle-shim';
 import { count } from '../utils/drizzle-shim';
 import { db } from '../db/db';
 import { users } from '../db/schema';

@@ -3,9 +3,10 @@ import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 import { db } from '../db/db';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { or } from '../utils/drizzle-shim';
-// TODO: Fix count and sql imports - may need different approachimport { sql } from '../utils/drizzle-shim';
+// TODO: Fix count and sql imports - may need different approach
+import { sql } from '../utils/drizzle-shim';
 import { voiceSessions, voiceCommands } from '../db/schema';
 
 const router = Router();

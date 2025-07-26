@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { db } from '../db-connection';
 import { users, organizations } from '../db/schema';
-import { eq, and } from '../utils/drizzle-shim';;
+import { eq, and } from '../utils/drizzle-shim';
 
 // Role-based schemas
 const UserRoleSchema = z.enum(['executive', 'travel_manager', 'finance', 'it_admin', 'employee']);

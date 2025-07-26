@@ -1,8 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe';
 import { getDatabase } from '../db/connection.js';
-import { eq } from '../utils/drizzle-shim';;
-import { or } from '../utils/drizzle-shim';import { NodemailerEmailService } from '../email/services/nodemailer-email.service';
+import { eq } from '../utils/drizzle-shim';
+import { or } from '../utils/drizzle-shim';
+import { NodemailerEmailService } from '../email/services/nodemailer-email.service';
 import { ConfigService } from '@nestjs/config';
 import { invoices } from '../db/invoiceSchema';
 import { organizations } from '../db/schema';

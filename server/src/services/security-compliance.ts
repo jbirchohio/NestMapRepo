@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { db } from '../db-connection';
 import { users, organizations, trips } from '../db/schema';
 import { eq, and, gte, lte, desc, count } from '../utils/drizzle-shim';
-import { sql } from '../utils/drizzle-shim';;
+import { sql } from '../utils/drizzle-shim';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 

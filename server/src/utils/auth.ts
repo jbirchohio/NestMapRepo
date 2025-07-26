@@ -6,7 +6,7 @@ import { logger } from './logger';
 import { users } from '../db/schema.js';  
 import type { User } from '../db/schema.js';  
 import { eq, and } from '../utils/drizzle-shim';
-import { sql } from '../utils/drizzle-shim';;
+import { sql } from '../utils/drizzle-shim';
 import type { InferSelectModel } from '../utils/drizzle-shim';
 import { dbService } from '../services/database.service';
 

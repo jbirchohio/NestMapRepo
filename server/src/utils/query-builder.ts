@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray } from '../utils/drizzle-shim';
-import { sql } from '../utils/drizzle-shim';;
+import { sql } from '../utils/drizzle-shim';
 import { dbService } from '../services/database.service';
 import { logger } from './logger';
 

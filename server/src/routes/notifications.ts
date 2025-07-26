@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { getDatabase } from '../db/connection.js';
 import { notifications } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and, or } from '../utils/drizzle-shim';
-import { desc } from '../utils/drizzle-shim';import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { desc } from '../utils/drizzle-shim';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 // Helper to get database instance

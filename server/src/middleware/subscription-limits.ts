@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { and, eq, count } from '../utils/drizzle-shim';;
+import { and, eq, count } from '../utils/drizzle-shim';
 import { db } from '../db';
 import { organizations, users, trips } from '../db/schema';
 import { logger } from '../utils/logger';
