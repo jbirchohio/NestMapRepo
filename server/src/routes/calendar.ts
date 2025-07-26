@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { eq } from '../utils/drizzle-shim';;
-import { and, or } from '../utils/drizzle-shim';import { getDatabase } from '../db/connection.js';
+import { eq } from '../utils/drizzle-shim';
+import { and, or } from '../utils/drizzle-shim';
+import { getDatabase } from '../db/connection.js';
 import { calendarIntegrations, trips, activities } from '../db/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

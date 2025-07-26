@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { getDatabase } from '../db/connection';
 import { autonomousVehicles, vehicleBookings } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and } from '../utils/drizzle-shim';
 
 export interface AutonomousVehicleIntegration {

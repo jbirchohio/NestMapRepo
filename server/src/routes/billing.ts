@@ -10,8 +10,9 @@ import {
 } from '../stripe';
 import { getDatabase } from '../db/connection.js';
 import { organizations } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
-import { or } from '../utils/drizzle-shim';// Helper to get database instance
+import { eq } from '../utils/drizzle-shim';
+import { or } from '../utils/drizzle-shim';
+// Helper to get database instance
 const getDB = () => {
   const db = getDatabase();
   if (!db) {

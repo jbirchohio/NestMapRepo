@@ -4,7 +4,7 @@ import { logger } from '../utils/logger.js';
 import { authenticateJWT } from '../middleware/auth.js';
 import { db } from '../db/db';
 import { spendPolicies } from '../db/schema';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and, or } from '../utils/drizzle-shim';const router = Router();
 
 // Apply JWT authentication to all policy routes

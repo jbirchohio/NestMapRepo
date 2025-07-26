@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and, or, gte, lte } from '../utils/drizzle-shim';
 import { desc } from '../utils/drizzle-shim';
-// TODO: Fix count and sql imports - may need different approachimport { getDatabase } from '../db/connection.js';
+// TODO: Fix count and sql imports - may need different approach
+import { getDatabase } from '../db/connection.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { 

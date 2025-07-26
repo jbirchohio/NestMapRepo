@@ -5,9 +5,10 @@
 
 import express from 'express';
 import z from 'zod';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and } from '../utils/drizzle-shim';
-import { desc } from '../utils/drizzle-shim';import { getDatabase } from '../db/connection';
+import { desc } from '../utils/drizzle-shim';
+import { getDatabase } from '../db/connection';
 import { autonomousVehicles, vehicleBookings } from '../db/schema';
 import { authenticateJWT } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';

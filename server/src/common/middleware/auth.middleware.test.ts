@@ -51,7 +51,7 @@ describe('Auth Middleware', () => {
       params: {},
       query: {},
       body: {}
-    };;
+    };
     
     mockResponse = {
       status: jest.fn().mockReturnThis(),

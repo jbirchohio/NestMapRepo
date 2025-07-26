@@ -2,7 +2,7 @@ import { OpenAI } from 'openai';
 import { z } from 'zod';
 import { db } from '../db-connection';
 import { trips, organizations, users } from '../db/schema';
-import { eq, and, gte, lte, desc } from '../utils/drizzle-shim';;
+import { eq, and, gte, lte, desc } from '../utils/drizzle-shim';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

@@ -1,4 +1,4 @@
-import { eq } from '../../../utils/drizzle-shim';;
+import { eq } from '../../../utils/drizzle-shim';
 // import { db } from '../../db/db';
 // import { activities, type Activity } from '../../db/schema';
 import type { ActivityRepository } from './activity.repository.interface';

@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db-connection';
 import { userSessions } from '../../../shared/src/types/api.js';
-import { eq } from '../utils/drizzle-shim';;
+import { eq } from '../utils/drizzle-shim';
 import { and, or, gte } from '../utils/drizzle-shim';
 import { desc } from '../utils/drizzle-shim';
-// TODO: Fix count and sql imports - may need different approachimport { z } from 'zod';
+// TODO: Fix count and sql imports - may need different approach
+import { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq } from '../utils/drizzle-shim';;
-import { or } from '../utils/drizzle-shim';import { sql } from '../utils/drizzle-shim';
+import { eq } from '../utils/drizzle-shim';
+import { or } from '../utils/drizzle-shim';
+import { sql } from '../utils/drizzle-shim';
 import { getDatabase } from '../db/connection';
 import { trips, users, organizations, expenses, bookings } from '../db/schema';
 import { logger } from '../utils/logger.js';

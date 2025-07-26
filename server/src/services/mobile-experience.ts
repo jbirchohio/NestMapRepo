@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { db } from '../db-connection';
 import { trips, users } from '../db/schema';
-import { eq, and, gte } from '../utils/drizzle-shim';;
+import { eq, and, gte } from '../utils/drizzle-shim';
 
 // Mobile experience schemas
 const MobileConfigSchema = z.object({

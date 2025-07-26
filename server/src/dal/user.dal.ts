@@ -1,7 +1,7 @@
 import { dbService } from '../services/database.service';
 import { users } from '../db/schema';
 import { BaseDAL } from './base.dal';
-import { sql } from '../utils/drizzle-shim';;
+import { sql } from '../utils/drizzle-shim';
 
 export interface User {
   id: string;
