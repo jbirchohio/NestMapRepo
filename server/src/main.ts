@@ -107,7 +107,7 @@ export async function startServer(): Promise<void> {
         JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
         OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'
       };
-      logger.info('📝 Environment variables status:', envStatus);
+      logger.info(`📝 Environment variables status: ${JSON.stringify(envStatus)}`);
     });
 
     // Graceful shutdown handlers

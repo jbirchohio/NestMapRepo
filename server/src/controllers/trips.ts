@@ -1,16 +1,8 @@
 import type { Request, Response } from "express";
 import { storage } from "../storage";
-import { insertTripSchema } from "../db/schema";
-import { z } from "zod";
-import { 
-  validateAndSanitizeBody, 
-  validateContentLength,
-  contentCreationRateLimit,
-  validationSchemas
-} from "../middleware/inputValidation";
+
 import {
   logOrganizationAccess,
-  setOrganizationId
 } from "../organizationContext";
 
 export async function deleteTrip(req: Request, res: Response) {

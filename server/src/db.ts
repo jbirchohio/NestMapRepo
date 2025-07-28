@@ -17,7 +17,7 @@ const logger = {
 type DatabaseClient = Sql;
 
 // Database connection variables
-let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+let db: ReturnType<typeof drizzle> | null = null;
 let client: DatabaseClient | null = null;
 
 /**
@@ -43,7 +43,8 @@ async function initializeDatabase() {
     // Create the database client with connection string
     const connectionString = `postgres://postgres:${encodeURIComponent(supabasePassword)}@${dbHost}:5432/postgres`;
     
-    client = postgres(connectionString, {
+    client = postgres({
+      connectionString,
       max: 10,                   // Maximum number of connections in the pool
       idle_timeout: 20,          // Reduced idle timeout for better connection recycling
       connect_timeout: 10,       // Connection timeout in seconds
@@ -71,6 +72,9 @@ async function initializeDatabase() {
     try {
       logger.info('Testing database connection...');
       const startTime = Date.now();
+      if (!client) {
+        throw new Error('Database client is not initialized');
+      }
       await client`SELECT 1`;
       const endTime = Date.now();
       logger.info(`✅ Database connection successful (${endTime - startTime}ms)`);
@@ -149,7 +153,7 @@ export const pool = {
       }
     }
     // Type assertion is safe here as we've typed the params array
-    return client.unsafe<T[]>(text, params as any[]);
+    return client!.unsafe<T[]>(text, params as any[]);
   }
 };
 

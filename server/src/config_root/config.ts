@@ -1,20 +1,5 @@
-interface AuthConfig {
-  jwtSecret: string;
-  jwtAccessExpiresIn: string;
-  jwtRefreshExpiresIn: string;
-}
 
-interface DatabaseConfig {
-  url: string;
-}
 
-interface AppConfig {
-  port: number;
-  nodeEnv: string;
-  isProduction: boolean;
-  isDevelopment: boolean;
-  isTest: boolean;
-}
 
 const config = {
   port: parseInt(process.env.PORT || '3000', 10) || 3000,

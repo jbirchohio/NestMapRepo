@@ -28,7 +28,7 @@ export function getDatabase() {
       
       logger.info('✅ Database connection created from DATABASE_URL');
     } catch (error) {
-      logger.warn('⚠️ Failed to create database connection:', error instanceof Error ? error.message : error);
+      logger.warn('⚠️ Failed to create database connection: ' + (error instanceof Error ? error.message : error));
       return null;
     }
   }

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+// import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+import { validateRequest, validateQuery, sanitizeInput } from '../middleware/input-validation';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { exportTripToCSV, exportTripToICS } from '../utils/exporters';

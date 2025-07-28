@@ -12,6 +12,8 @@
  * DO NOT create duplicate rate limiting implementations - extend this one if needed.
  */
 
+import express from "express";
+
 // Local type definitions to avoid external dependencies
 interface Request {
   params?: Record<string, string>;

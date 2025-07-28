@@ -205,7 +205,7 @@ async function loadRoutes(): Promise<void> {
     if (isJestTeardown()) return;
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
-      logger.warn('Some routes could not be loaded:', error);
+      logger.warn(`Some routes could not be loaded: ${error}`);
     }
   }
 }

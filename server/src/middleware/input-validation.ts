@@ -4,7 +4,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import  z  from 'zod';
 import { logger } from '../utils/logger';
 
 /**
@@ -99,12 +99,12 @@ export const validateRequest = (schema: z.ZodSchema) => {
           code: err.code
         }));
         
-        logger.warn('Validation failed:', {
+        logger.warn('Validation failed: ' + JSON.stringify({
           url: req.url,
           method: req.method,
           errors,
           ip: req.ip
-        });
+        }));
         
         return res.status(400).json({
           success: false,

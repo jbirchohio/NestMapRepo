@@ -2,6 +2,7 @@ import * as dns from 'dns';
 import { promisify } from 'util';
 import crypto from 'crypto';
 import https from 'https';
+import { TLSSocket } from 'tls';
 
 /**
  * Helper to wrap fetch with a timeout using AbortController.
@@ -91,7 +92,8 @@ export async function verifySSLCertificate(domain: string): Promise<SSLVerificat
     };
 
     const req = https.request(options, (res) => {
-      const cert = res.socket?.getPeerCertificate?.();
+      const socket = res.socket as TLSSocket;
+      const cert = socket.getPeerCertificate?.();
       
       if (cert && cert.valid_to) {
         const expiresAt = new Date(cert.valid_to);
@@ -232,21 +234,15 @@ export async function checkDomainReachability(domain: string): Promise<{
   error?: string;
 }> {
   const startTime = Date.now();
-  
   try {
     const response = await fetchWithTimeout(
       `https://${domain}`,
-      {
-        method: 'HEAD',
-        redirect: 'manual'
-      },
+      { method: 'HEAD', redirect: 'manual' },
       15000
     );
-    
     const responseTime = Date.now() - startTime;
-    
     return {
-      reachable: true,
+      reachable: response.ok,
       responseTime
     };
   } catch (error) {

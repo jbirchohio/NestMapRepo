@@ -1,11 +1,23 @@
 // Local type definitions to avoid external dependencies
 interface Stripe {
   apiVersion?: string;
-  invoices?: {
+  invoices: {
     retrieve(id: string): Promise<any>;
   };
-  subscriptions?: {
+  subscriptions: {
     retrieve(id: string): Promise<any>;
+    create(params: any): Promise<any>;
+    list(params: any): Promise<{ data: any[] }>;
+    update(id: string, params: any): Promise<any>;
+  };
+  customers: {
+    create(params: any): Promise<any>;
+    retrieve(id: string): Promise<any>;
+  };
+  billingPortal: {
+    sessions: {
+      create(params: any): Promise<{ url: string }>;
+    };
   };
 }
 
@@ -28,14 +40,33 @@ const MockStripe = function(_secretKey: string, options?: { apiVersion?: string 
       retrieve: async (id: string) => ({ 
         id, 
         current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-        status: 'active'
+        status: 'active',
+        items: { data: [{ id: 'item_1', price: 'price_team_default' }] },
+        latest_invoice: { payment_intent: { client_secret: 'secret' } }
       }),
       create: async (params: any) => ({
         id: 'sub_' + Math.random().toString(36).substring(7),
         customer: params.customer,
-        items: params.items,
+        items: { data: [{ id: 'item_1', price: params.items[0]?.price }] },
         current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-        status: 'active'
+        status: 'active',
+        latest_invoice: { payment_intent: { client_secret: 'secret' } }
+      }),
+      list: async (params: any) => ({
+        data: params.status === 'active' ? [
+          {
+            id: 'sub_' + Math.random().toString(36).substring(7),
+            status: 'active',
+            current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
+            items: { data: [{ id: 'item_1', price: 'price_team_default' }] }
+          }
+        ] : []
+      }),
+      update: async (id: string, params: any) => ({
+        id,
+        ...params,
+        status: 'active',
+        items: { data: [{ id: params.items?.[0]?.id || 'item_1', price: params.items?.[0]?.price || 'price_team_default' }] }
       })
     },
     customers: {
@@ -43,8 +74,23 @@ const MockStripe = function(_secretKey: string, options?: { apiVersion?: string 
         id: 'cus_' + Math.random().toString(36).substring(7),
         email: params.email,
         name: params.name,
-        metadata: params.metadata
+        metadata: params.metadata,
+        deleted: false
+      }),
+      retrieve: async (id: string) => ({
+        id,
+        email: 'test@example.com',
+        name: 'Test User',
+        metadata: { plan: 'team' },
+        deleted: false
       })
+    },
+    billingPortal: {
+      sessions: {
+        create: async (params: any) => ({
+          url: `https://mock.stripe.com/billing-portal/session/${params.customer}`
+        })
+      }
     }
   };
 } as any as StripeConstructor;

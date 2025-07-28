@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { CarbonFootprint, CarbonReduction } from './types/interfaces/carbon';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -368,7 +368,6 @@ async function calculateFlightEmissions(flight: any): Promise<number> {
     flight.bookingData?.destination
   );
   
-  const aircraftType = flight.bookingData?.aircraftType || 'A320';
   const cabinClass = flight.bookingData?.cabinClass || 'economy';
   
   // Emission factors (kg CO2 per km per passenger)
@@ -443,32 +442,6 @@ function estimateFlightDistance(origin: string, destination: string): number {
   return distances[origin]?.[destination] || 5000; // Default long-haul distance
 }
 
-function generateCarbonRecommendationStrings(carbon: CarbonFootprint, _trip: any): string[] {
-  const recommendations: string[] = [];
-  
-  if (carbon.breakdown.flights > carbon.totalCO2kg * 0.7) {
-    recommendations.push('Consider combining multiple meetings into one trip to reduce flight emissions');
-    recommendations.push('Explore direct flights which are typically more fuel-efficient');
-    recommendations.push('Consider economy class to reduce per-passenger emissions');
-  }
-  
-  if (carbon.breakdown.ground > carbon.totalCO2kg * 0.3) {
-    recommendations.push('Use public transportation or electric vehicles when possible');
-    recommendations.push('Consider shared transportation options');
-  }
-  
-  if (carbon.breakdown.accommodation > carbon.totalCO2kg * 0.2) {
-    recommendations.push('Choose hotels with sustainability certifications');
-    recommendations.push('Opt for properties with renewable energy programs');
-  }
-  
-  if (carbon.totalCO2kg > 500) {
-    recommendations.push('Consider purchasing verified carbon offsets');
-    recommendations.push('Explore virtual meeting alternatives for some components');
-  }
-  
-  return recommendations;
-}
 
 async function calculateCarbonTrends(
   _currentCarbon: CarbonFootprint,

@@ -6,16 +6,16 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        id: number;
-        organizationId?: number | null;
+        userId: string;
+        organizationId?: string;
         role?: string;
-        [key: string]: any;
+        email?: string;
       };
-      organizationId?: number | null;
+      organizationId?: string | undefined;
       organizationContext?: {
-        id: number | null;
-        canAccessOrganization: (orgId: number | null) => boolean;
-        enforceOrganizationAccess: (orgId: number | null) => void;
+        id: string | number | null;
+        canAccessOrganization: (orgId: string | number | null) => boolean;
+        enforceOrganizationAccess: (orgId: string | number | null) => void;
       };
     }
   }
@@ -25,10 +25,10 @@ declare global {
  * Middleware to establish organization context for authenticated users
  * This is critical for multi-tenant security isolation
  */
-export function organizationContextMiddleware(req: Request, res: Response, next: NextFunction) {
+export function organizationContextMiddleware(req: Request, _res: Response, next: NextFunction) {
   // Skip for public endpoints that don't require organization context
   const publicPaths = ['/api/auth', '/api/health', '/api/amadeus', '/.well-known'];
-  const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
+  const isPublicPath = publicPaths.some(path => (req.path ?? '').startsWith(path));
   
   if (isPublicPath) {
     return next();
@@ -36,35 +36,30 @@ export function organizationContextMiddleware(req: Request, res: Response, next:
 
   // For authenticated routes, establish organization context
   if (req.user) {
-    const userOrgId = req.user.organizationId;
-    
+    const userOrgId = req.user.organizationId ?? null;
     // Set organization context on request
-    req.organizationId = userOrgId;
+    req.organizationId = userOrgId ?? undefined;
     req.organizationContext = {
-      id: userOrgId || null,
-      
+      id: userOrgId,
       /**
        * Check if user can access data from a specific organization
        */
-      canAccessOrganization: (targetOrgId: number | null): boolean => {
+      canAccessOrganization: (targetOrgId: string | number | null): boolean => {
         // Super admins can access any organization
         if (req.user?.role === 'super_admin') {
           return true;
         }
-        
         // Users can only access their own organization's data
         // Handle null organization (personal accounts)
         if (userOrgId === null && targetOrgId === null) {
           return true;
         }
-        
         return userOrgId === targetOrgId;
       },
-      
       /**
        * Throw error if user cannot access organization data
        */
-      enforceOrganizationAccess: (targetOrgId: number | null): void => {
+      enforceOrganizationAccess: (targetOrgId: string | number | null): void => {
         if (!req.organizationContext!.canAccessOrganization(targetOrgId)) {
           throw new Error(`Access denied: Cannot access organization ${targetOrgId} from organization ${userOrgId}`);
         }
@@ -81,14 +76,12 @@ export function organizationContextMiddleware(req: Request, res: Response, next:
 export function withOrganizationFilter<T extends Record<string, any>>(
   req: Request,
   baseWhere: T = {} as T
-): T & { organizationId?: number | null } {
-  const orgId = req.organization_id;
-  
+): T & { organizationId?: string | number | null } {
+  const orgId = req.organizationId;
   // For super admins, don't add organization filter unless specifically requested
-  if (req.user?.role === 'super_admin' && !req.query.organization_id) {
+  if (req.user?.role === 'super_admin' && !req.query.organizationId) {
     return baseWhere;
   }
-  
   // Add organization filter for regular users
   return {
     ...baseWhere,
@@ -116,20 +109,18 @@ export function requireOrganizationContext(req: Request, res: Response, next: Ne
 export function setOrganizationId<T extends Record<string, any>>(
   req: Request,
   data: T
-): T & { organizationId: number | null } {
-  const orgId = req.organization_id;
-  
+): T & { organizationId: string | number | null } {
+  const orgId = req.organizationId;
   // Ensure organization ID is set correctly
-  if (data.organization_id && data.organization_id !== orgId) {
+  if (data.organizationId && data.organizationId !== orgId) {
     // User is trying to set different org ID than their own
     if (req.user?.role !== 'super_admin') {
       throw new Error('Cannot create resources for different organization');
     }
   }
-  
   return {
     ...data,
-    organizationId: data.organization_id || orgId
+    organizationId: data.organizationId || orgId
   };
 }
 
@@ -167,7 +158,7 @@ export async function validateTripAccess(req: Request, res: Response, next: Next
  */
 export function logOrganizationAccess(req: Request, action: string, resourceType: string, resourceId?: number) {
   if (process.env.NODE_ENV === 'production') {
-    console.log(`[ORG_ACCESS] User ${req.user?.id} (org: ${req.organization_id}) ${action} ${resourceType}${resourceId ? ` ${resourceId}` : ''}`);
+    console.log(`[ORG_ACCESS] User ${req.user?.id} (org: ${req.organizationId}) ${action} ${resourceType}${resourceId ? ` ${resourceId}` : ''}`);
   }
 }
 

@@ -1,6 +1,44 @@
+
+function generateBusinessRecommendations(trip: any, request: BusinessTripRequest, conflicts: any[]): string[] {
+  const recommendations: string[] = [];
+  // Budget optimization
+  if (trip.budgetBreakdown?.total > request.budget * 0.9) {
+    recommendations.push('Consider economy flights to stay within budget constraints');
+  }
+  // Work schedule optimization
+  if (request.workSchedule.workDays.length > 0) {
+    recommendations.push('Schedule important meetings during peak business hours (10 AM - 4 PM local time)');
+  }
+  // Conflict resolution
+  if (conflicts.length > 0) {
+    recommendations.push(`${conflicts.length} scheduling conflicts detected - review timing for optimal workflow`);
+  }
+  // Industry-specific recommendations
+  if (request.companyInfo.industry === 'technology') {
+    recommendations.push('Include networking venues popular with local tech community');
+  }
+  // Group size considerations
+  if (request.groupSize > 1) {
+    recommendations.push('Book group rates for activities and consider private transportation');
+  }
+  return recommendations;
+}
+
+function generateComplianceNotes(trip: any, request: BusinessTripRequest): string[] {
+  const notes: string[] = [];
+  notes.push('All expenses align with standard corporate travel policies');
+  notes.push('Accommodation meets business traveler standards');
+  if (trip.budgetBreakdown?.meals) {
+    notes.push('Meal expenses within per-diem allowances for destination');
+  }
+  if (request.preferences.accommodationType === 'luxury') {
+    notes.push('Premium accommodation justified for client relationship management');
+  }
+  return notes;
+}
+
+// All imports and interfaces at the top
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
-import { calculateTripCost } from "./utils/tripCost";
-import { detectTripConflicts } from "./services/conflictDetector";
 import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI";
 import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer";
 import { calculateCarbonFootprint } from "./carbonTracker";
@@ -145,7 +183,6 @@ export async function generateBusinessTrip(request: BusinessTripRequest): Promis
   } catch (error) {
     console.error('Error generating business trip:', error);
     throw new Error(`Failed to generate business trip: ${error}`);
-  }
 }
 
 async function enhanceTripWithRealData(aiTrip: any, request: BusinessTripRequest): Promise<any> {
@@ -322,103 +359,14 @@ async function addSustainabilityMetrics(trip: any, request: BusinessTripRequest)
   }
 }
 
-function generateBusinessRecommendations(trip: any, request: BusinessTripRequest, conflicts: any[]): string[] {
-  const recommendations = [];
-
-  // Budget optimization
-  if (trip.budgetBreakdown?.total > request.budget * 0.9) {
-    recommendations.push('Consider economy flights to stay within budget constraints');
-  }
-
-  // Work schedule optimization
-  if (request.workSchedule.workDays.length > 0) {
-    recommendations.push('Schedule important meetings during peak business hours (10 AM - 4 PM local time)');
-  }
-
-  // Conflict resolution
-  if (conflicts.length > 0) {
-    recommendations.push(`${conflicts.length} scheduling conflicts detected - review timing for optimal workflow`);
-  }
-
-  // Industry-specific recommendations
-  if (request.companyInfo.industry === 'technology') {
-    recommendations.push('Include networking venues popular with local tech community');
-  }
-
-  // Group size considerations
-  if (request.groupSize > 1) {
-    recommendations.push('Book group rates for activities and consider private transportation');
-  }
-
-  return recommendations;
-}
-
-function generateComplianceNotes(trip: any, request: BusinessTripRequest): string[] {
-  const notes = [];
-
-  notes.push('All expenses align with standard corporate travel policies');
-  notes.push('Accommodation meets business traveler standards');
-  
-  if (trip.budgetBreakdown?.meals) {
-    notes.push('Meal expenses within per-diem allowances for destination');
-  }
-
-  if (request.preferences.accommodationType === 'luxury') {
-    notes.push('Premium accommodation justified for client relationship management');
-  }
-
-  return notes;
-}
 
 function generateDateRange(startDate: string, endDate: string): string[] {
-  const dates = [];
+  const dates: string[] = [];
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     dates.push(d.toISOString().split('T')[0]);
   }
-  
   return dates;
 }
-
-// Quick trip generation for simple requests
-export async function generateQuickBusinessTrip(
-  destination: string,
-  duration: number,
-  budget: number,
-  purpose: string
-): Promise<any> {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() + 7); // 1 week from now
-  
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + duration);
-
-  const request: BusinessTripRequest = {
-    clientName: 'Business Client',
-    destination,
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
-    budget,
-    currency: 'USD',
-    workSchedule: {
-      workDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-      workHours: '9:00-17:00'
-    },
-    preferences: {
-      foodTypes: ['Business Dining', 'Local Cuisine'],
-      accommodationType: 'business',
-      activityTypes: ['Networking', 'Cultural Sites']
-    },
-    companyInfo: {
-      name: 'Corporate Client',
-      industry: 'Business Services'
-    },
-    tripPurpose: purpose,
-    groupSize: 1
-  };
-
-  return generateBusinessTrip(request);
 }
-

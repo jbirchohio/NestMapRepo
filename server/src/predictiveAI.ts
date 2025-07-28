@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { getWeatherForecast } from "./weather";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -198,7 +198,11 @@ export async function generateWeatherAdaptiveItinerary(
     return {
       originalPlan: activities,
       adaptedPlan: adaptation.adaptedPlan || activities,
-      weatherForecast: weatherForecast,
+      weatherForecast: weatherForecast.map((w: any) => ({
+        ...w,
+        precipitation: w.precipitation ?? 0,
+        recommendations: w.recommendations ?? []
+      })),
       indoorAlternatives: adaptation.indoorAlternatives || [],
       postponeRecommendations: adaptation.postponeRecommendations || []
     };

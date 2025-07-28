@@ -3,7 +3,8 @@ import { proposals, insertProposalSchema, proposalStatusEnum } from '../db/propo
 import { getDatabase } from '../db/connection.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+// import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+import { validateRequest, validateQuery, sanitizeInput } from '../middleware/input-validation';
 import { z } from 'zod';
 import type { AuthenticatedRequest } from '../types/auth-user';
 

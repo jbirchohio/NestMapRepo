@@ -39,7 +39,7 @@ export const invoices = pgTable('invoices', {
   currency: text('currency').default('usd'),
   description: text('description'),
   // Invoice items validation schema
-  items: jsonb('items').$type<Array<Record<string, any>>>().default([]),
+  items: jsonb('items').default([]) as unknown as { items: Array<Record<string, any>> },
   dueDate: timestamp('due_date'),
   paidAt: timestamp('paid_at'),
   viewedAt: timestamp('viewed_at'),
@@ -51,12 +51,12 @@ export const invoices = pgTable('invoices', {
   paymentIntentId: text('payment_intent_id'),
   paymentUrl: text('payment_url'),
   notes: text('notes'),
-  metadata: jsonb('metadata').$type<{
+  metadata: jsonb('metadata') as unknown as {
     stripeEvent?: string;
     stripeEventId?: string;
     lastPaymentError?: string;
     [key: string]: any;
-  }>(),
+  },
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({

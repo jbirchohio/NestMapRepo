@@ -38,7 +38,7 @@ export const bookings = pgTable('bookings', {
   cancellationReason: text('cancellation_reason'),
   price: integer('price'), // In cents
   currency: text('currency').default('usd'),
-  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  metadata: jsonb('metadata') as unknown as { metadata: Record<string, unknown> },
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

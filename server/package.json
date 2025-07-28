@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@nestjs/config": "^4.0.2",
+    "@sentry/node": "^9.42.0",
     "@shared/schema": "workspace:*",
     "axios": "^1.10.0",
     "bcrypt": "^5.1.1",

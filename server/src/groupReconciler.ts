@@ -16,7 +16,7 @@ export interface ConsensusItinerary {
   notes: string[];
 }
 
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
 export function reconcilePreferences(preferences: TravelerPreference[]): ReconciledPreferences {

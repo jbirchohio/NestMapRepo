@@ -26,6 +26,7 @@ interface Request {
 }
 
 interface Response {
+  headersSent: any;
   status(code: number): Response;
   json(data: any): Response;
   send(data: any): Response;

@@ -204,12 +204,10 @@ export const performanceMonitor = new AdvancedPerformanceMonitor();
 export function createPerformanceMiddleware() {
   return (req: any, res: any, next: any) => {
     const startTime = Date.now();
-    const startMemory = process.memoryUsage().heapUsed / 1024 / 1024; // MB
 
     res.on('finish', () => {
       const responseTime = Date.now() - startTime;
       const endMemory = process.memoryUsage().heapUsed / 1024 / 1024; // MB
-      const memoryDelta = endMemory - startMemory;
 
       performanceMonitor.recordMetric({
         endpoint: req.path,

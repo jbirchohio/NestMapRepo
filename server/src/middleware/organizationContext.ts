@@ -1,14 +1,25 @@
-import { eq, and, sql } from '../utils/drizzle-shim';
+import { eq } from '../utils/drizzle-shim';
 import { Response, NextFunction, Request as ExpressRequest } from 'express';
-import { db } from '../db';
-import { organizations, users, type User, type UserRole as DbUserRole } from '../db/schema';
-import { logSecurityEvent, createSecurityEvent } from '../security-event-logger';
-import { SecurityEvent } from '../types/security-events';
+import { logSecurityEvent } from '../security-event-logger';
 
-// Base request type that doesn't extend Express Request
-interface BaseRequest {
-  user?: any;
-  organizationId?: string;
+// Define missing types inline
+type UserRole = 'user' | 'admin' | 'super_admin' | 'SUPER_ADMIN' | 'ADMIN' | string;
+interface AppUser {
+  id: string;
+  userId?: string;
+  email: string;
+  emailVerified?: boolean;
+  name?: string;
+  avatarUrl?: string | null;
+  role: UserRole;
+  organizationId: string;
+  permissions?: string[];
+  [key: string]: any;
+}
+// Use Express.Request everywhere for compatibility
+type AuthenticatedRequest = Express.Request & {
+  user: AppUser;
+  organizationId: string;
   domainOrganizationId?: string;
   isWhiteLabelDomain?: boolean;
   organizationFilter?: (orgId: string | null) => boolean;
@@ -17,29 +28,26 @@ interface BaseRequest {
     startDate?: Date;
     endDate?: Date;
   };
-  [key: string]: any;
-}
-
-// Custom Express Request type with our properties
-export interface AuthenticatedRequest extends BaseRequest, ExpressRequest {
-  user: {
-    id: string;
-    userId: string;
-    email: string;
-    emailVerified: boolean;
-    name?: string;
-    avatarUrl?: string | null;
-    role: DbUserRole;
-    organizationId: string;  // Required for authenticated requests
-    [key: string]: any;
-  };
-  organizationId: string;  // Required for authenticated requests
-}
+};
+// For addOrganizationScope generic
+type Column<T> = { name: string; };
 
 // Global type augmentation for Express
 declare global {
   namespace Express {
-    interface Request extends BaseRequest {}
+    interface Request {
+      // Use 'any' to avoid type conflicts with other global augmentations
+  user?: unknown;
+      organizationId?: string;
+      domainOrganizationId?: string;
+      isWhiteLabelDomain?: boolean;
+      organizationFilter?: (orgId: string | null) => boolean;
+      analyticsScope?: {
+        organizationId: string;
+        startDate?: Date;
+        endDate?: Date;
+      };
+    }
   }
 }
 
@@ -49,21 +57,7 @@ export function isAuthenticatedRequest(req: ExpressRequest): req is Authenticate
          !!(req as AuthenticatedRequest).organizationId;
 }
 
-// Augment the Express Request type to include our custom properties
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: AppUser;
-    organizationId?: string;
-    domainOrganizationId?: string;
-    isWhiteLabelDomain?: boolean;
-    organizationFilter?: (orgId: string | null) => boolean;
-    analyticsScope?: {
-      organizationId: string;
-      startDate?: Date;
-      endDate?: Date;
-    };
-  }
-}
+// No need to augment express-serve-static-core again, already handled above
 
 /**
  * Type for our middleware functions that handle authenticated requests
@@ -87,8 +81,7 @@ export type AuthenticatedMiddleware = (
  * Automatically injects organization context into all requests
  * Prevents cross-organization data access
  */
-export async function injectOrganizationContext(
-  req: Request,
+  req: import('express').Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
@@ -97,65 +90,59 @@ export async function injectOrganizationContext(
   const frontendPaths = ['/', '/trip/', '/share/', '/login', '/signup', '/demo'];
   
   // Skip for public API endpoints
-  if (req.path && publicPaths.some(path => req.path!.includes(path))) {
+  const reqAny = req as unknown as any;
+  if (reqAny.path && publicPaths.some((p: string) => reqAny.path.includes(p))) {
     return next();
   }
-  
   // Skip for frontend routes (non-API)
-  if (!req.path || !req.path.startsWith('/api') || frontendPaths.some(path => req.path!.startsWith(path))) {
+  if (!reqAny.path || !reqAny.path.startsWith('/api') || frontendPaths.some((p: string) => reqAny.path.startsWith(p))) {
     return next();
   }
-
   // Ensure user is authenticated for organization-scoped API endpoints
-  if (!req.user) {
+  if (!reqAny.user) {
     res.status(401).json({ message: 'Authentication required' });
     return;
   }
-
   // Ensure user has organization context
-  if (!req.user.organizationId) {
+  if (!reqAny.user.organizationId) {
     res.status(403).json({ 
       message: 'Organization context required. Please contact your administrator.' 
     });
     return;
   }
-
   // CRITICAL: Enforce domain-based organization isolation for white-label domains
-  if (req.isWhiteLabelDomain && req.domainOrganizationId) {
+  if (reqAny.isWhiteLabelDomain && reqAny.domainOrganizationId) {
     // For white-label domains, ensure user's organization matches the domain's organization
-    if (req.user.organizationId !== req.domainOrganizationId) {
-      console.warn('SECURITY_VIOLATION: Cross-organization access attempt via white-label domain', {
-        user_id: req.user.id,
-        userOrgId: req.user.organizationId,
-        domainOrgId: req.domainOrganizationId,
-        domain: req.headers?.host ?? 'unknown',
-        endpoint: req.path,
-        ip: req.ip,
+    if (reqAny.user.organizationId !== reqAny.domainOrganizationId) {
+  console.warn('SECURITY_VIOLATION: Cross-organization access attempt via white-label domain', {
+        user_id: reqAny.user.id,
+        userOrgId: reqAny.user.organizationId,
+        domainOrgId: reqAny.domainOrganizationId,
+  domain: req.headers && (req.headers as any).host ? (req.headers as any).host : 'unknown',
+        endpoint: reqAny.path,
+        ip: reqAny.ip,
         timestamp: new Date().toISOString()
       });
-      
       res.status(403).json({ 
         error: 'Access denied',
         message: 'You cannot access this organization\'s data through this domain.'
       });
       return;
     }
-    
     // Set organization context to the domain's organization for extra security
-    req.organizationId = req.domainOrganizationId;
+    reqAny.organizationId = reqAny.domainOrganizationId;
   } else {
     // Set organization context based on user's organization
-    if (req.user) {
-      req.organizationId = req.user.organizationId;
-      req.organizationFilter = (orgId: string | null) => {
+    if (reqAny.user) {
+      reqAny.organizationId = reqAny.user.organizationId;
+      reqAny.organizationFilter = (orgId: string | null) => {
         // Super admins can access all organizations
-        if (req.user?.role === 'super_admin') return true;
+        if (reqAny.user?.role === 'super_admin' || reqAny.user?.role === 'SUPER_ADMIN') return true;
         // Regular users can only access their own organization
-        return orgId === req.user?.organizationId;
+        return orgId === reqAny.user?.organizationId;
       };
     }
   }
-
   next();
 }
 
@@ -202,10 +189,9 @@ export const addOrganizationScope = <T extends { organizationId: Column<any> }>(
   if (!req.organizationId) {
     throw new Error('Organization context required for scoped queries');
   }
-
   // Add organization filter using the table's organizationId column
   return baseQuery.where(eq(table.organizationId, req.organizationId));
-}
+};
 
 /**
  * Validation helper for organization-scoped inserts
@@ -238,11 +224,13 @@ export const requireAnalyticsAccess = async (
   }
 
   // Type assertion for req.user to ensure it's treated as AuthUser
-  const user = req.user as AuthUser;
+  const user = req.user;
   
   // Check if user has analytics permissions for their organization
-  const hasAnalyticsAccess = user.role === UserRole.ADMIN || 
-                            user.role === UserRole.SUPER_ADMIN ||
+  const hasAnalyticsAccess = user.role === 'admin' || 
+                            user.role === 'super_admin' ||
+                            user.role === 'ADMIN' ||
+                            user.role === 'SUPER_ADMIN' ||
                             (user.permissions && Array.isArray(user.permissions) && user.permissions.includes('ACCESS_ANALYTICS'));
 
   if (!hasAnalyticsAccess) {

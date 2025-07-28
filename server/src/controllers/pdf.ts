@@ -45,7 +45,7 @@ export async function generateTripProposal(req: Request, res: Response) {
     // Set proper headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="trip-proposal-${trip.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Content-Length', pdfBuffer.length.toString());
 
     // Send PDF buffer directly
     res.send(pdfBuffer);
@@ -104,7 +104,7 @@ export async function generateItinerary(req: Request, res: Response) {
     // Set proper headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="itinerary-${trip.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Content-Length', pdfBuffer.length.toString());
 
     // Send PDF buffer directly
     res.send(pdfBuffer);

@@ -80,7 +80,9 @@ export const authenticateJWT = async (
     }
 
     // Verify JWT token
-    logger.debug('Verifying JWT token...');
+    logger.debug('Verifying JWT token...', {
+      userId: undefined
+    });
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET) as JWTPayload;
