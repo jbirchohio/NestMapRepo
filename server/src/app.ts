@@ -6,6 +6,9 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import { logger } from './utils/logger';
+import { createExpressMiddleware } from '@trpc/server/adapters/express';
+import { appRouter } from './trpc/routers';
+import { createContext } from './trpc/context';
 
 // Import dynamic route setup
 import { setupRoutes } from './routes/index';
@@ -77,6 +80,12 @@ app.use(morgan('combined', {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// tRPC middleware
+app.use('/trpc', createExpressMiddleware({
+  router: appRouter,
+  createContext,
+}));
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
