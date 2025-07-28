@@ -5,9 +5,9 @@ This checklist lists all tasks required to fully migrate the project from the ex
 1. **Install tRPC dependencies**
    1.1. Add server and client libraries
        1.1.1. Run from repository root: `pnpm add -w @trpc/server @trpc/client @trpc/react-query @trpc/server/adapters/express zod`
-           1.1.1.1. Commit updated `package.json` and lock file
+           - [x] Commit updated `package.json` and lock file
        1.1.2. Install dev dependency `@trpc/react-query@latest`
-           1.1.2.1. Commit changes
+           - [x] Commit changes
    1.2. Verify packages compile with existing code
        1.2.1. Run `pnpm install && pnpm lint`
            1.2.1.1. Resolve any conflicts from new packages
