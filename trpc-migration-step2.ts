@@ -174,7 +174,7 @@ ${procedureCode}
 }
 
 // Main conversion function
-async function convertExpressToTRPC(routeFile: string) {
+export async function convertExpressToTRPC(routeFile: string) {
   const routeName = path.basename(routeFile, '.ts');
   const procedures = await convertRoute(routeFile);
   

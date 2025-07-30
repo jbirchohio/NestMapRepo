@@ -21,80 +21,80 @@ This checklist lists all tasks required to fully migrate the project from the ex
            2.2.1.1. Remove old dynamic route setup once all routes are migrated
    2.3. Convert existing Express routes to tRPC
        2.3.1. For each file under `server/src/routes` convert the handlers to a router and then delete the file
-           - server/src/routes/activities.ts
-           - server/src/routes/admin-analytics.ts
-           - server/src/routes/admin-settings.ts
-           - server/src/routes/admin.ts
-           - server/src/routes/ai-assistant.ts
-           - server/src/routes/ai-routes.ts
-           - server/src/routes/ai.ts
-           - server/src/routes/alerts.ts
-           - server/src/routes/analytics.ts
-           - server/src/routes/approvals.ts
-           - server/src/routes/auth.ts
-           - server/src/routes/autonomous-vehicles.ts
-           - server/src/routes/billing.ts
-           - server/src/routes/bookings.ts
-           - server/src/routes/branding.ts
-           - server/src/routes/budgets.ts
-           - server/src/routes/calendar.ts
-           - server/src/routes/collaboration.ts
-           - server/src/routes/communication.ts
-           - server/src/routes/compliance.ts
-           - server/src/routes/comprehensive-routes.ts
-           - server/src/routes/corporate-cards.ts
-           - server/src/routes/corporateCards.ts
-           - server/src/routes/custom-reporting.ts
-           - server/src/routes/customDomains.ts
-           - server/src/routes/domains.ts
-           - server/src/routes/errors.ts
-           - server/src/routes/expenses.ts
-           - server/src/routes/export.ts
-           - server/src/routes/flights.ts
-           - server/src/routes/health.ts
-           - server/src/routes/hotels.ts
-           - server/src/routes/index.ts
-           - server/src/routes/invoices.ts
-           - server/src/routes/localization.ts
-           - server/src/routes/locations.ts
-           - server/src/routes/metrics.ts
-           - server/src/routes/mfa.ts
-           - server/src/routes/notes.ts
-           - server/src/routes/notifications.ts
-           - server/src/routes/onboarding-feedback.ts
-           - server/src/routes/organizationFunding.ts
-           - server/src/routes/organizationMembers.ts
-           - server/src/routes/organizations.ts
-           - server/src/routes/payments.ts
-           - server/src/routes/performance.ts
-           - server/src/routes/policies.ts
-           - server/src/routes/proposals.ts
-           - server/src/routes/reimbursements.ts
-           - server/src/routes/reporting.ts
-           - server/src/routes/security.ts
-           - server/src/routes/stripeOAuth.ts
-           - server/src/routes/subscription-status.ts
-           - server/src/routes/system-metrics.ts
-           - server/src/routes/templates.ts
-           - server/src/routes/test.routes.ts
-           - server/src/routes/todos.ts
-           - server/src/routes/trips.ts
-           - server/src/routes/user-management.ts
-           - server/src/routes/user.ts
-           - server/src/routes/voice.ts
-           - server/src/routes/weather.ts
-           - server/src/routes/webhooks.ts
-           - server/src/routes/whiteLabelSimplified.ts
-           - server/src/routes/whiteLabelStatus.ts
+           - [x] server/src/routes/activities.ts
+           - [x] server/src/routes/admin-analytics.ts
+           - [x] server/src/routes/admin-settings.ts
+           - [x] server/src/routes/admin.ts
+           - [x] server/src/routes/ai-assistant.ts
+           - [x] server/src/routes/ai-routes.ts
+           - [x] server/src/routes/ai.ts
+           - [x] server/src/routes/alerts.ts
+           - [x] server/src/routes/analytics.ts
+           - [x] server/src/routes/approvals.ts
+           - [x] server/src/routes/auth.ts
+           - [x] server/src/routes/autonomous-vehicles.ts
+           - [x] server/src/routes/billing.ts
+           - [x] server/src/routes/bookings.ts
+           - [x] server/src/routes/branding.ts
+           - [x] server/src/routes/budgets.ts
+           - [x] server/src/routes/calendar.ts
+           - [x] server/src/routes/collaboration.ts
+           - [x] server/src/routes/communication.ts
+           - [x] server/src/routes/compliance.ts
+           - [x] server/src/routes/comprehensive-routes.ts
+           - [x] server/src/routes/corporate-cards.ts
+           - [x] server/src/routes/corporateCards.ts
+           - [x] server/src/routes/custom-reporting.ts
+           - [x] server/src/routes/customDomains.ts
+           - [x] server/src/routes/domains.ts
+           - [x] server/src/routes/errors.ts
+           - [x] server/src/routes/expenses.ts
+           - [x] server/src/routes/export.ts
+           - [x] server/src/routes/flights.ts
+           - [x] server/src/routes/health.ts
+           - [x] server/src/routes/hotels.ts
+           - [x] server/src/routes/index.ts
+           - [x] server/src/routes/invoices.ts
+           - [x] server/src/routes/localization.ts
+           - [x] server/src/routes/locations.ts
+           - [x] server/src/routes/metrics.ts
+           - [x] server/src/routes/mfa.ts
+           - [x] server/src/routes/notes.ts
+           - [x] server/src/routes/notifications.ts
+           - [x] server/src/routes/onboarding-feedback.ts
+           - [x] server/src/routes/organizationFunding.ts
+           - [x] server/src/routes/organizationMembers.ts
+           - [x] server/src/routes/organizations.ts
+           - [x] server/src/routes/payments.ts
+           - [x] server/src/routes/performance.ts
+           - [x] server/src/routes/policies.ts
+           - [x] server/src/routes/proposals.ts
+           - [x] server/src/routes/reimbursements.ts
+           - [x] server/src/routes/reporting.ts
+           - [x] server/src/routes/security.ts
+           - [x] server/src/routes/stripeOAuth.ts
+           - [x] server/src/routes/subscription-status.ts
+           - [x] server/src/routes/system-metrics.ts
+           - [x] server/src/routes/templates.ts
+           - [x] server/src/routes/test.routes.ts
+           - [x] server/src/routes/todos.ts
+           - [x] server/src/routes/trips.ts
+           - [x] server/src/routes/user-management.ts
+           - [x] server/src/routes/user.ts
+           - [x] server/src/routes/voice.ts
+           - [x] server/src/routes/weather.ts
+           - [x] server/src/routes/webhooks.ts
+           - [x] server/src/routes/whiteLabelSimplified.ts
+           - [x] server/src/routes/whiteLabelStatus.ts
        2.3.2. Convert `server/src/auth` modules to routers
-           - server/src/auth/auth.container.ts
-           - server/src/auth/auth.controller.ts
-           - server/src/auth/auth.module.ts
-           - server/src/auth/auth.routes.ts
-           - server/src/auth/auth.service.ts
-           - server/src/auth/index.ts
+           - [x] server/src/auth/auth.container.ts
+           - [x] server/src/auth/auth.controller.ts
+           - [x] server/src/auth/auth.module.ts
+           - [x] server/src/auth/auth.routes.ts
+           - [x] server/src/auth/auth.service.ts
+           - [x] server/src/auth/index.ts
        2.3.3. Remove any route references from `server/src/routes/index.ts`
-           2.3.3.1. Delete `server/src/routes/index.ts` after migration
+           2.3.3.1. [x] Delete `server/src/routes/index.ts` after migration
 
 3. **Update the client to use tRPC**
    3.1. Create tRPC React client instance
