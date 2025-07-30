@@ -1,26 +1,29 @@
-import { t } from '../context';
-import { z } from 'zod';
+import { router, publicProcedure } from './_base.router';
 
-const healthQuerySchema = z.object({
-  detailed: z.boolean().optional(),
-});
+// Define output types
+type HealthResponse = {
+  status: 'healthy';
+  timestamp: string;
+  env: string;
+  nodeVersion: string;
+  uptime: number;
+  memoryUsage: NodeJS.MemoryUsage;
+  build: string;
+  commit: string;
+  version: string;
+};
 
-export const healthRouter = t.router({
-  status: t.procedure
-    .input(healthQuerySchema)
-    .query(({ input }) => {
-      const detailed = input.detailed ?? false;
-      const response = {
-        status: 'healthy' as const,
-        timestamp: new Date().toISOString(),
-      };
-      if (detailed) {
-        return {
-          ...response,
-          environment: process.env.NODE_ENV || 'development',
-          version: '1.0.0',
-        };
-      }
-      return response;
-    }),
+// Simple health check endpoint
+export const healthRouter = router({
+  status: publicProcedure.query((): HealthResponse => ({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development',
+    nodeVersion: process.version,
+    uptime: process.uptime(),
+    memoryUsage: process.memoryUsage(),
+    build: process.env.BUILD_NUMBER || 'local',
+    commit: process.env.COMMIT_HASH || 'unknown',
+    version: '1.0.0',
+  }))
 });

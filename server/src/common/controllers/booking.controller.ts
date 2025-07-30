@@ -6,10 +6,7 @@ import { Booking } from '../../db/schema';
 
 // Services and utilities
 import { BookingService } from '../services/booking.service';
-import  ResponseHandler  from '../../utils/response';
-
-// Middleware
-import { requireAuth, requireOrgContext } from '../middleware/auth.middleware';
+import ResponseHandler from '../../utils/response';
 
 // Request DTOs
 interface ConfirmationDetails {
@@ -29,10 +26,7 @@ export class BookingController {
   }
 
   private initializeRoutes(): void {
-    // Apply auth and org context middleware to all routes
-    this.router.use(requireAuth);
-    this.router.use(requireOrgContext);
-
+    // Note: Authentication and authorization are now handled by tRPC middleware
     // Register routes with proper binding to maintain 'this' context
     this.router.get('/', this.getAllBookings.bind(this));
     this.router.get('/:id', this.getBookingById.bind(this));

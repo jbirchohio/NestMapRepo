@@ -1,4 +1,3 @@
-import { Router } from 'express';
 import { db } from './db-connection';
 import { users } from './db/schema';
 import { eq } from './utils/drizzle-shim';
@@ -19,7 +18,7 @@ export interface MFAMethod {
 
 export interface MFAChallenge {
   id: string;
-  userId: number;
+  userId: string;
   methodId: string;
   code: string;
   expiresAt: Date;
@@ -365,7 +364,8 @@ export class MFAService {
 
   private generateTOTPCode(secret: string, timeStep: number): string {
     // Simplified TOTP implementation - use a proper library in production
-    const hash = crypto.createHmac('sha1', Buffer.from(secret, 'base32'));
+    const secretBuffer = Buffer.from(secret, 'base64');
+    const hash = crypto.createHmac('sha1', secretBuffer);
     hash.update(Buffer.from(timeStep.toString(16).padStart(16, '0'), 'hex'));
     const hmac = hash.digest();
     
@@ -377,86 +377,3 @@ export class MFAService {
 }
 
 export const mfaService = MFAService.getInstance();
-
-// MFA Routes
-export const mfaRouter = Router();
-
-// Setup TOTP
-mfaRouter.post('/setup/totp', async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-    const setup = await mfaService.setupTOTP(userId);
-    res.json(setup);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to setup TOTP' });
-  }
-});
-
-// Verify TOTP setup
-mfaRouter.post('/verify/totp', async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    const { code } = req.body;
-    
-    if (!userId || !code) return res.status(400).json({ error: 'Missing required fields' });
-
-    const isValid = await mfaService.verifyTOTP(userId, code);
-    res.json({ success: isValid });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to verify TOTP' });
-  }
-});
-
-// Setup SMS
-mfaRouter.post('/setup/sms', async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    const { phoneNumber } = req.body;
-    
-    if (!userId || !phoneNumber) return res.status(400).json({ error: 'Missing required fields' });
-
-    const success = await mfaService.setupSMS(userId, phoneNumber);
-    res.json({ success });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to setup SMS' });
-  }
-});
-
-// Get user methods
-mfaRouter.get('/methods', async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-    const methods = await mfaService.getUserMethods(userId);
-    // Don't send secrets to client
-    const safeMethods = methods.map(m => ({
-      ...m,
-      secret: undefined
-    }));
-    
-    res.json(safeMethods);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to get MFA methods' });
-  }
-});
-
-// Disable method
-mfaRouter.delete('/methods/:methodId', async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    const { methodId } = req.params;
-    
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-    const success = await mfaService.disableMethod(userId, methodId);
-    res.json({ success });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to disable MFA method' });
-  }
-});
-
-
-
