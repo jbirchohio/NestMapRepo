@@ -8,6 +8,12 @@ import { whiteLabelRouter } from './whiteLabel.router';
 import { activityRouter } from './activity.router';
 import { adminAnalyticsRouter } from './adminAnalytics.router';
 import { paymentsRouter } from './payments.router';
+import { bookingsRouter } from './bookings.router';
+import { flightsRouter } from './flights.router';
+import { hotelsRouter } from './hotels.router';
+import { expensesRouter } from './expenses.router';
+import { adminRouter } from './admin.router';
+import { adminSettingsRouter } from './admin-settings.router';
 
 export const appRouter = router({
   health: healthRouter,
@@ -19,6 +25,12 @@ export const appRouter = router({
   activity: activityRouter,
   adminAnalytics: adminAnalyticsRouter,
   payments: paymentsRouter,
+  bookings: bookingsRouter,
+  flights: flightsRouter,
+  hotels: hotelsRouter,
+  expenses: expensesRouter,
+  admin: adminRouter,
+  adminSettings: adminSettingsRouter,
   // Add other routers here
 });
 
