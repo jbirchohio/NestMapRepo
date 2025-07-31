@@ -2,9 +2,10 @@
 
 This document maps each feature mentioned in the README.md to its corresponding database tables and schema elements.
 
-## ✅ Complete Feature Coverage
+## 🔎 Current Coverage
 
-All features mentioned in the README now have proper database schema support.
+Only a portion of the README features are reflected in the database schema.
+Many tables listed here are stubs for planned functionality.
 
 ---
 

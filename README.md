@@ -1,26 +1,30 @@
 # NestMap - AI-Powered Corporate Travel Management Platform
 
-🚀 **Next-Generation Enterprise Travel Management** with Voice Interface, Smart City Integration, and Advanced Automation
+This repository contains an early prototype of the NestMap platform. Only a
+subset of the planned functionality is operational. Features like authentication
+and basic trip management are working today, while many of the advanced
+integrations described below remain conceptual or only partially implemented.
 
-Enterprise-grade travel management platform featuring authentic flight data integration, AI-powered voice interface, smart city connectivity, autonomous vehicle booking, and comprehensive enterprise automation workflows.
+🚀 **Next-Generation Travel Management** with Voice Interface, Smart City
+Integration, and Advanced Automation *(conceptual)*
 
-## 🎯 **Innovation Roadmap - All Phases Complete**
+## 🎯 **Innovation Roadmap**
 
-### **Phase 1: AI-Powered Intelligence Enhancement** ✅
+### **Phase 1: Core Features (implemented)**
 - **🎙️ Voice Interface**: Natural language voice commands with Web Speech API
 - **🤖 AI Assistant**: OpenAI GPT-4 powered intelligent responses and recommendations
 - **📊 Predictive Analytics**: Real-time weather, flight, and news data integration
 - **🌱 Carbon Footprint Tracking**: Real coordinate-based emissions calculations
 - **⚡ Smart Automation**: Context-aware travel recommendations and optimization
 
-### **Phase 2: Enterprise-Grade Features** ✅
+### **Phase 2: Enterprise Features (in progress)**
 - **📈 Advanced Analytics**: Real-time executive dashboards and KPI tracking
 - **🔧 Custom Report Builder**: Drag-and-drop report creation with advanced visualizations
 - **🏢 Enterprise Integration Hub**: HR, Finance, and Communication platform connectivity
 - **📋 Automated Workflows**: Multi-level approval chains and policy compliance
 - **📊 Business Intelligence**: Predictive travel demand forecasting and cost optimization
 
-### **Phase 3: Market Domination Features** ✅
+### **Phase 3: Future Concepts**
 - **🏙️ Smart City Integration**: Real-time IoT data and environmental monitoring
 - **🛒 Platform Marketplace**: App ecosystem with third-party integrations
 - **🚗 Autonomous Vehicle Booking**: Self-driving vehicle reservation system
@@ -277,12 +281,11 @@ POST /api/automation/workflows/run         # Workflow execution
 
 ## 🎯 **What Makes NestMap Unique**
 
-✅ **Voice-First Interface**: Industry's first voice-controlled travel platform
-✅ **Complete Enterprise Ecosystem**: End-to-end business travel solution
-✅ **AI-Powered Intelligence**: Smart recommendations and predictive analytics
-✅ **Smart City Integration**: Real-time IoT and environmental data
-✅ **Future-Ready Architecture**: Autonomous vehicles and advanced automation
-✅ **Production-Ready**: 50,000+ lines of enterprise-grade code
+- **Voice-First Interface**: Early proof of concept using Web Speech API
+- **Planned Enterprise Ecosystem**: Many integrations remain to be built
+- **AI-Powered Intelligence**: Basic OpenAI examples included
+- **Smart City Integration**: Conceptual only
+- **Future-Ready Architecture**: Placeholder designs for autonomous vehicles
 
 ---
 
@@ -298,28 +301,38 @@ Comprehensive documentation is available in the `/docs` folder:
 - **[Test Documentation](tests/README.md)** - Test coverage and quality assurance
 - **[Screenshots](docs/screenshots/SCREENSHOTS.md)** - Visual documentation and UI examples
 
-## 🎯 **Acquisition Ready**
+## 🎯 **Acquisition Considerations**
 
-**NestMap is a production-ready, enterprise-grade travel management platform designed for acquisition:**
+This project is not yet production ready. The codebase provides a starting
+point for a travel management platform but many of the advertised enterprise
+features are incomplete or only exist as placeholders.
 
-### **✅ Complete Package**
-- **Production-Ready Codebase**: Clean, scalable, zero technical debt
-- **Comprehensive Documentation**: Business case, technical specs, deployment guides
-- **Test Coverage**: Extensive test suites for quality assurance
-- **Professional UI/UX**: Modern, accessible, mobile-first design
-- **Enterprise Features**: Voice interface, AI integration, smart city connectivity
+### **Current Package**
+- **Core Codebase**: Express API with basic authentication and trip management
+- **Documentation**: Setup guides and design notes
+- **Limited Tests**: Basic coverage for authentication and trips
+- **Sample UI**: React demo screens
+- **Planned Features**: Voice interface, AI integrations and smart city support
 
 ### **💰 Business Value**
-- **$8.6B Market Opportunity**: Corporate travel management sector
-- **Projected Revenue**: $2.5M Year 1 → $30M Year 3
-- **Competitive Advantage**: Industry-first voice-powered travel platform
-- **Enterprise Ready**: Multi-tenant, scalable, secure architecture
+- **Large Market Opportunity**: Corporate travel management sector
+- **Projected Revenue**: Dependent on completing planned features
+- **Competitive Advantage**: Voice-first approach and AI integration
+- **Enterprise Focus**: Multi-tenant design planned but not complete
 
 ### **🚀 Technical Excellence**
 - **Modern Stack**: React + Express.js + PostgreSQL + TypeScript
 - **AI Integration**: OpenAI GPT-4 for voice and recommendations
 - **Security**: Enterprise-grade security with JWT, CORS, rate limiting
 - **Scalability**: Cloud-native, Docker-ready, microservices architecture
+
+## 🗺️ **Roadmap & TODO**
+
+- Finalize database schema and migrations
+- Implement voice assistant end-to-end
+- Build enterprise integrations (HR, finance, communication)
+- Develop automation workflow engine
+- Expand test coverage across all modules
 
 ## 📞 **Contact & Support**
 
@@ -332,4 +345,4 @@ For technical support, feature requests, or business inquiries:
 
 ---
 
-*NestMap - Production-ready AI-powered corporate travel management platform. Complete ownership transfer upon acquisition with comprehensive documentation, test coverage, and professional support.*
+*NestMap is an early-stage codebase. It includes example implementations and documentation but requires significant development to reach a production state.*

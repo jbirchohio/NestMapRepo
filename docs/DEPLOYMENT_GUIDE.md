@@ -396,4 +396,4 @@ curl -H "Authorization: Bearer $DUFFEL_API_TOKEN" https://api.duffel.com/air/air
 
 ---
 
-**The NestMap platform is production-ready and designed for enterprise-scale deployment. This guide provides everything needed for successful deployment and ongoing operations.**
+**This guide outlines how the project might be deployed. The current repository is not production ready and additional work is required before a real deployment.**
