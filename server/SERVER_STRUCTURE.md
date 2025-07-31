@@ -4,24 +4,16 @@ This document outlines the cleaned up server structure for the NestMap applicati
 
 ## Entry Points
 
-The server now has a single, clean entry point structure.
-The bootstrap previously located in `index-new.ts` has been moved here:
+The server uses a single, clean entry point. The bootstrap previously located in `index-new.ts` has been moved here:
 
 ### Main Entry Point
-- **`src/main.ts`** - Primary application entry point
+- **`src/main.ts`** - Primary and only application entry point
   - Handles environment variable loading
   - Initializes database connection
+  - Express app setup and middleware (Helmet, CORS)
+  - Route setup and health check endpoint
   - Starts the Express server
   - Handles graceful shutdown
-
-### Server Configuration
-- **`src/server.ts`** - Express application configuration
-  - Express app setup and middleware
-  - Security headers (Helmet)
-  - CORS configuration  
-  - Route setup
-  - Health check endpoint
-  - Server startup and shutdown logic
 
 ## Removed Files
 
@@ -35,6 +27,7 @@ The following redundant server entry points were removed during cleanup:
 - ~~`server/index-minimal.ts`~~ - Experimental minimal server
 - ~~`server/simple-index.ts`~~ - Simplified entry used for testing
 - ~~`server/minimal-server.js`~~ - Old JavaScript demo server
+- ~~`src/server.ts`~~ - Deprecated server configuration file
 
 ## Build Configuration
 
