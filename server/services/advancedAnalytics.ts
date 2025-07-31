@@ -270,7 +270,7 @@ class AdvancedAnalyticsService extends EventEmitter {
         averageTripCost: totalTrips > 0 ? totalSpend / totalTrips : 0,
         complianceRate: 0.92, // Calculate from policy adherence
         carbonFootprint: totalTrips * 2.5, // Estimate based on trips
-        employeeSatisfaction: 4.3 // Survey data placeholder
+        employeeSatisfaction: 4.3 // TODO: pull from employee satisfaction surveys
       };
     } catch (error) {
       console.error('Error generating summary metrics:', error);
@@ -291,33 +291,100 @@ class AdvancedAnalyticsService extends EventEmitter {
     organizationId: number,
     period: { start: Date; end: Date; type: string }
   ): Promise<ExecutiveDashboard['trends']> {
+    const { db } = await import('../db/db.js');
+    const { expenses, trips } = await import('../db/schema.js');
+    const { eq, and, gte, lte, sql, sum, count } = await import('drizzle-orm');
+
+    const formatMap: Record<string, string> = {
+      daily: 'YYYY-MM-DD',
+      weekly: 'IYYY-IW',
+      monthly: 'YYYY-MM',
+      quarterly: "YYYY-'Q'Q",
+    };
+    const format = formatMap[period.type] || 'YYYY-MM';
+
+    const spendRows = await db
+      .select({
+        period: sql<string>`to_char(${expenses.expenseDate}, ${sql.raw(`'${format}'`)})`,
+        total: sum(expenses.amount),
+      })
+      .from(expenses)
+      .where(
+        and(
+          eq(expenses.organizationId, organizationId.toString()),
+          gte(expenses.expenseDate, period.start),
+          lte(expenses.expenseDate, period.end)
+        )
+      )
+      .groupBy(sql`to_char(${expenses.expenseDate}, ${sql.raw(`'${format}'`)})`)
+      .orderBy(sql`to_char(${expenses.expenseDate}, ${sql.raw(`'${format}'`)})`);
+
+    const volumeRows = await db
+      .select({
+        period: sql<string>`to_char(${trips.startDate}, ${sql.raw(`'${format}'`)})`,
+        count: count(trips.id),
+        budget: sum(trips.budget),
+      })
+      .from(trips)
+      .where(
+        and(
+          eq(trips.organizationId, organizationId.toString()),
+          gte(trips.startDate, period.start),
+          lte(trips.endDate, period.end)
+        )
+      )
+      .groupBy(sql`to_char(${trips.startDate}, ${sql.raw(`'${format}'`)})`)
+      .orderBy(sql`to_char(${trips.startDate}, ${sql.raw(`'${format}'`)})`);
+
+    const spendMap = new Map(spendRows.map(r => [r.period, Number(r.total || 0) / 100]));
+    const volumeMap = new Map(volumeRows.map(r => [r.period, { trips: Number(r.count || 0), budget: Number(r.budget || 0) / 100 }]));
+
     const periods = this.generatePeriodLabels(period);
-    
+
+    const buildTrend = (values: number[]): TrendData[] => {
+      const trend: TrendData[] = [];
+      let prev: number | undefined;
+      values.forEach((val, i) => {
+        const change = prev !== undefined ? val - prev : 0;
+        const changePercent = prev ? (change / prev) * 100 : 0;
+        trend.push({ period: periods[i], value: val, change, changePercent });
+        prev = val;
+      });
+      return trend;
+    };
+
+    const spendValues = periods.map(p => spendMap.get(p) || 0);
+    const volumeValues = periods.map(p => volumeMap.get(p)?.trips || 0);
+    const budgetValues = periods.map(p => volumeMap.get(p)?.budget || 0);
+
+    const savingsValues = spendValues.map((v, idx) => Math.max(0, (budgetValues[idx] || 0) - v));
+
+    const complianceRows = await db
+      .select({
+        period: sql<string>`to_char(${expenses.expenseDate}, ${sql.raw(`'${format}'`)})`,
+        approved: sql<number>`sum(case when ${expenses.status} = 'approved' then 1 else 0 end)`,
+        total: count(expenses.id),
+      })
+      .from(expenses)
+      .where(
+        and(
+          eq(expenses.organizationId, organizationId.toString()),
+          gte(expenses.expenseDate, period.start),
+          lte(expenses.expenseDate, period.end)
+        )
+      )
+      .groupBy(sql`to_char(${expenses.expenseDate}, ${sql.raw(`'${format}'`)})`);
+
+    const complianceMap = new Map(
+      complianceRows.map(r => [r.period, r.total ? Number(r.approved) / Number(r.total) : 1])
+    );
+    const complianceValues = periods.map(p => complianceMap.get(p) || 1);
+
     return {
-      spendTrend: periods.map(p => ({
-        period: p,
-        value: Math.floor(Math.random() * 50000) + 20000,
-        change: (Math.random() - 0.5) * 10000,
-        changePercent: (Math.random() - 0.5) * 20
-      })),
-      volumeTrend: periods.map(p => ({
-        period: p,
-        value: Math.floor(Math.random() * 50) + 20,
-        change: (Math.random() - 0.5) * 10,
-        changePercent: (Math.random() - 0.5) * 25
-      })),
-      savingsTrend: periods.map(p => ({
-        period: p,
-        value: Math.floor(Math.random() * 5000) + 2000,
-        change: (Math.random() - 0.5) * 1000,
-        changePercent: (Math.random() - 0.5) * 15
-      })),
-      complianceTrend: periods.map(p => ({
-        period: p,
-        value: 0.8 + Math.random() * 0.15,
-        change: (Math.random() - 0.5) * 0.1,
-        changePercent: (Math.random() - 0.5) * 10
-      }))
+      spendTrend: buildTrend(spendValues),
+      volumeTrend: buildTrend(volumeValues),
+      savingsTrend: buildTrend(savingsValues),
+      complianceTrend: buildTrend(complianceValues),
     };
   }
 
@@ -546,14 +613,37 @@ class AdvancedAnalyticsService extends EventEmitter {
     organizationId: number,
     period: { start: Date; end: Date }
   ): Promise<MonthlyForecast[]> {
+    const { db } = await import('../db/db.js');
+    const { trips, expenses } = await import('../db/schema.js');
+    const { eq, and, gte, lte, sql, sum, count } = await import('drizzle-orm');
+
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    return months.map(month => ({
-      month,
-      predictedTrips: Math.floor(Math.random() * 50) + 30,
-      predictedSpend: Math.floor(Math.random() * 100000) + 50000,
-      confidence: 0.85 + Math.random() * 0.1,
-      factors: ['seasonality', 'business_calendar', 'economic_indicators'].slice(0, Math.floor(Math.random() * 3) + 1)
+
+    const data = await db
+      .select({
+        month: sql<string>`to_char(${trips.startDate}, 'Mon')`,
+        tripCount: count(trips.id),
+        spend: sum(expenses.amount)
+      })
+      .from(trips)
+      .leftJoin(expenses, eq(trips.id, expenses.tripId))
+      .where(
+        and(
+          eq(trips.organizationId, organizationId.toString()),
+          gte(trips.startDate, period.start),
+          lte(trips.endDate, period.end)
+        )
+      )
+      .groupBy(sql`to_char(${trips.startDate}, 'Mon')`);
+
+    const map = new Map(data.map(d => [d.month, { trips: Number(d.tripCount || 0), spend: Number(d.spend || 0) / 100 }]));
+
+    return months.map(m => ({
+      month: m,
+      predictedTrips: map.get(m)?.trips || 0,
+      predictedSpend: map.get(m)?.spend || 0,
+      confidence: 0.9,
+      factors: []
     }));
   }
 
@@ -561,13 +651,51 @@ class AdvancedAnalyticsService extends EventEmitter {
     organizationId: number,
     period: { start: Date; end: Date }
   ): Promise<QuarterlyForecast[]> {
-    return ['Q1', 'Q2', 'Q3', 'Q4'].map(quarter => ({
-      quarter,
-      predictedTrips: Math.floor(Math.random() * 150) + 100,
-      predictedSpend: Math.floor(Math.random() * 300000) + 200000,
-      growthRate: (Math.random() - 0.5) * 0.3,
-      seasonalAdjustment: (Math.random() - 0.5) * 0.2
-    }));
+    const { db } = await import('../db/db.js');
+    const { trips, expenses } = await import('../db/schema.js');
+    const { eq, and, gte, lte, sql, sum, count } = await import('drizzle-orm');
+
+    const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+    const data = await db
+      .select({
+        q: sql<string>`to_char(${trips.startDate}, 'Q')`,
+        tripCount: count(trips.id),
+        spend: sum(expenses.amount)
+      })
+      .from(trips)
+      .leftJoin(expenses, eq(trips.id, expenses.tripId))
+      .where(
+        and(
+          eq(trips.organizationId, organizationId.toString()),
+          gte(trips.startDate, period.start),
+          lte(trips.endDate, period.end)
+        )
+      )
+      .groupBy(sql`to_char(${trips.startDate}, 'Q')`)
+      .orderBy(sql`to_char(${trips.startDate}, 'Q')`);
+
+    const map = new Map(data.map(d => [
+      'Q' + d.q,
+      { trips: Number(d.tripCount || 0), spend: Number(d.spend || 0) / 100 }
+    ]));
+
+    const res: QuarterlyForecast[] = [];
+    let prevTrips = 0;
+    quarters.forEach(q => {
+      const current = map.get(q) || { trips: 0, spend: 0 };
+      const growthRate = prevTrips ? (current.trips - prevTrips) / prevTrips : 0;
+      res.push({
+        quarter: q,
+        predictedTrips: current.trips,
+        predictedSpend: current.spend,
+        growthRate,
+        seasonalAdjustment: 0,
+      });
+      prevTrips = current.trips;
+    });
+
+    return res;
   }
 
   private async generateSeasonalForecasts(organizationId: number): Promise<SeasonalForecast[]> {

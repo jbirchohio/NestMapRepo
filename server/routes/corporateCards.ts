@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { db } from "../db";
-import { corporateCards, cardTransactions, users } from "../src/db/schema";
+import { corporateCards, cardTransactions, users, expenses } from "../src/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
@@ -387,11 +387,31 @@ export function registerCorporateCardRoutes(app: Express) {
     }
   });
 
-  // Get expenses (placeholder for corporate card expenses)
+  // Get expenses tied to corporate card transactions
   app.get("/api/expenses", validateJWT, async (req, res) => {
     try {
-      // Return empty array for now - this would integrate with expense tracking
-      res.json([]);
+      const organizationId = req.user?.organizationId;
+      if (!organizationId) {
+        return res.status(400).json({ error: "Organization ID is missing" });
+      }
+
+      const orgExpenses = await db
+        .select({
+          id: expenses.id,
+          amount: expenses.amount,
+          currency: expenses.currency,
+          description: expenses.description,
+          category: expenses.category,
+          status: expenses.status,
+          expenseDate: expenses.expenseDate,
+          transactionId: expenses.transactionId,
+          userId: expenses.userId,
+        })
+        .from(expenses)
+        .where(eq(expenses.organizationId, organizationId))
+        .orderBy(desc(expenses.expenseDate));
+
+      res.json(orgExpenses);
     } catch (error) {
       console.error("Error fetching expenses:", error);
       res.status(500).json({ error: "Failed to fetch expenses" });
@@ -401,8 +421,34 @@ export function registerCorporateCardRoutes(app: Express) {
   // Approve expense
   app.post("/api/expenses/approve", validateJWT, async (req, res) => {
     try {
-      // Placeholder for expense approval
-      res.json({ success: true });
+      const { expenseId } = req.body;
+      const organizationId = req.user?.organizationId;
+
+      if (!expenseId || !organizationId) {
+        return res.status(400).json({ error: "Expense ID and organization are required" });
+      }
+
+      const [expense] = await db
+        .select()
+        .from(expenses)
+        .where(and(eq(expenses.id, expenseId), eq(expenses.organizationId, organizationId)));
+
+      if (!expense) {
+        return res.status(404).json({ error: "Expense not found" });
+      }
+
+      const [updated] = await db
+        .update(expenses)
+        .set({
+          status: 'approved',
+          approvedBy: req.user!.id,
+          approvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(expenses.id, expenseId))
+        .returning();
+
+      res.json(updated);
     } catch (error) {
       console.error("Error approving expense:", error);
       res.status(500).json({ error: "Failed to approve expense" });
