@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import type { ActivityRepository } from './activity.repository.interface';
 import { BaseRepositoryImpl } from '../base.repository';
 
-// Temporary placeholders to avoid compilation errors
+// TODO: replace temporary placeholders with real database implementation
 const db = {} as any;
 const activities = {} as any;
 type Activity = any;

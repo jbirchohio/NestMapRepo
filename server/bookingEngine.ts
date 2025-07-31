@@ -196,7 +196,7 @@ class AmadeusFlightProvider implements BookingProvider {
   }
 }
 
-// Booking.com Hotel Provider (placeholder for real integration)
+// Booking.com Hotel Provider (TODO: add real integration)
 class BookingComHotelProvider implements BookingProvider {
   name = 'Booking.com Hotels';
   type = 'hotel' as const;

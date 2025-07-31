@@ -414,7 +414,7 @@ export class EnhancedCalendarSyncService {
       
       // Simulate Exchange sync
       result.success = true;
-      result.eventsCreated = 0; // No events synced yet - placeholder for real implementation
+      result.eventsCreated = 0; // TODO: implement event synchronization
       
     } catch (error) {
       result.errors.push(`Exchange Calendar sync error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -451,7 +451,7 @@ export class EnhancedCalendarSyncService {
       // Example: Fetch calendar collection, then individual events
       
       result.success = true;
-      result.eventsCreated = 0; // Placeholder for real implementation
+      result.eventsCreated = 0; // TODO: implement event synchronization
       
     } catch (error) {
       result.errors.push(`CalDAV sync error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -491,7 +491,7 @@ export class EnhancedCalendarSyncService {
       // Parse VEVENT components and convert to CalendarEvent format
       
       result.success = true;
-      result.eventsCreated = 0; // Placeholder for real implementation
+      result.eventsCreated = 0; // TODO: implement event synchronization
       
     } catch (error) {
       result.errors.push(`iCal sync error: ${error instanceof Error ? error.message : 'Unknown error'}`);
