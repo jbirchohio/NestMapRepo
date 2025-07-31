@@ -171,4 +171,4 @@ The NestMap platform represents a unique opportunity to acquire a next-generatio
 
 ---
 
-*This business overview demonstrates NestMap's readiness for acquisition with a complete, production-ready platform, clear market opportunity, and strong growth potential.*
+*This business overview outlines the vision for NestMap. The current codebase is a proof of concept and still requires significant work before it could be considered for acquisition.*

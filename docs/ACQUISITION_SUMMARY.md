@@ -1,8 +1,10 @@
 # NestMap - Acquisition Readiness Summary
 
-## 🎯 **ACQUISITION READY STATUS: COMPLETE**
+## 🎯 **ACQUISITION STATUS: DRAFT**
 
-Your NestMap codebase has been professionally prepared for a $100k+ acquire.com sale with all buyer expectations met.
+This repository is a work in progress. It may serve as a foundation for a full
+travel management platform, but significant development is required before it is
+ready for sale.
 
 ---
 
@@ -22,7 +24,7 @@ Your NestMap codebase has been professionally prepared for a $100k+ acquire.com 
 ### **Root-Level Files**
 - ✅ **README.md** - Updated with acquisition messaging and documentation links
 - ✅ **LICENSE.md** - Clear acquisition license with full IP transfer rights
-- ✅ **package.json** - Clean, production-ready dependencies
+- ✅ **package.json** - Well-defined dependencies
 
 **✨ Impact**: Professional presentation reduces buyer friction and builds confidence
 
@@ -145,14 +147,14 @@ Your NestMap codebase has been professionally prepared for a $100k+ acquire.com 
 - 🎙️ **Industry First**: Voice-powered travel booking platform
 - 🤖 **AI Integration**: OpenAI GPT-4 for intelligent recommendations
 - 🏙️ **Smart City**: Real-time IoT and environmental data
-- 🏢 **Enterprise Ready**: Multi-tenant, scalable, secure
+- 🏢 **Enterprise Focus**: Multi-tenant design planned but not fully implemented
 
 ---
 
 ## 🎯 **Acquisition Highlights**
 
 ### **What Buyers Get**
-1. **Complete Codebase**: 50,000+ lines of production-ready code
+1. **Codebase Snapshot**: Early prototype with core API and basic frontend
 2. **Professional Documentation**: Business case, technical specs, deployment guides
 3. **Test Coverage**: Comprehensive quality assurance
 4. **Visual Assets**: UI screenshots and feature demonstrations
@@ -160,12 +162,9 @@ Your NestMap codebase has been professionally prepared for a $100k+ acquire.com 
 6. **Transition Support**: Knowledge transfer and technical assistance
 
 ### **Why NestMap Stands Out**
-- ✅ **Zero Technical Debt**: Clean, maintainable codebase
-- ✅ **Production Ready**: Immediately deployable
-- ✅ **Unique Features**: Voice interface, AI integration, smart city connectivity
-- ✅ **Enterprise Grade**: Scalable, secure, compliant
-- ✅ **Clear ROI**: Proven business model with growth projections
-- ✅ **Professional Presentation**: Reduces buyer friction
+- Prototype demonstrating voice commands and basic trip management
+- Documentation outlining planned integrations
+- Clean TypeScript code and organized project structure
 
 ---
 
@@ -189,9 +188,17 @@ Your NestMap codebase has been professionally prepared for a $100k+ acquire.com 
 ### **Business Value**
 - 💰 **Revenue Potential**: $30M+ within 3 years
 - 🎯 **Market Position**: First-mover advantage
-- 🏢 **Enterprise Ready**: Fortune 500 target market
+- 🏢 **Enterprise Target**: Aimed at large organizations once features mature
 - 📈 **Growth Strategy**: Clear path to scale
 
 ---
 
-**🎉 CONGRATULATIONS! Your NestMap platform is now acquisition-ready with professional documentation, comprehensive test coverage, enterprise-grade security, and clear business value proposition. Ready for $100k+ acquire.com sale!**
+**Note:** This project is not yet acquisition ready. Additional development,
+testing and documentation are required before a formal sale.
+
+## 📌 Roadmap
+
+- Finish database schema and migrations
+- Implement smart city and enterprise integrations
+- Expand automated test coverage
+- Polish UI/UX and accessibility
