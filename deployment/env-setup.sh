@@ -1,5 +1,5 @@
 #!/bin/bash
-# Standard environment setup script for NestMap
+# Standard environment setup script for VoyageOps
 
 # Check if .env file exists, create from example if not
 if [ ! -f .env ]; then

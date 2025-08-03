@@ -292,7 +292,7 @@ export function useMobileFeatures(): MobileFeatures {
       setTimeout(() => {
         sendNotification(
           'Travel Mode Active',
-          'NestMap is now tracking your journey and will send helpful updates!'
+          'VoyageOps is now tracking your journey and will send helpful updates!'
         );
       }, 1000);
     }

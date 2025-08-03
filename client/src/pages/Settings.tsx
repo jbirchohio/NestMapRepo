@@ -410,7 +410,7 @@ export default function Settings() {
                               type="button"
                               variant="outline"
                               onClick={() => {
-                                // Reset to NestMap default colors
+                                // Reset to VoyageOps default colors
                                 form.setValue('primaryColor', '#6D5DFB');
                                 form.setValue('secondaryColor', '#6D5DFB');
                                 form.setValue('accentColor', '#6D5DFB');
@@ -418,7 +418,7 @@ export default function Settings() {
                               className="flex items-center gap-2"
                             >
                               <RotateCcw className="h-4 w-4" />
-                              Reset to NestMap Colors
+                              Reset to VoyageOps Colors
                             </Button>
                           </div>
                         )}

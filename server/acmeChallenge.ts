@@ -103,7 +103,7 @@ export async function validateACMEChallenge(
     const response = await fetch(challengeUrl, {
       method: 'GET',
       headers: {
-        'User-Agent': 'NestMap-ACME-Client/1.0'
+        'User-Agent': 'VoyageOps-ACME-Client/1.0'
       }
     });
 

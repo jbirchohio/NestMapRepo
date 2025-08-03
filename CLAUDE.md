@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-NestMap is an enterprise-grade travel management platform with a React frontend and Express.js backend. The architecture follows a clear separation between client and server with automatic case conversion between database (snake_case) and frontend (camelCase).
+VoyageOps is an enterprise-grade travel management platform with a React frontend and Express.js backend. The architecture follows a clear separation between client and server with automatic case conversion between database (snake_case) and frontend (camelCase).
 
 ### Key Architectural Patterns
 

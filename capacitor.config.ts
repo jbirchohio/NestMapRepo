@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.nestmap.app',
-  appName: 'NestMap',
+  appId: 'com.voyageops.app',
+  appName: 'VoyageOps',
   webDir: 'dist',
   server: {
     // Production URL - update this to your custom domain for enterprise deployment
@@ -13,11 +13,11 @@ const config: CapacitorConfig = {
   android: {
     buildOptions: {
       keystorePath: 'android.keystore',
-      keystoreAlias: 'nestmap',
+      keystoreAlias: 'voyageops',
     }
   },
   ios: {
-    scheme: 'NestMap',
+    scheme: 'VoyageOps',
     limitsNavigationsToAppBoundDomains: true
   },
   plugins: {

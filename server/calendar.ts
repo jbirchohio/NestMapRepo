@@ -24,18 +24,18 @@ DTSTAMP:${formatDateForICal(new Date())}
 DTSTART:${formatDateForICal(startDate)}
 DTEND:${formatDateForICal(endDate)}
 SUMMARY:${activity.title}
-DESCRIPTION:${activity.notes || 'Activity from NestMap trip: ' + trip.title}
+DESCRIPTION:${activity.notes || 'Activity from VoyageOps trip: ' + trip.title}
 LOCATION:${activity.location_name || ''}
 END:VEVENT`;
   }).join('\n');
 
   return `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//NestMap//Trip Calendar//EN
+PRODID:-//VoyageOps//Trip Calendar//EN
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-X-WR-CALNAME:${trip.title} - NestMap Trip
-X-WR-CALDESC:Trip itinerary created with NestMap
+X-WR-CALNAME:${trip.title} - VoyageOps Trip
+X-WR-CALDESC:Trip itinerary created with VoyageOps
 ${events}
 END:VCALENDAR`;
 }
@@ -55,7 +55,7 @@ export function generateGoogleCalendarUrls(trip: Trip, activities: Activity[]): 
       return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
     
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(activity.title)}&dates=${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}&details=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.location_name || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`)}&location=${encodeURIComponent(activity.location_name || '')}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(activity.title)}&dates=${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}&details=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.location_name || ''}\n\nPart of trip: ${trip.title}\nCreated with VoyageOps`)}&location=${encodeURIComponent(activity.location_name || '')}`;
   });
 }
 
@@ -70,6 +70,6 @@ export function generateOutlookCalendarUrls(trip: Trip, activities: Activity[]):
     
     const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
     
-    return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(activity.title)}&startdt=${startDate.toISOString()}&enddt=${endDate.toISOString()}&body=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.location_name || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`)}&location=${encodeURIComponent(activity.location_name || '')}`;
+    return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(activity.title)}&startdt=${startDate.toISOString()}&enddt=${endDate.toISOString()}&body=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.location_name || ''}\n\nPart of trip: ${trip.title}\nCreated with VoyageOps`)}&location=${encodeURIComponent(activity.location_name || '')}`;
   });
 }

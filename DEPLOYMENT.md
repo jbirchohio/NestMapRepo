@@ -1,8 +1,8 @@
-# NestMap Production Deployment Guide
+# VoyageOps Production Deployment Guide
 
 ## Overview
 
-NestMap is an enterprise-grade travel management platform designed for production deployment with high availability, security, and scalability.
+VoyageOps is an enterprise-grade travel management platform designed for production deployment with high availability, security, and scalability.
 
 ## System Requirements
 
@@ -25,7 +25,7 @@ NestMap is an enterprise-grade travel management platform designed for productio
 
 ```bash
 # Database
-DATABASE_URL="postgresql://username:password@host:5432/nestmap_production"
+DATABASE_URL="postgresql://username:password@host:5432/voyageops_production"
 
 # Authentication
 JWT_SECRET="your-cryptographically-secure-jwt-secret-here"

@@ -1,6 +1,6 @@
 # Cross-Platform Deployment Guide
 
-This guide provides instructions for deploying NestMap on any platform consistently.
+This guide provides instructions for deploying VoyageOps on any platform consistently.
 
 ## Starting the Application
 
@@ -111,15 +111,15 @@ npm start
 
 3. Create database:
    ```bash
-   sudo -u postgres createdb nestmap
+   sudo -u postgres createdb voyageops
    ```
 
 4. Run the application with systemd:
    ```bash
-   sudo cp deployment/systemd.service /etc/systemd/system/nestmap.service
+   sudo cp deployment/systemd.service /etc/systemd/system/voyageops.service
    sudo systemctl daemon-reload
-   sudo systemctl enable nestmap
-   sudo systemctl start nestmap
+   sudo systemctl enable voyageops
+   sudo systemctl start voyageops
    ```
 
 ### macOS Setup
@@ -136,7 +136,7 @@ npm start
 
 3. Create database:
    ```bash
-   createdb nestmap
+   createdb voyageops
    ```
 
 ### Windows Setup
@@ -168,7 +168,7 @@ For production deployments, use appropriate process managers:
 PM2 works across all platforms:
 ```bash
 npm install -g pm2
-pm2 start npm --name "nestmap" -- start
+pm2 start npm --name "voyageops" -- start
 ```
 
 ### HTTPS Configuration

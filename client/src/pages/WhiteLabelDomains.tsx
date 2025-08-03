@@ -186,7 +186,7 @@ export default function WhiteLabelDomains() {
               ) : (
                 <div className="p-6 border rounded-lg bg-gray-50">
                   <div className="text-2xl font-bold mb-2 text-gray-400">
-                    NestMap
+                    VoyageOps
                   </div>
                   <p className="text-gray-500">Default branding (configure to customize)</p>
                 </div>
@@ -240,7 +240,7 @@ export default function WhiteLabelDomains() {
                         <li>Custom branding and colors</li>
                         <li>Custom domain hosting</li>
                         <li>SSL certificate provisioning</li>
-                        <li>Remove NestMap branding</li>
+                        <li>Remove VoyageOps branding</li>
                         <li>Email template customization</li>
                       </ul>
                     </div>

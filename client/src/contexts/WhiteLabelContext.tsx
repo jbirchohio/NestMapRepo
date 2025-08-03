@@ -44,7 +44,7 @@ interface WhiteLabelContextType {
 }
 
 const defaultConfig: WhiteLabelConfig = {
-  companyName: "NestMap",
+  companyName: "VoyageOps",
   primaryColor: "#2563eb",
   secondaryColor: "#64748b",
   accentColor: "#10b981",
@@ -53,7 +53,7 @@ const defaultConfig: WhiteLabelConfig = {
   enableSocialLogin: true,
   enableMobileApp: true,
   tagline: "AI-Powered Corporate Travel Management",
-  footerText: "© 2025 NestMap. All rights reserved."
+  footerText: "© 2025 VoyageOps. All rights reserved."
 };
 
 // Helper function to convert hex color to HSL format for CSS variables
@@ -174,7 +174,7 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
         }
       }
     } else {
-      // Apply default NestMap branding
+      // Apply default VoyageOps branding
       const defaultPrimaryHsl = hexToHsl(defaultConfig.primaryColor);
       const defaultSecondaryHsl = hexToHsl(defaultConfig.secondaryColor);
       const defaultAccentHsl = hexToHsl(defaultConfig.accentColor);

@@ -15,7 +15,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nestmap_test
+          POSTGRES_DB: voyageops_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -45,12 +45,12 @@ jobs:
     - name: Build application
       run: npm run build
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nestmap_test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/voyageops_test
     
     - name: Run tests
       run: npm test
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nestmap_test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/voyageops_test
         NODE_ENV: test
     
     - name: Health check endpoints
@@ -60,7 +60,7 @@ jobs:
         curl -f http://localhost:5000/health || exit 1
         curl -f http://localhost:5000/api/trips || exit 1
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nestmap_test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/voyageops_test
         NODE_ENV: production
         PORT: 5000
 

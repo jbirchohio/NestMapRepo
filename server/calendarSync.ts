@@ -113,7 +113,7 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
     
     return {
       summary: activity.title,
-      description: `${activity.notes || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`,
+      description: `${activity.notes || ''}\n\nPart of trip: ${trip.title}\nCreated with VoyageOps`,
       location: activity.location_name || '',
       start: {
         dateTime: startDate.toISOString(),
@@ -170,7 +170,7 @@ export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], 
       subject: activity.title,
       body: {
         contentType: 'text',
-        content: `${activity.notes || ''}\n\nLocation: ${activity.location_name || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`,
+        content: `${activity.notes || ''}\n\nLocation: ${activity.location_name || ''}\n\nPart of trip: ${trip.title}\nCreated with VoyageOps`,
       },
       location: {
         displayName: activity.location_name || '',

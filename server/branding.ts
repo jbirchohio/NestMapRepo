@@ -62,7 +62,7 @@ const ORGANIZATION_BRANDING: OrganizationBranding = {
 
 // Default branding fallback
 const DEFAULT_BRANDING: BrandingConfig = {
-  appName: "NestMap",
+  appName: "VoyageOps",
   logo: "/logo.svg",
   primaryColor: "#2563eb",
   secondaryColor: "#3b82f6",

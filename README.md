@@ -1,4 +1,4 @@
-# NestMap - AI-Powered Corporate Travel Management
+# VoyageOps - AI-Powered Corporate Travel Management
 
 Enterprise-grade travel management platform with authentic flight data integration, JWT authentication, and comprehensive white-label capabilities.
 
