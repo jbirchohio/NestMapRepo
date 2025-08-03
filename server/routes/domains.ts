@@ -1,18 +1,9 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { db } from "../db";
 import { customDomains, organizations, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    username: string;
-    organization_id?: number;
-    role: string;
-  };
-}
+import type { AuthenticatedRequest } from "../types/auth";
 
 export function registerDomainRoutes(app: Express) {
   
@@ -214,7 +205,7 @@ export function registerDomainRoutes(app: Express) {
   });
 
   // Get domain branding configuration for public access
-  app.get("/api/domains/:domain/branding", async (req: Request, res: Response) => {
+  app.get("/api/domains/:domain/branding", async (req: AuthenticatedRequest, res: Response) => {
     const { domain } = req.params;
 
     try {

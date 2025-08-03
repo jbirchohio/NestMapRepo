@@ -16,7 +16,8 @@
     "moduleResolution": "bundler",
     "downlevelIteration": true,
     "baseUrl": ".",
-    "types": ["node", "vite/client"],
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./server/types"],
     "paths": {
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"]

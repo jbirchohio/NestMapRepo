@@ -5,8 +5,8 @@ import { eq, and } from 'drizzle-orm';
 
 // In-memory session tracking as fallback until database is updated
 const activeSessions = new Map<string, {
-  userId: number;
-  organizationId: number;
+  user_id: number;
+  organization_id: number;
   lastActivity: Date;
   ipAddress: string;
   userAgent: string;
@@ -18,8 +18,8 @@ export async function trackUserActivity(req: Request, res: Response, next: NextF
     
     // Update in-memory session tracking
     activeSessions.set(sessionKey, {
-      userId: req.user.id,
-      organizationId: req.user.organization_id || 0,
+      user_id: req.user.id,
+      organization_id: req.user.organization_id || 0,
       lastActivity: new Date(),
       ipAddress: req.ip || 'unknown',
       userAgent: req.get('User-Agent') || 'unknown'
@@ -42,8 +42,8 @@ export function getActiveUserCount(organizationId: number): number {
   const uniqueUsers = new Set<number>();
   
   for (const [key, session] of activeSessions.entries()) {
-    if (session.organizationId === organizationId && session.lastActivity > cutoff) {
-      uniqueUsers.add(session.userId);
+    if (session.organization_id === organizationId && session.lastActivity > cutoff) {
+      uniqueUsers.add(session.user_id);
     }
   }
   
@@ -55,7 +55,7 @@ export function getActiveSessions(organizationId: number) {
   const sessions = [];
   
   for (const session of activeSessions.values()) {
-    if (session.organizationId === organizationId && session.lastActivity > cutoff) {
+    if (session.organization_id === organizationId && session.lastActivity > cutoff) {
       sessions.push(session);
     }
   }

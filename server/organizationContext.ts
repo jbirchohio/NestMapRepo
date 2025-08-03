@@ -1,25 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage';
 
-// Extend Express Request interface to include organization context
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: number;
-        organizationId?: number | null;
-        role?: string;
-        [key: string]: any;
-      };
-      organizationId?: number | null;
-      organizationContext?: {
-        id: number | null;
-        canAccessOrganization: (orgId: number | null) => boolean;
-        enforceOrganizationAccess: (orgId: number | null) => void;
-      };
-    }
-  }
-}
+// Type definitions are in server/types/express.d.ts
 
 /**
  * Middleware to establish organization context for authenticated users
@@ -41,7 +23,7 @@ export function organizationContextMiddleware(req: Request, res: Response, next:
     // Set organization context on request
     req.organization_id = userOrgId;
     req.organizationContext = {
-      id: userOrgId || null,
+      id: userOrgId || 0,
       
       /**
        * Check if user can access data from a specific organization
@@ -149,7 +131,7 @@ export async function validateTripAccess(req: Request, res: Response, next: Next
     }
     
     // Check organization access
-    if (req.organizationContext) {
+    if (req.organizationContext && req.organizationContext.enforceOrganizationAccess) {
       req.organizationContext.enforceOrganizationAccess(trip.organization_id);
     }
     

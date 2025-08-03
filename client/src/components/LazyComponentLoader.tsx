@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 // Lazy load large components to improve initial bundle size
 export const LazyBookingWorkflow = lazy(() => import('./BookingWorkflow'));
-export const LazySuperadmin = lazy(() => import('../pages/Superadmin'));
+export const LazySuperadmin = lazy(() => import('../pages/SuperadminClean'));
 export const LazyCorporateCards = lazy(() => import('../pages/CorporateCards'));
 export const LazySequentialBooking = lazy(() => import('../pages/SequentialBooking'));
 export const LazyBookingSystem = lazy(() => import('./BookingSystem'));

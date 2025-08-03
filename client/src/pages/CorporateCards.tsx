@@ -611,7 +611,7 @@ export default function CorporateCards() {
                         <div>
                           <h3 className="font-semibold">{expense.description}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {formatCurrency(expense.amount)} • {expense.category}
+                            {formatCurrency(expense.amount)} • {expense.expense_category}
                           </p>
                         </div>
                       </div>

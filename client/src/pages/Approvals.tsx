@@ -44,21 +44,20 @@ export default function Approvals() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: pendingRequests, isLoading } = useQuery({
+  const { data: pendingRequests, isLoading } = useQuery<ApprovalRequest[]>({
     queryKey: ['/api/approvals/pending'],
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds
+    initialData: []
   });
 
-  const { data: approvalRules } = useQuery({
-    queryKey: ['/api/approvals/rules']
+  const { data: approvalRules } = useQuery<any[]>({
+    queryKey: ['/api/approvals/rules'],
+    initialData: []
   });
 
   const approveMutation = useMutation({
     mutationFn: ({ requestId, decision, reason }: { requestId: number; decision: string; reason?: string }) =>
-      apiRequest(`/api/approvals/${requestId}/decision`, {
-        method: 'PATCH',
-        body: { decision, reason }
-      }),
+      apiRequest('PATCH', `/api/approvals/${requestId}/decision`, { decision, reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
       setSelectedRequest(null);

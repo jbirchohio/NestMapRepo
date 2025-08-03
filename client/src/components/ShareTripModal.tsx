@@ -45,16 +45,16 @@ export default function ShareTripModal({
     if (trip) {
       setIsPublic(trip.isPublic || false);
       setSharingEnabled(trip.sharingEnabled || false);
-      setSharePermission((trip as any).sharePermission || "read-only");
+      setSharePermission((trip.sharePermission as "read-only" | "edit") || "read-only");
       
       // Generate share link with permission parameter
       const baseUrl = window.location.origin;
       const shareCode = trip.shareCode || '';
-      const permission = (trip as any).sharePermission || "read-only";
+      const permission = trip.sharePermission || "read-only";
       setShareLink(`${baseUrl}/share/${shareCode}?permission=${permission}`);
       
       // Set collaborators
-      setCollaborators(trip.collaborators as string[] || []);
+      setCollaborators([]);
     }
   }, [trip]);
 
@@ -204,7 +204,8 @@ export default function ShareTripModal({
       
       if (trip) {
         // Save to database
-        onSave(trip.id, { collaborators: newCollaborators });
+        // Collaborators are handled separately, not part of trip model
+        // onSave(trip.id, { collaborators: newCollaborators });
       }
     } else {
       toast({
@@ -220,8 +221,8 @@ export default function ShareTripModal({
     setCollaborators(newCollaborators);
     
     if (trip) {
-      // Save to database
-      onSave(trip.id, { collaborators: newCollaborators });
+      // Collaborators are handled separately, not part of trip model
+      // onSave(trip.id, { collaborators: newCollaborators });
     }
   };
 
@@ -236,8 +237,7 @@ export default function ShareTripModal({
       await onSave(trip.id, {
         isPublic,
         sharingEnabled,
-        shareCode: sharingEnabled ? shareCode : null,
-        collaborators
+        shareCode: sharingEnabled ? shareCode : undefined
       });
       
       toast({

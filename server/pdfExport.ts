@@ -903,8 +903,8 @@ export async function generateCostEstimate(trip: Trip, activities: Activity[]): 
     
     try {
         // Calculate trip duration
-        const startDate = new Date(trip.startDate);
-        const endDate = new Date(trip.endDate);
+        const startDate = new Date(trip.start_date);
+        const endDate = new Date(trip.end_date);
         const tripDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         
         // Base estimates per day based on destination and trip type
@@ -917,8 +917,8 @@ export async function generateCostEstimate(trip: Trip, activities: Activity[]): 
         
         // Determine trip category
         const isInternational = trip.country && trip.country.toLowerCase() !== 'usa' && trip.country.toLowerCase() !== 'united states';
-        const isLuxury = tripActivities.some(a => a.tag === 'luxury' || a.notes?.toLowerCase().includes('luxury'));
-        const isBudget = tripActivities.some(a => a.tag === 'budget' || a.notes?.toLowerCase().includes('budget'));
+        const isLuxury = activities.some((a: any) => a.tag === 'luxury' || a.notes?.toLowerCase().includes('luxury'));
+        const isBudget = activities.some((a: any) => a.tag === 'budget' || a.notes?.toLowerCase().includes('budget'));
         
         let rates = baseRates.domestic;
         if (isLuxury) rates = baseRates.luxury;
@@ -928,19 +928,19 @@ export async function generateCostEstimate(trip: Trip, activities: Activity[]): 
         // Calculate detailed breakdown
         const flights = rates.flights;
         const hotels = rates.hotels * tripDuration;
-        const activities = activities.length * 75; // Average activity cost
+        const activitiesCost = activities.length * 75; // Average activity cost
         const meals = tripDuration * 60; // 3 meals per day estimate
         const transportation = tripDuration * 40; // Local transport
-        const miscellaneous = Math.round((flights + hotels + activities + meals + transportation) * 0.1); // 10% buffer
+        const miscellaneous = Math.round((flights + hotels + activitiesCost + meals + transportation) * 0.1); // 10% buffer
         
-        const estimatedCost = flights + hotels + activities + meals + transportation + miscellaneous;
+        const estimatedCost = flights + hotels + activitiesCost + meals + transportation + miscellaneous;
         
         return {
             estimatedCost,
             costBreakdown: {
                 flights,
                 hotels,
-                activities,
+                activities: activitiesCost,
                 meals,
                 transportation,
                 miscellaneous

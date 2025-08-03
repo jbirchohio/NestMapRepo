@@ -18,13 +18,12 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
       id: req.user.organization_id,
       canAccessOrganization: (orgId: number | null) => {
         if (!orgId) return false;
-        return orgId === req.user.organization_id;
+        return orgId === req.user!.organization_id;
       },
-      requireSameOrganization: (orgId: number | null) => {
-        if (!orgId || orgId !== req.user.organization_id) {
+      enforceOrganizationAccess: (orgId: number | null) => {
+        if (!orgId || orgId !== req.user!.organization_id) {
           throw new Error('Access denied: Organization mismatch');
         }
-        return true;
       }
     };
   }
@@ -36,17 +35,25 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
  * Database query builder with automatic organization filtering
  */
 export class SecureQueryBuilder {
-  constructor(private organizationId: number | null) {}
+  organizationId: number | null;
+  organization_id: number | null; // Alias
+  userId?: number;
+  enforceOrganizationScope: boolean = true;
+  
+  constructor(organizationId: number | null) {
+    this.organizationId = organizationId;
+    this.organization_id = organizationId;
+  }
 
   /**
    * Add organization filter to where clause
    */
   withOrganizationFilter(table: any, additionalConditions?: any) {
-    if (!this.organization_id) {
+    if (!this.organizationId) {
       throw new Error('Organization context required for database operations');
     }
 
-    const orgCondition = eq(table.organization_id, this.organization_id);
+    const orgCondition = eq(table.organization_id, this.organizationId);
     
     if (additionalConditions) {
       return and(orgCondition, additionalConditions);
@@ -67,10 +74,10 @@ export class SecureQueryBuilder {
    * Validate organization access before operations
    */
   validateOrganizationAccess(resourceOrgId: number | null): boolean {
-    if (!this.organization_id || !resourceOrgId) {
+    if (!this.organizationId || !resourceOrgId) {
       return false;
     }
-    return resourceOrgId === this.organization_id;
+    return resourceOrgId === this.organizationId;
   }
 }
 
@@ -195,35 +202,48 @@ export const databaseSecurityConfig = {
  * Database query performance monitoring
  */
 export function monitorDatabasePerformance(req: Request, res: Response, next: NextFunction) {
-  req.dbMetrics = {
+  const metrics = {
     queryCount: 0,
-    totalQueryTime: 0,
-    slowQueries: [],
+    totalDuration: 0,
+    slowQueries: 0,
+    slowQueriesList: [] as Array<{ name: string; duration: number; timestamp: string }>
+  };
+
+  req.dbMetrics = {
+    queryCount: metrics.queryCount,
+    totalDuration: metrics.totalDuration,
+    slowQueries: metrics.slowQueries,
     
     recordQuery: (queryName: string, duration: number) => {
-      req.dbMetrics!.queryCount++;
-      req.dbMetrics!.totalQueryTime += duration;
+      metrics.queryCount++;
+      metrics.totalDuration += duration;
       
       if (duration > 100) { // Queries over 100ms are considered slow
-        req.dbMetrics!.slowQueries.push({
+        metrics.slowQueries++;
+        metrics.slowQueriesList.push({
           name: queryName,
           duration,
           timestamp: new Date().toISOString()
         });
       }
+      
+      // Update req.dbMetrics values
+      req.dbMetrics!.queryCount = metrics.queryCount;
+      req.dbMetrics!.totalDuration = metrics.totalDuration;
+      req.dbMetrics!.slowQueries = metrics.slowQueries;
     },
     
     getMetrics: () => ({
-      queryCount: req.dbMetrics!.queryCount,
-      averageQueryTime: req.dbMetrics!.totalQueryTime / req.dbMetrics!.queryCount || 0,
-      slowQueries: req.dbMetrics!.slowQueries
+      queryCount: metrics.queryCount,
+      averageQueryTime: metrics.totalDuration / metrics.queryCount || 0,
+      slowQueries: metrics.slowQueriesList
     })
   };
 
   // Log performance metrics at request completion
   const originalEnd = res.end;
   res.end = function(chunk?: any, encoding?: any, cb?: any) {
-    const metrics = req.dbMetrics?.getMetrics();
+    const metrics = req.dbMetrics?.getMetrics?.();
     if (metrics && metrics.queryCount > 0) {
       // Only set headers if response hasn't been sent
       if (!res.headersSent) {

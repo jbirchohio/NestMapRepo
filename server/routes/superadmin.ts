@@ -39,14 +39,14 @@ interface AuthenticatedUser {
   displayName?: string;
 }
 
-import { cleanJwtAuthMiddleware, requireSuperadminRole } from '../middleware/cleanJwtAuth';
+import { jwtAuthMiddleware, requireSuperadminRole } from '../middleware/jwtAuth';
 
 // Apply JWT auth to all superadmin routes with proper middleware
 const createSuperadminRoutes = () => {
   const router = express.Router();
   
   // Apply JWT auth to all routes
-  router.use(cleanJwtAuthMiddleware);
+  router.use(jwtAuthMiddleware);
   router.use(requireSuperadminRole);
   
   return router;

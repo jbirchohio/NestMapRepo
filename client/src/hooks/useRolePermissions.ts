@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export interface RolePermissions {
   canViewAllTrips: boolean;
@@ -23,13 +24,27 @@ export interface RolePermissions {
  * Hook to check user permissions based on role
  * Provides granular permission checking for UI components
  */
+// Define the API response type
+interface PermissionsResponse {
+  permissions?: {
+    canViewTrips?: boolean;
+    canCreateTrips?: boolean;
+    canEditTrips?: boolean;
+    canDeleteTrips?: boolean;
+    canViewAnalytics?: boolean;
+    canManageOrganization?: boolean;
+    canAccessAdmin?: boolean;
+  };
+}
+
 export function useRolePermissions() {
-  const { data: permissionsData, isLoading } = useQuery({
+  const { data: permissionsData, isLoading } = useQuery<PermissionsResponse>({
     queryKey: ['/api/user/permissions'],
+    queryFn: () => apiRequest('GET', '/api/user/permissions').then(res => res.json()),
   });
 
   // Handle both object and array permission formats
-  const permissions = permissionsData?.permissions || {
+  const permissions = (permissionsData as PermissionsResponse)?.permissions || {
     canViewTrips: true,
     canCreateTrips: true,
     canEditTrips: true,

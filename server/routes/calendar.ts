@@ -13,7 +13,7 @@ router.post('/generate-ical/:tripId', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.trip_id);
+    const tripId = parseInt(req.params.tripId);
     const organizationId = req.user.organization_id;
     
     // Verify trip belongs to user's organization
@@ -66,12 +66,12 @@ router.get('/integrations', async (req, res) => {
         provider: calendarIntegrations.provider,
         syncEnabled: calendarIntegrations.syncEnabled,
         lastSyncAt: calendarIntegrations.lastSyncAt,
-        createdAt: calendarIntegrations.createdAt,
+        created_at: calendarIntegrations.createdAt,
       })
       .from(calendarIntegrations)
       .where(and(
-        eq(calendarIntegrations.user_id, userId),
-        eq(calendarIntegrations.organization_id, organizationId)
+        eq(calendarIntegrations.userId, userId),
+        eq(calendarIntegrations.organizationId, organizationId)
       ));
     
     res.json(integrations);
@@ -88,7 +88,7 @@ router.post('/sync-trip/:tripId', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.trip_id);
+    const tripId = parseInt(req.params.tripId);
     const organizationId = req.user.organization_id;
     
     // Verify trip belongs to user's organization
@@ -134,8 +134,8 @@ router.post('/sync-trip/:tripId', async (req, res) => {
 
 // Helper function to generate iCal format
 function generateICalendar(trip: any, activities: any[]): string {
-  const startDate = new Date(trip.startDate);
-  const endDate = new Date(trip.endDate);
+  const startDate = new Date(trip.start_date);
+  const endDate = new Date(trip.end_date);
   
   let ical = [
     'BEGIN:VCALENDAR',
@@ -200,8 +200,8 @@ async function generateCalendarEvents(trip: any, tripId: number, organizationId:
   return [
     {
       title: `Business Trip: ${trip.title}`,
-      start: trip.startDate,
-      end: trip.endDate,
+      start: trip.start_date,
+      end: trip.end_date,
       allDay: true,
       description: trip.description || `Business travel to ${trip.city}`,
       location: trip.city
@@ -211,7 +211,7 @@ async function generateCalendarEvents(trip: any, tripId: number, organizationId:
       start: `${activity.date}T${activity.time || '09:00'}:00`,
       end: `${activity.date}T${addHour(activity.time || '09:00')}:00`,
       description: activity.notes || '',
-      location: activity.locationName || trip.city
+      location: activity.location_name || trip.city
     }))
   ];
 }

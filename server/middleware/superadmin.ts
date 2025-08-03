@@ -1,19 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { USER_ROLES } from '@shared/schema';
 
-// Extended request interface for authenticated users
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-    organization_id?: number;
-    displayName?: string;
-  };
-}
+// Using the centralized type definitions from server/types/express.d.ts
 
 // Middleware to check superadmin permissions
-export const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const requireSuperadmin = (req: Request, res: Response, next: NextFunction) => {
   // Check if user is authenticated first
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -34,7 +25,7 @@ export const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next
 };
 
 // Middleware for superadmin owner level permissions
-export const requireSuperadminOwner = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const requireSuperadminOwner = (req: Request, res: Response, next: NextFunction) => {
   // Check if user is authenticated first
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });

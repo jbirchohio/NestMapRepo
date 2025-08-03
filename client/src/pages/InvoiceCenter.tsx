@@ -36,12 +36,14 @@ export default function InvoiceCenter() {
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: invoices, isLoading } = useQuery({
+  const { data: invoices, isLoading } = useQuery<any[]>({
     queryKey: ["/api/invoices"],
+    initialData: []
   });
 
-  const { data: proposals } = useQuery({
+  const { data: proposals } = useQuery<any[]>({
     queryKey: ["/api/proposals"],
+    initialData: []
   });
 
   const createInvoice = useMutation({

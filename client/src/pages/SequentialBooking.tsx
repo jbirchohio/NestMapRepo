@@ -96,7 +96,7 @@ export default function SequentialBooking() {
           // Validate that required data exists
           if (data && data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
             // Validate each traveler has required properties
-            const validTravelers = data.travelers.every(t => 
+            const validTravelers = data.travelers.every((t: any) => 
               t && typeof t.name === 'string' && typeof t.email === 'string'
             );
             
@@ -613,7 +613,7 @@ export default function SequentialBooking() {
                       
                       <div className="text-right">
                         <div className="text-2xl font-bold text-primary">
-                          ${parseFloat(offer.price).toFixed(2)}
+                          ${offer.price.toFixed(2)}
                         </div>
                         <div className="text-sm text-muted-foreground">{offer.currency}</div>
                       </div>

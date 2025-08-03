@@ -59,7 +59,7 @@ export function enforceOrganizationSecurity(req: Request, res: Response, next: N
 
   // Ensure user has organization context for protected resources
   if (req.user && req.user.organization_id) {
-    req.organizationFilter = { organization_id: req.user.organization_id };
+    req.organizationFilter = (orgId: number | null) => orgId === req.user!.organization_id;
   }
 
   next();
@@ -107,15 +107,15 @@ export function auditLogger(action: string, resource: string) {
 
     // Override res.end to log completion
     const originalEnd = res.end;
-    res.end = function(chunk?: any, encoding?: any) {
+    res.end = function(chunk?: any, encoding?: any, cb?: any) {
       console.log('AUDIT_COMPLETE:', {
         ...auditData,
         statusCode: res.statusCode,
         success: res.statusCode < 400
       });
       
-      originalEnd.call(res, chunk, encoding);
-    };
+      return originalEnd.call(res, chunk, encoding, cb);
+    } as any;
 
     next();
   };

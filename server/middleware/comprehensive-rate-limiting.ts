@@ -297,7 +297,7 @@ export function organizationRateLimit(req: Request, res: Response, next: NextFun
   }
 
   // Determine organization tier (would typically come from database)
-  const orgTier = req.user?.organization_tier || 'free';
+  const orgTier = (req.user as any)?.organization_tier || 'free';
   return tieredRateLimit(orgTier)(req, res, next);
 }
 

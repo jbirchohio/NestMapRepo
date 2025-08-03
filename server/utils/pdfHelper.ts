@@ -214,8 +214,8 @@ function generatePdfHtml(data: PdfGenerationData): string {
             <h2>Trip Overview</h2>
             <div class="trip-details">
                 <div><strong>Destination:</strong> ${trip.city || 'Not specified'}, ${trip.country || ''}</div>
-                <div><strong>Duration:</strong> ${trip.startDate} to ${trip.endDate}</div>
-                <div><strong>Type:</strong> ${trip.tripType || 'General'}</div>
+                <div><strong>Duration:</strong> ${trip.start_date} to ${trip.end_date}</div>
+                <div><strong>Type:</strong> ${trip.trip_type || 'General'}</div>
                 <div><strong>Status:</strong> ${trip.completed ? 'Completed' : 'Planned'}</div>
             </div>
         </div>
@@ -233,7 +233,7 @@ function generatePdfHtml(data: PdfGenerationData): string {
                             ${activity.time ? `<div class="activity-time">${activity.time}</div>` : ''}
                         </div>
                         
-                        ${activity.locationName ? `<div class="activity-location">📍 ${activity.locationName}</div>` : ''}
+                        ${activity.location_name ? `<div class="activity-location">📍 ${activity.location_name}</div>` : ''}
                         
                         ${activity.notes ? `<div class="activity-notes">${activity.notes}</div>` : ''}
                         

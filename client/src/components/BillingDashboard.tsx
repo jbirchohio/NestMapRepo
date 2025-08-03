@@ -27,6 +27,12 @@ interface BillingInfo {
   plan: 'free' | 'team' | 'enterprise';
 }
 
+interface UserPermissions {
+  canAccessBilling?: boolean;
+  canManageOrganization?: boolean;
+  canAccessAdmin?: boolean;
+}
+
 export default function BillingDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -34,7 +40,7 @@ export default function BillingDashboard() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Check user permissions for billing access
-  const { data: userPermissions } = useQuery({
+  const { data: userPermissions } = useQuery<UserPermissions>({
     queryKey: ['/api/user/permissions'],
     enabled: !!user,
   });
@@ -48,15 +54,15 @@ export default function BillingDashboard() {
 
   // Get billing information
   const { data: billingInfo, isLoading: billingLoading } = useQuery<BillingInfo>({
-    queryKey: ['/api/billing', user?.user_metadata?.customerId],
-    enabled: !!user?.user_metadata?.customerId && hasBillingAccess,
+    queryKey: ['/api/billing', user?.organizationId],
+    enabled: !!user?.organizationId && hasBillingAccess,
   });
 
   // Create billing portal session
   const portalMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", "/api/billing/portal", {
-        customerId: user?.user_metadata?.customerId,
+        organizationId: user?.organizationId,
         returnUrl: window.location.origin + "/team"
       });
       return response.json();
@@ -77,10 +83,10 @@ export default function BillingDashboard() {
   const upgradeMutation = useMutation({
     mutationFn: async (plan: 'team' | 'enterprise') => {
       const response = await apiRequest("POST", "/api/billing/subscription", {
-        organizationId: user?.user_metadata?.organization_id,
+        organizationId: user?.organizationId,
         plan,
         customerEmail: user?.email,
-        customerName: user?.user_metadata?.display_name || user?.email
+        customerName: user?.username || user?.email
       });
       return response.json();
     },
@@ -202,7 +208,7 @@ export default function BillingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {user?.user_metadata?.organization_id ? '5' : '1'}
+                {user?.organizationId ? '5' : '1'}
               </div>
               <p className="text-xs text-muted-foreground">
                 Active members

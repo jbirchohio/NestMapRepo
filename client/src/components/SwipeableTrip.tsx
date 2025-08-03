@@ -197,11 +197,11 @@ export default function SwipeableTrip({ trip, onNavigate, onRename, isGuestMode 
                 
                 {/* Dates */}
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  {format(new Date(trip.start_date), 'MMM d')} – {format(new Date(trip.end_date), 'MMM d, yyyy')}
+                  {format(new Date(trip.startDate), 'MMM d')} – {format(new Date(trip.endDate), 'MMM d, yyyy')}
                 </p>
                 
                 {/* Collaboration indicator */}
-                {trip.sharing_enabled && (
+                {trip.sharingEnabled && (
                   <div className="flex items-center gap-1 mt-2">
                     <Users className="h-3 w-3 text-blue-500" />
                     <span className="text-xs text-blue-600 dark:text-blue-400">Team Collaboration</span>

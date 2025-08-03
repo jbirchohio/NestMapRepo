@@ -22,8 +22,10 @@ const logAdminAction = async (
     await db.insert(adminAuditLog).values({
       admin_user_id: adminUserId,
       action_type: actionType,
-      target_organization_id: targetOrgId,
-      action_data: actionData,
+      action_data: {
+        ...actionData,
+        target_organization_id: targetOrgId
+      },
       ip_address: ipAddress,
     });
   } catch (error) {
@@ -380,15 +382,12 @@ router.get('/audit-log', async (req: Request, res: Response) => {
         admin_user_id: adminAuditLog.admin_user_id,
         admin_name: users.display_name,
         action_type: adminAuditLog.action_type,
-        target_organization_id: adminAuditLog.target_organization_id,
-        organization_name: organizations.name,
         action_data: adminAuditLog.action_data,
         ip_address: adminAuditLog.ip_address,
         timestamp: adminAuditLog.timestamp,
       })
       .from(adminAuditLog)
       .leftJoin(users, eq(adminAuditLog.admin_user_id, users.id))
-      .leftJoin(organizations, eq(adminAuditLog.target_organization_id, organizations.id))
       .orderBy(desc(adminAuditLog.timestamp))
       .limit(limit)
       .offset(offset);

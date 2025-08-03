@@ -138,7 +138,7 @@ class RateLimiter {
     // Check if already blocked
     if (this.isBlocked(clientId)) {
       SecurityAuditLogger.logAction({
-        userId: 0,
+        user_id: 0,
         action: 'RATE_LIMIT_BLOCKED',
         resource: 'authentication',
         ipAddress: req.ip || 'unknown',
@@ -162,7 +162,7 @@ class RateLimiter {
     
     if (exceeded) {
       SecurityAuditLogger.logAction({
-        userId: 0,
+        user_id: 0,
         action: 'RATE_LIMIT_EXCEEDED',
         resource: 'authentication',
         ipAddress: req.ip || 'unknown',

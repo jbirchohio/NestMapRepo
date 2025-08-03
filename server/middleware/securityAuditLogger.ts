@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db';
-import { securityAuditLog } from '@shared/schema';
+import { adminAuditLog } from '@shared/schema';
 
 interface AuditLogEntry {
-  userId: number;
+  user_id: number;
   action: string;
   resource: string;
   resourceId?: string;
-  organizationId?: number;
+  organization_id?: number;
   ipAddress: string;
   userAgent: string;
   success: boolean;
@@ -24,17 +24,18 @@ export class SecurityAuditLogger {
    */
   static async logAction(entry: AuditLogEntry): Promise<void> {
     try {
-      await db.insert(securityAuditLog).values({
-        user_id: entry.userId,
-        action: entry.action,
-        resource: entry.resource,
-        resource_id: entry.resourceId,
-        organization_id: entry.organizationId,
-        ip_address: entry.ipAddress,
-        user_agent: entry.userAgent,
-        success: entry.success,
-        details: entry.details ? JSON.stringify(entry.details) : null,
-        timestamp: new Date()
+      await db.insert(adminAuditLog).values({
+        admin_user_id: entry.user_id,
+        action_type: entry.action,
+        action_data: {
+          resource: entry.resource,
+          resource_id: entry.resourceId,
+          organization_id: entry.organization_id,
+          user_agent: entry.userAgent,
+          success: entry.success,
+          details: entry.details
+        },
+        ip_address: entry.ipAddress
       });
     } catch (error) {
       // Log audit failure to console but don't throw to avoid breaking the request
@@ -54,11 +55,11 @@ export class SecurityAuditLogger {
         
         if (req.user) {
           SecurityAuditLogger.logAction({
-            userId: req.user.id,
+            user_id: req.user.id,
             action,
             resource,
-            resourceId: req.params.id || req.params.orgId || req.params.userId,
-            organizationId: req.user.organization_id,
+            resourceId: req.params.id || req.params.orgId || req.params.user_id,
+            organization_id: req.user.organization_id,
             ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
             userAgent: req.get('User-Agent') || 'unknown',
             success,
@@ -90,10 +91,10 @@ export class SecurityAuditLogger {
     organizationId?: number
   ): Promise<void> {
     await this.logAction({
-      userId: userId || 0,
+      user_id: userId || 0,
       action: success ? 'LOGIN_SUCCESS' : 'LOGIN_FAILED',
       resource: 'authentication',
-      organizationId,
+      organization_id: organizationId,
       ipAddress,
       userAgent,
       success,
@@ -116,10 +117,10 @@ export class SecurityAuditLogger {
     userAgent: string
   ): Promise<void> {
     await this.logAction({
-      userId,
+      user_id: userId,
       action: `WHITELABEL_${action.toUpperCase()}`,
       resource: 'white_label_settings',
-      organizationId,
+      organization_id: organizationId,
       ipAddress,
       userAgent,
       success: true,
@@ -143,11 +144,11 @@ export class SecurityAuditLogger {
     userAgent: string = 'unknown'
   ): Promise<void> {
     await this.logAction({
-      userId,
+      user_id: userId,
       action: `ORG_${action.toUpperCase()}`,
       resource: 'organization',
       resourceId: targetUserId?.toString(),
-      organizationId,
+      organization_id: organizationId,
       ipAddress,
       userAgent,
       success: true,
@@ -172,10 +173,10 @@ export class SecurityAuditLogger {
     userAgent: string = 'unknown'
   ): Promise<void> {
     await this.logAction({
-      userId,
+      user_id: userId,
       action: `BILLING_${action.toUpperCase()}`,
       resource: 'billing',
-      organizationId,
+      organization_id: organizationId,
       ipAddress,
       userAgent,
       success: true,
@@ -194,10 +195,10 @@ export class SecurityAuditLogger {
 export function auditAdminAccess(req: Request, res: Response, next: NextFunction) {
   if (req.user && (req.user.role === 'admin' || req.user.role === 'superadmin')) {
     SecurityAuditLogger.logAction({
-      userId: req.user.id,
+      user_id: req.user.id,
       action: 'ADMIN_ACCESS',
       resource: 'admin_dashboard',
-      organizationId: req.user.organization_id,
+      organization_id: req.user.organization_id,
       ipAddress: req.ip || 'unknown',
       userAgent: req.get('User-Agent') || 'unknown',
       success: true,

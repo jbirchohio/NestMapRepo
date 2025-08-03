@@ -13,6 +13,26 @@ interface CollaboratorPresence {
   color: string;
 }
 
+interface WebSocketMessage {
+  type: string;
+  [key: string]: unknown;
+}
+
+interface CollaboratorData {
+  userId: number;
+  username: string;
+  avatar?: string;
+  currentPage: string;
+  currentSection?: string;
+  cursor?: { x: number; y: number };
+  lastSeen: string | Date;
+  isActive: boolean;
+}
+
+interface ActivityData {
+  [key: string]: unknown;
+}
+
 interface UseRealTimeCollaborationProps {
   tripId?: number;
   organizationId?: number;
@@ -121,22 +141,25 @@ export function useRealTimeCollaboration({
     }
   }, [location]);
 
-  const handleWebSocketMessage = (data: any) => {
+  const handleWebSocketMessage = (data: WebSocketMessage) => {
     switch (data.type) {
       case 'collaborators_list':
-        setCollaborators(data.collaborators.map((collab: any, index: number) => ({
+        setCollaborators((data.collaborators as CollaboratorData[]).map((collab: CollaboratorData, index: number) => ({
           ...collab,
+          lastSeen: new Date(collab.lastSeen),
           color: PRESENCE_COLORS[index % PRESENCE_COLORS.length]
         })));
         break;
 
       case 'collaborator_joined':
         setCollaborators(prev => {
-          const existing = prev.find(c => c.userId === data.collaborator.userId);
+          const collaborator = data.collaborator as CollaboratorData;
+          const existing = prev.find(c => c.userId === collaborator.userId);
           if (existing) return prev;
           
           return [...prev, {
-            ...data.collaborator,
+            ...collaborator,
+            lastSeen: new Date(collaborator.lastSeen),
             color: PRESENCE_COLORS[prev.length % PRESENCE_COLORS.length]
           }];
         });
@@ -144,15 +167,15 @@ export function useRealTimeCollaboration({
 
       case 'collaborator_left':
         setCollaborators(prev => 
-          prev.filter(c => c.userId !== data.userId)
+          prev.filter(c => c.userId !== (data.userId as number))
         );
         break;
 
       case 'presence_update':
         setCollaborators(prev =>
           prev.map(c =>
-            c.userId === data.userId
-              ? { ...c, ...data.presence, lastSeen: new Date() }
+            c.userId === (data.userId as number)
+              ? { ...c, ...(data.presence as Partial<CollaboratorPresence>), lastSeen: new Date() }
               : c
           )
         );
@@ -161,8 +184,8 @@ export function useRealTimeCollaboration({
       case 'cursor_update':
         setCollaborators(prev =>
           prev.map(c =>
-            c.userId === data.userId
-              ? { ...c, cursor: data.cursor, lastSeen: new Date() }
+            c.userId === (data.userId as number)
+              ? { ...c, cursor: data.cursor as { x: number; y: number }, lastSeen: new Date() }
               : c
           )
         );
@@ -203,7 +226,7 @@ export function useRealTimeCollaboration({
   };
 
   // Send activity updates (editing, viewing, etc.)
-  const sendActivity = (activityType: string, data: any) => {
+  const sendActivity = (activityType: string, data: ActivityData) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'activity_update',

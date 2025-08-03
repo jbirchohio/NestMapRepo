@@ -90,16 +90,16 @@ router.get('/trips/performance', async (req, res) => {
         trip: {
           id: trips.id,
           title: trips.title,
-          destination: trips.destination,
+          destination: trips.city,
           startDate: trips.start_date,
           endDate: trips.end_date,
-          status: trips.status,
-          totalBudget: trips.total_budget
+          status: sql<string>`CASE WHEN ${trips.completed} THEN 'completed' ELSE 'active' END`,
+          totalBudget: trips.budget
         },
         user: {
           id: users.id,
           displayName: users.display_name,
-          department: users.department
+          department: users.team_size
         },
         metrics: {
           expenseCount: sql<number>`(
@@ -315,7 +315,7 @@ async function getTripAnalytics(organizationId: number, startDate: Date, endDate
 
   const statusBreakdown = await db
     .select({
-      status: trips.status,
+      status: trips.completed,
       count: count()
     })
     .from(trips)
@@ -324,7 +324,7 @@ async function getTripAnalytics(organizationId: number, startDate: Date, endDate
       gte(trips.created_at, startDate),
       lte(trips.created_at, endDate)
     ))
-    .groupBy(trips.status);
+    .groupBy(trips.completed);
 
   return {
     total: tripCount[0]?.count || 0,
@@ -343,23 +343,23 @@ async function getExpenseAnalytics(organizationId: number, startDate: Date, endD
     .from(expenses)
     .where(and(
       eq(expenses.organization_id, organizationId),
-      gte(expenses.createdAt, startDate),
-      lte(expenses.createdAt, endDate)
+      gte(expenses.created_at, startDate),
+      lte(expenses.created_at, endDate)
     ));
 
   const categoryBreakdown = await db
     .select({
-      category: expenses.category,
+      category: expenses.expense_category,
       count: count(),
       totalAmount: sql<number>`SUM(${expenses.amount})`
     })
     .from(expenses)
     .where(and(
       eq(expenses.organization_id, organizationId),
-      gte(expenses.createdAt, startDate),
-      lte(expenses.createdAt, endDate)
+      gte(expenses.created_at, startDate),
+      lte(expenses.created_at, endDate)
     ))
-    .groupBy(expenses.category);
+    .groupBy(expenses.expense_category);
 
   return {
     total: expenseStats[0]?.total || 0,
@@ -377,7 +377,7 @@ async function getBookingAnalytics(organizationId: number, startDate: Date, endD
     })
     .from(bookings)
     .where(and(
-      eq(bookings.organization_id, organizationId),
+      eq(bookings.organizationId, organizationId),
       gte(bookings.createdAt, startDate),
       lte(bookings.createdAt, endDate)
     ));
@@ -413,7 +413,7 @@ async function getApprovalAnalytics(organizationId: number, startDate: Date, end
     })
     .from(approvalRequests)
     .where(and(
-      eq(approvalRequests.organization_id, organizationId),
+      eq(approvalRequests.organizationId, organizationId),
       gte(approvalRequests.createdAt, startDate),
       lte(approvalRequests.createdAt, endDate)
     ))
@@ -438,15 +438,15 @@ async function getCostAnalytics(organizationId: number, startDate: Date, endDate
     .from(expenses)
     .where(and(
       eq(expenses.organization_id, organizationId),
-      gte(expenses.createdAt, startDate),
-      lte(expenses.createdAt, endDate)
+      gte(expenses.created_at, startDate),
+      lte(expenses.created_at, endDate)
     ));
 
   const bookingTotal = await db
     .select({ total: sql<number>`SUM(${bookings.totalAmount})` })
     .from(bookings)
     .where(and(
-      eq(bookings.organization_id, organizationId),
+      eq(bookings.organizationId, organizationId),
       gte(bookings.createdAt, startDate),
       lte(bookings.createdAt, endDate)
     ));
@@ -464,7 +464,7 @@ async function getTrendAnalytics(organizationId: number, startDate: Date, endDat
     .select({
       month: sql<string>`to_char(${trips.created_at}, 'YYYY-MM')`,
       tripCount: count(),
-      totalBudget: sql<number>`SUM(${trips.total_budget})`
+      totalBudget: sql<number>`SUM(${trips.budget})`
     })
     .from(trips)
     .where(and(
@@ -501,7 +501,7 @@ function calculateCostPerDay(trip: any): number {
 }
 
 function calculateCompletionRate(statusBreakdown: any[]): number {
-  const completed = statusBreakdown.find(s => s.status === 'completed')?.count || 0;
+  const completed = statusBreakdown.find(s => s.status === true)?.count || 0;
   const total = statusBreakdown.reduce((sum, s) => sum + s.count, 0);
   return total > 0 ? (completed / total) * 100 : 0;
 }
@@ -528,8 +528,8 @@ async function getExpenseCompliance(organizationId: number, startDate: Date, end
     .from(expenses)
     .where(and(
       eq(expenses.organization_id, organizationId),
-      gte(expenses.createdAt, startDate),
-      lte(expenses.createdAt, endDate)
+      gte(expenses.created_at, startDate),
+      lte(expenses.created_at, endDate)
     ));
 
   const expensesWithReceipts = await db
@@ -537,9 +537,9 @@ async function getExpenseCompliance(organizationId: number, startDate: Date, end
     .from(expenses)
     .where(and(
       eq(expenses.organization_id, organizationId),
-      gte(expenses.createdAt, startDate),
-      lte(expenses.createdAt, endDate),
-      sql`${expenses.receiptUrl} IS NOT NULL`
+      gte(expenses.created_at, startDate),
+      lte(expenses.created_at, endDate),
+      sql`${expenses.receipt_url} IS NOT NULL`
     ));
 
   const receiptComplianceRate = totalExpenses[0]?.count > 0 ?
@@ -558,7 +558,7 @@ async function getApprovalCompliance(organizationId: number, startDate: Date, en
     .select({ count: count() })
     .from(approvalRequests)
     .where(and(
-      eq(approvalRequests.organization_id, organizationId),
+      eq(approvalRequests.organizationId, organizationId),
       gte(approvalRequests.createdAt, startDate),
       lte(approvalRequests.createdAt, endDate)
     ));
@@ -567,7 +567,7 @@ async function getApprovalCompliance(organizationId: number, startDate: Date, en
     .select({ count: count() })
     .from(approvalRequests)
     .where(and(
-      eq(approvalRequests.organization_id, organizationId),
+      eq(approvalRequests.organizationId, organizationId),
       gte(approvalRequests.createdAt, startDate),
       lte(approvalRequests.createdAt, endDate),
       sql`${approvalRequests.approvedAt} <= ${approvalRequests.dueDate}`,
@@ -589,17 +589,17 @@ async function getTaxComplianceData(organizationId: number, startDate: Date, end
   // Calculate tax-deductible amounts and compliance
   const taxDeductibleExpenses = await db
     .select({
-      category: expenses.category,
+      category: expenses.expense_category,
       totalAmount: sql<number>`SUM(${expenses.amount})`
     })
     .from(expenses)
     .where(and(
       eq(expenses.organization_id, organizationId),
-      gte(expenses.createdAt, startDate),
-      lte(expenses.createdAt, endDate),
-      sql`${expenses.category} IN ('meals', 'accommodation', 'transportation')`
+      gte(expenses.created_at, startDate),
+      lte(expenses.created_at, endDate),
+      sql`${expenses.expense_category} IN ('meals', 'accommodation', 'transportation')`
     ))
-    .groupBy(expenses.category);
+    .groupBy(expenses.expense_category);
 
   const totalDeductible = taxDeductibleExpenses.reduce((sum, e) => {
     const rate = e.category === 'meals' ? 0.5 : 1.0; // 50% for meals, 100% for others
@@ -668,9 +668,9 @@ async function exportBookingsData(organizationId: number, startDate?: string, en
   return await db
     .select()
     .from(bookings)
-    .leftJoin(trips, eq(bookings.trip_id, trips.id))
-    .leftJoin(users, eq(bookings.user_id, users.id))
-    .where(eq(bookings.organization_id, organizationId));
+    .leftJoin(trips, eq(bookings.tripId, trips.id))
+    .leftJoin(users, eq(bookings.userId, users.id))
+    .where(eq(bookings.organizationId, organizationId));
 }
 
 async function exportComplianceData(organizationId: number, startDate?: string, endDate?: string) {
@@ -679,7 +679,7 @@ async function exportComplianceData(organizationId: number, startDate?: string, 
     .select()
     .from(approvalRequests)
     .leftJoin(users, eq(approvalRequests.requesterId, users.id))
-    .where(eq(approvalRequests.organization_id, organizationId));
+    .where(eq(approvalRequests.organizationId, organizationId));
 }
 
 function convertToCSV(data: any[]): string {

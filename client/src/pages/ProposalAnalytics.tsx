@@ -15,10 +15,20 @@ export default function ProposalAnalytics() {
 
   const { data: analytics, isLoading } = useQuery({
     queryKey: ["/api/proposal-analytics", timeRange, selectedProposal],
+    queryFn: async () => {
+      const response = await fetch(`/api/proposal-analytics?timeRange=${timeRange}&proposal=${selectedProposal}`);
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+      return response.json();
+    }
   });
 
   const { data: proposals } = useQuery({
     queryKey: ["/api/proposals"],
+    queryFn: async () => {
+      const response = await fetch('/api/proposals');
+      if (!response.ok) throw new Error('Failed to fetch proposals');
+      return response.json();
+    }
   });
 
   if (isLoading) {
@@ -37,7 +47,7 @@ export default function ProposalAnalytics() {
     );
   }
 
-  const stats = analytics?.overview || {
+  const stats = (analytics as any)?.overview || {
     totalProposals: 24,
     totalViews: 186,
     averageViewTime: 4.2,
@@ -46,7 +56,7 @@ export default function ProposalAnalytics() {
     totalRevenue: 125400
   };
 
-  const viewsData = analytics?.viewsOverTime || [
+  const viewsData = (analytics as any)?.viewsOverTime || [
     { date: "2024-01-01", views: 12, opens: 8 },
     { date: "2024-01-02", views: 18, opens: 12 },
     { date: "2024-01-03", views: 15, opens: 10 },
@@ -56,7 +66,7 @@ export default function ProposalAnalytics() {
     { date: "2024-01-07", views: 32, opens: 24 }
   ];
 
-  const sectionData = analytics?.sectionViews || [
+  const sectionData = (analytics as any)?.sectionViews || [
     { section: "Cost Breakdown", views: 156, avgTime: 2.4 },
     { section: "Itinerary", views: 134, avgTime: 3.8 },
     { section: "Terms", views: 89, avgTime: 1.2 },
@@ -64,7 +74,7 @@ export default function ProposalAnalytics() {
     { section: "Custom Sections", views: 45, avgTime: 1.5 }
   ];
 
-  const conversionFunnel = analytics?.conversionFunnel || [
+  const conversionFunnel = (analytics as any)?.conversionFunnel || [
     { stage: "Sent", count: 24, percentage: 100 },
     { stage: "Opened", count: 20, percentage: 83.3 },
     { stage: "Viewed >30s", count: 16, percentage: 66.7 },
@@ -99,7 +109,7 @@ export default function ProposalAnalytics() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Proposals</SelectItem>
-              {proposals?.map((proposal: any) => (
+              {(proposals as any[])?.map((proposal: any) => (
                 <SelectItem key={proposal.id} value={proposal.id.toString()}>
                   {proposal.clientName} - {new Date(proposal.createdAt).toLocaleDateString()}
                 </SelectItem>
@@ -200,14 +210,14 @@ export default function ProposalAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {sectionData.map((section, index) => (
+                  {sectionData.map((section: any, index: number) => (
                     <div key={section.section} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">{section.section}</span>
                         <span className="text-sm text-gray-500">{section.avgTime}m avg</span>
                       </div>
                       <Progress 
-                        value={(section.views / Math.max(...sectionData.map(s => s.views))) * 100} 
+                        value={(section.views / Math.max(...sectionData.map((s: any) => s.views))) * 100} 
                         className="h-2"
                       />
                       <div className="text-xs text-gray-500">{section.views} views</div>
@@ -284,7 +294,7 @@ export default function ProposalAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {conversionFunnel.map((stage, index) => (
+                  {conversionFunnel.map((stage: any, index: number) => (
                     <div key={stage.stage} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{stage.stage}</span>
@@ -346,7 +356,7 @@ export default function ProposalAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {proposals?.slice(0, 10).map((proposal: any) => (
+                {(proposals as any[])?.slice(0, 10).map((proposal: any) => (
                   <div key={proposal.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <h4 className="font-medium">{proposal.clientName}</h4>

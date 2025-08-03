@@ -72,8 +72,9 @@ export default function Settings() {
   });
 
   // Get white label config
-  const { data: whiteLabelConfig } = useQuery({
+  const { data: whiteLabelConfig } = useQuery<{ config?: any }>({
     queryKey: ['/api/white-label/config'],
+    queryFn: () => apiRequest('GET', '/api/white-label/config').then(res => res.json()),
     enabled: !!user,
   });
 
@@ -146,7 +147,7 @@ export default function Settings() {
 
   const canUseBranding = orgPlan?.plan === 'pro' || orgPlan?.plan === 'business' || orgPlan?.plan === 'enterprise';
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: z.infer<typeof whiteLabelSchema>) => {
     if (!canUseBranding) {
       toast({
         title: "Upgrade Required",

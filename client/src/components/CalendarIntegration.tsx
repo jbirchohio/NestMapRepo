@@ -54,6 +54,7 @@ export default function CalendarIntegration() {
   // Fetch calendar connections
   const { data: connections = [], isLoading } = useQuery({
     queryKey: ['/api/calendar/connections'],
+    queryFn: () => apiRequest('GET', '/api/calendar/connections').then(res => res.json()),
   });
 
   // Connect to calendar provider

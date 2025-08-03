@@ -44,12 +44,13 @@ export class SSOManager {
     this.configs.set(organizationId, ssoConfig);
 
     // In production, store in database
-    await auditLogger.logAdminAction(
-      0, // System user
-      organizationId,
-      'sso_configured',
-      { provider: config.provider, entityId: config.entityId }
-    );
+    await auditLogger.log({
+      userId: 0, // System user
+      action: 'sso_configured',
+      targetType: 'organization',
+      targetId: organizationId.toString(),
+      details: { provider: config.provider, entityId: config.entityId }
+    });
   }
 
   /**
@@ -80,12 +81,13 @@ export class SSOManager {
         organizationDomain: parsedResponse.entityId
       };
 
-      await auditLogger.logAuth(
-        0, // Will be set after user lookup
-        organizationId,
-        'sso_login_success',
-        { provider: 'saml', entityId: parsedResponse.entityId }
-      );
+      await auditLogger.log({
+        userId: 0, // Will be set after user lookup
+        action: 'sso_login_success',
+        targetType: 'organization',
+        targetId: organizationId.toString(),
+        details: { provider: 'saml', entityId: parsedResponse.entityId }
+      });
 
       return { user, organizationId };
     } catch (error) {
@@ -119,12 +121,13 @@ export class SSOManager {
         organizationDomain: userInfo.hd || userInfo.domain
       };
 
-      await auditLogger.logAuth(
-        0,
-        organizationId,
-        'sso_login_success',
-        { provider: config.provider, email: user.email }
-      );
+      await auditLogger.log({
+        userId: 0,
+        action: 'sso_login_success',
+        targetType: 'organization',
+        targetId: organizationId.toString(),
+        details: { provider: config.provider, email: user.email }
+      });
 
       return { user, organizationId };
     } catch (error) {
@@ -152,20 +155,18 @@ export class SSOManager {
         .update(users)
         .set({
           display_name: `${ssoUser.firstName} ${ssoUser.lastName}`,
-          sso_provider: 'saml',
-          sso_user_id: ssoUser.email,
-          department: ssoUser.department,
-          updated_at: new Date()
+          last_login: new Date()
         })
         .where(eq(users.id, existingUser.id))
         .returning();
 
-      await auditLogger.logAuth(
-        updatedUser.id,
-        organizationId,
-        'sso_user_updated',
-        { email: ssoUser.email, groups: ssoUser.groups }
-      );
+      await auditLogger.log({
+        userId: updatedUser.id,
+        action: 'sso_user_updated',
+        targetType: 'user',
+        targetId: updatedUser.id.toString(),
+        details: { email: ssoUser.email, groups: ssoUser.groups }
+      });
 
       return updatedUser;
     } else {
@@ -175,25 +176,23 @@ export class SSOManager {
       const [newUser] = await db
         .insert(users)
         .values({
+          auth_id: `sso_${ssoUser.email}`, // Create a unique auth_id for SSO users
+          username: ssoUser.email.split('@')[0], // Use email prefix as username
           email: ssoUser.email,
           display_name: `${ssoUser.firstName} ${ssoUser.lastName}`,
           role,
           organization_id: organizationId,
-          sso_provider: 'saml',
-          sso_user_id: ssoUser.email,
-          department: ssoUser.department,
-          email_verified: true, // SSO users are pre-verified
-          created_at: new Date(),
-          updated_at: new Date()
+          created_at: new Date()
         })
         .returning();
 
-      await auditLogger.logAuth(
-        newUser.id,
-        organizationId,
-        'sso_user_created',
-        { email: ssoUser.email, role, groups: ssoUser.groups }
-      );
+      await auditLogger.log({
+        userId: newUser.id,
+        action: 'sso_user_created',
+        targetType: 'user',
+        targetId: newUser.id.toString(),
+        details: { email: ssoUser.email, role, groups: ssoUser.groups }
+      });
 
       return newUser;
     }
@@ -240,23 +239,56 @@ export class SSOManager {
   }
 
   private parseSAMLResponse(samlResponse: string): any {
-    // Simplified SAML parsing - use proper library in production
-    return {
-      isValid: true,
-      entityId: 'example.com',
-      attributes: {
-        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': 'user@example.com',
-        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname': 'John',
-        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname': 'Doe',
-        'http://schemas.microsoft.com/ws/2008/06/identity/claims/groups': 'managers,users'
+    // Decode base64 SAML response
+    try {
+      const decoded = Buffer.from(samlResponse, 'base64').toString('utf8');
+      
+      // Basic XML parsing to extract key attributes
+      // In production, use a proper SAML library like @node-saml/node-saml
+      const emailMatch = decoded.match(/<saml:Attribute[^>]*Name="email"[^>]*>.*?<saml:AttributeValue[^>]*>([^<]+)<\/saml:AttributeValue>/s);
+      const firstNameMatch = decoded.match(/<saml:Attribute[^>]*Name="firstName"[^>]*>.*?<saml:AttributeValue[^>]*>([^<]+)<\/saml:AttributeValue>/s);
+      const lastNameMatch = decoded.match(/<saml:Attribute[^>]*Name="lastName"[^>]*>.*?<saml:AttributeValue[^>]*>([^<]+)<\/saml:AttributeValue>/s);
+      const entityIdMatch = decoded.match(/<saml:Issuer[^>]*>([^<]+)<\/saml:Issuer>/);
+      
+      if (!emailMatch || !entityIdMatch) {
+        return { isValid: false };
       }
-    };
+      
+      return {
+        isValid: true,
+        entityId: entityIdMatch[1],
+        attributes: {
+          email: emailMatch[1],
+          firstName: firstNameMatch?.[1] || 'Unknown',
+          lastName: lastNameMatch?.[1] || 'User',
+          groups: 'users' // Default group
+        }
+      };
+    } catch (error) {
+      console.error('Error parsing SAML response:', error);
+      return { isValid: false };
+    }
   }
 
   private async getOrganizationFromEntityId(entityId: string): Promise<number> {
-    // TODO: Implement actual entity ID to organization mapping from database
-    // This should look up the organization_id based on the SAML entity ID
-    throw new Error('Entity ID mapping not implemented - please configure organization mapping');
+    // Look up organization by domain extracted from entity ID
+    const domainMatch = entityId.match(/https?:\/\/([^/]+)/);
+    if (!domainMatch) {
+      throw new Error('Invalid entity ID format');
+    }
+    
+    const domain = domainMatch[1];
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.domain, domain))
+      .limit(1);
+    
+    if (!org) {
+      throw new Error(`No organization found for domain: ${domain}`);
+    }
+    
+    return org.id;
   }
 
   private async getOrganizationFromState(state: string): Promise<number> {
@@ -266,19 +298,63 @@ export class SSOManager {
   }
 
   private async exchangeOAuthCode(code: string, state: string): Promise<any> {
-    // OAuth code exchange implementation
-    return { accessToken: 'mock_token' };
+    // Parse state to get organization config
+    const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+    const config = this.configs.get(stateData.organization_id);
+    
+    if (!config) {
+      throw new Error('No OAuth configuration found');
+    }
+    
+    // Exchange authorization code for access token
+    const tokenUrl = new URL('/token', config.ssoUrl);
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      client_id: config.entityId,
+      client_secret: process.env[`OAUTH_CLIENT_SECRET_${stateData.organization_id}`] || '',
+      redirect_uri: `${process.env.BASE_URL || 'https://your-domain.com'}/sso/oauth/callback`
+    });
+    
+    try {
+      const response = await fetch(tokenUrl.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Token exchange failed: ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('OAuth token exchange error:', error);
+      throw error;
+    }
   }
 
   private async getOAuthUserInfo(accessToken: string): Promise<any> {
     // Fetch user info from OAuth provider
-    return {
-      email: 'user@example.com',
-      given_name: 'John',
-      family_name: 'Doe',
-      groups: ['users'],
-      department: 'Engineering'
-    };
+    const userInfoUrl = process.env.OAUTH_USERINFO_URL || 'https://api.oauth-provider.com/userinfo';
+    
+    try {
+      const response = await fetch(userInfoUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user info: ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching OAuth user info:', error);
+      throw error;
+    }
   }
 
   private determineUserRole(groups: string[]): string {
@@ -292,7 +368,7 @@ export class SSOManager {
 
   private generateSAMLRequest(config: SSOConfig, returnUrl?: string): string {
     const baseUrl = process.env.BASE_URL || 'https://your-domain.com';
-    const acsUrl = `${baseUrl}/sso/acs/${config.organization_id}`;
+    const acsUrl = `${baseUrl}/sso/acs/${config.organizationId}`;
     const relayState = returnUrl ? encodeURIComponent(returnUrl) : '';
     
     // Generate SAML AuthnRequest (simplified)
@@ -313,7 +389,7 @@ export class SSOManager {
     const baseUrl = process.env.BASE_URL || 'https://your-domain.com';
     const redirectUri = `${baseUrl}/sso/oauth/callback`;
     const state = Buffer.from(JSON.stringify({ 
-      organizationId: config.organization_id, 
+      organizationId: config.organizationId, 
       returnUrl 
     })).toString('base64');
     
@@ -337,7 +413,7 @@ export const ssoRouter = Router();
 // SAML metadata endpoint
 ssoRouter.get('/metadata/:organizationId', async (req, res) => {
   try {
-    const organizationId = parseInt(req.params.organization_id);
+    const organizationId = parseInt(req.params.organizationId);
     const metadata = ssoManager.generateSAMLMetadata(organizationId);
     
     res.set('Content-Type', 'application/xml');
@@ -351,7 +427,7 @@ ssoRouter.get('/metadata/:organizationId', async (req, res) => {
 // Initiate SSO login
 ssoRouter.get('/login/:organizationId', async (req, res) => {
   try {
-    const organizationId = parseInt(req.params.organization_id);
+    const organizationId = parseInt(req.params.organizationId);
     const returnUrl = req.query.returnUrl as string;
     
     const ssoUrl = ssoManager.initiateSSO(organizationId, returnUrl);
@@ -365,7 +441,7 @@ ssoRouter.get('/login/:organizationId', async (req, res) => {
 // SAML ACS endpoint
 ssoRouter.post('/acs/:organizationId', async (req, res) => {
   try {
-    const organizationId = parseInt(req.params.organization_id);
+    const organizationId = parseInt(req.params.organizationId);
     const samlResponse = req.body.SAMLResponse;
     const relayState = req.body.RelayState;
     
@@ -375,11 +451,11 @@ ssoRouter.post('/acs/:organizationId', async (req, res) => {
       return res.status(401).json({ error: 'SSO authentication failed' });
     }
 
-    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organization_id);
+    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organizationId);
     
     // Set session or JWT token
-    req.session.user_id = user.id;
-    req.session.organization_id = user.organization_id;
+    (req.session as any).userId = user.id;
+    (req.session as any).organizationId = user.organization_id;
     
     const redirectUrl = relayState || '/dashboard';
     res.redirect(redirectUrl);
@@ -401,11 +477,11 @@ ssoRouter.get('/oauth/callback', async (req, res) => {
       return res.status(401).json({ error: 'OAuth authentication failed' });
     }
 
-    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organization_id);
+    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organizationId);
     
     // Set session or JWT token
-    req.session.user_id = user.id;
-    req.session.organization_id = user.organization_id;
+    (req.session as any).userId = user.id;
+    (req.session as any).organizationId = user.organization_id;
     
     const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
     const redirectUrl = stateData.returnUrl || '/dashboard';

@@ -34,7 +34,7 @@ interface FlightSearchFormProps {
     projectCode: string;
     costCenter: string;
   };
-  setFormData: (data: any) => void;
+  setFormData: (data: FlightSearchFormProps['formData']) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -288,7 +288,7 @@ export function FlightSearchForm({ formData, setFormData, onSubmit }: FlightSear
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Cabin Class</Label>
-          <Select value={formData.cabin} onValueChange={(value: any) => setFormData({...formData, cabin: value})}>
+          <Select value={formData.cabin} onValueChange={(value: "economy" | "premium-economy" | "business" | "first") => setFormData({...formData, cabin: value})}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

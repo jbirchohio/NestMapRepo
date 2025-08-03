@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,23 @@ import { useToast } from '@/hooks/use-toast';
 import { CreditCard, DollarSign, TrendingUp, Users, Building, RefreshCw, Ban, CheckCircle, ArrowUpCircle, ArrowDownCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 function SystemHealthStatus() {
-  const { data: healthData } = useQuery({
+  const { data: healthData } = useQuery<{
+    status: string;
+    endpoints?: { total: number };
+    performance?: { avgResponseTime: number };
+  }>({
     queryKey: ['/api/health'],
     refetchInterval: 30000,
+    initialData: { status: 'unknown' }
   });
 
-  const { data: stripeStatus } = useQuery({
+  const { data: stripeStatus } = useQuery<{
+    connected: boolean;
+    status: string;
+  }>({
     queryKey: ['/api/stripe/status'],
     refetchInterval: 60000,
+    initialData: { connected: false, status: 'unknown' }
   });
 
   const getStatusIcon = (status: string) => {
@@ -65,7 +74,7 @@ function SystemHealthStatus() {
 
   const apiStatus = healthData?.status || 'unknown';
   const stripeIntegrationStatus = stripeStatus?.connected ? 'connected' : 'disconnected';
-  const databaseStatus = healthData?.endpoints?.total > 0 ? 'connected' : 'disconnected';
+  const databaseStatus = (healthData?.endpoints?.total || 0) > 0 ? 'connected' : 'disconnected';
   const auditStatus = healthData?.status === 'healthy' ? 'active' : 'inactive';
 
   return (

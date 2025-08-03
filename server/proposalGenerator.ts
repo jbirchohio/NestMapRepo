@@ -33,8 +33,8 @@ export function generateCostEstimate(trip: Trip, activities: Activity[]): {
 } {
     try {
         // Calculate trip duration
-        const startDate = new Date(trip.startDate);
-        const endDate = new Date(trip.endDate);
+        const startDate = new Date(trip.start_date);
+        const endDate = new Date(trip.end_date);
         const tripDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         
         // Base estimates per day based on destination and trip type
@@ -142,7 +142,7 @@ function generateProposalHTML(data: ProposalData): string {
     <div class="client-section">
         <h3>Prepared For: ${data.clientName}</h3>
         <p><strong>Destination:</strong> ${data.trip.city}${data.trip.country ? ', ' + data.trip.country : ''}</p>
-        <p><strong>Travel Dates:</strong> ${formatDateRange(new Date(data.trip.startDate), new Date(data.trip.endDate))}</p>
+        <p><strong>Travel Dates:</strong> ${formatDateRange(new Date(data.trip.start_date), new Date(data.trip.end_date))}</p>
         <p><strong>Agent:</strong> ${data.agentName}</p>
         <p><strong>Valid Until:</strong> ${formatDate(data.validUntil)}</p>
     </div>

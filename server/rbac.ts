@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from './db-connection';
 import { users, tripCollaborators, trips } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
-import { USER_ROLES, TRIP_ROLES, type UserRole, type TripRole } from '@shared/schema';
+import { USER_ROLES, TRIP_ROLES } from '@shared/schema';
+
+type UserRole = keyof typeof USER_ROLES;
+type TripRole = keyof typeof TRIP_ROLES;
 
 // Permission definitions
 export const PERMISSIONS = {
@@ -26,7 +29,7 @@ export const PERMISSIONS = {
 } as const;
 
 // Role-based permission mapping
-export const ROLE_PERMISSIONS = {
+export const ROLE_PERMISSIONS: Record<string, string[]> = {
   [USER_ROLES.ADMIN]: [
     PERMISSIONS.MANAGE_USERS,
     PERMISSIONS.MANAGE_ORGANIZATIONS,
@@ -42,7 +45,7 @@ export const ROLE_PERMISSIONS = {
 };
 
 export const TRIP_ROLE_PERMISSIONS = {
-  [TRIP_ROLES.ADMIN]: [
+  admin: [
     PERMISSIONS.VIEW_TRIP,
     PERMISSIONS.EDIT_TRIP,
     PERMISSIONS.DELETE_TRIP,
@@ -54,7 +57,7 @@ export const TRIP_ROLE_PERMISSIONS = {
     PERMISSIONS.EDIT_NOTES,
     PERMISSIONS.EXPORT_TRIP,
   ],
-  [TRIP_ROLES.EDITOR]: [
+  editor: [
     PERMISSIONS.VIEW_TRIP,
     PERMISSIONS.EDIT_TRIP,
     PERMISSIONS.ADD_ACTIVITIES,
@@ -63,11 +66,11 @@ export const TRIP_ROLE_PERMISSIONS = {
     PERMISSIONS.EDIT_NOTES,
     PERMISSIONS.EXPORT_TRIP,
   ],
-  [TRIP_ROLES.VIEWER]: [
+  viewer: [
     PERMISSIONS.VIEW_TRIP,
     PERMISSIONS.EXPORT_TRIP,
   ],
-  [TRIP_ROLES.COMMENTER]: [
+  commenter: [
     PERMISSIONS.VIEW_TRIP,
     PERMISSIONS.ADD_NOTES,
   ],
@@ -94,8 +97,8 @@ export function hasSystemPermission(user: AuthenticatedUser, permission: string)
 
 // Check if user has trip-level permission
 export function hasTripPermission(tripRole: TripRole, permission: string): boolean {
-  const rolePermissions = TRIP_ROLE_PERMISSIONS[tripRole] || [];
-  return rolePermissions.includes(permission);
+  const rolePermissions = TRIP_ROLE_PERMISSIONS[tripRole as keyof typeof TRIP_ROLE_PERMISSIONS] || [];
+  return rolePermissions.includes(permission as any);
 }
 
 // Get user's role for a specific trip
@@ -108,7 +111,7 @@ export async function getUserTripRole(userId: number, tripId: number): Promise<T
       .where(eq(trips.id, tripId));
 
     if (trip && trip.user_id === userId) {
-      return TRIP_ROLES.ADMIN;
+      return 'admin' as TripRole;
     }
 
     // Check collaborator role
@@ -227,17 +230,14 @@ export async function getUserTripsWithRoles(userId: number) {
   try {
     // Get trips user owns
     const ownedTrips = await db
-      .select({
-        ...trips,
-        userRole: 'admin' as const,
-      })
+      .select()
       .from(trips)
       .where(eq(trips.user_id, userId));
 
     // Get trips user collaborates on
     const collaboratedTrips = await db
       .select({
-        ...trips,
+        trip: trips,
         userRole: tripCollaborators.role,
       })
       .from(trips)
@@ -249,7 +249,18 @@ export async function getUserTripsWithRoles(userId: number) {
         )
       );
 
-    return [...ownedTrips, ...collaboratedTrips];
+    // Combine owned trips with collaborated trips
+    const ownedTripsWithRole = ownedTrips.map(trip => ({
+      ...trip,
+      userRole: 'admin' as const
+    }));
+    
+    const collaboratedTripsFlat = collaboratedTrips.map(({ trip, userRole }) => ({
+      ...trip,
+      userRole
+    }));
+    
+    return [...ownedTripsWithRole, ...collaboratedTripsFlat];
   } catch (error) {
     console.error('Error getting user trips with roles:', error);
     return [];

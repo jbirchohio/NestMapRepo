@@ -37,16 +37,19 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
   // Fetch optimization data
   const { data: optimization, isLoading: optimizationLoading, refetch: refetchOptimization } = useQuery({
     queryKey: ['/api/optimize/schedule', tripId],
+    queryFn: () => apiRequest('GET', `/api/optimize/schedule/${tripId}`).then(res => res.json()),
     enabled: !!tripId && activities.length > 0
   });
 
   const { data: conflicts, isLoading: conflictsLoading } = useQuery({
     queryKey: ['/api/conflicts/detect', tripId],
+    queryFn: () => apiRequest('GET', `/api/conflicts/detect/${tripId}`).then(res => res.json()),
     enabled: !!tripId && activities.length > 0
   });
 
   const { data: reminders, isLoading: remindersLoading } = useQuery({
     queryKey: ['/api/reminders/smart', tripId],
+    queryFn: () => apiRequest('GET', `/api/reminders/smart/${tripId}`).then(res => res.json()),
     enabled: !!tripId && activities.length > 0
   });
 

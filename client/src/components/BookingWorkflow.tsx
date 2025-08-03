@@ -79,14 +79,14 @@ interface FlightResult {
 interface HotelResult {
   id: string;
   name: string;
-  rating: number;
   address: string;
+  starRating: number;
+  price: { amount: number; currency: string; per: string };
   amenities: string[];
-  price: {
-    amount: number;
-    currency: string;
-  };
   images: string[];
+  rating: number;
+  cancellation: string;
+  bookingUrl: string;
 }
 
 type BookingStep = 'client-info' | 'flights' | 'hotels' | 'confirmation';
@@ -127,12 +127,39 @@ export default function BookingWorkflow() {
   // State management
   const [currentStep, setCurrentStep] = useState<BookingStep>('client-info');
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
-  const [formData, setFormData] = useState({
+  // Define the form data type explicitly to match FlightSearchForm interface
+  type FormDataType = {
+    origin: string;
+    destination: string;
+    departureDate: string;
+    returnDate: string;
+    tripType: "one-way" | "round-trip";
+    passengers: number;
+    primaryTraveler: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      dateOfBirth: string;
+    };
+    additionalTravelers: Array<{
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string;
+    }>;
+    cabin: "economy" | "premium-economy" | "business" | "first";
+    budget?: number;
+    department: string;
+    projectCode: string;
+    costCenter: string;
+  };
+
+  const [formData, setFormData] = useState<FormDataType>({
     origin: '',
     destination: '',
     departureDate: '',
     returnDate: '',
-    tripType: 'round-trip' as 'one-way' | 'round-trip',
+    tripType: 'round-trip',
     passengers: 1,
     primaryTraveler: {
       firstName: '',
@@ -141,13 +168,9 @@ export default function BookingWorkflow() {
       phone: '',
       dateOfBirth: '',
     },
-    additionalTravelers: [] as Array<{
-      firstName: string;
-      lastName: string;
-      dateOfBirth: string;
-    }>,
-    cabin: 'economy' as 'economy' | 'premium-economy' | 'business' | 'first',
-    budget: undefined as number | undefined,
+    additionalTravelers: [],
+    cabin: 'economy',
+    budget: undefined,
     department: '',
     projectCode: '',
     costCenter: '',
@@ -428,7 +451,7 @@ export default function BookingWorkflow() {
           <CardContent>
             <FlightSearchForm
               formData={formData}
-              setFormData={setFormData}
+              setFormData={(data) => setFormData(data)}
               onSubmit={handleClientInfoSubmit}
             />
           </CardContent>

@@ -14,11 +14,12 @@ export function transformRequestFields(req: Request, res: Response, next: NextFu
   // Ensure user object in request has both camelCase and snake_case for compatibility
   if (req.user && typeof req.user === 'object') {
     // Keep camelCase for frontend compatibility, add snake_case for database operations
-    if (req.user.organizationId) {
-      req.user.organization_id = req.user.organizationId;
+    const userWithAliases = req.user as any;
+    if (userWithAliases.organizationId) {
+      req.user.organization_id = userWithAliases.organizationId;
     }
-    if (req.user.userId) {
-      req.user.user_id = req.user.userId;
+    if (userWithAliases.userId) {
+      userWithAliases.user_id = userWithAliases.userId;
     }
   }
   

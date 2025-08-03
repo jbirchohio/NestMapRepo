@@ -33,13 +33,13 @@ router.get('/trips/:tripId/comments', async (req, res) => {
     const comments = await db
       .select({
         id: tripComments.id,
-        tripId: tripComments.trip_id,
-        activityId: tripComments.activity_id,
+        trip_id: tripComments.trip_id,
+        activity_id: tripComments.activity_id,
         content: tripComments.content,
-        parentId: tripComments.parent_id,
+        parent_id: tripComments.parent_id,
         resolved: tripComments.resolved,
-        createdAt: tripComments.created_at,
-        updatedAt: tripComments.updated_at,
+        created_at: tripComments.created_at,
+        updated_at: tripComments.updated_at,
         user: {
           id: users.id,
           displayName: users.display_name,
@@ -117,13 +117,13 @@ router.post('/trips/:tripId/comments', async (req, res) => {
     const [commentWithUser] = await db
       .select({
         id: tripComments.id,
-        tripId: tripComments.trip_id,
-        activityId: tripComments.activity_id,
+        trip_id: tripComments.trip_id,
+        activity_id: tripComments.activity_id,
         content: tripComments.content,
-        parentId: tripComments.parent_id,
+        parent_id: tripComments.parent_id,
         resolved: tripComments.resolved,
-        createdAt: tripComments.created_at,
-        updatedAt: tripComments.updated_at,
+        created_at: tripComments.created_at,
+        updated_at: tripComments.updated_at,
         user: {
           id: users.id,
           displayName: users.display_name,

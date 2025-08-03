@@ -226,7 +226,7 @@ export class DuffelFlightService {
           amount: offer.total_amount,
           currency: offer.total_currency
         },
-        slices: offer.slices.map(slice => ({
+        slices: offer.slices.map((slice: any) => ({
           origin: {
             iata_code: slice.origin.iata_code,
             name: slice.origin.name,
@@ -240,7 +240,7 @@ export class DuffelFlightService {
           departure_datetime: slice.segments[0].departing_at,
           arrival_datetime: slice.segments[slice.segments.length - 1].arriving_at,
           duration: slice.duration,
-          segments: slice.segments.map(segment => ({
+          segments: slice.segments.map((segment: any) => ({
             airline: {
               name: segment.operating_carrier.name,
               iata_code: segment.operating_carrier.iata_code,
@@ -317,7 +317,7 @@ export class DuffelFlightService {
           amount: offer.total_amount,
           currency: offer.total_currency
         },
-        slices: offer.slices.map(slice => ({
+        slices: offer.slices.map((slice: any) => ({
           origin: {
             iata_code: slice.origin.iata_code,
             name: slice.origin.name,
@@ -331,7 +331,7 @@ export class DuffelFlightService {
           departure_datetime: slice.segments[0].departing_at,
           arrival_datetime: slice.segments[slice.segments.length - 1].arriving_at,
           duration: slice.duration,
-          segments: slice.segments.map(segment => ({
+          segments: slice.segments.map((segment: any) => ({
             airline: {
               name: segment.operating_carrier.name,
               iata_code: segment.operating_carrier.iata_code,
@@ -354,11 +354,11 @@ export class DuffelFlightService {
             duration: segment.duration
           }))
         })),
-        passengers: offer.passengers.map(passenger => ({
+        passengers: offer.passengers.map((passenger: any) => ({
           type: passenger.type,
           fare_basis_code: passenger.fare_basis_code,
           cabin_class: passenger.cabin_class,
-          baggage: passenger.baggages?.map(baggage => ({
+          baggage: passenger.baggages?.map((baggage: any) => ({
             type: baggage.type,
             quantity: baggage.quantity
           })) || []
@@ -395,18 +395,21 @@ export class DuffelFlightService {
     try {
       console.log('Creating booking with Duffel API:', bookingData.offer_id);
 
-      const booking = await duffel.orders.create({
-        selected_offers: [bookingData.offer_id],
-        passengers: bookingData.passengers.map(passenger => ({
-          title: passenger.title,
-          given_name: passenger.given_name,
-          family_name: passenger.family_name,
-          born_on: passenger.born_on,
-          email: passenger.email,
-          phone_number: passenger.phone_number,
-          gender: passenger.gender
-        })),
-        payments: [bookingData.payment]
+      const booking = await duffelClient.request('/air/orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          selected_offers: [bookingData.offer_id],
+          passengers: bookingData.passengers.map((passenger: any) => ({
+            title: passenger.title,
+            given_name: passenger.given_name,
+            family_name: passenger.family_name,
+            born_on: passenger.born_on,
+            email: passenger.email,
+            phone_number: passenger.phone_number,
+            gender: passenger.gender
+          })),
+          payments: [bookingData.payment]
+        })
       });
 
       console.log('Duffel booking created:', booking.id);
@@ -417,21 +420,21 @@ export class DuffelFlightService {
         status: booking.status,
         created_at: booking.created_at,
         booking_reference: booking.booking_reference,
-        documents: booking.documents?.map(doc => ({
+        documents: booking.documents?.map((doc: any) => ({
           type: doc.type,
           url: doc.url
         })) || [],
-        passengers: booking.passengers.map(passenger => ({
+        passengers: booking.passengers.map((passenger: any) => ({
           id: passenger.id,
           given_name: passenger.given_name,
           family_name: passenger.family_name,
           title: passenger.title
         })),
-        slices: booking.slices.map(slice => ({
+        slices: booking.slices.map((slice: any) => ({
           id: slice.id,
-          segments: slice.segments.map(segment => ({
+          segments: slice.segments.map((segment: any) => ({
             id: segment.id,
-            passengers: segment.passengers.map(passenger => ({
+            passengers: segment.passengers.map((passenger: any) => ({
               passenger_id: passenger.passenger_id,
               seat: passenger.seat ? {
                 designator: passenger.seat.designator,
@@ -458,7 +461,7 @@ export class DuffelFlightService {
    */
   async getBooking(bookingId: string): Promise<BookingResponse> {
     try {
-      const booking = await duffel.orders.get(bookingId);
+      const booking = await duffelClient.request(`/air/orders/${bookingId}`);
 
       return {
         id: booking.id,
@@ -466,21 +469,21 @@ export class DuffelFlightService {
         status: booking.status,
         created_at: booking.created_at,
         booking_reference: booking.booking_reference,
-        documents: booking.documents?.map(doc => ({
+        documents: booking.documents?.map((doc: any) => ({
           type: doc.type,
           url: doc.url
         })) || [],
-        passengers: booking.passengers.map(passenger => ({
+        passengers: booking.passengers.map((passenger: any) => ({
           id: passenger.id,
           given_name: passenger.given_name,
           family_name: passenger.family_name,
           title: passenger.title
         })),
-        slices: booking.slices.map(slice => ({
+        slices: booking.slices.map((slice: any) => ({
           id: slice.id,
-          segments: slice.segments.map(segment => ({
+          segments: slice.segments.map((segment: any) => ({
             id: segment.id,
-            passengers: segment.passengers.map(passenger => ({
+            passengers: segment.passengers.map((passenger: any) => ({
               passenger_id: passenger.passenger_id,
               seat: passenger.seat ? {
                 designator: passenger.seat.designator,
@@ -504,8 +507,11 @@ export class DuffelFlightService {
     try {
       console.log('Cancelling booking with Duffel API:', bookingId);
 
-      const cancellation = await duffel.orderCancellations.create({
-        order_id: bookingId
+      const cancellation = await duffelClient.request('/air/order_cancellations', {
+        method: 'POST',
+        body: JSON.stringify({
+          order_id: bookingId
+        })
       });
 
       console.log('Duffel booking cancelled:', cancellation.id);
@@ -527,12 +533,12 @@ export class DuffelFlightService {
    */
   async searchAirports(query: string): Promise<Array<{ iata_code: string; name: string; city_name: string; country_name: string }>> {
     try {
-      const airports = await duffel.airports.list({
+      const response = await duffelClient.request('/air/airports?' + new URLSearchParams({
         name: query,
-        limit: 10
-      });
+        limit: '10'
+      }));
 
-      return airports.data.map(airport => ({
+      return response.data.map((airport: any) => ({
         iata_code: airport.iata_code,
         name: airport.name,
         city_name: airport.city_name || airport.name,

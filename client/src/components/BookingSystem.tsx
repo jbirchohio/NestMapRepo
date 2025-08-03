@@ -10,8 +10,20 @@ import { FlightSearchForm } from '@/components/booking/FlightSearchForm';
 import { FlightResults } from '@/components/booking/FlightResults';
 import { HotelResults } from '@/components/booking/HotelResults';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { CalendarIcon, Plane, MapPin, Users, DollarSign, Clock, Star, Building2, Building, ChevronLeft, ChevronRight, Search, Filter, Loader2, CreditCard, Info, AlertCircle, CheckCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type DateRange = {
   from: Date | undefined;
@@ -63,6 +75,7 @@ const clientInfoSchema = z.object({
 type FlightSearchValues = z.infer<typeof flightSearchSchema>;
 type HotelSearchValues = z.infer<typeof hotelSearchSchema>;
 type ClientInfoValues = z.infer<typeof clientInfoSchema>;
+type TravelerInfoValues = ClientInfoValues;
 
 interface FlightResult {
   id: string;
@@ -113,6 +126,10 @@ export default function BookingSystem() {
   const [selectedDepartureFlight, setSelectedDepartureFlight] = useState<FlightResult | null>(null);
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightResult | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<HotelResult | null>(null);
+  
+  // UI state
+  const [showTravelerForm, setShowTravelerForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('flights');
 
   const flightForm = useForm<FlightSearchValues>({
     resolver: zodResolver(flightSearchSchema),
@@ -449,7 +466,7 @@ export default function BookingSystem() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <ReactCalendar
+                      <Calendar
                         initialFocus
                         mode={tripType === 'round-trip' ? "range" : "single"}
                         defaultMonth={dateRange?.from}
@@ -822,7 +839,7 @@ export default function BookingSystem() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <ReactCalendar
+                      <Calendar
                         initialFocus
                         mode="range"
                         defaultMonth={dateRange?.from}
@@ -948,7 +965,7 @@ export default function BookingSystem() {
                 </Button>
               </div>
 
-              <form onSubmit={travelerForm.handleSubmit(handleCreateTripWithTravelerInfo)} className="space-y-6">
+              <form onSubmit={clientForm.handleSubmit(handleCreateTripWithTravelerInfo)} className="space-y-6">
                 {/* Primary Traveler Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium border-b pb-2">Primary Traveler</h3>
@@ -957,12 +974,12 @@ export default function BookingSystem() {
                       <Label htmlFor="firstName">First Name *</Label>
                       <Input
                         id="firstName"
-                        {...travelerForm.register("primaryTraveler.firstName")}
-                        className={travelerForm.formState.errors.primaryTraveler?.firstName ? "border-red-500" : ""}
+                        {...clientForm.register("primaryTraveler.firstName")}
+                        className={clientForm.formState.errors.primaryTraveler?.firstName ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.primaryTraveler?.firstName && (
+                      {clientForm.formState.errors.primaryTraveler?.firstName && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.primaryTraveler.firstName.message}
+                          {clientForm.formState.errors.primaryTraveler.firstName.message}
                         </p>
                       )}
                     </div>
@@ -970,12 +987,12 @@ export default function BookingSystem() {
                       <Label htmlFor="lastName">Last Name *</Label>
                       <Input
                         id="lastName"
-                        {...travelerForm.register("primaryTraveler.lastName")}
-                        className={travelerForm.formState.errors.primaryTraveler?.lastName ? "border-red-500" : ""}
+                        {...clientForm.register("primaryTraveler.lastName")}
+                        className={clientForm.formState.errors.primaryTraveler?.lastName ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.primaryTraveler?.lastName && (
+                      {clientForm.formState.errors.primaryTraveler?.lastName && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.primaryTraveler.lastName.message}
+                          {clientForm.formState.errors.primaryTraveler.lastName.message}
                         </p>
                       )}
                     </div>
@@ -984,12 +1001,12 @@ export default function BookingSystem() {
                       <Input
                         id="email"
                         type="email"
-                        {...travelerForm.register("primaryTraveler.email")}
-                        className={travelerForm.formState.errors.primaryTraveler?.email ? "border-red-500" : ""}
+                        {...clientForm.register("primaryTraveler.email")}
+                        className={clientForm.formState.errors.primaryTraveler?.email ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.primaryTraveler?.email && (
+                      {clientForm.formState.errors.primaryTraveler?.email && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.primaryTraveler.email.message}
+                          {clientForm.formState.errors.primaryTraveler.email.message}
                         </p>
                       )}
                     </div>
@@ -997,12 +1014,12 @@ export default function BookingSystem() {
                       <Label htmlFor="phone">Phone *</Label>
                       <Input
                         id="phone"
-                        {...travelerForm.register("primaryTraveler.phone")}
-                        className={travelerForm.formState.errors.primaryTraveler?.phone ? "border-red-500" : ""}
+                        {...clientForm.register("primaryTraveler.phone")}
+                        className={clientForm.formState.errors.primaryTraveler?.phone ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.primaryTraveler?.phone && (
+                      {clientForm.formState.errors.primaryTraveler?.phone && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.primaryTraveler.phone.message}
+                          {clientForm.formState.errors.primaryTraveler.phone.message}
                         </p>
                       )}
                     </div>
@@ -1011,12 +1028,12 @@ export default function BookingSystem() {
                       <Input
                         id="dateOfBirth"
                         type="date"
-                        {...travelerForm.register("primaryTraveler.dateOfBirth")}
-                        className={travelerForm.formState.errors.primaryTraveler?.dateOfBirth ? "border-red-500" : ""}
+                        {...clientForm.register("primaryTraveler.dateOfBirth")}
+                        className={clientForm.formState.errors.primaryTraveler?.dateOfBirth ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.primaryTraveler?.dateOfBirth && (
+                      {clientForm.formState.errors.primaryTraveler?.dateOfBirth && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.primaryTraveler.dateOfBirth.message}
+                          {clientForm.formState.errors.primaryTraveler.dateOfBirth.message}
                         </p>
                       )}
                     </div>
@@ -1031,12 +1048,12 @@ export default function BookingSystem() {
                       <Label htmlFor="emergencyName">Contact Name *</Label>
                       <Input
                         id="emergencyName"
-                        {...travelerForm.register("emergencyContact.name")}
-                        className={travelerForm.formState.errors.emergencyContact?.name ? "border-red-500" : ""}
+                        {...clientForm.register("emergencyContact.name")}
+                        className={clientForm.formState.errors.emergencyContact?.name ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.emergencyContact?.name && (
+                      {clientForm.formState.errors.emergencyContact?.name && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.emergencyContact.name.message}
+                          {clientForm.formState.errors.emergencyContact.name.message}
                         </p>
                       )}
                     </div>
@@ -1044,12 +1061,12 @@ export default function BookingSystem() {
                       <Label htmlFor="emergencyPhone">Contact Phone *</Label>
                       <Input
                         id="emergencyPhone"
-                        {...travelerForm.register("emergencyContact.phone")}
-                        className={travelerForm.formState.errors.emergencyContact?.phone ? "border-red-500" : ""}
+                        {...clientForm.register("emergencyContact.phone")}
+                        className={clientForm.formState.errors.emergencyContact?.phone ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.emergencyContact?.phone && (
+                      {clientForm.formState.errors.emergencyContact?.phone && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.emergencyContact.phone.message}
+                          {clientForm.formState.errors.emergencyContact.phone.message}
                         </p>
                       )}
                     </div>
@@ -1058,12 +1075,12 @@ export default function BookingSystem() {
                       <Input
                         id="relationship"
                         placeholder="e.g., Spouse, Parent, Friend"
-                        {...travelerForm.register("emergencyContact.relationship")}
-                        className={travelerForm.formState.errors.emergencyContact?.relationship ? "border-red-500" : ""}
+                        {...clientForm.register("emergencyContact.relationship")}
+                        className={clientForm.formState.errors.emergencyContact?.relationship ? "border-red-500" : ""}
                       />
-                      {travelerForm.formState.errors.emergencyContact?.relationship && (
+                      {clientForm.formState.errors.emergencyContact?.relationship && (
                         <p className="text-sm text-red-500 mt-1">
-                          {travelerForm.formState.errors.emergencyContact.relationship.message}
+                          {clientForm.formState.errors.emergencyContact.relationship.message}
                         </p>
                       )}
                     </div>
@@ -1078,7 +1095,7 @@ export default function BookingSystem() {
                       <Label htmlFor="tripPurpose">Trip Purpose *</Label>
                       <select
                         id="tripPurpose"
-                        {...travelerForm.register("tripPurpose")}
+                        {...clientForm.register("tripPurpose")}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="business">Business</option>
@@ -1092,7 +1109,7 @@ export default function BookingSystem() {
                       <Label htmlFor="companyName">Company Name</Label>
                       <Input
                         id="companyName"
-                        {...travelerForm.register("companyName")}
+                        {...clientForm.register("companyName")}
                         placeholder="Optional"
                       />
                     </div>
@@ -1100,7 +1117,7 @@ export default function BookingSystem() {
                       <Label htmlFor="costCenter">Cost Center</Label>
                       <Input
                         id="costCenter"
-                        {...travelerForm.register("costCenter")}
+                        {...clientForm.register("costCenter")}
                         placeholder="For business trips (optional)"
                       />
                     </div>
@@ -1108,7 +1125,7 @@ export default function BookingSystem() {
                       <Label htmlFor="specialRequests">Special Requests</Label>
                       <textarea
                         id="specialRequests"
-                        {...travelerForm.register("specialRequests")}
+                        {...clientForm.register("specialRequests")}
                         placeholder="Any special dietary requirements, accessibility needs, etc."
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
                       />

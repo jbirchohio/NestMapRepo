@@ -5,23 +5,57 @@ import { Trip, Activity, Todo, Note } from "@shared/schema";
 export { Todo, Note };
 
 // Extended types with additional client-side properties
-export interface ClientTrip extends Trip {
-  days?: Date[];
+export interface ClientTrip {
+  id: number;
+  title: string;
+  startDate: Date;
+  endDate: Date;
+  userId: number;
+  organizationId?: number;
+  isPublic?: boolean;
+  shareCode?: string;
+  sharingEnabled?: boolean;
+  sharePermission?: string;
   city?: string;
+  country?: string;
   location?: string;
-  // City coordinates for map centering
   cityLatitude?: string;
   cityLongitude?: string;
-  // Hotel/accommodation information
   hotel?: string;
   hotelLatitude?: string;
   hotelLongitude?: string;
+  tripType?: string;
+  clientName?: string;
+  projectType?: string;
+  budget?: number;
+  completed?: boolean;
+  status?: string;
+  completedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  // Additional client-side properties
+  days?: Date[];
   // Legacy coordinates (for backward compatibility)
   latitude?: string;
   longitude?: string;
 }
 
-export interface ClientActivity extends Activity {
+export interface ClientActivity {
+  id: number;
+  tripId: number;
+  organizationId?: number;
+  title: string;
+  date: Date;
+  time: string;
+  locationName: string;
+  latitude?: string | null;
+  longitude?: string | null;
+  notes?: string | null;
+  tag?: string | null;
+  assignedTo?: string | null;
+  order: number;
+  travelMode?: string | null;
+  completed?: boolean;
   travelTimeFromPrevious?: string;
   travelDistanceFromPrevious?: string;
   conflict?: boolean;

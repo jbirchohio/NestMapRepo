@@ -11,44 +11,29 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Users, UserPlus, MapPin, Plane, DollarSign, X } from 'lucide-react';
+import { ClientTrip } from '@/lib/types';
 
 interface TripTraveler {
   id: number;
   tripId?: number;
-  trip_id?: number;
   userId?: number;
-  user_id?: number;
   name: string;
   email?: string;
   phone?: string;
   dateOfBirth?: string;
-  date_of_birth?: string;
   emergencyContactName?: string;
-  emergency_contact_name?: string;
   emergencyContactPhone?: string;
-  emergency_contact_phone?: string;
   emergencyContactRelationship?: string;
-  emergency_contact_relationship?: string;
   departureCity?: string;
-  departure_city?: string;
   departureCountry?: string;
-  departure_country?: string;
   departureLatitude?: string;
-  departure_latitude?: string;
   departureLongitude?: string;
-  departure_longitude?: string;
   arrivalPreferences: Record<string, any>;
-  arrival_preferences?: Record<string, any>;
   accommodationPreferences: Record<string, any>;
-  accommodation_preferences?: Record<string, any>;
   dietaryRequirements?: string;
-  dietary_requirements?: string;
   budgetAllocation?: number;
-  budget_allocation?: number;
   travelClass: string;
-  travel_class?: string;
   isTripOrganizer: boolean;
-  is_trip_organizer?: boolean;
   status: string;
   notes?: string;
   createdAt: string;
@@ -76,11 +61,11 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     email: '',
     phone: '',
     dateOfBirth: '',
-    departure_city: '',
-    departure_country: '',
-    travel_class: 'economy',
-    budget_allocation: '',
-    dietary_requirements: '',
+    departureCity: '',
+    departureCountry: '',
+    travelClass: 'economy',
+    budgetAllocation: '',
+    dietaryRequirements: '',
     emergencyContactName: '',
     emergencyContactPhone: '',
     emergencyContactRelationship: '',
@@ -96,8 +81,9 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   });
 
   // Fetch trip details to get destination information
-  const { data: tripData } = useQuery({
+  const { data: tripData } = useQuery<ClientTrip>({
     queryKey: [`/api/trips/${tripId}`],
+    queryFn: () => apiRequest('GET', `/api/trips/${tripId}`).then(res => res.json()),
     enabled: !!tripId
   });
 
@@ -112,11 +98,11 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         email: '',
         phone: '',
         dateOfBirth: '',
-        departure_city: '',
-        departure_country: '',
-        travel_class: 'economy',
-        budget_allocation: '',
-        dietary_requirements: '',
+        departureCity: '',
+        departureCountry: '',
+        travelClass: 'economy',
+        budgetAllocation: '',
+        dietaryRequirements: '',
         emergencyContactName: '',
         emergencyContactPhone: '',
         emergencyContactRelationship: '',
@@ -158,7 +144,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       return;
     }
 
-    if (!newTraveler.departure_city.trim()) {
+    if (!newTraveler.departureCity.trim()) {
       toast({
         title: "Departure city required",
         description: "Please enter the traveler's departure city.",
@@ -203,11 +189,11 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       emergency_contact_name: newTraveler.emergencyContactName,
       emergency_contact_phone: newTraveler.emergencyContactPhone,
       emergency_contact_relationship: newTraveler.emergencyContactRelationship,
-      departure_city: newTraveler.departure_city,
-      departure_country: newTraveler.departure_country,
-      travel_class: newTraveler.travel_class,
-      dietary_requirements: newTraveler.dietary_requirements,
-      budget_allocation: newTraveler.budget_allocation ? parseInt(newTraveler.budget_allocation) * 100 : null,
+      departure_city: newTraveler.departureCity,
+      departure_country: newTraveler.departureCountry,
+      travel_class: newTraveler.travelClass,
+      dietary_requirements: newTraveler.dietaryRequirements,
+      budget_allocation: newTraveler.budgetAllocation ? parseInt(newTraveler.budgetAllocation) * 100 : null,
       notes: newTraveler.notes
     };
 
@@ -262,13 +248,8 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     // Debug: Log complete trip data to identify date field names
     console.log('DEBUG: Complete tripData object:', tripData);
     console.log('DEBUG: Available date fields:', {
-      start_date: tripData.start_date,
-      startDate: tripData.startDate,
-      end_date: tripData.end_date,
-      endDate: tripData.endDate,
-      departure_date: tripData.departure_date,
-      return_date: tripData.return_date,
-      dates: tripData.dates
+      startDate: tripData?.startDate,
+      endDate: tripData?.endDate
     });
 
     // Create sequential booking workflow data using existing tripData
@@ -285,23 +266,23 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     const sequentialBookingData = {
       tripId: tripId.toString(),
       tripDestination: `${city}, ${country}`,
-      departureDate: formatDateForBooking(tripData.startDate) || formatDateForBooking(tripData.start_date),
-      returnDate: formatDateForBooking(tripData.endDate) || formatDateForBooking(tripData.end_date),
+      departureDate: formatDateForBooking(tripData?.startDate),
+      returnDate: formatDateForBooking(tripData?.endDate),
       currentTravelerIndex: 0,
       travelers: travelers.map(traveler => ({
         id: traveler.id,
         name: traveler.name || '',
         email: traveler.email || '',
         phone: traveler.phone || '',
-        dateOfBirth: traveler.dateOfBirth || traveler.date_of_birth || '',
-        departureCity: traveler.departureCity || traveler.departure_city || '',
-        departureCountry: traveler.departureCountry || traveler.departure_country || '',
-        travelClass: traveler.travelClass || traveler.travel_class || 'economy',
-        dietaryRequirements: traveler.dietaryRequirements || traveler.dietary_requirements || '',
+        dateOfBirth: traveler.dateOfBirth || '',
+        departureCity: traveler.departureCity || '',
+        departureCountry: traveler.departureCountry || '',
+        travelClass: traveler.travelClass || 'economy',
+        dietaryRequirements: traveler.dietaryRequirements || '',
         emergencyContact: {
-          name: traveler.emergencyContactName || traveler.emergency_contact_name || '',
-          phone: traveler.emergencyContactPhone || traveler.emergency_contact_phone || '',
-          relationship: traveler.emergencyContactRelationship || traveler.emergency_contact_relationship || ''
+          name: traveler.emergencyContactName || '',
+          phone: traveler.emergencyContactPhone || '',
+          relationship: traveler.emergencyContactRelationship || ''
         }
       })),
       roomsNeeded: travelers.length,
@@ -319,7 +300,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     
     toast({
       title: "Sequential booking started",
-      description: `Starting with ${travelers[0].name || 'first traveler'}'s flight from ${travelers[0].departure_city || 'departure city'} to ${city}`,
+      description: `Starting with ${travelers[0].name || 'first traveler'}'s flight from ${travelers[0].departureCity || 'departure city'} to ${city}`,
     });
   };
 
@@ -396,26 +377,26 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label htmlFor="departure_city" className="text-blue-900 dark:text-blue-100">
+                        <Label htmlFor="departureCity" className="text-blue-900 dark:text-blue-100">
                           Departure City *
                         </Label>
                         <Input
-                          id="departure_city"
-                          value={newTraveler.departure_city}
-                          onChange={(e) => setNewTraveler({ ...newTraveler, departure_city: e.target.value })}
+                          id="departureCity"
+                          value={newTraveler.departureCity}
+                          onChange={(e) => setNewTraveler({ ...newTraveler, departureCity: e.target.value })}
                           placeholder="e.g. Los Angeles, New York"
                           className="border-blue-200 dark:border-blue-700"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="departure_country" className="text-blue-900 dark:text-blue-100">
+                        <Label htmlFor="departureCountry" className="text-blue-900 dark:text-blue-100">
                           Country
                         </Label>
                         <Input
-                          id="departure_country"
-                          value={newTraveler.departure_country}
-                          onChange={(e) => setNewTraveler({ ...newTraveler, departure_country: e.target.value })}
+                          id="departureCountry"
+                          value={newTraveler.departureCountry}
+                          onChange={(e) => setNewTraveler({ ...newTraveler, departureCountry: e.target.value })}
                           placeholder="e.g. United States"
                           className="border-blue-200 dark:border-blue-700"
                         />
@@ -425,8 +406,8 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="travel_class">Travel Class</Label>
-                      <Select value={newTraveler.travel_class} onValueChange={(value) => setNewTraveler({ ...newTraveler, travel_class: value })}>
+                      <Label htmlFor="travelClass">Travel Class</Label>
+                      <Select value={newTraveler.travelClass} onValueChange={(value) => setNewTraveler({ ...newTraveler, travelClass: value })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -439,23 +420,23 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="budget_allocation">Budget ($)</Label>
+                      <Label htmlFor="budgetAllocation">Budget ($)</Label>
                       <Input
-                        id="budget_allocation"
+                        id="budgetAllocation"
                         type="number"
-                        value={newTraveler.budget_allocation}
-                        onChange={(e) => setNewTraveler({ ...newTraveler, budget_allocation: e.target.value })}
+                        value={newTraveler.budgetAllocation}
+                        onChange={(e) => setNewTraveler({ ...newTraveler, budgetAllocation: e.target.value })}
                         placeholder="0"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="dietary_requirements">Dietary Requirements</Label>
+                    <Label htmlFor="dietaryRequirements">Dietary Requirements</Label>
                     <Input
-                      id="dietary_requirements"
-                      value={newTraveler.dietary_requirements}
-                      onChange={(e) => setNewTraveler({ ...newTraveler, dietary_requirements: e.target.value })}
+                      id="dietaryRequirements"
+                      value={newTraveler.dietaryRequirements}
+                      onChange={(e) => setNewTraveler({ ...newTraveler, dietaryRequirements: e.target.value })}
                       placeholder="e.g. Vegetarian, No nuts"
                     />
                   </div>
@@ -546,21 +527,21 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{traveler.name}</h4>
-                      {traveler.is_trip_organizer && (
+                      {traveler.isTripOrganizer && (
                         <Badge variant="default" className="text-xs">Organizer</Badge>
                       )}
                       <Badge 
-                        variant={TRAVEL_CLASSES[traveler.travel_class as keyof typeof TRAVEL_CLASSES]?.color as any || 'secondary'} 
+                        variant={TRAVEL_CLASSES[traveler.travelClass as keyof typeof TRAVEL_CLASSES]?.color as any || 'secondary'} 
                         className="text-xs"
                       >
-                        {TRAVEL_CLASSES[traveler.travel_class as keyof typeof TRAVEL_CLASSES]?.label || traveler.travel_class}
+                        {TRAVEL_CLASSES[traveler.travelClass as keyof typeof TRAVEL_CLASSES]?.label || traveler.travelClass}
                       </Badge>
                     </div>
                     {traveler.email && (
                       <p className="text-sm text-muted-foreground">{traveler.email}</p>
                     )}
                   </div>
-                  {canManageTeam && !traveler.is_trip_organizer && (
+                  {canManageTeam && !traveler.isTripOrganizer && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -579,7 +560,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                   </div>
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>{formatBudget(traveler.budget_allocation)}</span>
+                    <span>{formatBudget(traveler.budgetAllocation)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
@@ -601,11 +582,11 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                   </p>
                 </div>
 
-                {(traveler.dietary_requirements || traveler.notes) && (
+                {(traveler.dietaryRequirements || traveler.notes) && (
                   <div className="pt-2 border-t space-y-1">
-                    {traveler.dietary_requirements && (
+                    {traveler.dietaryRequirements && (
                       <p className="text-xs text-muted-foreground">
-                        <strong>Dietary:</strong> {traveler.dietary_requirements}
+                        <strong>Dietary:</strong> {traveler.dietaryRequirements}
                       </p>
                     )}
                     {traveler.notes && (

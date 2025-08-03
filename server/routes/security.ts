@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db-connection';
-import { users, adminAuditLog, organizations, userSessions } from '../../shared/schema';
+import { users, superadminAuditLogs, organizations, userSessions } from '../../shared/schema';
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking';
@@ -32,12 +32,13 @@ router.get('/alerts', async (req: Request, res: Response) => {
 
     // Get recent suspicious activities from audit logs
     const recentLogs = await db.select()
-      .from(adminAuditLog)
+      .from(superadminAuditLogs)
       .where(and(
-        eq(adminAuditLog.target_organization_id, organizationId),
-        gte(adminAuditLog.timestamp, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) // Last 7 days
+        eq(superadminAuditLogs.target_id, organizationId.toString()),
+        eq(superadminAuditLogs.target_type, 'organization'),
+        gte(superadminAuditLogs.created_at, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) // Last 7 days
       ))
-      .orderBy(desc(adminAuditLog.timestamp))
+      .orderBy(desc(superadminAuditLogs.created_at))
       .limit(100);
 
     // Analyze logs for security patterns
@@ -45,7 +46,7 @@ router.get('/alerts', async (req: Request, res: Response) => {
 
     // Check for privilege escalation attempts
     const privilegeChanges = recentLogs.filter(log => 
-      log.action_type === 'role_updated' || log.action_type === 'user_role_changed'
+      log.action === 'role_updated' || log.action === 'user_role_changed'
     );
 
     if (privilegeChanges.length > 5) {
@@ -57,14 +58,14 @@ router.get('/alerts', async (req: Request, res: Response) => {
         description: `${privilegeChanges.length} privilege changes in the last 7 days. Review for unauthorized escalations.`,
         timestamp: new Date(),
         organizationId,
-        metadata: { count: privilegeChanges.length, actions: privilegeChanges.map(p => p.action_type) },
+        metadata: { count: privilegeChanges.length, actions: privilegeChanges.map(p => p.action) },
         resolved: false
       });
     }
 
     // Check for unusual admin activity
     const adminActions = recentLogs.filter(log => 
-      log.action_type.includes('admin') || log.action_type.includes('delete') || log.action_type.includes('role')
+      log.action.includes('admin') || log.action.includes('delete') || log.action.includes('role')
     );
 
     if (adminActions.length > 10) {
@@ -83,7 +84,7 @@ router.get('/alerts', async (req: Request, res: Response) => {
 
     // Check for data access patterns
     const dataAccessActions = recentLogs.filter(log => 
-      log.action_type.includes('export') || log.action_type.includes('download')
+      log.action.includes('export') || log.action.includes('download')
     );
 
     if (dataAccessActions.length > 0) {
@@ -137,27 +138,30 @@ router.get('/metrics', async (req: Request, res: Response) => {
       Promise.resolve({ count: getActiveUserCount(organizationId) }),
       
       db.select({ count: count() })
-        .from(adminAuditLog)
+        .from(superadminAuditLogs)
         .where(and(
-          eq(adminAuditLog.target_organization_id, organizationId),
-          gte(adminAuditLog.timestamp, last24h),
-          sql`action_type LIKE '%admin%' OR action_type LIKE '%delete%' OR action_type LIKE '%role%'`
+          eq(superadminAuditLogs.target_id, organizationId.toString()),
+          eq(superadminAuditLogs.target_type, 'organization'),
+          gte(superadminAuditLogs.created_at, last24h),
+          sql`action LIKE '%admin%' OR action LIKE '%delete%' OR action LIKE '%role%'`
         )),
       
       db.select({ count: count() })
-        .from(adminAuditLog)
+        .from(superadminAuditLogs)
         .where(and(
-          eq(adminAuditLog.target_organization_id, organizationId),
-          gte(adminAuditLog.timestamp, last7d),
-          sql`action_type LIKE '%failed%' OR action_type LIKE '%suspicious%'`
+          eq(superadminAuditLogs.target_id, organizationId.toString()),
+          eq(superadminAuditLogs.target_type, 'organization'),
+          gte(superadminAuditLogs.created_at, last7d),
+          sql`action LIKE '%failed%' OR action LIKE '%suspicious%'`
         )),
       
       db.select({ count: count() })
-        .from(adminAuditLog)
+        .from(superadminAuditLogs)
         .where(and(
-          eq(adminAuditLog.target_organization_id, organizationId),
-          gte(adminAuditLog.timestamp, last30d),
-          sql`action_type LIKE '%login_failed%' OR action_type LIKE '%auth_failed%'`
+          eq(superadminAuditLogs.target_id, organizationId.toString()),
+          eq(superadminAuditLogs.target_type, 'organization'),
+          gte(superadminAuditLogs.created_at, last30d),
+          sql`action LIKE '%login_failed%' OR action LIKE '%auth_failed%'`
         ))
     ]);
 
@@ -204,26 +208,28 @@ router.get('/audit-summary', async (req: Request, res: Response) => {
     // Get audit summary by action type
     const auditSummary = await db.execute(sql`
       SELECT 
-        action_type,
+        action,
         COUNT(*) as count,
-        MAX(timestamp) as last_occurrence
-      FROM admin_audit_log 
-      WHERE target_organization_id = ${organizationId} 
-        AND timestamp >= ${last7d}
-      GROUP BY action_type 
+        MAX(created_at) as last_occurrence
+      FROM superadmin_audit_logs 
+      WHERE target_id = ${organizationId.toString()} 
+        AND target_type = 'organization'
+        AND created_at >= ${last7d}
+      GROUP BY action 
       ORDER BY count DESC 
       LIMIT 20
     `);
 
     // Get recent critical actions
     const criticalActions = await db.select()
-      .from(adminAuditLog)
+      .from(superadminAuditLogs)
       .where(and(
-        eq(adminAuditLog.target_organization_id, organizationId),
-        gte(adminAuditLog.timestamp, last7d),
-        sql`action_type IN ('user_deleted', 'role_created', 'role_deleted', 'organization_updated', 'admin_access_granted')`
+        eq(superadminAuditLogs.target_id, organizationId.toString()),
+        eq(superadminAuditLogs.target_type, 'organization'),
+        gte(superadminAuditLogs.created_at, last7d),
+        sql`action IN ('user_deleted', 'role_created', 'role_deleted', 'organization_updated', 'admin_access_granted')`
       ))
-      .orderBy(desc(adminAuditLog.timestamp))
+      .orderBy(desc(superadminAuditLogs.created_at))
       .limit(10);
 
     const summary = {
@@ -234,10 +240,10 @@ router.get('/audit-summary', async (req: Request, res: Response) => {
       })),
       criticalActions: criticalActions.map(action => ({
         id: action.id,
-        action: action.action_type,
-        adminUserId: action.admin_user_id,
-        details: action.action_data,
-        createdAt: action.timestamp,
+        action: action.action,
+        adminUserId: action.superadmin_user_id,
+        details: action.details,
+        createdAt: action.created_at,
         ipAddress: action.ip_address
       })),
       period: '7 days',
@@ -262,14 +268,16 @@ router.post('/alerts/:id/resolve', async (req: Request, res: Response) => {
     
     // Log the resolution as an admin action
     const logEntry = {
-      admin_user_id: req.user?.id || 0,
-      action_type: 'security_alert_resolved',
-      target_organization_id: req.user?.organization_id,
-      action_data: { alertId, resolution, notes },
-      ip_address: req.ip || 'unknown'
+      superadmin_user_id: req.user?.id || 0,
+      action: 'security_alert_resolved',
+      target_type: 'organization',
+      target_id: (req.user?.organization_id || 0).toString(),
+      details: { alertId, resolution, notes },
+      ip_address: req.ip || 'unknown',
+      user_agent: req.get('user-agent') || 'unknown'
     };
 
-    await db.insert(adminAuditLog).values(logEntry);
+    await db.insert(superadminAuditLogs).values(logEntry);
 
     res.json({ 
       success: true, 

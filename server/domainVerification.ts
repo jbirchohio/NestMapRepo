@@ -77,7 +77,7 @@ export async function verifySSLCertificate(domain: string): Promise<SSLVerificat
     };
 
     const req = https.request(options, (res) => {
-      const cert = res.socket?.getPeerCertificate?.();
+      const cert = (res.socket as any)?.getPeerCertificate?.();
       
       if (cert && cert.valid_to) {
         const expiresAt = new Date(cert.valid_to);
@@ -161,7 +161,7 @@ export async function verifyACMEChallenge(
     
     const response = await fetch(challengeUrl, {
       method: 'GET',
-      timeout: 10000
+      signal: AbortSignal.timeout(10000)
     });
     
     if (!response.ok) {
@@ -221,7 +221,7 @@ export async function checkDomainReachability(domain: string): Promise<{
   try {
     const response = await fetch(`https://${domain}`, {
       method: 'HEAD',
-      timeout: 15000,
+      signal: AbortSignal.timeout(15000),
       redirect: 'manual'
     });
     

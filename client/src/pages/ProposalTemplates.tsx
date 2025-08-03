@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Edit, Copy, Trash2, Template, Settings } from "lucide-react";
+import { Plus, Edit, Copy, Trash2, FileText, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const templateSchema = z.object({
@@ -62,6 +62,7 @@ export default function ProposalTemplates() {
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["/api/proposal-templates"],
+    queryFn: () => apiRequest("GET", "/api/proposal-templates"),
   });
 
   const createTemplate = useMutation({
@@ -194,13 +195,13 @@ export default function ProposalTemplates() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates?.map((template: any) => (
+        {(templates as any[])?.map((template: any) => (
           <Card key={template.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Template className="w-5 h-5 text-blue-600" />
+                    <FileText className="w-5 h-5 text-blue-600" />
                     {template.name}
                   </CardTitle>
                   <CardDescription>{template.description}</CardDescription>

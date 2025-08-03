@@ -129,7 +129,7 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     
     // Average trip length for user's trips only
     const [avgTripLengthResult] = await db.select({
-      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1`)
+      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1`)
     }).from(trips).where(userTripsFilter);
 
     // Average activities per trip for user only
@@ -179,19 +179,19 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     // User's trip duration distribution
     const tripDurationsResult = await db.select({
       duration: sql`CASE 
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 2 THEN 'Weekend (1-2 days)'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
         ELSE 'Extended Trip (10+ days)'
       END`.as('duration'),
       count: count()
     })
     .from(trips)
-    .where(and(userTripsFilter, sql`${trips.startDate} IS NOT NULL AND ${trips.endDate} IS NOT NULL`))
+    .where(and(userTripsFilter, sql`${trips.start_date} IS NOT NULL AND ${trips.end_date} IS NOT NULL`))
     .groupBy(sql`CASE 
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 2 THEN 'Weekend (1-2 days)'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
       ELSE 'Extended Trip (10+ days)'
     END`)
     .orderBy(desc(count()));
@@ -260,10 +260,10 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     );
 
     const tripCompletionRate = totalTripsResult[0]?.count > 0 ? 
-      Math.round(((completedTripsResult[0]?.count || 0) / totalTripsResult[0]?.count) * 100) : 0;
+      Math.round(((completedTripsResult?.count || 0) / totalTripsResult[0]?.count) * 100) : 0;
 
     const activityCompletionRate = totalTripsResult[0]?.count > 0 ? 
-      Math.round(((tripsWithCompletedActivitiesResult[0]?.count || 0) / totalTripsResult[0]?.count) * 100) : 0;
+      Math.round(((tripsWithCompletedActivitiesResult?.count || 0) / totalTripsResult[0]?.count) * 100) : 0;
 
     // Recent activity for user only
     const sevenDaysAgo = new Date();
@@ -271,7 +271,7 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
 
     const newTripsLast7DaysResult = await db.select({
       count: count()
-    }).from(trips).where(and(userTripsFilter, sql`${trips.createdAt} >= ${sevenDaysAgo}`));
+    }).from(trips).where(and(userTripsFilter, sql`${trips.created_at} >= ${sevenDaysAgo}`));
 
     const activitiesAddedLast7DaysResult = await db.select({
       count: count()
@@ -284,13 +284,13 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
     
     const growthMetricsResult = await db.select({
-      week: sql`DATE_TRUNC('week', ${trips.createdAt})`.as('week'),
+      week: sql`DATE_TRUNC('week', ${trips.created_at})`.as('week'),
       tripCount: count(trips.id)
     })
     .from(trips)
-    .where(and(userTripsFilter, sql`${trips.createdAt} >= ${eightWeeksAgo}`))
-    .groupBy(sql`DATE_TRUNC('week', ${trips.createdAt})`)
-    .orderBy(sql`DATE_TRUNC('week', ${trips.createdAt})`);
+    .where(and(userTripsFilter, sql`${trips.created_at} >= ${eightWeeksAgo}`))
+    .groupBy(sql`DATE_TRUNC('week', ${trips.created_at})`)
+    .orderBy(sql`DATE_TRUNC('week', ${trips.created_at})`);
 
     const growthMetrics = growthMetricsResult.map(week => ({
       date: new Date(week.week as string).toISOString().split('T')[0],
@@ -327,7 +327,7 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
         totalUsers: 1,
         usersWithTrips: 1,
         usersWithActivities: totalActivitiesResult[0]?.count > 0 ? 1 : 0,
-        usersWithCompletedTrips: (completedTripsResult[0]?.count || 0) > 0 ? 1 : 0,
+        usersWithCompletedTrips: (completedTripsResult?.count || 0) > 0 ? 1 : 0,
         usersWithExports: 0 // Not tracked for personal view
       }
     };
@@ -346,7 +346,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     
     // Average trip length (in days)
     const [avgTripLengthResult] = await db.select({
-      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1`)
+      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1`)
     }).from(trips);
 
     // Average activities per trip
@@ -388,9 +388,9 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     // Trip duration distribution - optimized with SQL windowing
     const tripDurationsWithTotalResult = await db.select({
       duration: sql`CASE 
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 2 THEN 'Weekend (1-2 days)'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
         ELSE 'Extended Trip (10+ days)'
       END`.as('duration'),
       count: count(),
@@ -398,9 +398,9 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     })
     .from(trips)
     .groupBy(sql`CASE 
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 2 THEN 'Weekend (1-2 days)'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
       ELSE 'Extended Trip (10+ days)'
     END`)
     .orderBy(desc(count()));
@@ -496,7 +496,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
 
     const [newTripsLast7DaysResult] = await db.select({
       count: count()
-    }).from(trips).where(sql`${trips.createdAt} >= ${sevenDaysAgo}`);
+    }).from(trips).where(sql`${trips.created_at} >= ${sevenDaysAgo}`);
 
     const [newUsersLast7DaysResult] = await db.select({
       count: count()
@@ -512,13 +512,13 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
     
     const growthMetricsResult = await db.select({
-      week: sql`DATE_TRUNC('week', ${trips.createdAt})`.as('week'),
+      week: sql`DATE_TRUNC('week', ${trips.created_at})`.as('week'),
       tripCount: count(trips.id)
     })
     .from(trips)
-    .where(sql`${trips.createdAt} >= ${eightWeeksAgo}`)
-    .groupBy(sql`DATE_TRUNC('week', ${trips.createdAt})`)
-    .orderBy(sql`DATE_TRUNC('week', ${trips.createdAt})`);
+    .where(sql`${trips.created_at} >= ${eightWeeksAgo}`)
+    .groupBy(sql`DATE_TRUNC('week', ${trips.created_at})`)
+    .orderBy(sql`DATE_TRUNC('week', ${trips.created_at})`);
 
     const growthMetrics = growthMetricsResult.map(week => ({
       date: new Date(week.week as string).toISOString().split('T')[0],
@@ -689,7 +689,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     .orderBy(desc(count(trips.id)))
     .limit(10);
 
-    const totalTrips = totalTripsResult[0]?.count || 0;
+    const totalTrips = totalTripsResult?.count || 0;
     const destinations = destinationsResult.map(dest => ({
       city: dest.city?.split(',')[0]?.trim() || 'Unknown',
       country: dest.country || 'Unknown',
@@ -701,9 +701,9 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     // Trip duration analysis
     const tripDurationsResult = await db.select({
       duration: sql`CASE 
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 3 THEN '1-3 days'
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 7 THEN '4-7 days'
-        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 14 THEN '1-2 weeks'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 3 THEN '1-3 days'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 7 THEN '4-7 days'
+        WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 14 THEN '1-2 weeks'
         ELSE '2+ weeks'
       END`.as('duration'),
       count: count()
@@ -711,15 +711,15 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     .from(trips)
     .where(orgTripsFilter)
     .groupBy(sql`CASE 
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 3 THEN '1-3 days'
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 7 THEN '4-7 days'
-      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 14 THEN '1-2 weeks'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 3 THEN '1-3 days'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 7 THEN '4-7 days'
+      WHEN EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1 <= 14 THEN '1-2 weeks'
       ELSE '2+ weeks'
     END`)
     .orderBy(desc(count()));
 
     const tripDurations = tripDurationsResult.map(duration => ({
-      duration: duration.duration,
+      duration: duration.duration as string,
       count: duration.count,
       percentage: totalTrips > 0 ? Math.round((duration.count / totalTrips) * 100) : 0
     }));
@@ -749,7 +749,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     .orderBy(desc(count()));
 
     const budgetDistribution = budgetDistributionResult.map(budget => ({
-      range: budget.range,
+      range: budget.range as string,
       count: budget.count,
       percentage: totalTrips > 0 ? Math.round((budget.count / totalTrips) * 100) : 0
     }));
@@ -818,7 +818,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
 
     const [newTripsLast7DaysResult] = await db.select({
       count: count()
-    }).from(trips).where(and(orgTripsFilter, sql`${trips.createdAt} >= ${sevenDaysAgo}`));
+    }).from(trips).where(and(orgTripsFilter, sql`${trips.created_at} >= ${sevenDaysAgo}`));
 
     const [newUsersLast7DaysResult] = await db.select({
       count: count()
@@ -832,55 +832,55 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
 
     const [budgetSpentLast7DaysResult] = await db.select({
       totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
-    }).from(trips).where(and(orgTripsFilter, sql`${trips.createdAt} >= ${sevenDaysAgo}`));
+    }).from(trips).where(and(orgTripsFilter, sql`${trips.created_at} >= ${sevenDaysAgo}`));
 
     // Growth metrics (last 8 weeks)
     const eightWeeksAgo = new Date();
     eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
     
     const growthMetricsResult = await db.select({
-      week: sql`DATE_TRUNC('week', ${trips.createdAt})`.as('week'),
+      week: sql`DATE_TRUNC('week', ${trips.created_at})`.as('week'),
       tripCount: count(trips.id),
       budget: sql`COALESCE(SUM(${trips.budget}), 0)`
     })
     .from(trips)
-    .where(and(orgTripsFilter, sql`${trips.createdAt} >= ${eightWeeksAgo}`))
-    .groupBy(sql`DATE_TRUNC('week', ${trips.createdAt})`)
-    .orderBy(asc(sql`DATE_TRUNC('week', ${trips.createdAt})`));
+    .where(and(orgTripsFilter, sql`${trips.created_at} >= ${eightWeeksAgo}`))
+    .groupBy(sql`DATE_TRUNC('week', ${trips.created_at})`)
+    .orderBy(asc(sql`DATE_TRUNC('week', ${trips.created_at})`));
 
     const growthMetrics = growthMetricsResult.map(week => ({
-      date: new Date(week.week).toISOString().split('T')[0],
+      date: new Date(week.week as string).toISOString().split('T')[0],
       trips: week.tripCount,
       users: 0, // Would need separate query to calculate new users per week
       activities: 0, // Would need separate query to calculate activities per week
       budget: Math.round((Number(week.budget) || 0) / 100 * 100) / 100 // Convert cents to dollars
     }));
 
-    const totalUsers = totalUsersResult[0]?.count || 0;
-    const usersWithTrips = Number(usersWithTripsResult[0]?.count) || 0;
-    const usersWithMultipleTrips = Number(usersWithMultipleTripsResult[0]?.count) || 0;
+    const totalUsers = totalUsersResult?.count || 0;
+    const usersWithTrips = Number((usersWithTripsResult as any)?.count) || 0;
+    const usersWithMultipleTrips = Number((usersWithMultipleTripsResult[0] as any)?.count) || 0;
     const averageTripsPerUser = totalUsers > 0 ? Math.round((totalTrips / totalUsers) * 100) / 100 : 0;
     const tripCompletionRate = totalTrips > 0 ? 
-      Math.round(((completedTripsResult[0]?.count || 0) / totalTrips) * 100) : 0;
+      Math.round(((completedTripsResult?.count || 0) / totalTrips) * 100) : 0;
     const activityCompletionRate = totalTrips > 0 ? 
-      Math.round(((tripsWithCompletedActivitiesResult[0]?.count || 0) / totalTrips) * 100) : 0;
+      Math.round(((tripsWithCompletedActivitiesResult?.count || 0) / totalTrips) * 100) : 0;
 
     return {
       organizationId,
       overview: {
         totalTrips,
         totalUsers,
-        totalActivities: totalActivitiesResult[0]?.count || 0,
-        totalBudget: Math.round((Number(totalBudgetResult[0]?.totalBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
-        averageTripLength: Math.round((Number(avgTripLengthResult[0]?.avgLength) || 0) * 100) / 100,
-        averageActivitiesPerTrip: Math.round((Number(avgActivitiesResult[0]?.avgActivities) || 0) * 100) / 100,
-        averageTripBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) / 100 * 100) / 100 // Convert cents to dollars
+        totalActivities: totalActivitiesResult?.count || 0,
+        totalBudget: Math.round((Number(totalBudgetResult?.totalBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
+        averageTripLength: Math.round((Number(avgTripLengthResult?.avgLength) || 0) * 100) / 100,
+        averageActivitiesPerTrip: Math.round((Number(avgActivitiesResult?.avgActivities) || 0) * 100) / 100,
+        averageTripBudget: Math.round((Number(avgBudgetResult?.avgBudget) || 0) / 100 * 100) / 100 // Convert cents to dollars
       },
       destinations,
       tripDurations,
       budgetAnalysis: {
-        totalBudget: Math.round((Number(totalBudgetResult[0]?.totalBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
-        averageBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
+        totalBudget: Math.round((Number(totalBudgetResult?.totalBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
+        averageBudget: Math.round((Number(avgBudgetResult?.avgBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
         budgetDistribution
       },
       userEngagement: {
@@ -892,10 +892,10 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
         mostActiveUsers
       },
       recentActivity: {
-        newTripsLast7Days: newTripsLast7DaysResult[0]?.count || 0,
-        newUsersLast7Days: newUsersLast7DaysResult[0]?.count || 0,
-        activitiesAddedLast7Days: activitiesAddedLast7DaysResult[0]?.count || 0,
-        budgetSpentLast7Days: Math.round((Number(budgetSpentLast7DaysResult[0]?.totalBudget) || 0) / 100 * 100) / 100 // Convert cents to dollars
+        newTripsLast7Days: newTripsLast7DaysResult?.count || 0,
+        newUsersLast7Days: newUsersLast7DaysResult?.count || 0,
+        activitiesAddedLast7Days: activitiesAddedLast7DaysResult?.count || 0,
+        budgetSpentLast7Days: Math.round((Number(budgetSpentLast7DaysResult?.totalBudget) || 0) / 100 * 100) / 100 // Convert cents to dollars
       },
       growthMetrics
     };

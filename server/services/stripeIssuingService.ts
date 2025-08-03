@@ -71,15 +71,15 @@ export class StripeIssuingService {
               interval: request.interval,
             },
           ],
-          allowed_categories: request.allowed_categories || [
+          allowed_categories: (request.allowed_categories || [
             'airlines',
             'lodging',
             'car_rental',
             'gas_stations',
             'restaurants',
             'taxi_services',
-          ],
-          blocked_categories: request.blocked_categories || [],
+          ]) as any,
+          blocked_categories: (request.blocked_categories || []) as any,
         },
         metadata: {
           user_id: request.user_id.toString(),
@@ -101,7 +101,6 @@ export class StripeIssuingService {
         card_type: 'virtual',
         card_status: 'active',
         spending_limit: request.spend_limit,
-        remaining_limit: request.spend_limit,
         cardholder_name: request.cardholder_name,
         expiry_month: card.exp_month.toString(),
         expiry_year: card.exp_year.toString(),
@@ -133,6 +132,10 @@ export class StripeIssuingService {
    * Update card spending controls
    */
   async updateCardControls(request: CardControlsUpdate) {
+    if (!stripe) {
+      throw new Error('Stripe not configured. Please provide STRIPE_SECRET_KEY environment variable.');
+    }
+    
     try {
       const cardRecord = await storage.getCorporateCard(request.card_id);
       if (!cardRecord) {
@@ -192,6 +195,10 @@ export class StripeIssuingService {
    * Freeze/unfreeze a card
    */
   async freezeCard(card_id: number, freeze: boolean) {
+    if (!stripe) {
+      throw new Error('Stripe not configured. Please provide STRIPE_SECRET_KEY environment variable.');
+    }
+    
     try {
       const cardRecord = await storage.getCorporateCard(card_id);
       if (!cardRecord) {
@@ -222,6 +229,10 @@ export class StripeIssuingService {
    * Delete a card permanently
    */
   async deleteCard(card_id: number, organization_id: number) {
+    if (!stripe) {
+      throw new Error('Stripe not configured. Please provide STRIPE_SECRET_KEY environment variable.');
+    }
+    
     try {
       const cardRecord = await storage.getCorporateCard(card_id);
       if (!cardRecord) {
@@ -288,14 +299,15 @@ export class StripeIssuingService {
     });
 
     // Log the authorization request
-    const cardRecord = await storage.getCorporateCardByStripeId(authorization.card.id);
+    const cardId = typeof authorization.card === 'string' ? authorization.card : authorization.card.id;
+    const cardRecord = await storage.getCorporateCardByStripeId(cardId);
     if (cardRecord) {
       await storage.createCardTransaction({
         card_id: cardRecord.id,
         organization_id: cardRecord.organization_id,
         user_id: cardRecord.user_id,
         transaction_id: authorization.id,
-        authorization_code: authorization.authorization_code || '',
+        authorization_code: authorization.id || '',
         amount: authorization.amount,
         currency: authorization.currency,
         transaction_type: 'authorization',
@@ -334,9 +346,10 @@ export class StripeIssuingService {
       merchant: transaction.merchant_data?.name,
     });
 
-    const cardRecord = await storage.getCorporateCardByStripeId(transaction.card.id);
+    const cardId = typeof transaction.card === 'string' ? transaction.card : transaction.card.id;
+    const cardRecord = await storage.getCorporateCardByStripeId(cardId);
     if (!cardRecord) {
-      console.error('Card not found for transaction:', transaction.card.id);
+      console.error('Card not found for transaction:', cardId);
       return;
     }
 
@@ -346,7 +359,7 @@ export class StripeIssuingService {
       organization_id: cardRecord.organization_id,
       user_id: cardRecord.user_id,
       transaction_id: transaction.id,
-      authorization_code: transaction.authorization?.id || '',
+      authorization_code: typeof transaction.authorization === 'string' ? transaction.authorization : transaction.authorization?.id || '',
       amount: transaction.amount,
       currency: transaction.currency,
       transaction_type: transaction.type,
@@ -429,10 +442,10 @@ export class StripeIssuingService {
 
   private async updateCardSpendingLimits(cardId: number, transactionAmount: number) {
     const cardRecord = await storage.getCorporateCard(cardId);
-    if (cardRecord && cardRecord.remaining_limit) {
-      const newRemainingLimit = cardRecord.remaining_limit - transactionAmount;
+    if (cardRecord && cardRecord.spending_limit) {
+      const newSpendingLimit = cardRecord.spending_limit - transactionAmount;
       await storage.updateCorporateCard(cardId, {
-        remaining_limit: Math.max(0, newRemainingLimit),
+        spending_limit: Math.max(0, newSpendingLimit),
       });
     }
   }
@@ -449,8 +462,8 @@ export class StripeIssuingService {
    * Get user phone from database
    */
   private async getUserPhone(userId: number): Promise<string> {
-    const user = await storage.getUser(userId);
-    return user?.phone || '+15555551234';
+    // Users table doesn't have phone field, return default
+    return '+15555551234';
   }
 
   /**

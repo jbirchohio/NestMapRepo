@@ -31,8 +31,25 @@ interface NotificationEmailParams {
   title: string;
   message: string;
   actionUrl?: string;
+  ctaLink?: string;
   actionText?: string;
   type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';
+}
+
+function generateNotificationHTML(params: NotificationEmailParams): string {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>${params.subject}</h2>
+      <p>${params.message}</p>
+      ${params.ctaLink ? `
+        <div style="margin: 30px 0;">
+          <a href="${params.ctaLink}" style="background: #6D5DFB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Details</a>
+        </div>
+      ` : ''}
+      <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+      <p style="color: #666; font-size: 14px;">This is an automated message from NestMap</p>
+    </div>
+  `;
 }
 
 export async function sendNotificationEmail(params: NotificationEmailParams): Promise<boolean> {

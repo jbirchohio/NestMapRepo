@@ -1,4 +1,4 @@
-import { sendEmail } from './emailService';
+import { sendNotificationEmail } from './emailService';
 
 interface ProposalNotificationData {
   proposalId: number;
@@ -26,21 +26,24 @@ interface ProposalViewData {
 export async function sendProposalSentNotification(data: ProposalNotificationData): Promise<boolean> {
   try {
     // Email to client
-    const clientEmailSent = await sendEmail({
+    const clientEmailSent = await sendNotificationEmail({
       to: data.clientEmail,
-      from: `${data.agentName} <${data.agentEmail}>`,
       subject: `Travel Proposal for ${data.tripDestination} - ${data.companyName}`,
-      html: generateProposalSentEmailHTML(data),
-      text: generateProposalSentEmailText(data)
+      title: `Travel Proposal for ${data.tripDestination}`,
+      message: `${data.agentName} has prepared a comprehensive travel proposal for your upcoming trip.`,
+      actionUrl: data.proposalUrl,
+      ctaLink: data.proposalUrl,
+      actionText: 'View Proposal',
+      type: 'system'
     });
 
     // Email to agent (confirmation)
-    const agentEmailSent = await sendEmail({
+    const agentEmailSent = await sendNotificationEmail({
       to: data.agentEmail,
-      from: `NestMap Notifications <notifications@nestmap.app>`,
       subject: `Proposal Sent Confirmation - ${data.clientName}`,
-      html: generateAgentConfirmationHTML(data),
-      text: generateAgentConfirmationText(data)
+      title: 'Proposal Sent Successfully',
+      message: `Your proposal has been sent to ${data.clientName} for their trip to ${data.tripDestination}.`,
+      type: 'system'
     });
 
     return clientEmailSent && agentEmailSent;
@@ -52,12 +55,12 @@ export async function sendProposalSentNotification(data: ProposalNotificationDat
 
 export async function sendProposalViewedNotification(data: ProposalViewData): Promise<boolean> {
   try {
-    const emailSent = await sendEmail({
+    const emailSent = await sendNotificationEmail({
       to: data.agentEmail,
-      from: `NestMap Notifications <notifications@nestmap.app>`,
       subject: `🎉 ${data.clientName} viewed your proposal!`,
-      html: generateProposalViewedHTML(data),
-      text: generateProposalViewedText(data)
+      title: 'Proposal Viewed',
+      message: `${data.clientName} has viewed your proposal at ${data.viewedAt.toLocaleString()}.`,
+      type: 'system'
     });
 
     return emailSent;

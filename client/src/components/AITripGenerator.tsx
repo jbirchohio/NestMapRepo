@@ -30,11 +30,88 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
+// Type definitions
+interface TripSummary {
+  title?: string;
+  description?: string;
+  duration?: number;
+  totalCost?: number;
+  carbonFootprint?: number;
+}
+
+interface Flight {
+  airline: string;
+  flightNumber: string;
+  route: string;
+  departure: string;
+  arrival: string;
+  price: number;
+  cabin: string;
+}
+
+interface Hotel {
+  name: string;
+  address: string;
+  stars: number;
+  pricePerNight: number;
+  checkIn: string;
+  checkOut: string;
+}
+
+interface Activity {
+  time?: string;
+  title: string;
+  location?: string;
+  duration?: string;
+  price?: number;
+  category: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
+interface Meal {
+  restaurant: string;
+  cuisine: string;
+  location: string;
+  time: string;
+  estimatedCost: number;
+  type: string;
+}
+
+interface GroundTransportation {
+  type: string;
+  description: string;
+  cost?: number;
+}
+
+interface GeneratedTrip {
+  type?: string;
+  tripSummary?: TripSummary;
+  flights?: Flight[];
+  accommodation?: Hotel[];
+  activities?: Activity[];
+  groundTransportation?: GroundTransportation[];
+  meals?: Meal[];
+  message?: string;
+  conversation?: ConversationItem[];
+  recommendations?: string[];
+  conflicts?: string[];
+  clientAccess?: {
+    trackingCode: string;
+  };
+}
+
+interface ConversationItem {
+  role: string;
+  content: string;
+}
+
 export default function AITripGenerator() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedTrip, setGeneratedTrip] = useState<any>(null);
-  const [conversation, setConversation] = useState<any[]>([]);
+  const [generatedTrip, setGeneratedTrip] = useState<GeneratedTrip | null>(null);
+  const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [showQuestions, setShowQuestions] = useState(false);
   const [assistantMessage, setAssistantMessage] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -42,7 +119,7 @@ export default function AITripGenerator() {
   const { toast } = useToast();
 
   const createItineraryMutation = useMutation({
-    mutationFn: async (data: { tripData: any; clientEmail: string }) => {
+    mutationFn: async (data: { tripData: GeneratedTrip; clientEmail: string }) => {
       const response = await apiRequest('POST', '/api/create-client-itinerary', data);
       if (!response.ok) {
         throw new Error('Failed to create itinerary');
@@ -97,7 +174,7 @@ export default function AITripGenerator() {
     }
     
     createItineraryMutation.mutate({
-      tripData: generatedTrip,
+      tripData: generatedTrip!,
       clientEmail
     });
   };
@@ -294,7 +371,80 @@ export default function AITripGenerator() {
   );
 }
 
-function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
+interface TripResultsViewProps {
+  trip: GeneratedTrip;
+  onBack: () => void;
+}
+
+function TripResultsView({ trip, onBack }: TripResultsViewProps) {
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [clientEmail, setClientEmail] = useState('');
+  const { toast } = useToast();
+
+  const createItineraryMutation = useMutation({
+    mutationFn: async (data: { tripData: GeneratedTrip; clientEmail: string }) => {
+      const response = await apiRequest('POST', '/api/create-client-itinerary', data);
+      if (!response.ok) {
+        throw new Error('Failed to create itinerary');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Itinerary Created",
+        description: `Client tracking link sent to ${clientEmail}`,
+      });
+      setShowClientForm(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create client itinerary",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const shareItineraryMutation = useMutation({
+    mutationFn: async (trackingCode: string) => {
+      const response = await apiRequest('GET', `/api/track/${trackingCode}`);
+      if (!response.ok) {
+        throw new Error('Failed to get sharing info');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      navigator.clipboard.writeText(data.shareUrl);
+      toast({
+        title: "Share Link Copied",
+        description: "Mobile tracking link copied to clipboard",
+      });
+    }
+  });
+
+  const handleCreateItinerary = () => {
+    setShowClientForm(true);
+  };
+
+  const handleSubmitClientForm = () => {
+    if (!clientEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter client email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createItineraryMutation.mutate({
+      tripData: trip,
+      clientEmail
+    });
+  };
+
+  const handleShareItinerary = (trackingCode: string) => {
+    shareItineraryMutation.mutate(trackingCode);
+  };
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -354,7 +504,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <Plane className="w-5 h-5 text-blue-600" />
                 <span>Flights</span>
               </h3>
-              {trip.flights?.map((flight: any, index: number) => (
+              {trip.flights?.map((flight, index) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -374,7 +524,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <Bed className="w-5 h-5 text-purple-600" />
                 <span>Accommodation</span>
               </h3>
-              {trip.accommodation?.map((hotel: any, index: number) => (
+              {trip.accommodation?.map((hotel, index) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -400,7 +550,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <MapPin className="w-5 h-5 text-red-600" />
                 <span>Activities & Schedule</span>
               </h3>
-              {trip.activities?.map((activity: any, index: number) => (
+              {trip.activities?.map((activity, index) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -420,7 +570,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <Utensils className="w-5 h-5 text-orange-600" />
                 <span>Dining</span>
               </h3>
-              {trip.meals?.map((meal: any, index: number) => (
+              {trip.meals?.map((meal, index) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -471,9 +621,9 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 {createItineraryMutation.isPending ? "Creating..." : "Send Mobile Tracking Link"}
               </Button>
               
-              {generatedTrip?.clientAccess?.trackingCode && (
+              {trip?.clientAccess?.trackingCode && (
                 <Button 
-                  onClick={() => handleShareItinerary(generatedTrip.clientAccess.trackingCode)}
+                  onClick={() => handleShareItinerary(trip.clientAccess!.trackingCode)}
                   variant="outline"
                   disabled={shareItineraryMutation.isPending}
                 >

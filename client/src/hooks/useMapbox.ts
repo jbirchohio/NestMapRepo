@@ -61,8 +61,8 @@ export default function useMapbox() {
       } catch (mapboxError) {
         console.error('Mapbox GL initialization failed:', mapboxError);
         console.error('Error details:', {
-          message: mapboxError?.message || 'Unknown error',
-          stack: mapboxError?.stack || 'No stack trace',
+          message: (mapboxError as any)?.message || 'Unknown error',
+          stack: (mapboxError as any)?.stack || 'No stack trace',
           center,
           zoom,
           containerExists: !!container
@@ -115,7 +115,7 @@ export default function useMapbox() {
       // Create marker element
       const el = document.createElement('div');
       el.className = 'custom-marker';
-      el.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23${markerData.color || 'ff0000'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>')`;
+      el.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23${(markerData as any).color || 'ff0000'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>')`;
       el.style.width = '24px';
       el.style.height = '24px';
       el.style.backgroundSize = 'contain';
@@ -157,7 +157,10 @@ export default function useMapbox() {
         data: {
           type: 'Feature',
           properties: {},
-          geometry: route.geometry
+          geometry: {
+            type: 'LineString',
+            coordinates: route.coordinates
+          }
         }
       });
 
@@ -171,7 +174,7 @@ export default function useMapbox() {
           'line-cap': 'round'
         },
         paint: {
-          'line-color': route.color || '#3b82f6',
+          'line-color': (route as any).color || '#3b82f6',
           'line-width': 3
         }
       });

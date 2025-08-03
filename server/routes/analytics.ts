@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { jwtAuthMiddleware } from '../middleware/jwtAuth';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { enforceAnalyticsAccess } from '../middleware/subscription-limits';
 import { getSimpleAnalytics } from '../analytics-simple';
@@ -7,7 +7,7 @@ import { getSimpleAnalytics } from '../analytics-simple';
 const router = Router();
 
 // Apply authentication to all analytics routes
-router.use(unifiedAuthMiddleware);
+router.use(jwtAuthMiddleware);
 
 // Root analytics endpoint (requires JWT authentication and Pro+ subscription)
 router.get("/", enforceAnalyticsAccess(), async (req: Request, res: Response) => {

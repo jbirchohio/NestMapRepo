@@ -177,7 +177,7 @@ export function OrganizationsList({ organizations, onOrganizationSelect, isLoadi
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-gray-500">Funding:</span>
-                    <Badge className={getStatusColor(org.funding_source_status)} className="text-xs">
+                    <Badge className={`${getStatusColor(org.funding_source_status)} text-xs`}>
                       {org.funding_source_status}
                     </Badge>
                   </div>

@@ -19,8 +19,8 @@ import superadminRoutes from './superadmin';
 import webhookRoutes from './webhooks';
 import subscriptionStatusRoutes from './subscription-status';
 import { registerAdminSettingsRoutes } from './admin-settings';
-// import todosRoutes from './todos';
-// import notesRoutes from './notes';
+import todosRoutes from './todos';
+import notesRoutes from './notes';
 import aiRoutes from './ai';
 import securityRoutes from './security';
 import healthRoutes from './health';
@@ -60,8 +60,8 @@ router.use('/flights', flightRoutes);
 // Import and register simplified white label routes
 import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
 // Note: This will be handled in the main server file since it needs the app instance
-// router.use('/todos', todosRoutes);
-// router.use('/notes', notesRoutes);
+router.use('/todos', todosRoutes);
+router.use('/notes', notesRoutes);
 router.use('/ai', aiRoutes);
 
 // Templates endpoint

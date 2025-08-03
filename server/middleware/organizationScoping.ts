@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { eq } from 'drizzle-orm';
 
 // Extend Express Request interface to include domain organization context
 declare global {
@@ -155,12 +156,12 @@ export async function resolveDomainOrganization(req: Request, res: Response, nex
       }
 
       // Set domain organization context for later validation
-      req.domainOrganizationId = domainConfig.organization_id;
+      req.domainOrganizationId = domainConfig.organizationId;
       req.isWhiteLabelDomain = true;
       
       console.log('Domain organization resolved:', {
         domain: host,
-        organizationId: domainConfig.organization_id,
+        organizationId: domainConfig.organizationId,
         status: domainConfig.status
       });
     }
@@ -183,9 +184,10 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
   }
 
   // Check if user has analytics permissions for their organization
+  const userWithPermissions = req.user as any;
   const hasAnalyticsAccess = req.user.role === 'admin' || 
                             req.user.role === 'manager' ||
-                            (req.user.permissions && req.user.permissions.includes('ACCESS_ANALYTICS'));
+                            (userWithPermissions.permissions && userWithPermissions.permissions.includes('ACCESS_ANALYTICS'));
 
   if (!hasAnalyticsAccess) {
     console.warn('ANALYTICS_ACCESS_DENIED:', {
@@ -212,13 +214,13 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
 /**
  * Query helper to automatically add organization scoping
  */
-export function addOrganizationScope(baseQuery: any, req: Request, tableName: string) {
+export function addOrganizationScope(baseQuery: any, req: Request, table: any) {
   if (!req.organization_id) {
     throw new Error('Organization context required for scoped queries');
   }
 
   // Add organization_id filter to all queries
-  return baseQuery.where(eq(`${tableName}.organization_id`, req.organization_id));
+  return baseQuery.where(eq(table.organization_id, req.organization_id));
 }
 
 /**

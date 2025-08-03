@@ -62,7 +62,7 @@ export class OrganizationFundingService {
       await db
         .update(organizations)
         .set({ 
-          stripe_account_id: account.id,
+          stripe_connect_account_id: account.id,
           stripe_issuing_enabled: false, // Will be enabled after onboarding
           updated_at: new Date()
         })
@@ -79,13 +79,13 @@ export class OrganizationFundingService {
    */
   async createOnboardingLink(organizationId: number, returnUrl: string, refreshUrl: string) {
     const org = await db.select().from(organizations).where(eq(organizations.id, organizationId)).limit(1);
-    if (!org[0]?.stripe_account_id) {
+    if (!org[0]?.stripe_connect_account_id) {
       throw new Error('No Stripe account found for organization');
     }
 
     try {
       const accountLink = await stripe.accountLinks.create({
-        account: org[0].stripe_account_id,
+        account: org[0].stripe_connect_account_id,
         refresh_url: refreshUrl,
         return_url: returnUrl,
         type: 'account_onboarding',
@@ -102,12 +102,12 @@ export class OrganizationFundingService {
    */
   async checkAccountStatus(organizationId: number) {
     const org = await db.select().from(organizations).where(eq(organizations.id, organizationId)).limit(1);
-    if (!org[0]?.stripe_account_id) {
+    if (!org[0]?.stripe_connect_account_id) {
       return { ready: false, reason: 'No Stripe account' };
     }
 
     try {
-      const account = await stripe.accounts.retrieve(org[0].stripe_account_id);
+      const account = await stripe.accounts.retrieve(org[0].stripe_connect_account_id);
       
       const issuingCapability = account.capabilities?.card_issuing;
       const isReady = issuingCapability === 'active';
@@ -139,7 +139,7 @@ export class OrganizationFundingService {
    */
   async setupFundingSource(config: FundingSourceConfig) {
     const org = await db.select().from(organizations).where(eq(organizations.id, config.organizationId)).limit(1);
-    if (!org[0]?.stripe_account_id) {
+    if (!org[0]?.stripe_connect_account_id) {
       throw new Error('Organization must have a Stripe account first');
     }
 
@@ -154,7 +154,7 @@ export class OrganizationFundingService {
           
           // Create external account (bank account)
           const bankAccount = await stripe.accounts.createExternalAccount(
-            org[0].stripe_account_id,
+            org[0].stripe_connect_account_id,
             {
               external_account: {
                 object: 'bank_account',
@@ -171,9 +171,24 @@ export class OrganizationFundingService {
           break;
 
         case 'credit_line':
-          // For credit lines, this would involve Stripe Capital API
-          // This is a simplified implementation
-          fundingSourceId = 'credit_line_placeholder';
+          // Credit line implementation - requires manual Stripe Capital API setup
+          if (!config.creditLine) {
+            throw new Error('Credit line configuration required');
+          }
+          
+          // Note: Stripe Capital is invite-only. For production, this would need:
+          // 1. Stripe Capital API access (requires application)
+          // 2. Custom implementation based on Stripe's Capital API documentation
+          
+          // For now, create a reference to track the credit line request
+          const creditLineId = `cl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          
+          // In production, this would:
+          // 1. Check organization eligibility via Stripe Capital API
+          // 2. Apply for credit line with requested amount
+          // 3. Track approval status and terms
+          
+          fundingSourceId = creditLineId;
           break;
 
         case 'stripe_balance':
@@ -241,7 +256,7 @@ export class OrganizationFundingService {
     currency?: string;
   }) {
     const org = await db.select().from(organizations).where(eq(organizations.id, organizationId)).limit(1);
-    if (!org[0]?.stripe_account_id || !org[0].stripe_issuing_enabled) {
+    if (!org[0]?.stripe_connect_account_id || !org[0].stripe_issuing_enabled) {
       throw new Error('Organization not ready for card issuing');
     }
 
@@ -250,16 +265,18 @@ export class OrganizationFundingService {
       const cardholder = await stripe.issuing.cardholders.create({
         name: cardData.cardholderName,
         email: `cards@${org[0].name.toLowerCase().replace(/\s/g, '')}.com`, // Generate email
-        type: 'business_entity',
-        business_entity: {
-          dob: {
-            day: 1,
-            month: 1,
-            year: 2020, // Company formation date placeholder
-          },
-        },
+        type: 'individual' as any, // Using 'individual' type for card holders
+        billing: {
+          address: {
+            line1: '123 Corporate Blvd',
+            city: 'San Francisco',
+            state: 'CA',
+            postal_code: '94105',
+            country: 'US'
+          }
+        }
       }, {
-        stripeAccount: org[0].stripe_account_id,
+        stripeAccount: org[0].stripe_connect_account_id,
       });
 
       // Create the card
@@ -276,7 +293,7 @@ export class OrganizationFundingService {
           ],
         },
       }, {
-        stripeAccount: org[0].stripe_account_id,
+        stripeAccount: org[0].stripe_connect_account_id,
       });
 
       return { card, cardholder };
@@ -290,7 +307,7 @@ export class OrganizationFundingService {
    */
   async addFundsToOrganization(organizationId: number, amount: number) {
     const org = await db.select().from(organizations).where(eq(organizations.id, organizationId)).limit(1);
-    if (!org[0]?.stripe_account_id || org[0].funding_source_status !== 'active') {
+    if (!org[0]?.stripe_connect_account_id || org[0].funding_source_status !== 'active') {
       throw new Error('Organization funding not properly configured');
     }
 

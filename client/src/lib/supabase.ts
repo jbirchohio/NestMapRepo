@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, Session } from '@supabase/supabase-js';
 
 // Supabase connection details from environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -78,7 +78,7 @@ export const auth = {
   },
   
   // Set up auth state change listener
-  onAuthStateChange: (callback: (event: any, session: any) => void) => {
+  onAuthStateChange: (callback: (event: string, session: Session | null) => void) => {
     return supabase.auth.onAuthStateChange(callback);
   }
 };

@@ -64,7 +64,7 @@ export function HotelResults({ clientInfo, hotelResults, selectedHotel, onSelect
     );
   }
 
-  if (results.length === 0) {
+  if (hotelResults.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center p-8">
@@ -81,7 +81,7 @@ export function HotelResults({ clientInfo, hotelResults, selectedHotel, onSelect
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Hotel Results ({results.length})</span>
+            <span>Hotel Results ({hotelResults.length})</span>
             <div className="flex gap-2">
               <Button
                 variant={sortBy === 'price' ? 'default' : 'outline'}

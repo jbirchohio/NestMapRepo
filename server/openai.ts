@@ -175,7 +175,7 @@ export async function optimizeItinerary(activities: any[], tripContext: any): Pr
     //   id: a.id,
     //   title: a.title,
     //   time: a.time,
-    //   locationName: a.locationName
+    //   location_name: a.location_name
     // })), null, 2));
 
     const prompt = `CRITICAL SCHEDULING CONFLICT RESOLVER
@@ -188,7 +188,7 @@ ACTIVITY ${index + 1}:
 - DATABASE_ID: ${a.id} (THIS IS THE ID YOU MUST USE!)
 - TITLE: ${a.title}
 - CURRENT_TIME: ${a.time}
-- LOCATION: ${a.locationName}
+- LOCATION: ${a.location_name}
 `).join('')}
 
 CONFLICT DETECTED: Look for activities with identical times and fix them!
@@ -280,8 +280,8 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     // Budget simulation function
     const calculateTripCost = (trip: any, adjustments: any = {}) => {
       const baseFlight = PRICING.flight;
-      const startDate = new Date(trip.startDate);
-      const endDate = new Date(trip.endDate);
+      const startDate = new Date(trip.start_date);
+      const endDate = new Date(trip.end_date);
       const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const baseHotel = PRICING.hotel * nights;
       
@@ -313,10 +313,10 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
           const trip2 = trips[j];
           
           // Date overlap check
-          const start1 = new Date(trip1.startDate);
-          const end1 = new Date(trip1.endDate);
-          const start2 = new Date(trip2.startDate);
-          const end2 = new Date(trip2.endDate);
+          const start1 = new Date(trip1.start_date);
+          const end1 = new Date(trip1.end_date);
+          const start2 = new Date(trip2.start_date);
+          const end2 = new Date(trip2.end_date);
           
           if (start1 <= end2 && start2 <= end1) {
             conflicts.push({
@@ -349,7 +349,7 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     ${JSON.stringify(trips.map(t => ({
       id: t.id,
       destination: t.city,
-      dates: `${t.startDate} to ${t.endDate}`,
+      dates: `${t.start_date} to ${t.end_date}`,
       department: t.department,
       budget: t.budget,
       travelMode: t.travelMode || 'flight'
@@ -406,8 +406,8 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
 
         return {
           ...trip,
-          originalStartDate: trip.startDate,
-          originalEndDate: trip.endDate,
+          originalStartDate: trip.start_date,
+          originalEndDate: trip.end_date,
           suggestedStartDate: optimization.suggestedDates.split(' to ')[0],
           suggestedEndDate: optimization.suggestedDates.split(' to ')[1],
           originalCost,
@@ -658,8 +658,8 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
     const city = tripContext.trip?.city || "New York City";
     
     // Get trip date range to help with date inference
-    const tripStartDate = tripContext.trip?.startDate ? new Date(tripContext.trip.startDate) : new Date();
-    const tripEndDate = tripContext.trip?.endDate ? new Date(tripContext.trip.endDate) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const tripStartDate = tripContext.trip?.start_date ? new Date(tripContext.trip.start_date) : new Date();
+    const tripEndDate = tripContext.trip?.end_date ? new Date(tripContext.trip.end_date) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
     
     const prompt = `
     You are an expert itinerary parser and ACTIVITY CREATOR for a travel planning app. The user wants you to CREATE ACTUAL ACTIVITIES from their pasted itinerary.
@@ -828,11 +828,11 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
         const activity = result.activities[i];
         
         // Skip if no location
-        if (!activity.locationName) continue;
+        if (!activity.location_name) continue;
         
         try {
           // Try to find the location
-          const locationResult = await findLocation(activity.locationName, city);
+          const locationResult = await findLocation(activity.location_name, city);
           // Location search completed for activity
           
           // If we have location results, use the first one
@@ -840,14 +840,14 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
             const firstLocation = locationResult.locations[0];
             
             // Add location details to the activity
-            result.activities[i].locationName = firstLocation.name;
+            result.activities[i].location_name = firstLocation.name;
             
             // We need to geocode this location to get coordinates
             // This would use our existing geocoding function, but for now we'll skip it
             // as it would require importing additional modules
           }
         } catch (locError) {
-          console.error(`Error finding location for "${activity.locationName}":`, locError);
+          console.error(`Error finding location for "${activity.location_name}":`, locError);
         }
       }
     }

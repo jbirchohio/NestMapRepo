@@ -6,7 +6,18 @@ import { z } from "zod";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS, ACTIVITY_TAGS } from "@/lib/constants";
-import { ClientActivity } from "@/lib/types";
+import { ClientActivity, ClientTrip } from "@/lib/types";
+
+interface LocationResult {
+  name: string;
+  address?: string;
+  city: string;
+  region?: string;
+  country?: string;
+  description?: string;
+  latitude?: string;
+  longitude?: string;
+}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,16 +80,7 @@ export default function ActivityModal({
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 1000); // 1 second delay
   const searchInProgress = useRef(false);
-  const [locationResults, setLocationResults] = useState<Array<{
-    name: string;
-    address?: string;
-    city: string;
-    region?: string;
-    country?: string;
-    description?: string;
-    latitude?: string;
-    longitude?: string;
-  }>>([]);
+  const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
   
   // Selected tag state
   const [selectedTag, setSelectedTag] = useState<string | undefined>(
@@ -147,7 +149,7 @@ export default function ActivityModal({
       
       // Check if this is guest mode by looking for trip in localStorage
       const guestTripsData = localStorage.getItem("nestmap_guest_trips");
-      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
+      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
       
 
       
@@ -200,7 +202,7 @@ export default function ActivityModal({
       
       // Check if this is guest mode by looking for trip in localStorage
       const guestTripsData = localStorage.getItem("nestmap_guest_trips");
-      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
+      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
       
       if (isGuestTrip) {
 
@@ -219,8 +221,8 @@ export default function ActivityModal({
         };
         
         // Get existing guest activities and update the specific one
-        const existingActivities = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
-        const updatedActivities = existingActivities.map((act: any) => 
+        const existingActivities: ClientActivity[] = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
+        const updatedActivities = existingActivities.map((act: ClientActivity) => 
           act.id === activity.id ? updatedActivity : act
         );
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(updatedActivities));
@@ -434,7 +436,7 @@ export default function ActivityModal({
                           
                           // Process each location to get coordinates
                           const processedLocations = await Promise.all(
-                            aiData.locations.map(async (loc: any) => {
+                            aiData.locations.map(async (loc: LocationResult) => {
                               try {
                                 // Format address for geocoding
                                 const fullAddress = (loc.address || loc.name) + ", " + 

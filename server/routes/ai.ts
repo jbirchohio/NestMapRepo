@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { unifiedAuthMiddleware } from "../middleware/unifiedAuth";
+import { jwtAuthMiddleware } from "../middleware/jwtAuth";
 import { z } from "zod";
 import OpenAI from "openai";
 import { db } from "../db";
@@ -12,7 +12,7 @@ const openai = new OpenAI({
 });
 
 const router = Router();
-router.use(unifiedAuthMiddleware);
+router.use(jwtAuthMiddleware);
 
 // Validation schemas
 const summarizeDaySchema = z.object({
@@ -50,7 +50,7 @@ router.post("/summarize-day", async (req, res) => {
       .from(trips)
       .where(and(
         eq(trips.id, trip_id),
-        eq(trips.organization_id, req.user.organizationId!)
+        eq(trips.organization_id, req.user.organization_id!)
       ));
 
     if (!trip) {
@@ -194,7 +194,7 @@ router.post("/optimize-itinerary", async (req, res) => {
       .from(trips)
       .where(and(
         eq(trips.id, trip_id),
-        eq(trips.organization_id, req.user.organizationId!)
+        eq(trips.organization_id, req.user.organization_id!)
       ));
 
     if (!trip) {

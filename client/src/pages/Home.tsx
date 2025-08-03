@@ -384,10 +384,13 @@ export default function Home() {
 
         {!user && (
           <div className="mt-16 bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-8">
-            <TripTemplates onSelectTemplate={() => {
-              setAuthView("signup");
-              setIsAuthModalOpen(true);
-            }} />
+            <TripTemplates 
+              userId={0} // For non-logged in users
+              onTripCreated={() => {
+                setAuthView("signup");
+                setIsAuthModalOpen(true);
+              }} 
+            />
           </div>
         )}
       </div>
@@ -397,10 +400,6 @@ export default function Home() {
           isOpen={isRenameModalOpen}
           onClose={handleCloseRenameDialog}
           trip={tripToRename}
-          onRename={(tripId, newName) => {
-            // Handle rename logic here
-            handleCloseRenameDialog();
-          }}
         />
       )}
     </div>

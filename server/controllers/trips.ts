@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { storage } from "../storage";
 import { insertTripSchema } from "@shared/schema";
 import { z } from "zod";
+import { logger } from '../utils/logger';
 import { 
   validateAndSanitizeBody, 
   validateContentLength,
@@ -29,7 +30,6 @@ export async function getTrips(req: Request, res: Response) {
     // Log organization access for audit
     logOrganizationAccess(req, 'fetch', 'trips');
     
-    console.log("Attempting to fetch trips for user ID:", numericUserId);
     const trips = await storage.getTripsByUserId(numericUserId);
     
     // Filter trips by organization context for multi-tenant security
@@ -37,11 +37,9 @@ export async function getTrips(req: Request, res: Response) {
       if (!req.organizationContext) return true; // Skip filtering for non-authenticated requests
       return req.organizationContext.canAccessOrganization(trip.organization_id);
     });
-    
-    console.log("Trips fetched successfully:", filteredTrips.length);
     res.json(filteredTrips);
   } catch (error) {
-    console.error("Error fetching trips:", error);
+    logger.error("Error fetching trips", { error: error instanceof Error ? error.message : 'Unknown error' });
     res.status(500).json({ message: "Could not fetch trips", error: error instanceof Error ? error.message : "Unknown error" });
   }
 }
@@ -75,45 +73,19 @@ export async function getTripById(req: Request, res: Response) {
     
     res.json(trip);
   } catch (error) {
-    console.error("Error fetching trip:", error);
+    logger.error("Error fetching trip", { error: error instanceof Error ? error.message : 'Unknown error' });
     res.status(500).json({ message: "Could not fetch trip", error: error instanceof Error ? error.message : "Unknown error" });
   }
 }
 
 export async function createTrip(req: Request, res: Response) {
   try {
-    // Log the incoming data to help with debugging
-    console.log("Creating trip with validated data:", req.body);
+    // Validate and process trip data
     
-    // Handle demo users - return mock success response
+    // Validate user_id is numeric
     if (req.body.user_id && typeof req.body.user_id === 'string' && 
         (req.body.user_id.startsWith('demo-corp-') || req.body.user_id.startsWith('demo-agency-'))) {
-      
-      const mockTrip = {
-        id: `demo-trip-${Date.now()}`,
-        title: req.body.title || 'Demo Trip',
-        description: req.body.description || 'Demo trip created successfully',
-        startDate: req.body.startDate,
-        endDate: req.body.endDate,
-        city: req.body.city,
-        country: req.body.country,
-        userId: req.body.user_id,
-        status: 'confirmed',
-        created_at: new Date().toISOString(),
-        hasHotelButton: !!req.body.selectedHotel // Track if hotel was selected
-      };
-      
-      // Store the trip data in demo storage for later retrieval
-      if (!(global as any).demoTrips) {
-        (global as any).demoTrips = {};
-      }
-      (global as any).demoTrips[mockTrip.id] = {
-        ...mockTrip,
-        selectedHotel: req.body.selectedHotel,
-        selectedFlights: req.body.selectedFlights
-      };
-      
-      return res.status(201).json(mockTrip);
+      return res.status(400).json({ message: "Demo users are not supported. Please use a real user account." });
     }
     
     // Handle both camelCase and snake_case field names from frontend
@@ -129,7 +101,7 @@ export async function createTrip(req: Request, res: Response) {
       city_longitude: req.body.city_longitude || req.body.cityLongitude,
       hotel_latitude: req.body.hotel_latitude || req.body.hotelLatitude,
       hotel_longitude: req.body.hotel_longitude || req.body.hotelLongitude,
-      trip_type: req.body.trip_type || req.body.tripType,
+      trip_type: req.body.trip_type,
       client_name: req.body.client_name || req.body.clientName,
       project_type: req.body.project_type || req.body.projectType,
       completed_at: req.body.completed_at || req.body.completedAt,
@@ -145,7 +117,7 @@ export async function createTrip(req: Request, res: Response) {
     // Enforce organization context for multi-tenant security
     const tripDataWithOrg = setOrganizationId(req, tripData);
     
-    console.log("Processed trip data:", tripDataWithOrg);
+    // Process trip data with organization context
     
     // Log organization access for audit
     logOrganizationAccess(req, 'create', 'trip');
@@ -188,7 +160,7 @@ export async function createTrip(req: Request, res: Response) {
           });
         }
       } catch (activityError) {
-        console.error("Error creating hotel activities:", activityError);
+        logger.error("Error creating hotel activities", { tripId: trip.id, error: activityError instanceof Error ? activityError.message : 'Unknown error' });
         // Don't fail the trip creation if activity creation fails
       }
     }
@@ -198,7 +170,7 @@ export async function createTrip(req: Request, res: Response) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
     }
-    console.error("Error creating trip:", error);
+    logger.error("Error creating trip", { error: error instanceof Error ? error.message : 'Unknown error' });
     res.status(500).json({ message: "Could not create trip", error: error instanceof Error ? error.message : "Unknown error" });
   }
 }
@@ -269,7 +241,7 @@ export async function updateTrip(req: Request, res: Response) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
     }
-    console.error("Error updating trip:", error);
+    logger.error("Error updating trip", { error: error instanceof Error ? error.message : 'Unknown error' });
     res.status(500).json({ message: "Could not update trip", error: error instanceof Error ? error.message : "Unknown error" });
   }
 }
@@ -308,7 +280,7 @@ export async function deleteTrip(req: Request, res: Response) {
     
     res.json({ message: "Trip deleted successfully" });
   } catch (error) {
-    console.error("Error deleting trip:", error);
+    logger.error("Error deleting trip", { error: error instanceof Error ? error.message : 'Unknown error' });
     res.status(500).json({ message: "Could not delete trip", error: error instanceof Error ? error.message : "Unknown error" });
   }
 }

@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { jwtAuthMiddleware } from '../middleware/jwtAuth';
 import { getSubscriptionStatus, checkTripLimit, checkUserLimit } from '../middleware/subscription-limits';
 
 const router = Router();
 
 // Apply authentication to all subscription status routes
-router.use(unifiedAuthMiddleware);
+router.use(jwtAuthMiddleware);
 
 // Get comprehensive subscription status for organization
 router.get("/", async (req: Request, res: Response) => {

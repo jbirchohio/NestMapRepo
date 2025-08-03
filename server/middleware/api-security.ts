@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import { JWTUser } from '../types/auth';
 
 /**
  * API versioning and deprecation middleware
@@ -53,7 +54,7 @@ export function encryptSensitiveData(req: Request, res: Response, next: NextFunc
 function encryptSensitiveFields(obj: any, fields: string[]): any {
   if (!obj || typeof obj !== 'object') return obj;
 
-  const result = Array.isArray(obj) ? [] : {};
+  const result: any = Array.isArray(obj) ? [] : {};
   
   for (const key in obj) {
     if (fields.includes(key.toLowerCase()) && typeof obj[key] === 'string') {
@@ -122,7 +123,7 @@ class ApiKeyManager {
 
     return {
       valid: true,
-      organizationId: keyData.organization_id,
+      organizationId: keyData.organizationId,
       permissions: keyData.permissions,
       rateLimit: keyData.rateLimit
     };
@@ -149,7 +150,7 @@ export function authenticateApiKey(req: Request, res: Response, next: NextFuncti
   }
 
   req.apiKeyAuth = {
-    organizationId: validation.organization_id!,
+    organizationId: validation.organizationId!,
     permissions: validation.permissions!,
     rateLimit: validation.rateLimit!
   };
@@ -264,7 +265,7 @@ const advancedRateLimit = new AdvancedRateLimit();
 
 export function tieredRateLimit(req: Request, res: Response, next: NextFunction) {
   const key = req.ip || 'unknown';
-  const tier = req.user?.subscription_tier || 'free';
+  const tier = (req.user as any)?.subscription_tier || 'free';
   
   const result = advancedRateLimit.checkLimit(key, tier as any);
   

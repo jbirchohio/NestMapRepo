@@ -50,7 +50,7 @@ export interface ErrorContext {
   userId?: number;
   organizationId?: number;
   action?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class ErrorHandler {
@@ -151,7 +151,7 @@ export class ErrorHandler {
   }
 }
 
-export const withErrorHandling = <T extends any[], R>(
+export const withErrorHandling = <T extends unknown[], R>(
   fn: (...args: T) => R,
   context: ErrorContext = {}
 ) => {
@@ -160,7 +160,7 @@ export const withErrorHandling = <T extends any[], R>(
   };
 };
 
-export const withAsyncErrorHandling = <T extends any[], R>(
+export const withAsyncErrorHandling = <T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   context: ErrorContext = {}
 ) => {

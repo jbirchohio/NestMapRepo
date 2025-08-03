@@ -2,19 +2,7 @@ import type { Express, Request, Response } from "express";
 import { db } from "../db";
 import { organizations, users, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
-
-// Use the existing authentication interface
-interface AuthenticatedRequest extends Request {
-  isAuthenticated?(): boolean;
-  user?: {
-    id: number;
-    email: string;
-    username: string;
-    role: string;
-    organization_id?: number;
-    organizationId?: number;
-  };
-}
+import type { AuthenticatedRequest } from "../types/auth";
 
 export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   

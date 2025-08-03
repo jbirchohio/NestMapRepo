@@ -44,7 +44,7 @@ router.get('/pending', async (req, res) => {
         priority: approvalRequests.priority,
         dueDate: approvalRequests.dueDate,
         escalationLevel: approvalRequests.escalationLevel,
-        createdAt: approvalRequests.createdAt,
+        created_at: approvalRequests.createdAt,
         requester: {
           id: users.id,
           displayName: users.display_name,
@@ -54,7 +54,7 @@ router.get('/pending', async (req, res) => {
       .from(approvalRequests)
       .leftJoin(users, eq(approvalRequests.requesterId, users.id))
       .where(and(
-        eq(approvalRequests.organization_id, organizationId),
+        eq(approvalRequests.organizationId, organizationId),
         eq(approvalRequests.status, 'pending'),
         or(
           eq(approvalRequests.approverId, userId),
@@ -98,7 +98,7 @@ router.patch('/:requestId/decision', async (req, res) => {
       .from(approvalRequests)
       .where(and(
         eq(approvalRequests.id, requestId),
-        eq(approvalRequests.organization_id, organizationId)
+        eq(approvalRequests.organizationId, organizationId)
       ));
     
     if (!request) {
@@ -113,16 +113,16 @@ router.patch('/:requestId/decision', async (req, res) => {
     const updateData = decision === 'approve' 
       ? {
           status: 'approved' as const,
-          approverId: userId,
-          approvedAt: new Date(),
-          updatedAt: new Date()
+          approver_id: userId,
+          approved_at: new Date(),
+          updated_at: new Date()
         }
       : {
           status: 'rejected' as const,
-          approverId: userId,
-          rejectedAt: new Date(),
-          rejectionReason: reason,
-          updatedAt: new Date()
+          approver_id: userId,
+          rejected_at: new Date(),
+          rejection_reason: reason,
+          updated_at: new Date()
         };
     
     const [updatedRequest] = await db
@@ -177,7 +177,7 @@ router.post('/', async (req, res) => {
       .insert(approvalRequests)
       .values({
         ...validatedData,
-        organizationId,
+        organizationId: organizationId,
         requesterId: userId,
         approverId: approver?.id,
         dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
@@ -217,7 +217,7 @@ router.get('/rules', async (req, res) => {
     const rules = await db
       .select()
       .from(approvalRules)
-      .where(eq(approvalRules.organization_id, organizationId))
+      .where(eq(approvalRules.organizationId, organizationId))
       .orderBy(approvalRules.priority);
     
     res.json(rules);
@@ -276,7 +276,7 @@ async function checkApprovalRequired(
     .select()
     .from(approvalRules)
     .where(and(
-      eq(approvalRules.organization_id, organizationId),
+      eq(approvalRules.organizationId, organizationId),
       eq(approvalRules.entityType, entityType),
       eq(approvalRules.active, true)
     ))

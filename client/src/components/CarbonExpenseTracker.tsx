@@ -26,9 +26,13 @@ import {
 } from 'lucide-react';
 import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from 'recharts';
 
+import { ClientActivity } from '@/lib/types';
+
+const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
+
 interface CarbonExpenseTrackerProps {
   tripId: number;
-  activities: any[];
+  activities: ClientActivity[];
   budget?: number;
 }
 
@@ -42,26 +46,29 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
   });
 
   // Fetch carbon footprint data
-  const { data: carbonData, isLoading: carbonLoading } = useQuery({
+  const { data: carbonData = { totalEmissions: 0, comparison: { average: 0 } }, isLoading: carbonLoading } = useQuery({
     queryKey: ['/api/carbon/footprint', tripId],
+    queryFn: () => apiRequest('GET', `/api/carbon/footprint/${tripId}`).then(res => res.json()),
     enabled: !!tripId
   });
 
   // Fetch expense data
-  const { data: expenseData, isLoading: expenseLoading } = useQuery({
+  const { data: expenseData = { totalCost: 0, currency: 'USD' }, isLoading: expenseLoading } = useQuery({
     queryKey: ['/api/expenses/report', tripId],
+    queryFn: () => apiRequest('GET', `/api/expenses/report/${tripId}`).then(res => res.json()),
     enabled: !!tripId
   });
 
   // Fetch offset options
-  const { data: offsetOptions, isLoading: offsetLoading } = useQuery({
+  const { data: offsetOptions = [], isLoading: offsetLoading } = useQuery({
     queryKey: ['/api/carbon/offsets', tripId],
+    queryFn: () => apiRequest('GET', `/api/carbon/offsets/${tripId}`).then(res => res.json()),
     enabled: !!tripId && !!carbonData
   });
 
   // Add expense mutation
   const addExpenseMutation = useMutation({
-    mutationFn: (expense: any) => apiRequest('POST', '/api/expenses/add', { tripId, ...expense }),
+    mutationFn: (expense: { amount: string; category: string; description: string; vendor: string }) => apiRequest('POST', '/api/expenses/add', { tripId, ...expense }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/expenses/report', tripId] });
       setNewExpense({ amount: '', category: '', description: '', vendor: '' });
@@ -70,13 +77,11 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
 
   // Purchase offset mutation
   const purchaseOffsetMutation = useMutation({
-    mutationFn: (offsetData: any) => apiRequest('POST', '/api/carbon/purchase-offset', { tripId, ...offsetData }),
+    mutationFn: (offsetData: { provider: string; amount: number }) => apiRequest('POST', '/api/carbon/purchase-offset', { tripId, ...offsetData }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/carbon/footprint', tripId] });
     }
   });
-
-  const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
 
   if (carbonLoading || expenseLoading) {
     return (
@@ -185,7 +190,7 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
                 budget={budget}
                 newExpense={newExpense}
                 setNewExpense={setNewExpense}
-                onAddExpense={(expense) => addExpenseMutation.mutate(expense)}
+                onAddExpense={(expense: { amount: string; category: string; description: string; vendor: string }) => addExpenseMutation.mutate(expense)}
                 isAdding={addExpenseMutation.isPending}
               />
             </TabsContent>
@@ -194,7 +199,7 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
               <CarbonOffsetsTab 
                 offsetOptions={offsetOptions}
                 carbonFootprint={carbonData?.totalEmissions || 0}
-                onPurchaseOffset={(offsetData) => purchaseOffsetMutation.mutate(offsetData)}
+                onPurchaseOffset={(offsetData: { provider: string; amount: number }) => purchaseOffsetMutation.mutate(offsetData)}
                 isPurchasing={purchaseOffsetMutation.isPending}
               />
             </TabsContent>

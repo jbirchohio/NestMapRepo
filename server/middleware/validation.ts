@@ -132,7 +132,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   
   // Override res.end to log response
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any, cb?: any) {
     const duration = Date.now() - start;
     console.log({
       method: req.method,
@@ -142,8 +142,8 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
       timestamp: new Date().toISOString()
     });
     
-    originalEnd.call(res, chunk, encoding);
-  };
+    return originalEnd.call(res, chunk, encoding, cb);
+  } as any;
   
   next();
 }

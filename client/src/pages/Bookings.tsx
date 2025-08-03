@@ -2,6 +2,7 @@ import BookingWorkflow from "@/components/BookingWorkflow";
 import { TripTeamManagement } from "@/components/TripTeamManagement";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,8 +28,9 @@ export default function Bookings() {
   });
 
   // Get trips for team management context - always call this hook
-  const { data: trips = [] } = useQuery({
+  const { data: trips = [] } = useQuery<any[]>({
     queryKey: ['/api/trips/corporate'],
+    queryFn: () => apiRequest('GET', '/api/trips/corporate'),
     enabled: !!user,
   });
 

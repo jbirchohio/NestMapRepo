@@ -8,7 +8,7 @@ interface User {
   email: string;
   username: string;
   role: string;
-  organization_id: number;
+  organizationId: number;
 }
 
 interface AuthResponse {
@@ -39,7 +39,7 @@ class JWTAuth {
         email: payload.email,
         username: payload.username,
         role: payload.role,
-        organization_id: payload.organization_id
+        organizationId: payload.organization_id
       };
     } catch (error) {
       console.warn('Failed to decode token:', error);

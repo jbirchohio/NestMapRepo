@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { insertTripSchema } from '@shared/schema';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { jwtAuthMiddleware } from '../middleware/jwtAuth';
 import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { fieldTransformMiddleware } from '../middleware/fieldTransform';
 import { enforceTripLimit } from '../middleware/subscription-limits';
@@ -15,7 +15,7 @@ import { eq, desc } from 'drizzle-orm';
 const router = Router();
 
 // Apply authentication and organization context to all trip routes
-router.use(unifiedAuthMiddleware);
+router.use(jwtAuthMiddleware);
 router.use(injectOrganizationContext);
 router.use(fieldTransformMiddleware);
 
@@ -379,7 +379,7 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
 // Generate AI-powered trip proposal
 router.post("/:tripId/proposal", async (req: Request, res: Response) => {
   try {
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -407,7 +407,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
       trip,
       activities,
       clientName,
-      agentName: req.user?.displayName || "Travel Agent",
+      agentName: (req.user as any)?.displayName || req.user?.username || "Travel Agent",
       companyName: "NestMap Travel Services",
       estimatedCost: trip.budget || 0,
       costBreakdown: {

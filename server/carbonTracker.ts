@@ -112,7 +112,7 @@ export async function calculateCarbonFootprint(
       totalEmissions: result.totalEmissions || calculateFallbackEmissions(activities, flights, accommodation),
       breakdown: result.breakdown || generateEmissionsBreakdown(activities, flights, accommodation),
       comparison: result.comparison || generateEmissionsComparison(result.totalEmissions || 0),
-      recommendations: result.recommendations || generateCarbonRecommendations()
+      recommendations: result.recommendations || generateGenericCarbonRecommendations()
     };
 
   } catch (error) {
@@ -255,7 +255,7 @@ export function analyzeExpenseCompliance(expenses: any[]): any {
 }
 
 // Enhanced Carbon Footprint Tracking System
-export interface CarbonFootprint {
+export interface EnhancedCarbonFootprint {
   totalCO2kg: number;
   breakdown: {
     flights: number;
@@ -293,8 +293,8 @@ export async function calculateTripCarbonFootprint(
   activities: any[],
   bookings: any[],
   organizationId: number
-): Promise<CarbonFootprint> {
-  const carbon: CarbonFootprint = {
+): Promise<EnhancedCarbonFootprint> {
+  const carbon: EnhancedCarbonFootprint = {
     totalCO2kg: 0,
     breakdown: { flights: 0, ground: 0, accommodation: 0, activities: 0 },
     metrics: { co2PerKm: 0, co2PerDay: 0, offsetCost: 0 },
@@ -349,7 +349,7 @@ export async function calculateTripCarbonFootprint(
 
   // Calculate metrics
   const tripDays = Math.ceil(
-    (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)
+    (new Date(trip.end_date).getTime() - new Date(trip.start_date).getTime()) / (1000 * 60 * 60 * 24)
   );
   carbon.metrics.co2PerDay = carbon.totalCO2kg / Math.max(tripDays, 1);
   carbon.metrics.offsetCost = carbon.totalCO2kg * 25; // $25 per ton average
@@ -467,7 +467,7 @@ function estimateFlightDistance(origin: string, destination: string): number {
   return distances[origin]?.[destination] || 5000; // Default long-haul distance
 }
 
-function generateCarbonRecommendations(carbon: CarbonFootprint, trip: any): string[] {
+function generateCarbonRecommendations(carbon: EnhancedCarbonFootprint, trip: any): string[] {
   const recommendations: string[] = [];
   
   if (carbon.breakdown.flights > carbon.totalCO2kg * 0.7) {
@@ -495,10 +495,10 @@ function generateCarbonRecommendations(carbon: CarbonFootprint, trip: any): stri
 }
 
 async function calculateCarbonTrends(
-  currentCarbon: CarbonFootprint,
+  currentCarbon: EnhancedCarbonFootprint,
   organizationId: number,
   userId: number
-): Promise<CarbonFootprint['trends']> {
+): Promise<EnhancedCarbonFootprint['trends']> {
   // In production, query historical trip data from database
   // For now, provide sample calculations
   
@@ -625,7 +625,7 @@ function generateEmissionsComparison(totalEmissions: number): any {
   };
 }
 
-function generateCarbonRecommendations(): CarbonReduction[] {
+function generateGenericCarbonRecommendations(): CarbonReduction[] {
   return [
     {
       category: 'Transportation',
@@ -658,7 +658,7 @@ function generateFallbackCarbonReport(activities: any[], flights: any[], accommo
     totalEmissions,
     breakdown: generateEmissionsBreakdown(activities, flights, accommodation),
     comparison: generateEmissionsComparison(totalEmissions),
-    recommendations: generateCarbonRecommendations()
+    recommendations: generateGenericCarbonRecommendations()
   };
 }
 
@@ -701,16 +701,16 @@ function generateDailyAverages(expenses: any[]): any[] {
 
 function generateExpenseCategories(expenses: any[], budget?: number): ExpenseCategory[] {
   const breakdown = generateExpenseBreakdown(expenses);
-  const totalBudget = budget || Object.values(breakdown).reduce((sum, val) => sum + val, 0) * 1.2;
+  const totalBudget = budget || Object.values(breakdown).reduce((sum: number, val) => sum + (val as number), 0) * 1.2;
   
   return Object.entries(breakdown).map(([name, actual]) => {
     const budgeted = totalBudget / Object.keys(breakdown).length;
-    const variance = actual - budgeted;
+    const variance = (actual as number) - budgeted;
     
     return {
       name,
       budgeted: Math.round(budgeted),
-      actual: Math.round(actual),
+      actual: Math.round(actual as number),
       variance: Math.round(variance),
       status: variance < -budgeted * 0.1 ? 'under' : variance > budgeted * 0.1 ? 'over' : 'on-track'
     };

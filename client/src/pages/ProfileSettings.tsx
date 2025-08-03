@@ -33,6 +33,26 @@ const passwordSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
+interface PrivacySettings {
+  profileVisibility: string;
+  showEmail: boolean;
+  showLocation: boolean;
+  allowSearchEngineIndexing: boolean;
+  shareDataWithPartners: boolean;
+  allowAnalytics: boolean;
+}
+
+interface NotificationSettings {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  smsNotifications: boolean;
+  tripReminders: boolean;
+  bookingUpdates: boolean;
+  promotionalEmails: boolean;
+  weeklyDigest: boolean;
+  instantUpdates: boolean;
+}
+
 export default function ProfileSettings() {
   const { user, userId } = useAuth();
   const { toast } = useToast();
@@ -63,8 +83,8 @@ export default function ProfileSettings() {
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: user?.user_metadata?.display_name || user?.email || '',
-      username: user?.user_metadata?.username || '',
+      displayName: user?.username || user?.email || '',
+      username: user?.username || '',
       email: user?.email || '',
     },
   });
@@ -174,13 +194,13 @@ export default function ProfileSettings() {
     changePasswordMutation.mutate(data);
   };
 
-  const updatePrivacySettings = (key: string, value: any) => {
+  const updatePrivacySettings = (key: keyof PrivacySettings, value: boolean | string) => {
     const newSettings = { ...privacySettings, [key]: value };
     setPrivacySettings(newSettings);
     updatePrivacyMutation.mutate(newSettings);
   };
 
-  const updateNotificationSettings = (key: string, value: any) => {
+  const updateNotificationSettings = (key: keyof NotificationSettings, value: boolean) => {
     const newSettings = { ...notificationSettings, [key]: value };
     setNotificationSettings(newSettings);
     updateNotificationsMutation.mutate(newSettings);

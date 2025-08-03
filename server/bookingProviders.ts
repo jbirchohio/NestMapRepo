@@ -111,7 +111,6 @@ function convertCityToAirportCode(cityOrCode: string): string {
     'redmond': 'RDM',
     'bend': 'RDM',
     'reno': 'RNO',
-    'las vegas': 'LAS',
     'henderson': 'LAS',
     'anchorage': 'ANC',
     'fairbanks': 'FAI',

@@ -253,12 +253,15 @@ router.post('/hotels', async (req, res) => {
     // Attempt real hotel booking
     let bookingResult;
     try {
-      const { bookHotel } = await import('../bookingProviders');
-      bookingResult = await bookHotel({
-        hotelId: hotelOffer.hotel.hotelId,
-        offer: hotelOffer,
-        guests: guestDetails.guests,
-        paymentMethod
+      const { createBooking } = await import('../bookingProviders');
+      bookingResult = await createBooking({
+        type: 'hotel',
+        providerId: 'amadeus',
+        itemId: hotelOffer.hotel.hotelId,
+        userDetails: {
+          guests: guestDetails.guests,
+          paymentMethod
+        }
       });
     } catch (bookingError) {
       console.error('Hotel booking failed:', bookingError);
@@ -334,7 +337,7 @@ router.patch('/:bookingId/cancel', async (req, res) => {
       .from(bookings)
       .where(and(
         eq(bookings.id, bookingId),
-        eq(bookings.organization_id, organizationId)
+        eq(bookings.organizationId, organizationId)
       ));
 
     if (!booking) {
@@ -398,7 +401,7 @@ router.get('/:bookingId', async (req, res) => {
       .leftJoin(bookingPayments, eq(bookings.id, bookingPayments.bookingId))
       .where(and(
         eq(bookings.id, bookingId),
-        eq(bookings.organization_id, organizationId)
+        eq(bookings.organizationId, organizationId)
       ));
 
     if (!booking) {

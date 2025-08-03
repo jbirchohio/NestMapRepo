@@ -9,13 +9,13 @@ import { users, organizationMembers } from '@shared/schema';
 import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { jwtAuthMiddleware } from '../middleware/jwtAuth';
 import { z } from 'zod';
 
 const router = Router();
 
 // Apply unified auth middleware
-router.use(unifiedAuthMiddleware);
+router.use(jwtAuthMiddleware);
 
 /**
  * Get organization members with their roles
@@ -86,7 +86,7 @@ router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req
     const { email, orgRole, customPermissions } = validatedData;
 
     // Check if the current user can assign this role
-    if (!canAssignRole(req.userOrgRole!, orgRole as OrganizationRole)) {
+    if (!canAssignRole(req.userOrgRole as OrganizationRole, orgRole)) {
       return res.status(403).json({ 
         error: 'Insufficient permissions to assign this role',
         message: `Cannot assign role '${orgRole}' with your current role '${req.userOrgRole}'`
@@ -198,7 +198,7 @@ router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (r
 
     // Check role assignment permissions
     if (validatedData.orgRole) {
-      if (!canAssignRole(req.userOrgRole!, validatedData.orgRole as OrganizationRole)) {
+      if (!canAssignRole(req.userOrgRole as OrganizationRole, validatedData.orgRole)) {
         return res.status(403).json({ 
           error: 'Insufficient permissions to assign this role',
           message: `Cannot assign role '${validatedData.orgRole}' with your current role '${req.userOrgRole}'`
@@ -321,7 +321,7 @@ router.get('/roles', async (req: Request, res: Response) => {
 
   // Filter roles based on current user's ability to assign them
   const assignableRoles = roles.filter(role => 
-    !req.userOrgRole || canAssignRole(req.userOrgRole, role.value as OrganizationRole)
+    !req.userOrgRole || canAssignRole(req.userOrgRole as OrganizationRole, role.value as OrganizationRole)
   );
 
   res.json({

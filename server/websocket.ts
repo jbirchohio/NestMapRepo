@@ -3,15 +3,20 @@ import { Server } from 'http';
 import { parse } from 'url';
 import jwt from 'jsonwebtoken';
 
+declare module 'jsonwebtoken' {
+  export function verify(token: string, secret: string): any;
+  export function sign(payload: any, secret: string, options?: any): string;
+}
+
 interface AuthenticatedWebSocket extends WebSocket {
-  userId?: number;
-  organizationId?: number;
-  tripId?: number;
+  user_id?: number;
+  organization_id?: number;
+  trip_id?: number;
 }
 
 interface WebSocketMessage {
   type: 'join_trip' | 'leave_trip' | 'trip_update' | 'comment_added' | 'activity_changed' | 'user_presence';
-  tripId?: number;
+  trip_id?: number;
   data?: any;
 }
 
@@ -66,7 +71,7 @@ export class CollaborationWebSocketServer {
     }
   }
 
-  private handleMessage(ws: AuthenticatedWebSocket, data: Buffer) {
+  private handleMessage(ws: AuthenticatedWebSocket, data: any) {
     try {
       const message: WebSocketMessage = JSON.parse(data.toString());
       

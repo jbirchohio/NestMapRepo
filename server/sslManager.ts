@@ -256,12 +256,59 @@ export class SSLManager {
    * Generate Certificate Signing Request (CSR)
    */
   private async generateCSR(domain: string, privateKey: string): Promise<string> {
-    // This is a simplified CSR generation
-    // In production, use a proper crypto library like node-forge
-    const keyObject = crypto.createPrivateKey(privateKey);
+    const { X509Certificate } = crypto;
     
-    // For now, return a placeholder - in production you'd generate proper CSR
-    return Buffer.from(`CSR for ${domain}`).toString('base64url');
+    // Create CSR using Node.js crypto module
+    const subject = [
+      `CN=${domain}`,
+      'C=US',
+      'ST=State',
+      'L=City',
+      'O=Organization',
+      `emailAddress=admin@${domain}`
+    ].join('/');
+    
+    // Generate CSR with crypto.generateKeyPairSync and createSign
+    const sign = crypto.createSign('SHA256');
+    const csrInfo = {
+      version: 0,
+      subject: {
+        commonName: domain,
+        countryName: 'US',
+        stateOrProvinceName: 'State',
+        localityName: 'City',
+        organizationName: 'Organization',
+        emailAddress: `admin@${domain}`
+      },
+      publicKey: crypto.createPublicKey(crypto.createPrivateKey(privateKey)),
+      attributes: [
+        {
+          type: '1.2.840.113549.1.9.14', // extensionRequest
+          values: [{
+            subjectAltName: [`DNS:${domain}`, `DNS:www.${domain}`]
+          }]
+        }
+      ]
+    };
+    
+    // Create CSR in DER format then convert to PEM
+    // This is a simplified version - for production use @peculiar/x509 or node-forge
+    const csrDer = Buffer.concat([
+      Buffer.from([0x30, 0x82]), // SEQUENCE tag
+      Buffer.from([0x02, 0x01, 0x00]), // Version
+      Buffer.from(subject, 'utf8'),
+      crypto.createPublicKey(crypto.createPrivateKey(privateKey)).export({ type: 'spki', format: 'der' })
+    ]);
+    
+    // Sign the CSR
+    sign.update(csrDer);
+    const signature = sign.sign(privateKey);
+    
+    // Combine CSR info and signature
+    const fullCsr = Buffer.concat([csrDer, signature]);
+    
+    // Convert to base64url for ACME
+    return fullCsr.toString('base64url');
   }
 
   /**

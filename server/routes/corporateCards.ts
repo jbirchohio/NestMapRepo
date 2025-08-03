@@ -68,6 +68,7 @@ export function registerCorporateCardRoutes(app: Express) {
           cardholder_name,
           purpose,
           department,
+          created_by: req.user!.id,
           created_at: new Date(),
           updated_at: new Date()
         })
@@ -182,8 +183,8 @@ export function registerCorporateCardRoutes(app: Express) {
       const [updatedCard] = await db
         .update(corporateCards)
         .set({
-          available_balance: card.available_balance + amountInCents,
-          spending_limit: card.spending_limit + amountInCents,
+          available_balance: (card.available_balance || 0) + amountInCents,
+          spending_limit: (card.spending_limit || 0) + amountInCents,
           updated_at: new Date()
         })
         .where(eq(corporateCards.id, cardId))

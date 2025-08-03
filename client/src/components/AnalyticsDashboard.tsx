@@ -143,18 +143,18 @@ export default function AnalyticsDashboard() {
 
   if (!analytics) return null;
 
-  const tripDurationChartData = analytics.tripDurations.map(item => ({
+  const tripDurationChartData = analytics.tripDurations.map((item: AnalyticsData['tripDurations'][0]) => ({
     name: item.duration,
     value: item.count,
     percentage: item.percentage
   }));
 
-  const destinationChartData = analytics.destinations.slice(0, 6).map(item => ({
+  const destinationChartData = analytics.destinations.slice(0, 6).map((item: AnalyticsData['destinations'][0]) => ({
     name: `${item.city}, ${item.country}`,
     value: item.tripCount
   }));
 
-  const activityTagsChartData = analytics.activityTags.slice(0, 8).map(item => ({
+  const activityTagsChartData = analytics.activityTags.slice(0, 8).map((item: AnalyticsData['activityTags'][0]) => ({
     name: item.tag,
     value: item.count
   }));
@@ -267,7 +267,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analytics.destinations.slice(0, 8).map((destination, index) => (
+              {analytics.destinations.slice(0, 8).map((destination: AnalyticsData['destinations'][0], index: number) => (
                 <div key={`${destination.city}-${destination.country}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
@@ -307,17 +307,17 @@ export default function AnalyticsDashboard() {
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percentage }) => `${percentage}%`}
+                  label={({ name, percentage }: { name: string; percentage: number }) => `${percentage}%`}
                 >
-                  {tripDurationChartData.map((entry, index) => (
+                  {tripDurationChartData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [`${value} trips`, name]} />
+                <Tooltip formatter={(value: number, name: string) => [`${value} trips`, name]} />
               </PieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {tripDurationChartData.map((item, index) => (
+              {tripDurationChartData.map((item: typeof tripDurationChartData[0], index: number) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div 
                     className="w-3 h-3 rounded-full" 
@@ -345,7 +345,7 @@ export default function AnalyticsDashboard() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(value) => [`${value} activities`, 'Count']} />
+              <Tooltip formatter={(value: number) => [`${value} activities`, 'Count']} />
               <Bar dataKey="value" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
@@ -366,16 +366,16 @@ export default function AnalyticsDashboard() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                tickFormatter={(value: string) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               />
               <YAxis />
               <Tooltip 
-                labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { 
+                labelFormatter={(value: string) => new Date(value).toLocaleDateString('en-US', { 
                   weekday: 'short', 
                   month: 'short', 
                   day: 'numeric' 
                 })}
-                formatter={(value) => [`${value} trips`, 'Trips Created']}
+                formatter={(value: number) => [`${value} trips`, 'Trips Created']}
               />
               <Line 
                 type="monotone" 

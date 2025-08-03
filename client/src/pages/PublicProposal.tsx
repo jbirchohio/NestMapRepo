@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Lock, Download, Eye, Calendar, Clock, CheckCircle, FileSignature } from "lucide-react";
+import { Lock, Download, Eye, Calendar, Clock, CheckCircle, FileSignature, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PublicProposalViewProps {
@@ -22,6 +22,16 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
 
   const { data: proposal, isLoading, error } = useQuery({
     queryKey: ["/api/public-proposals", proposalId, password],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (password) params.append('password', password);
+      const response = await fetch(`/api/public-proposals/${proposalId}?${params}`);
+      if (!response.ok) {
+        const errorData = { status: response.status, message: response.statusText };
+        throw errorData;
+      }
+      return response.json();
+    },
     enabled: !isPasswordRequired || password.length > 0,
   });
 
@@ -82,7 +92,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
   }, [proposal]);
 
   // Handle password protection
-  if (error?.status === 401) {
+  if ((error as any)?.status === 401) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -115,7 +125,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
   }
 
   // Handle expired proposals
-  if (error?.status === 410) {
+  if ((error as any)?.status === 410) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -163,7 +173,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
     trackSectionView.mutate(section);
   };
 
-  const costBreakdown = proposal.proposalData?.costBreakdown || {
+  const costBreakdown = (proposal as any)?.proposalData?.costBreakdown || {
     flights: 2400,
     hotels: 1800,
     activities: 1200,
@@ -185,17 +195,17 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
                 Travel Proposal
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-300 mt-1">
-                For {proposal.clientName}
+                For {(proposal as any)?.clientName}
               </p>
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                <span>Prepared by {proposal.agentName}</span>
+                <span>Prepared by {(proposal as any)?.agentName}</span>
                 <span>•</span>
-                <span>{new Date(proposal.createdAt).toLocaleDateString()}</span>
-                {proposal.linkExpiration && (
+                <span>{new Date((proposal as any)?.createdAt).toLocaleDateString()}</span>
+                {(proposal as any)?.linkExpiration && (
                   <>
                     <span>•</span>
                     <span className="text-orange-600">
-                      Expires {new Date(proposal.linkExpiration).toLocaleDateString()}
+                      Expires {new Date((proposal as any)?.linkExpiration).toLocaleDateString()}
                     </span>
                   </>
                 )}
@@ -229,12 +239,12 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white">Destination</h4>
-                <p className="text-gray-600 dark:text-gray-300">{proposal.trip?.city}, {proposal.trip?.country}</p>
+                <p className="text-gray-600 dark:text-gray-300">{(proposal as any)?.trip?.city}, {(proposal as any)?.trip?.country}</p>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white">Duration</h4>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {new Date(proposal.trip?.startDate).toLocaleDateString()} - {new Date(proposal.trip?.endDate).toLocaleDateString()}
+                  {new Date((proposal as any)?.trip?.startDate).toLocaleDateString()} - {new Date((proposal as any)?.trip?.endDate).toLocaleDateString()}
                 </p>
               </div>
               <div>
@@ -281,7 +291,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {proposal.activities?.map((activity: any, index: number) => (
+              {(proposal as any)?.activities?.map((activity: any, index: number) => (
                 <div key={index} className="flex gap-4">
                   <div className="flex-shrink-0 w-16 text-center">
                     <div className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg px-2 py-1 text-sm font-medium">
@@ -330,7 +340,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
               <div>
                 <h4 className="font-medium">Validity</h4>
                 <p className="text-gray-600 dark:text-gray-300">
-                  This proposal is valid until {new Date(proposal.proposalData?.validUntil || Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.
+                  This proposal is valid until {new Date((proposal as any)?.proposalData?.validUntil || Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.
                   Prices subject to availability and may change.
                 </p>
               </div>
@@ -339,13 +349,13 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         </Card>
 
         {/* Signature Section */}
-        {proposal.signatureData?.signed ? (
+        {(proposal as any)?.signatureData?.signed ? (
           <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
             <CardContent className="pt-6">
               <div className="flex items-center justify-center gap-3 text-green-700 dark:text-green-300">
                 <CheckCircle className="w-6 h-6" />
                 <span className="font-medium">
-                  Signed by {proposal.signatureData.signerName} on {new Date(proposal.signatureData.signedAt).toLocaleDateString()}
+                  Signed by {(proposal as any)?.signatureData.signerName} on {new Date((proposal as any)?.signatureData.signedAt).toLocaleDateString()}
                 </span>
               </div>
             </CardContent>
@@ -380,9 +390,9 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
 
         {/* Footer */}
         <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-          <p>{proposal.companyName} • {proposal.contactInfo?.email} • {proposal.contactInfo?.phone}</p>
-          {proposal.contactInfo?.website && (
-            <p className="mt-1">{proposal.contactInfo.website}</p>
+          <p>{(proposal as any)?.companyName} • {(proposal as any)?.contactInfo?.email} • {(proposal as any)?.contactInfo?.phone}</p>
+          {(proposal as any)?.contactInfo?.website && (
+            <p className="mt-1">{(proposal as any)?.contactInfo.website}</p>
           )}
         </div>
       </div>

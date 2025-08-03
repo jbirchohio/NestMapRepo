@@ -46,39 +46,24 @@ export async function getUserPermissions(req: Request, res: Response) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const userRole = user[0].role || 'user';
-    const permissions = ROLE_PERMISSIONS[userRole] || [];
-
-    return res.json({ 
-      permissions, 
-      role: userRole,
-      userId: targetUserId,
-      organizationId: user[0].organization_id 
-    });
-
     // CRITICAL SECURITY: Enforce organization-based access control
     // Users can only view permissions for:
     // 1. Their own account
     // 2. Users in their organization (if they're admin/manager)
     // 3. Any user (if they're super_admin)
     
-    if (numericUserId !== req.user.id) {
+    if (targetUserId !== req.user!.id) {
       // Requesting another user's permissions
-      if (req.user.role === 'super_admin') {
+      if (req.user!.role === 'super_admin') {
         // Super admins can view any user's permissions
-      } else if (req.user.role === 'admin' || req.user.role === 'manager') {
+      } else if (req.user!.role === 'admin' || req.user!.role === 'manager') {
         // Admins/managers can only view users in their organization
-        const [targetUser] = await db
-          .select({ organization_id: users.organization_id })
-          .from(users)
-          .where(eq(users.id, numericUserId));
-          
-        if (!targetUser || targetUser.organization_id !== req.user.organization_id) {
+        if (!user[0] || user[0].organization_id !== req.user!.organization_id) {
           console.warn('PERMISSIONS_ACCESS_DENIED: Cross-organization access attempt', {
-            requesterId: req.user.id,
-            requesterOrgId: req.user.organization_id,
-            targetUserId: numericUserId,
-            targetUserOrgId: targetUser?.organization_id,
+            requesterId: req.user!.id,
+            requesterOrgId: req.user!.organization_id,
+            targetUserId: targetUserId,
+            targetUserOrgId: user[0]?.organization_id,
             endpoint: '/api/user/permissions',
             timestamp: new Date().toISOString()
           });
@@ -95,18 +80,16 @@ export async function getUserPermissions(req: Request, res: Response) {
         });
       }
     }
-    
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, numericUserId));
-      
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    
-    const permissions = ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
-    res.json({ permissions, role: user.role });
+
+    const userRole = user[0].role || 'user';
+    const permissions = ROLE_PERMISSIONS[userRole as keyof typeof ROLE_PERMISSIONS] || [];
+
+    return res.json({ 
+      permissions, 
+      role: userRole,
+      userId: targetUserId,
+      organizationId: user[0].organization_id 
+    });
   } catch (error) {
     console.error("Error fetching user permissions:", error);
     res.status(500).json({ error: "Failed to fetch permissions" });

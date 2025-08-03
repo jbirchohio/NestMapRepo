@@ -1,14 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    role: string | null;
-    organization_id: number | null;
-    email: string;
-    username: string;
-  };
-}
+import { AuthenticatedRequest } from "../types/auth";
 
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   if (!req.user) {
