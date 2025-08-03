@@ -34,8 +34,7 @@ export default function useMapbox() {
       
       // Set the access token
       mapboxgl.accessToken = MAPBOX_TOKEN;
-      console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
-      console.log('Map center coordinates:', center);
+      // Mapbox configuration and initialization
       
       // Add a delay to ensure DOM is ready
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -45,7 +44,7 @@ export default function useMapbox() {
       
       // Wrap in try-catch to handle Mapbox GL internal errors
       try {
-        console.log('Creating Mapbox map with:', { center, zoom, hasContainer: !!container });
+        // Creating Mapbox map with provided options
         
         map = new mapboxgl.Map({
           container,
@@ -56,7 +55,7 @@ export default function useMapbox() {
           trackResize: false // Disable automatic resize tracking to prevent errors
         });
         
-        console.log('Mapbox map created successfully');
+        // Mapbox map initialized successfully
         
       } catch (mapboxError) {
         console.error('Mapbox GL initialization failed:', mapboxError);

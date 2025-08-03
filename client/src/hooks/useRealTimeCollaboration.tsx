@@ -192,7 +192,7 @@ export function useRealTimeCollaboration({
         break;
 
       default:
-        console.log('Unknown message type:', data.type);
+        // Unknown message type received
     }
   };
 

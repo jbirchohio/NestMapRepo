@@ -64,8 +64,12 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ message: 'Invalid token format' });
     }
 
-    // Verify signature
-    const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback_dev_secret_change_in_production';
+    // Verify signature - require JWT_SECRET in production
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('JWT_SECRET environment variable is not set');
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(`${headerB64}.${payloadB64}`)

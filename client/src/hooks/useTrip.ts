@@ -14,17 +14,7 @@ export default function useTrip(tripId: string | number) {
     const guestTrips = JSON.parse(stored);
     const foundTrip = guestTrips.find((trip: ClientTrip) => trip.id === Number(tripId)) || null;
     
-    // Debug localStorage trip data
-    console.log('useTrip debug:', {
-      tripId,
-      storedData: stored,
-      guestTripsCount: guestTrips.length,
-      foundTrip,
-      foundTripCoords: foundTrip ? {
-        cityLatitude: foundTrip.cityLatitude,
-        cityLongitude: foundTrip.cityLongitude
-      } : null
-    });
+    // Trip data validation and retrieval
     
     return foundTrip;
   };
@@ -49,7 +39,7 @@ export default function useTrip(tripId: string | number) {
       if (tripId && Number(tripId) < 0) {
         const guestTrip = getGuestTrip();
         if (guestTrip) {
-          console.log('Using guest trip from localStorage as initialData:', guestTrip);
+          // Using guest trip from localStorage
           return guestTrip;
         }
       }

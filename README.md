@@ -60,19 +60,75 @@ Optional variables:
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/logout` - User logout
+- `POST /api/auth/login` - User login with email/password
+- `POST /api/auth/register` - Create new user account
+- `POST /api/auth/logout` - End user session
+- `GET /api/auth/validate` - Validate JWT token
 
-### Flights
-- `POST /api/flights/search` - Search flights (Duffel API)
-- `GET /api/flights/offers/:id` - Get flight offer details
-- `POST /api/flights/book` - Book flight
+### Trips Management
+- `GET /api/trips` - List user's trips
+- `POST /api/trips` - Create new trip
+- `GET /api/trips/:id` - Get trip details
+- `PUT /api/trips/:id` - Update trip
+- `DELETE /api/trips/:id` - Delete trip
+- `GET /api/trips/:id/export` - Export trip to PDF
+
+### Activities
+- `GET /api/activities/trip/:trip_id` - List trip activities
+- `POST /api/activities` - Create new activity
+- `PUT /api/activities/:id` - Update activity
+- `DELETE /api/activities/:id` - Delete activity
+- `PUT /api/activities/:id/order` - Reorder activities
+
+### TODOs & Notes
+- `GET /api/todos` - List user's todos
+- `POST /api/todos` - Create new todo
+- `PUT /api/todos/:id` - Update todo
+- `DELETE /api/todos/:id` - Delete todo
+- `GET /api/notes` - List user's notes
+- `POST /api/notes` - Create new note
+- `PUT /api/notes/:id` - Update note
+- `DELETE /api/notes/:id` - Delete note
 
 ### Organizations
 - `GET /api/organizations` - List organizations
 - `POST /api/organizations` - Create organization
 - `PUT /api/organizations/:id` - Update organization
+- `GET /api/organizations/:id/members` - List organization members
+- `POST /api/organizations/:id/invite` - Invite user to organization
+
+### Flights & Bookings
+- `POST /api/flights/search` - Search flights (Duffel API)
+- `GET /api/flights/offers/:id` - Get flight offer details
+- `POST /api/flights/book` - Book flight
+- `GET /api/bookings` - List user bookings
+- `GET /api/bookings/:id` - Get booking details
+
+### AI Features
+- `POST /api/ai/summarize-day` - Generate day summary
+- `POST /api/ai/suggest-food` - Get food recommendations
+- `POST /api/ai/optimize-itinerary` - Optimize trip itinerary
+- `POST /api/ai/suggest-activities` - Get activity suggestions
+- `POST /api/ai/translate-content` - Translate text content
+
+### Collaboration
+- `GET /api/collaboration/trip/:id/cursors` - Get real-time cursors
+- `POST /api/collaboration/trip/:id/update` - Send collaboration updates
+- `GET /api/collaboration/trip/:id/messages` - Get trip messages
+
+### Analytics & Reporting
+- `GET /api/analytics` - Get user analytics
+- `GET /api/reporting/trips` - Generate trip reports
+- `GET /api/reporting/expenses` - Generate expense reports
+- `POST /api/reporting/export` - Export reports
+
+### Admin Endpoints
+- `GET /api/admin/analytics` - Admin dashboard analytics
+- `GET /api/admin/organizations/performance` - Organization performance
+- `GET /api/admin/users/activity` - User activity monitoring
+- `GET /api/admin/settings` - Get admin settings
+- `PUT /api/admin/settings` - Update admin settings
+- `GET /api/admin/logs` - View system logs
 
 ## Security Features
 

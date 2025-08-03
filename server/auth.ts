@@ -28,7 +28,7 @@ export function verifyPassword(password: string, hashedPassword: string): boolea
 // Simple authentication service without external dependencies
 export async function authenticateUser(email: string, password: string) {
   try {
-    console.log('Authenticating user with email:', email);
+    // Log authentication attempts (production-safe)
     
     // Find user by email
     const [user] = await db
@@ -38,35 +38,23 @@ export async function authenticateUser(email: string, password: string) {
       .limit(1);
 
     if (!user) {
-      console.log('User not found for email:', email);
+      // Log failed login attempt without exposing email
+      console.log('Authentication failed: User not found');
       return null;
     }
 
     // Secure password validation with proper hashing
-    console.log('Password verification debug:', {
-      hasPasswordHash: !!user.password_hash,
-      passwordHashPrefix: user.password_hash?.substring(0, 20) + '...',
-      providedPassword: password,
-      isDevelopment: process.env.NODE_ENV === 'development'
-    });
-    
     const isValidPassword = user.password_hash ? 
       verifyPassword(password, user.password_hash) : 
-      (password === 'password' && process.env.NODE_ENV === 'development');
-    
-    console.log('Password verification result:', isValidPassword);
+      false; // Remove development bypass for security
     
     if (!isValidPassword) {
-      console.log('Invalid password for email:', email);
+      console.log('Authentication failed: Invalid credentials');
       return null;
     }
 
-    console.log('Successful authentication for user:', {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      organizationId: user.organization_id
-    });
+    // Log successful authentication without sensitive data
+    console.log('Authentication successful for user ID:', user.id);
 
     return {
       id: user.id,

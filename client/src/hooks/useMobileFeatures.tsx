@@ -238,7 +238,7 @@ export function useMobileFeatures(): MobileFeatures {
 
   const requestNotificationPermission = async (): Promise<boolean> => {
     if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
+      // Browser does not support notifications
       return false;
     }
 
@@ -256,7 +256,7 @@ export function useMobileFeatures(): MobileFeatures {
 
   const sendNotification = (title: string, body: string, options: NotificationOptions = {}) => {
     if (Notification.permission !== 'granted') {
-      console.log('Notification permission not granted');
+      // Notification permission not granted
       return;
     }
 

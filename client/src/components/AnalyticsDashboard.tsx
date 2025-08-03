@@ -74,8 +74,7 @@ export default function AnalyticsDashboard() {
       const { supabase } = await import("@/lib/supabase");
       const { data: { session } } = await supabase.auth.getSession();
 
-      console.log('Analytics query - session exists:', !!session);
-      console.log('Analytics query - access token exists:', !!session?.access_token);
+      // Session validation for analytics access
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json"
