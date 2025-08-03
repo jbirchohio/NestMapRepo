@@ -2,6 +2,7 @@ import { db } from './db';
 import { users } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import { logger } from './utils/logger';
 
 // Secure password hashing using Node.js crypto
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
@@ -20,7 +21,7 @@ export function verifyPassword(password: string, hashedPassword: string): boolea
     const verifyHash = crypto.pbkdf2Sync(password, salt, SALT_ROUNDS * 1000, 64, 'sha512');
     return hash === verifyHash.toString('hex');
   } catch (error) {
-    console.error('Password verification error:', error);
+    logger.error('Password verification error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return false;
   }
 }
@@ -39,7 +40,7 @@ export async function authenticateUser(email: string, password: string) {
 
     if (!user) {
       // Log failed login attempt without exposing email
-      console.log('Authentication failed: User not found');
+      logger.info('Authentication failed: User not found', { email });
       return null;
     }
 
@@ -49,12 +50,12 @@ export async function authenticateUser(email: string, password: string) {
       false; // Remove development bypass for security
     
     if (!isValidPassword) {
-      console.log('Authentication failed: Invalid credentials');
+      logger.info('Authentication failed: Invalid credentials', { userId: user.id });
       return null;
     }
 
     // Log successful authentication without sensitive data
-    console.log('Authentication successful for user ID:', user.id);
+    logger.info('Authentication successful', { userId: user.id });
 
     return {
       id: user.id,
@@ -64,7 +65,7 @@ export async function authenticateUser(email: string, password: string) {
       displayName: user.display_name
     };
   } catch (error) {
-    console.error('Authentication error:', error);
+    logger.error('Authentication error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return null;
   }
 }
@@ -89,7 +90,7 @@ export async function getUserById(authId: string) {
     }
     return null;
   } catch (error) {
-    console.error('Get user by auth ID error:', error);
+    logger.error('Get user by auth ID error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return null;
   }
 }

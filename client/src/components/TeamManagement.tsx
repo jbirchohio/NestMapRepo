@@ -123,11 +123,19 @@ export default function TeamManagement() {
     try {
       setIsInviting(true);
       
-      // TODO: Replace with actual API call
-      console.log("Sending invitation:", values);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/organization-members/members/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(values)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to send invitation');
+      }
       
       toast({
         title: "Invitation Sent!",

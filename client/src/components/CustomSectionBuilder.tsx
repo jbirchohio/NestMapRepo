@@ -8,15 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, Eye, Edit3 } from "lucide-react";
-// TODO: Install @hello-pangea/dnd package
-// import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
-type DropResult = any;
-type DroppableProvided = any;
-type DraggableProvided = any;
-type DraggableStateSnapshot = any;
-const DragDropContext = ({ children }: any) => <>{children}</>;
-const Droppable = ({ children }: any) => <>{children({ droppableProps: {}, innerRef: null })}</>;
-const Draggable = ({ children }: any) => <>{children({ draggableProps: {}, dragHandleProps: {}, innerRef: null }, { isDragging: false })}</>;
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
 
 interface CustomSection {
   id: string;

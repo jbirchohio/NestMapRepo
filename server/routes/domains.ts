@@ -138,9 +138,21 @@ export function registerDomainRoutes(app: Express) {
         return res.status(404).json({ error: "Domain not found" });
       }
 
-      // TODO: Implement actual DNS verification logic
-      // For now, we'll simulate verification
-      const isVerified = true; // Replace with actual DNS check
+      // Basic DNS verification - check if domain resolves
+      let isVerified = false;
+      try {
+        const dns = require('dns');
+        await new Promise((resolve, reject) => {
+          dns.lookup(domain.domain, (err: any, address: string) => {
+            if (err) reject(err);
+            else resolve(address);
+          });
+        });
+        isVerified = true;
+      } catch (error) {
+        console.log(`DNS verification failed for ${domain.domain}:`, error);
+        isVerified = false;
+      }
 
       if (isVerified) {
         await db

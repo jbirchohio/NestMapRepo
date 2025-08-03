@@ -40,6 +40,7 @@ interface SequentialBookingData {
       phone: string;
       relationship: string;
     };
+    selectedFlight?: any;
   }>;
   roomsNeeded: number;
   roomConfiguration: 'shared' | 'separate' | null;
@@ -635,7 +636,17 @@ export default function SequentialBooking() {
               <Button 
                 onClick={() => {
                   if (selectedFlight) {
-                    // TODO: Implement actual booking
+                    // Save flight selection for this traveler
+                    const updatedTravelers = [...bookingData.travelers];
+                    updatedTravelers[bookingData.currentTravelerIndex] = {
+                      ...currentTraveler,
+                      selectedFlight: selectedFlight
+                    };
+                    setBookingData(prev => prev ? ({
+                      ...prev,
+                      travelers: updatedTravelers
+                    }) : null);
+                    
                     toast({
                       title: "Flight selected",
                       description: `Selected ${selectedFlight.currency} $${selectedFlight.price} flight for ${currentTraveler.name}`,
