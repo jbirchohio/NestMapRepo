@@ -55,13 +55,15 @@ router.post('/google', async (req: Request, res: Response) => {
       const username = name?.replace(/\s+/g, '').toLowerCase() || email!.split('@')[0];
       
       [user] = await db.insert(users).values({
+        auth_id: `google_${googleId}`,
         email: email!,
         username: username,
-        password_hash: `google_${googleId}`, // Social login marker
-        full_name: name,
+        password_hash: null, // No password for social login
+        display_name: name,
         avatar_url: picture,
+        role: 'user',
+        role_type: 'consumer',
         created_at: new Date(),
-        updated_at: new Date(),
       }).returning();
       
       logger.info(`New user registered via Google: ${email}`);
@@ -69,7 +71,7 @@ router.post('/google', async (req: Request, res: Response) => {
       // Update user info if needed
       if (picture && picture !== user.avatar_url) {
         await db.update(users)
-          .set({ avatar_url: picture, updated_at: new Date() })
+          .set({ avatar_url: picture })
           .where(eq(users.id, user.id));
       }
     }
@@ -83,7 +85,7 @@ router.post('/google', async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         username: user.username,
-        fullName: user.full_name,
+        fullName: user.display_name,
         avatarUrl: user.avatar_url,
       }
     });
