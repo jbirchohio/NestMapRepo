@@ -160,6 +160,11 @@ app.use('/api', authenticateApiKey);
 import { domainRoutingMiddleware } from "./loadBalancer";
 app.use(domainRoutingMiddleware);
 
+// Add a simple health check at root for debugging 502 errors
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Apply case conversion middleware first, then JWT authentication only to API routes
 app.use(caseConversionMiddleware);
 app.use('/api', jwtAuthMiddleware);
@@ -383,7 +388,10 @@ app.use((req, res, next) => {
 
     // Start server for production
     const server = app.listen(PORT, HOST, () => {
-      log(`serving on http://${HOST}:${PORT}`);
+      log(`✅ Server running on http://${HOST}:${PORT}`);
+      log(`🌍 Environment: ${process.env.NODE_ENV}`);
+      log(`📁 Static path: ${staticPath}`);
+      log(`🔗 CORS allowed: ${process.env.CORS_ORIGIN}`);
     });
 
     // Handle server cleanup on process termination
