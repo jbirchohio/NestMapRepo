@@ -12,57 +12,30 @@ export default function Bookings() {
   const { user, userId } = useAuth();
   const [, setLocation] = useLocation();
   
-  // Mock bookings data for now - in a real app this would come from your backend
+  // Fetch real bookings from the API
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['/api/bookings', userId],
     queryFn: async () => {
-      // This would be a real API call
-      return [
-        {
-          id: 1,
-          type: 'flight',
-          title: 'Los Angeles to Paris',
-          date: '2024-03-15',
-          status: 'confirmed',
-          price: '$850',
-          confirmationNumber: 'ABC123',
-          details: {
-            airline: 'Air France',
-            flight: 'AF65',
-            departure: '10:30 AM',
-            arrival: '7:45 AM +1'
+      try {
+        const response = await fetch('/api/bookings', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        },
-        {
-          id: 2,
-          type: 'hotel',
-          title: 'Hotel Le Marais - Paris',
-          date: '2024-03-15',
-          checkOut: '2024-03-20',
-          status: 'confirmed',
-          price: '$1,200',
-          confirmationNumber: 'HTL456',
-          details: {
-            nights: 5,
-            roomType: 'Deluxe Double',
-            address: '3 Rue de Turenne, 75003 Paris'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            // API endpoint doesn't exist yet
+            return [];
           }
-        },
-        {
-          id: 3,
-          type: 'activity',
-          title: 'Eiffel Tower Skip-the-Line Tour',
-          date: '2024-03-16',
-          status: 'pending',
-          price: '$65',
-          confirmationNumber: 'VTR789',
-          details: {
-            time: '2:00 PM',
-            duration: '2 hours',
-            provider: 'Viator'
-          }
+          throw new Error('Failed to fetch bookings');
         }
-      ];
+        
+        return await response.json();
+      } catch (error) {
+        console.log('Bookings API not implemented yet');
+        return [];
+      }
     },
     enabled: !!userId,
   });
@@ -79,7 +52,7 @@ export default function Bookings() {
               Please sign in to view your bookings
             </p>
             <Button 
-              onClick={() => setLocation('/login')}
+              onClick={() => setLocation('/?auth=login')}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
             >
               Sign In

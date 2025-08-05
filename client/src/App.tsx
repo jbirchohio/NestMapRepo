@@ -16,7 +16,7 @@ import TripOptimizer from "@/pages/TripOptimizer";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
-import FlightSearch from "@/pages/FlightSearch";
+import FlightSearchSimple from "@/pages/FlightSearchSimple";
 import FlightBooking from "@/pages/FlightBooking";
 import FlightResults from "@/pages/FlightResults";
 import BookingConfirmation from "@/pages/BookingConfirmation";
@@ -60,7 +60,7 @@ function Router() {
           <Route path="/share/:shareCode" component={SimpleShare} />
           
           {/* Travel features */}
-          <Route path="/flights" component={FlightSearch} />
+          <Route path="/flights" component={FlightSearchSimple} />
           <Route path="/flights/results" component={FlightResults} />
           <Route path="/flights/book/:offerId" component={FlightBooking} />
           <Route path="/bookings" component={Bookings} />
