@@ -15,14 +15,18 @@ import { logger } from './utils/logger';
 export interface IStorage {
   // User management
   createUser(userData: any): Promise<User>;
+  getUser(id: number): Promise<User | undefined>; // Alias for getUserById
   getUserById(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
   
   // Trip management
   createTrip(tripData: any): Promise<Trip>;
+  getTrip(id: number): Promise<Trip | undefined>; // Alias for getTripById
   getTripById(id: number): Promise<Trip | undefined>;
-  getTripsByUserId(userId: number): Promise<Trip[]>;
+  getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]>;
+  getTripsByOrganizationId(organizationId: number): Promise<Trip[]>;
   updateTrip(id: number, updates: any): Promise<Trip | undefined>;
   deleteTrip(id: number): Promise<boolean>;
   getPublicTrips(): Promise<Trip[]>;
@@ -31,6 +35,7 @@ export interface IStorage {
   // Activity management
   createActivity(activityData: any): Promise<Activity>;
   getActivitiesByTripId(tripId: number): Promise<Activity[]>;
+  getActivity(id: number): Promise<Activity | undefined>;
   updateActivity(id: number, updates: any): Promise<Activity | undefined>;
   deleteActivity(id: number): Promise<boolean>;
   
@@ -40,6 +45,7 @@ export interface IStorage {
   createTodo(todoData: any): Promise<Todo>;
   getTodosByTripId(tripId: number): Promise<Todo[]>;
   updateTodo(id: number, updates: any): Promise<Todo | undefined>;
+  deleteTodo(id: number): Promise<boolean>;
   
   // Bookings
   createBooking(bookingData: any): Promise<Booking>;
@@ -63,6 +69,7 @@ export class ConsumerDatabaseStorage implements IStorage {
     const hashedPassword = hashPassword(validatedData.password);
     
     const [newUser] = await db.insert(users).values({
+      auth_id: `local_${validatedData.username}_${Date.now()}`, // Generate auth_id for local auth
       username: validatedData.username,
       email: validatedData.email,
       password_hash: hashedPassword,
@@ -75,6 +82,10 @@ export class ConsumerDatabaseStorage implements IStorage {
     return newUser;
   }
 
+  async getUser(id: number): Promise<User | undefined> {
+    return this.getUserById(id);
+  }
+
   async getUserById(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
     return user;
@@ -82,6 +93,11 @@ export class ConsumerDatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
     return user;
   }
 
@@ -124,12 +140,16 @@ export class ConsumerDatabaseStorage implements IStorage {
     return newTrip;
   }
 
+  async getTrip(id: number): Promise<Trip | undefined> {
+    return this.getTripById(id);
+  }
+
   async getTripById(id: number): Promise<Trip | undefined> {
     const [trip] = await db.select().from(trips).where(eq(trips.id, id)).limit(1);
     return trip;
   }
 
-  async getTripsByUserId(userId: number): Promise<Trip[]> {
+  async getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]> {
     // Get trips where user is owner or collaborator
     const ownTrips = await db.select()
       .from(trips)
@@ -149,6 +169,11 @@ export class ConsumerDatabaseStorage implements IStorage {
     return allTrips.sort((a, b) => b.start_date.getTime() - a.start_date.getTime());
   }
 
+  async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {
+    // Consumer app doesn't use organizations, return empty array
+    return [];
+  }
+
   async updateTrip(id: number, updates: any): Promise<Trip | undefined> {
     const [updated] = await db.update(trips)
       .set(updates)
@@ -158,8 +183,8 @@ export class ConsumerDatabaseStorage implements IStorage {
   }
 
   async deleteTrip(id: number): Promise<boolean> {
-    const result = await db.delete(trips).where(eq(trips.id, id));
-    return result.count > 0;
+    const result = await db.delete(trips).where(eq(trips.id, id)).returning({ id: trips.id });
+    return result.length > 0;
   }
 
   async getPublicTrips(): Promise<Trip[]> {
@@ -209,6 +234,11 @@ export class ConsumerDatabaseStorage implements IStorage {
     return newActivity;
   }
 
+  async getActivity(id: number): Promise<Activity | undefined> {
+    const [activity] = await db.select().from(activities).where(eq(activities.id, id)).limit(1);
+    return activity;
+  }
+
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
     return await db.select()
       .from(activities)
@@ -225,8 +255,8 @@ export class ConsumerDatabaseStorage implements IStorage {
   }
 
   async deleteActivity(id: number): Promise<boolean> {
-    const result = await db.delete(activities).where(eq(activities.id, id));
-    return result.count > 0;
+    const result = await db.delete(activities).where(eq(activities.id, id)).returning({ id: activities.id });
+    return result.length > 0;
   }
 
   // Notes & Todos
@@ -275,6 +305,11 @@ export class ConsumerDatabaseStorage implements IStorage {
       .where(eq(todos.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteTodo(id: number): Promise<boolean> {
+    const result = await db.delete(todos).where(eq(todos.id, id)).returning({ id: todos.id });
+    return result.length > 0;
   }
 
   // Bookings
@@ -330,8 +365,9 @@ export class ConsumerDatabaseStorage implements IStorage {
       .where(and(
         eq(tripCollaborators.trip_id, tripId),
         eq(tripCollaborators.user_id, userId)
-      ));
-    return result.count > 0;
+      ))
+      .returning({ id: tripCollaborators.id });
+    return result.length > 0;
   }
 
   // Waitlist
