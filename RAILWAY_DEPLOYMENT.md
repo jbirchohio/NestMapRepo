@@ -26,6 +26,10 @@ VITE_MAPBOX_TOKEN=your_mapbox_token
 
 # Sentry for error tracking (optional)
 SENTRY_DSN=your_sentry_dsn
+
+# Relax auth rate limits for consumer app (recommended)
+# This only affects login/signup endpoints, not API usage
+RELAX_AUTH_LIMIT=true
 ```
 
 ## Common Issues

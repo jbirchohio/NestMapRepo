@@ -38,11 +38,11 @@ class ComprehensiveRateLimit {
       burstLimit: 50, // 50 requests in 1 minute burst
     },
     
-    // Authentication endpoints - stricter limits
+    // Authentication endpoints - reasonable limits for consumer app
     'auth': {
-      requests: 20,
+      requests: 100, // Increased from 20
       windowMs: 15 * 60 * 1000, // 15 minutes
-      burstLimit: 5, // 5 attempts in 1 minute
+      burstLimit: 20, // Increased from 5 - allows multiple sign-in attempts
     },
     
     // API endpoints by organization tier
@@ -80,6 +80,46 @@ class ComprehensiveRateLimit {
     }
   };
 
+  private checkLimitWithConfig(key: string, config: RateLimitConfig): {
+    allowed: boolean;
+    remaining: number;
+    resetTime: number;
+    retryAfter?: number;
+  } {
+    const now = Date.now();
+    
+    const bucket = this.buckets.get(key) || {
+      tokens: config.requests,
+      lastRefill: now,
+      burstTokens: config.burstLimit,
+      violations: 0
+    };
+
+    // Refill tokens
+    const timePassed = now - bucket.lastRefill;
+    const tokensToAdd = Math.floor(timePassed * (config.requests / config.windowMs));
+    bucket.tokens = Math.min(config.requests, bucket.tokens + tokensToAdd);
+    bucket.lastRefill = now;
+
+    if (bucket.tokens <= 0) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime: now + config.windowMs,
+        retryAfter: Math.ceil(config.windowMs / 1000)
+      };
+    }
+
+    bucket.tokens--;
+    this.buckets.set(key, bucket);
+
+    return {
+      allowed: true,
+      remaining: bucket.tokens,
+      resetTime: now + ((config.requests - bucket.tokens) * (config.windowMs / config.requests))
+    };
+  }
+
   checkLimit(key: string, configType: string): {
     allowed: boolean;
     remaining: number;
@@ -94,6 +134,16 @@ class ComprehensiveRateLimit {
         resetTime: Date.now() + 3600000,
         retryAfter: undefined
       };
+    }
+    
+    // For auth endpoints, check if we should use relaxed limits
+    if (configType === 'auth' && process.env.RELAX_AUTH_LIMIT === 'true') {
+      const relaxedConfig = {
+        requests: 1000, // Very high limit
+        windowMs: 15 * 60 * 1000,
+        burstLimit: 100
+      };
+      return this.checkLimitWithConfig(key, relaxedConfig);
     }
     
     const config = this.configs[configType] || this.configs['global'];
