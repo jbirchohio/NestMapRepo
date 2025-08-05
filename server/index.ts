@@ -120,26 +120,20 @@ app.use(createPerformanceMiddleware());
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
 
-// Import demo middleware but apply it later after auth
-import { demoModeMiddleware, demoBannerMiddleware, demoLimitsMiddleware } from './middleware/demoMode';
+// Demo mode removed for consumer app
 
 // Apply comprehensive rate limiting (demo users will be handled after auth)
 app.use('/api', apiRateLimit);
 app.use('/api/auth', authRateLimit);
 app.use('/api', organizationRateLimit);
 
-// Apply demo limits after rate limiting exemption
-if (process.env.ENABLE_DEMO_MODE === 'true') {
-  app.use('/api', demoLimitsMiddleware);
-}
+// Demo mode removed for consumer app
 
 // Apply API security middleware only to API routes
 app.use('/api', apiVersioning);
 app.use('/api', authenticateApiKey);
 
-// Apply domain routing middleware for white label domains BEFORE authentication
-import { domainRoutingMiddleware } from "./loadBalancer";
-app.use(domainRoutingMiddleware);
+// White label domain routing removed for consumer app
 
 // Add a simple health check at root for debugging 502 errors
 app.get('/api/ping', (req, res) => {
@@ -150,11 +144,7 @@ app.get('/api/ping', (req, res) => {
 app.use(caseConversionMiddleware);
 app.use('/api', jwtAuthMiddleware);
 
-// Apply demo mode detection middleware AFTER authentication
-if (process.env.ENABLE_DEMO_MODE === 'true') {
-  app.use(demoModeMiddleware);
-  app.use(demoBannerMiddleware);
-}
+// Demo mode removed for consumer app
 
 // Track user activity for security monitoring
 app.use(trackUserActivity);
@@ -226,12 +216,7 @@ app.use((req, res, next) => {
     sampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0
   });
 
-  // Start demo reset scheduler if demo mode is enabled
-  if (process.env.ENABLE_DEMO_MODE === 'true') {
-    const { startDemoResetScheduler } = await import('./services/demoResetService');
-    startDemoResetScheduler();
-    console.log('✅ Demo reset scheduler started');
-  }
+  // Demo mode removed for consumer app
   
   console.log('🔧 Environment check:');
   console.log('  - NODE_ENV:', process.env.NODE_ENV);
@@ -268,29 +253,7 @@ app.use((req, res, next) => {
     const { registerBookingRoutes } = await import('./routes/bookings');
     registerBookingRoutes(app);
 
-    // Register corporate cards routes with full Express app instance
-    const { registerCorporateCardRoutes } = await import('./routes/corporateCards');
-    registerCorporateCardRoutes(app);
-
-    // Register simplified white label routes with full Express app instance
-    const { registerSimplifiedWhiteLabelRoutes } = await import('./routes/whiteLabelSimplified');
-    registerSimplifiedWhiteLabelRoutes(app);
-
-    // Register domain management routes with full Express app instance
-    const { registerDomainRoutes } = await import('./routes/domains');
-    registerDomainRoutes(app);
-
-    // Register system metrics routes with full Express app instance
-    const { registerSystemMetricsRoutes } = await import('./routes/system-metrics');
-    registerSystemMetricsRoutes(app);
-
-    // Register alerts routes with full Express app instance
-    const { registerAlertsRoutes } = await import('./routes/alerts');
-    registerAlertsRoutes(app);
-
-    // Register admin settings routes with full Express app instance
-    const { registerAdminSettingsRoutes } = await import('./routes/admin-settings');
-    registerAdminSettingsRoutes(app);
+    // Corporate routes removed for consumer app
 
     // Register admin analytics routes with full Express app instance
     const { registerAdminAnalyticsRoutes } = await import('./routes/admin-analytics');
