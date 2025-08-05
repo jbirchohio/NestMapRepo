@@ -53,43 +53,24 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
 
-  // Enhanced Content Security Policy
-  let csp;
-  if (process.env.NODE_ENV === 'production') {
-    // Generate nonce for production inline scripts
-    const nonce = Buffer.from(Math.random().toString()).toString('base64');
-    res.locals.nonce = nonce;
-
-    // Production CSP - strict security with nonce-based scripts
-    csp = [
-      "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' https://cdn.jsdelivr.net https://unpkg.com`,
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.mapbox.com",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https: wss: ws:",
-      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-      "worker-src 'self' blob:",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "upgrade-insecure-requests"
-    ].join('; ');
-  } else {
-    // Development CSP - compatible with Vite React plugin (no nonce needed)
-    csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.mapbox.com",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
-      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-      "worker-src 'self' blob:",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'"
-    ].join('; ');
-  }
+  // Consumer-friendly Content Security Policy
+  // Allows common analytics, ads, social media, etc.
+  const csp = [
+    "default-src 'self' https:",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:",
+    "style-src 'self' 'unsafe-inline' https:",
+    "img-src 'self' data: https: http: blob:",
+    "connect-src 'self' https: http: wss: ws:",
+    "font-src 'self' data: https:",
+    "frame-src 'self' https:",
+    "media-src 'self' https: blob:",
+    "worker-src 'self' blob:",
+    "child-src 'self' blob: https:",
+    "form-action 'self' https:",
+    "frame-ancestors 'self' https:",
+    "base-uri 'self'",
+    "manifest-src 'self'"
+  ].join('; ');
 
   res.setHeader('Content-Security-Policy', csp);
   next();
