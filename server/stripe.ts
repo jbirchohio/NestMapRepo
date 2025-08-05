@@ -1,12 +1,14 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
+// Make Stripe optional - only initialize if key is provided
+export const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-11-20.acacia" as any, // Using latest API version
+    })
+  : null;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-11-20.acacia" as any, // Using latest API version
-});
+// Helper to check if Stripe is configured
+export const isStripeConfigured = () => !!process.env.STRIPE_SECRET_KEY;
 
 // Subscription plan configurations
 export const SUBSCRIPTION_PLANS = {
@@ -37,6 +39,7 @@ export const SUBSCRIPTION_PLANS = {
 };
 
 export async function createStripeCustomer(email: string, name: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   return await stripe.customers.create({
     email,
     name,
@@ -44,6 +47,7 @@ export async function createStripeCustomer(email: string, name: string) {
 }
 
 export async function createSubscription(customerId: string, priceId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   return await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
@@ -53,6 +57,7 @@ export async function createSubscription(customerId: string, priceId: string) {
 }
 
 export async function updateSubscription(subscriptionId: string, newPriceId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   
   return await stripe.subscriptions.update(subscriptionId, {
@@ -65,10 +70,12 @@ export async function updateSubscription(subscriptionId: string, newPriceId: str
 }
 
 export async function cancelSubscription(subscriptionId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   return await stripe.subscriptions.cancel(subscriptionId);
 }
 
 export async function createRefund(paymentIntentId: string, amount?: number, reason?: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   const refundData: Stripe.RefundCreateParams = {
     payment_intent: paymentIntentId,
   };

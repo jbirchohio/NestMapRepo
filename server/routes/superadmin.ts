@@ -30,7 +30,7 @@ const auditLogger = {
   }
 };
 import { hashPassword } from '../auth';
-import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, updateSubscription, createRefund } from '../stripe';
+import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, updateSubscription, createRefund, isStripeConfigured } from '../stripe';
 
 // Define authenticated request interface
 interface AuthenticatedUser {

@@ -3,11 +3,10 @@ import { db } from '../db';
 import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Make Stripe optional - only initialize if key is provided
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 export interface FundingSourceConfig {
   organizationId: number;

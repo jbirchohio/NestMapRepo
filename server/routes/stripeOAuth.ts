@@ -6,13 +6,22 @@ import { eq } from 'drizzle-orm';
 
 const router = Router();
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
+// Make Stripe optional - only initialize if key is provided
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-11-20.acacia" as any,
+    })
+  : null;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-11-20.acacia" as any,
-});
+// Return early if Stripe is not configured
+if (!stripe) {
+  router.get('/oauth/callback', (req, res) => {
+    res.status(501).json({ message: 'Stripe OAuth not configured' });
+  });
+  router.get('/oauth/connect', (req, res) => {
+    res.status(501).json({ message: 'Stripe OAuth not configured' });
+  });
+}
 
 /**
  * OAuth callback handler for Stripe Connect

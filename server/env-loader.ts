@@ -17,17 +17,6 @@ if (!process.env.RAILWAY_ENVIRONMENT && (!process.env.NODE_ENV || process.env.NO
 // Railway-specific environment variable handling
 if (process.env.RAILWAY_ENVIRONMENT) {
   console.log('🚂 Running on Railway platform');
-  console.log('🔍 Railway environment variables check:', {
-    RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
-    RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID,
-    RAILWAY_SERVICE_ID: process.env.RAILWAY_SERVICE_ID,
-    NODE_ENV: process.env.NODE_ENV,
-    // Check if our custom variables are loaded
-    CORS_ORIGIN: process.env.CORS_ORIGIN,
-    JWT_SECRET_EXISTS: !!process.env.JWT_SECRET,
-    SESSION_SECRET_EXISTS: !!process.env.SESSION_SECRET,
-    DATABASE_URL_EXISTS: !!process.env.DATABASE_URL
-  });
 }
 
 // Validate critical environment variables early

@@ -7,13 +7,22 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
+// Make Stripe optional - only initialize if key is provided
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-11-20.acacia" as any,
+    })
+  : null;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-11-20.acacia" as any,
-});
+// Return early if Stripe is not configured
+if (!stripe) {
+  router.post('/stripe-connect', (req, res) => {
+    res.status(501).json({ message: 'Stripe webhooks not configured' });
+  });
+  router.post('/stripe', (req, res) => {
+    res.status(501).json({ message: 'Stripe webhooks not configured' });
+  });
+}
 
 // Webhook endpoint for Stripe Connect account updates
 router.post('/stripe-connect', async (req, res) => {
