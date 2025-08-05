@@ -17,3 +17,6 @@ errors.txt
 ts_errors.txt
 server_errors.txt
 client_errors.txt
+
+# Corporate/Enterprise features (archived)
+/archive/corporate/
