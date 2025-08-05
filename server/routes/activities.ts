@@ -3,16 +3,15 @@ import { z } from 'zod';
 import { insertActivitySchema, transformActivityToFrontend } from '@shared/schema';
 import { transformActivityToDatabase } from '@shared/fieldTransforms';
 import { jwtAuthMiddleware } from '../middleware/jwtAuth';
-import { injectOrganizationContext } from '../middleware/organizationScoping';
+// Organization scoping removed for consumer app
 import { storage } from '../storage';
 import { logger } from '../utils/logger';
 import { geocodeLocation } from '../geocoding';
 
 const router = Router();
 
-// Apply authentication and organization context to all activity routes
+// Apply authentication to all activity routes
 router.use(jwtAuthMiddleware);
-router.use(injectOrganizationContext);
 
 // Get activities for a specific trip
 router.get("/trip/:trip_id", async (req: Request, res: Response) => {

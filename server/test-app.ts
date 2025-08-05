@@ -6,7 +6,7 @@ import apiRoutes from "./routes/index";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
 import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
 import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
-import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
+// Organization scoping removed for consumer app
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
 import { jwtAuthMiddleware } from "./middleware/jwtAuth";
 import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";

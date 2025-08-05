@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { endpointMonitor } from './api-security';
 import { trackEndpointHealth } from '../routes/health';
-import { trackRequest } from '../routes/system-metrics';
+// System metrics tracking removed for consumer app
 
 interface UnifiedMetrics {
   startTime: bigint;
@@ -129,7 +129,7 @@ export function unifiedMonitoringMiddleware(req: Request, res: Response, next: N
     trackEndpointHealth(req.path, duration, res.statusCode, isError ? 'HTTP Error' : undefined);
     
     // Track system metrics
-    trackRequest(duration, isError);
+    // Request tracking removed for consumer app
     
     return originalEnd.call(this, chunk, encoding, cb);
   };

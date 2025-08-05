@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { Client } from '@microsoft/microsoft-graph-client';
-import { db } from '../db';
+import { db } from "../db-connection";
 import { 
   calendarIntegrations, 
   trips, 

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db';
+import { db } from "../db-connection";
 import { organizations, users, trips } from '../../shared/schema';
 import { eq, and, count } from 'drizzle-orm';
 

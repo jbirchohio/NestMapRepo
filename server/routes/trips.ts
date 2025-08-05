@@ -2,13 +2,13 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { insertTripSchema } from '@shared/schema';
 import { jwtAuthMiddleware } from '../middleware/jwtAuth';
-import { injectOrganizationContext } from '../middleware/organizationScoping';
+// Organization scoping removed for consumer app
 import { fieldTransformMiddleware } from '../middleware/fieldTransform';
 import { enforceTripLimit } from '../middleware/subscription-limits';
 import { storage } from '../storage';
 import { generatePdfBuffer } from '../utils/pdfHelper';
 import { generateAIProposal } from '../proposalGenerator';
-import { db } from '../db';
+import { db } from '../db-connection';
 import { trips as tripsTable, users } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import { logger } from '../utils/logger';
@@ -17,7 +17,7 @@ const router = Router();
 
 // Apply authentication and organization context to all trip routes
 router.use(jwtAuthMiddleware);
-router.use(injectOrganizationContext);
+// Organization context removed for consumer app
 router.use(fieldTransformMiddleware);
 
 // Get all trips for authenticated user with organization filtering

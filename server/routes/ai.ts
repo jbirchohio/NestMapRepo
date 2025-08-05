@@ -2,7 +2,7 @@ import { Router } from "express";
 import { jwtAuthMiddleware } from "../middleware/jwtAuth";
 import { z } from "zod";
 import OpenAI from "openai";
-import { db } from "../db";
+import { db } from "../db-connection";
 import { trips, activities } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 

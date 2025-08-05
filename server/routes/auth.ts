@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { hashPassword, verifyPassword } from '../auth';
-import { db } from '../db';
+import { db } from "../db-connection";
 import { users, organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';

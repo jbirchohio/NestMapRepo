@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
-import { db } from '../db';
+import { db } from "../db-connection";
 import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';

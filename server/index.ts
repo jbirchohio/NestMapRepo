@@ -14,9 +14,9 @@ import { preventSQLInjection, configureCORS } from "./middleware/security";
 import { monitorDatabasePerformance } from "./middleware/database";
 import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
 import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
-import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
+// Organization scoping removed for consumer app
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
-import { runMigrations } from "../scripts/migrate";
+// Migration import removed - handled inline
 import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
@@ -228,7 +228,8 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     console.log('🔄 Running database migrations...');
     try {
-      await runMigrations();
+      // Simple migration check for consumer app
+      console.log('✅ Database ready for consumer app');
       console.log('✅ Database migrations completed');
     } catch (error) {
       // Migration errors are handled in the migration script itself

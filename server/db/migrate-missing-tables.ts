@@ -4,7 +4,7 @@ import path from 'path';
 // Load environment variables from root .env file
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-import { db, pool } from '../db';
+import { db, pool } from "../db-connection";
 import fs from 'fs';
 import { logger } from '../utils/logger';
 

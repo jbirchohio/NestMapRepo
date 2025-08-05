@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { db } from "../db-connection";
 import { sql } from 'drizzle-orm';
 
 // Cache for system settings

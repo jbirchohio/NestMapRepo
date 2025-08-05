@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db';
+import { db } from "../db-connection";
 import { adminAuditLog } from '@shared/schema';
 
 interface AuditLogEntry {

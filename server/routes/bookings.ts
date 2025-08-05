@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { db } from "../db";
+import { db } from "../db-connection";
 import { trips, bookings, activities } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
