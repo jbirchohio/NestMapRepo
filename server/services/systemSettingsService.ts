@@ -12,18 +12,29 @@ export async function getSystemSettings(): Promise<Record<string, any>> {
     return settingsCache;
   }
 
-  const result = await db.execute(sql`SELECT * FROM system_settings`);
-  settingsCache = {};
-  
-  result.rows.forEach((row: any) => {
-    const value = row.setting_type === 'number' ? Number(row.setting_value) :
-                  row.setting_type === 'boolean' ? row.setting_value === 'true' :
-                  row.setting_value;
-    settingsCache[row.setting_key] = value;
-  });
-  
-  cacheLastUpdated = new Date();
-  return settingsCache;
+  try {
+    const result = await db.execute(sql`SELECT * FROM system_settings`);
+    settingsCache = {};
+    
+    result.rows.forEach((row: any) => {
+      const value = row.setting_type === 'number' ? Number(row.setting_value) :
+                    row.setting_type === 'boolean' ? row.setting_value === 'true' :
+                    row.setting_value;
+      settingsCache[row.setting_key] = value;
+    });
+    
+    cacheLastUpdated = new Date();
+    return settingsCache;
+  } catch (error: any) {
+    // If table doesn't exist, return empty settings
+    if (error.code === '42P01') {
+      console.warn('⚠️  system_settings table does not exist, using default settings');
+      settingsCache = {};
+      cacheLastUpdated = new Date();
+      return settingsCache;
+    }
+    throw error;
+  }
 }
 
 // Get a specific setting
@@ -34,17 +45,25 @@ export async function getSetting(key: string): Promise<any> {
 
 // Update settings and apply changes
 export async function updateSetting(key: string, value: any): Promise<void> {
-  await db.execute(sql`
-    UPDATE system_settings 
-    SET setting_value = ${String(value)}, updated_at = NOW()
-    WHERE setting_key = ${key}
-  `);
-  
-  // Invalidate cache
-  cacheLastUpdated = null;
-  
-  // Apply setting changes immediately
-  await applySettingChange(key, value);
+  try {
+    await db.execute(sql`
+      UPDATE system_settings 
+      SET setting_value = ${String(value)}, updated_at = NOW()
+      WHERE setting_key = ${key}
+    `);
+    
+    // Invalidate cache
+    cacheLastUpdated = null;
+    
+    // Apply setting changes immediately
+    await applySettingChange(key, value);
+  } catch (error: any) {
+    if (error.code === '42P01') {
+      console.warn('⚠️  Cannot update setting - system_settings table does not exist');
+      return;
+    }
+    throw error;
+  }
 }
 
 // Apply setting changes to the running system
