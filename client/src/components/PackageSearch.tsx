@@ -34,7 +34,7 @@ export default function PackageSearch({
     origin: defaultOrigin,
     destination: defaultDestination,
     depart: format(defaultStartDate || addDays(new Date(), 7), 'yyyy-MM-dd'),
-    return: format(defaultEndDate || addDays(new Date(), 14), 'yyyy-MM-dd'),
+    returnDate: format(defaultEndDate || addDays(new Date(), 14), 'yyyy-MM-dd'),
     adults: 2,
     rooms: 1
   });
@@ -95,7 +95,7 @@ export default function PackageSearch({
       console.error('Package search error:', error);
       
       // Fallback URL
-      const fallbackUrl = `https://www.expedia.com/Packages?packageType=fh&ftla=${searchData.origin}&ttla=${searchData.destination}&chkin=${searchData.depart}&chkout=${searchData.return}`;
+      const fallbackUrl = `https://www.expedia.com/Packages?packageType=fh&ftla=${searchData.origin}&ttla=${searchData.destination}&chkin=${searchData.depart}&chkout=${searchData.returnDate}`;
       window.open(fallbackUrl, '_blank');
     } finally {
       setIsSearching(false);
@@ -103,7 +103,7 @@ export default function PackageSearch({
   };
 
   // Calculate estimated savings
-  const nights = Math.ceil((new Date(searchData.return).getTime() - new Date(searchData.depart).getTime()) / (1000 * 60 * 60 * 24));
+  const nights = Math.ceil((new Date(searchData.returnDate).getTime() - new Date(searchData.depart).getTime()) / (1000 * 60 * 60 * 24));
   const estimatedHotelCost = nights * 150; // Average $150/night
   const estimatedFlightCost = 400; // Average domestic flight
   const estimatedSavings = Math.round((estimatedHotelCost + estimatedFlightCost) * 0.22);
@@ -193,8 +193,8 @@ export default function PackageSearch({
                 <Input
                   id="return"
                   type="date"
-                  value={searchData.return}
-                  onChange={(e) => setSearchData(prev => ({ ...prev, return: e.target.value }))}
+                  value={searchData.returnDate}
+                  onChange={(e) => setSearchData(prev => ({ ...prev, returnDate: e.target.value }))}
                   className="pl-9"
                   min={searchData.depart}
                 />

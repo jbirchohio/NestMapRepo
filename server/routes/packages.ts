@@ -11,7 +11,7 @@ const packageUrlSchema = z.object({
   origin: z.string().min(1, 'Origin is required'),
   destination: z.string().min(1, 'Destination is required'),
   depart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Departure must be YYYY-MM-DD'),
-  return: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Return must be YYYY-MM-DD'),
+  returnDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Return must be YYYY-MM-DD'),
   adults: z.number().min(1).max(6).optional().default(2),
   rooms: z.number().min(1).max(3).optional().default(1),
   tripId: z.string().optional()
@@ -69,7 +69,7 @@ router.post('/generate-url', jwtAuthMiddleware, async (req, res) => {
       from: fromCode.toUpperCase(),
       to: toCode.toUpperCase(),
       depart: params.depart,
-      return: params.return,
+      returnDate: params.returnDate,
       adults: params.adults,
       rooms: params.rooms
     });

@@ -58,8 +58,8 @@ export class ExpediaIntegration {
   /**
    * Generate flight search URL
    */
-  generateFlightSearchUrl(from: string, to: string, depart: string, return?: string): string {
-    const tripType = return ? 'Roundtrip' : 'OneWay';
+  generateFlightSearchUrl(from: string, to: string, depart: string, returnDate?: string): string {
+    const tripType = returnDate ? 'Roundtrip' : 'OneWay';
     
     const searchParams = new URLSearchParams({
       'mode': 'search',
@@ -69,8 +69,8 @@ export class ExpediaIntegration {
       'affid': this.affiliateId,
     });
 
-    if (return) {
-      searchParams.append('leg2', `from:${to},to:${from},departure:${return}TANYT`);
+    if (returnDate) {
+      searchParams.append('leg2', `from:${to},to:${from},departure:${returnDate}TANYT`);
     }
 
     return `${this.baseUrl}/Flights-Search?${searchParams.toString()}`;
@@ -84,7 +84,7 @@ export class ExpediaIntegration {
     from: string;
     to: string;
     depart: string;
-    return: string;
+    returnDate: string;
     adults?: number;
     rooms?: number;
   }): string {
@@ -96,7 +96,7 @@ export class ExpediaIntegration {
       'ftla': params.from,
       'ttla': params.to,
       'chkin': params.depart,
-      'chkout': params.return,
+      'chkout': params.returnDate,
       
       // Travelers
       'adults': (params.adults || 2).toString(),
