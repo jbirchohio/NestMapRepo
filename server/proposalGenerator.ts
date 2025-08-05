@@ -1,4 +1,11 @@
-import puppeteer from 'puppeteer';
+// Make puppeteer optional - only load if available
+let puppeteer: any = null;
+try {
+  puppeteer = require('puppeteer');
+} catch (error) {
+  console.log('ℹ️ Puppeteer not installed - PDF proposal generation disabled');
+}
+
 import { Trip, Activity } from '@shared/schema';
 
 export interface ProposalData {
@@ -201,6 +208,10 @@ function generateProposalHTML(data: ProposalData): string {
 
 // Generate AI-powered branded proposal PDF
 export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
+    if (!puppeteer) {
+        throw new Error('PDF proposal generation is not available. Please install puppeteer: npm install puppeteer');
+    }
+    
     const html = generateProposalHTML(data);
     
     const browser = await puppeteer.launch({

@@ -7,10 +7,10 @@
 // Only load dotenv for local development
 if (!process.env.RAILWAY_ENVIRONMENT && (!process.env.NODE_ENV || process.env.NODE_ENV === 'development')) {
   try {
-    require('dotenv').config();
-    console.log('✅ Loaded .env file for development');
+    // Use the CommonJS loader to avoid ESM issues
+    await import('./load-env.js');
   } catch (error) {
-    console.log('ℹ️  No .env file found, using environment variables');
+    console.log('ℹ️  Could not load environment variables:', error);
   }
 }
 

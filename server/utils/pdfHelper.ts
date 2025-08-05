@@ -1,4 +1,11 @@
-import puppeteer from 'puppeteer';
+// Make puppeteer optional - only load if available
+let puppeteer: any = null;
+try {
+  puppeteer = require('puppeteer');
+} catch (error) {
+  console.log('ℹ️ Puppeteer not installed - PDF generation disabled');
+}
+
 import { Trip, Activity } from '@shared/schema';
 
 /**
@@ -14,6 +21,10 @@ interface PdfGenerationData {
 }
 
 export async function generatePdfBuffer(data: PdfGenerationData): Promise<Buffer> {
+  if (!puppeteer) {
+    throw new Error('PDF generation is not available. Please install puppeteer: npm install puppeteer');
+  }
+
   const browser = await puppeteer.launch({
     headless: true,
     args: [
