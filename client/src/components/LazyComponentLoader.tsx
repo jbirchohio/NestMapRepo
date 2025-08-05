@@ -1,25 +1,22 @@
 import { lazy, Suspense, ComponentType } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Sparkles } from 'lucide-react';
 
-// Lazy load large components to improve initial bundle size
-export const LazyBookingWorkflow = lazy(() => import('./BookingWorkflow'));
-export const LazySuperadmin = lazy(() => import('../pages/SuperadminClean'));
-export const LazyCorporateCards = lazy(() => import('../pages/CorporateCards'));
-export const LazySequentialBooking = lazy(() => import('../pages/SequentialBooking'));
-export const LazyBookingSystem = lazy(() => import('./BookingSystem'));
-export const LazyOrganizationFunding = lazy(() => import('../pages/OrganizationFunding'));
-export const LazyWhiteLabelSettings = lazy(() => import('./WhiteLabelSettings'));
+// Lazy load consumer components to improve initial bundle size
 export const LazyActivityModal = lazy(() => import('./ActivityModal'));
-export const LazyOnboardingWizard = lazy(() => import('./OnboardingWizard'));
+export const LazyActivityModalConsumer = lazy(() => import('./ActivityModalConsumer'));
+export const LazyBookableActivity = lazy(() => import('./BookableActivity'));
+export const LazyFlightSearch = lazy(() => import('../pages/FlightSearch'));
+export const LazyAITripGenerator = lazy(() => import('../pages/AITripGenerator'));
 
 // Loading fallback component
 function LoadingFallback({ componentName }: { componentName?: string }) {
   return (
-    <Card className="w-full">
+    <Card className="w-full border-purple-200">
       <CardContent className="flex items-center justify-center p-8">
         <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          <span className="text-sm text-muted-foreground">
+          <Sparkles className="h-6 w-6 text-purple-600 animate-pulse" />
+          <span className="text-sm text-gray-600">
             {componentName ? `Loading ${componentName}...` : 'Loading...'}
           </span>
         </div>
@@ -42,13 +39,9 @@ export function withLazyLoading<T extends {}>(
   };
 }
 
-// Pre-configured lazy components
-export const BookingWorkflowLazy = withLazyLoading(LazyBookingWorkflow, 'Booking Workflow');
-export const SuperadminLazy = withLazyLoading(LazySuperadmin, 'Admin Dashboard');
-export const CorporateCardsLazy = withLazyLoading(LazyCorporateCards, 'Corporate Cards');
-export const SequentialBookingLazy = withLazyLoading(LazySequentialBooking, 'Sequential Booking');
-export const BookingSystemLazy = withLazyLoading(LazyBookingSystem, 'Booking System');
-export const OrganizationFundingLazy = withLazyLoading(LazyOrganizationFunding, 'Organization Funding');
-export const WhiteLabelSettingsLazy = withLazyLoading(LazyWhiteLabelSettings, 'White Label Settings');
-export const ActivityModalLazy = withLazyLoading(LazyActivityModal, 'Activity Modal');
-export const OnboardingWizardLazy = withLazyLoading(LazyOnboardingWizard, 'Onboarding Wizard');
+// Pre-configured lazy components for consumer features
+export const ActivityModalLazy = withLazyLoading(LazyActivityModal, 'Activities');
+export const ActivityModalConsumerLazy = withLazyLoading(LazyActivityModalConsumer, 'Activity Search');
+export const BookableActivityLazy = withLazyLoading(LazyBookableActivity, 'Bookable Activities');
+export const FlightSearchLazy = withLazyLoading(LazyFlightSearch, 'Flight Search');
+export const AITripGeneratorLazy = withLazyLoading(LazyAITripGenerator, 'AI Trip Generator');

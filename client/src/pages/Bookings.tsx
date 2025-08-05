@@ -1,203 +1,234 @@
-import BookingWorkflow from "@/components/BookingWorkflow";
-import { TripTeamManagement } from "@/components/TripTeamManagement";
+import React from 'react';
 import { useAuth } from "@/contexts/JWTAuthContext";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
-import { Shield, Users, Plane, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plane, Hotel, Calendar, MapPin, ExternalLink } from "lucide-react";
+import { format } from "date-fns";
+import { useLocation } from "wouter";
 
 export default function Bookings() {
   const { user, userId } = useAuth();
+  const [, setLocation] = useLocation();
   
-  // Check user permissions for booking access
-  const { data: userPermissions } = useQuery({
-    queryKey: ['/api/user/permissions'],
+  // Mock bookings data for now - in a real app this would come from your backend
+  const { data: bookings = [], isLoading } = useQuery({
+    queryKey: ['/api/bookings', userId],
     queryFn: async () => {
-      const response = await fetch('/api/user/permissions', {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch permissions');
-      const data = await response.json();
-      return data.permissions || [];
+      // This would be a real API call
+      return [
+        {
+          id: 1,
+          type: 'flight',
+          title: 'Los Angeles to Paris',
+          date: '2024-03-15',
+          status: 'confirmed',
+          price: '$850',
+          confirmationNumber: 'ABC123',
+          details: {
+            airline: 'Air France',
+            flight: 'AF65',
+            departure: '10:30 AM',
+            arrival: '7:45 AM +1'
+          }
+        },
+        {
+          id: 2,
+          type: 'hotel',
+          title: 'Hotel Le Marais - Paris',
+          date: '2024-03-15',
+          checkOut: '2024-03-20',
+          status: 'confirmed',
+          price: '$1,200',
+          confirmationNumber: 'HTL456',
+          details: {
+            nights: 5,
+            roomType: 'Deluxe Double',
+            address: '3 Rue de Turenne, 75003 Paris'
+          }
+        },
+        {
+          id: 3,
+          type: 'activity',
+          title: 'Eiffel Tower Skip-the-Line Tour',
+          date: '2024-03-16',
+          status: 'pending',
+          price: '$65',
+          confirmationNumber: 'VTR789',
+          details: {
+            time: '2:00 PM',
+            duration: '2 hours',
+            provider: 'Viator'
+          }
+        }
+      ];
     },
-    enabled: !!user,
+    enabled: !!userId,
   });
-
-  // Get trips for team management context - always call this hook
-  const { data: trips = [] } = useQuery<any[]>({
-    queryKey: ['/api/trips/corporate'],
-    queryFn: () => apiRequest('GET', '/api/trips/corporate'),
-    enabled: !!user,
-  });
-
-  const hasBookingAccess = userPermissions && (
-    userPermissions.canCreateTrips || 
-    userPermissions.canViewTrips ||
-    userPermissions.canManageOrganization ||
-    userPermissions.canAccessAdmin ||
-    user?.role === 'admin'
-  );
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
-        <Alert className="max-w-md">
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
-            Please sign in to access the booking system.
-          </AlertDescription>
-        </Alert>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Sign in Required</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              Please sign in to view your bookings
+            </p>
+            <Button 
+              onClick={() => setLocation('/login')}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
+            >
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  if (!hasBookingAccess) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
-        <Alert className="max-w-md">
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
-            You don't have permission to access the booking system. Contact your administrator for access.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'flight': return <Plane className="h-5 w-5" />;
+      case 'hotel': return <Hotel className="h-5 w-5" />;
+      case 'activity': return <MapPin className="h-5 w-5" />;
+      default: return <Calendar className="h-5 w-5" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'bg-green-100 text-green-700';
+      case 'pending': return 'bg-yellow-100 text-yellow-700';
+      case 'cancelled': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
-      {/* Hero Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }} />
-
-        <div className="relative container mx-auto px-6 py-16">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex-1"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
-                  <Plane className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-white/80" />
-                  <span className="text-white/90 text-sm font-medium">Corporate Travel</span>
-                </div>
-              </div>
-
-              <h1 className="text-5xl font-bold mb-4 tracking-tight text-white">
-                Travel Bookings
-              </h1>
-              <p className="text-xl text-white/90 mb-6 max-w-2xl">
-                Coordinate team bookings and multi-person trips with intelligent flight search and team management
-              </p>
-
-              <div className="flex flex-wrap items-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full" />
-                  <span className="text-white/80">Real-time availability</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                  <span className="text-white/80">Group coordination</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
-                  <span className="text-white/80">Instant booking</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            My Bookings
+          </h1>
+          <p className="text-gray-600">
+            Manage all your travel bookings in one place
+          </p>
         </div>
-      </motion.div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-8 space-y-8">
-
-        <Tabs defaultValue="bookings" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="bookings" className="flex items-center gap-2">
-              <Plane className="h-4 w-4" />
-              Flight Bookings
-            </TabsTrigger>
-            <TabsTrigger value="team" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Team Coordination
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="bookings">
-            <BookingWorkflow />
-          </TabsContent>
-          
-          <TabsContent value="team" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Trip-Based Team Management</CardTitle>
-                <p className="text-muted-foreground">
-                  Select a trip below to manage team members and coordinate multi-origin travel
-                </p>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  // Filter to show only current and future trips
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  
-                  const currentAndUpcomingTrips = trips.filter((trip: any) => {
-                    const tripEndDate = new Date(trip.endDate || trip.end_date);
-                    return tripEndDate >= today;
-                  });
-
-                  if (currentAndUpcomingTrips.length === 0) {
-                    return (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No current or upcoming corporate trips found. Create a trip to manage team bookings.</p>
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading your bookings...</p>
+          </div>
+        ) : bookings.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
+              <p className="text-gray-600 mb-4">
+                Start planning a trip to see your bookings here
+              </p>
+              <Button 
+                onClick={() => setLocation('/')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
+              >
+                Plan a Trip
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {bookings.map((booking: any) => (
+              <Card key={booking.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        {getIcon(booking.type)}
                       </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-4">
-                      {currentAndUpcomingTrips.map((trip: any) => (
-                        <div key={trip.id} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="font-semibold">{trip.title}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {trip.city}, {trip.country} • {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <Badge variant={trip.tripType === 'business' ? 'default' : 'secondary'}>
-                              {trip.tripType || 'personal'}
-                            </Badge>
-                          </div>
-                          <TripTeamManagement tripId={trip.id} userRole="admin" />
+                      <div>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          {booking.title}
+                          <Badge className={getStatusColor(booking.status)}>
+                            {booking.status}
+                          </Badge>
+                        </CardTitle>
+                        <div className="text-sm text-gray-600 mt-1">
+                          <p>{format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}</p>
+                          {booking.checkOut && (
+                            <p>Check-out: {format(new Date(booking.checkOut), 'MMMM d, yyyy')}</p>
+                          )}
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-gray-900">{booking.price}</p>
+                      <p className="text-xs text-gray-500">Confirmation: {booking.confirmationNumber}</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    {booking.type === 'flight' && (
+                      <>
+                        <div>
+                          <p className="text-gray-600">Flight</p>
+                          <p className="font-medium">{booking.details.airline} {booking.details.flight}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Schedule</p>
+                          <p className="font-medium">{booking.details.departure} → {booking.details.arrival}</p>
+                        </div>
+                      </>
+                    )}
+                    {booking.type === 'hotel' && (
+                      <>
+                        <div>
+                          <p className="text-gray-600">Room Type</p>
+                          <p className="font-medium">{booking.details.roomType}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Duration</p>
+                          <p className="font-medium">{booking.details.nights} nights</p>
+                        </div>
+                      </>
+                    )}
+                    {booking.type === 'activity' && (
+                      <>
+                        <div>
+                          <p className="text-gray-600">Time</p>
+                          <p className="font-medium">{booking.details.time} ({booking.details.duration})</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Provider</p>
+                          <p className="font-medium">{booking.details.provider}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="mt-4 pt-4 border-t flex justify-between items-center">
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                    {booking.status === 'pending' && (
+                      <Button 
+                        size="sm"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
+                      >
+                        Complete Booking
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
