@@ -13,7 +13,7 @@ import { performanceOptimizer } from "./services/performanceOptimizer";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
 import { monitorDatabasePerformance } from "./middleware/database";
 import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
-import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
+import { apiRateLimit, authRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
 // Organization scoping removed for consumer app
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
 // Migration import removed - handled inline
@@ -125,7 +125,7 @@ app.use(preventSQLInjection);
 // Apply comprehensive rate limiting (demo users will be handled after auth)
 app.use('/api', apiRateLimit);
 app.use('/api/auth', authRateLimit);
-app.use('/api', organizationRateLimit);
+// Organization rate limit removed for consumer app
 
 // Demo mode removed for consumer app
 
@@ -256,9 +256,7 @@ app.use((req, res, next) => {
 
     // Corporate routes removed for consumer app
 
-    // Register admin analytics routes with full Express app instance
-    const { registerAdminAnalyticsRoutes } = await import('./routes/admin-analytics');
-    registerAdminAnalyticsRoutes(app);
+    // Admin analytics removed for consumer app
 
     // Register performance monitoring routes with full Express app instance
     const { registerPerformanceRoutes } = await import('./routes/performance');
