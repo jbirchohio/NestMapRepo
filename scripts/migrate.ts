@@ -1,15 +1,12 @@
 #!/usr/bin/env tsx
 
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { migrate } from 'drizzle-orm/neon-serverless/migrator';
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import ws from 'ws';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
-
-neonConfig.webSocketConstructor = ws;
 
 if (!process.env.DATABASE_URL) {
   console.error('❌ DATABASE_URL environment variable is required');
@@ -17,7 +14,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle({ client: pool });
+const db = drizzle(pool);
 
 async function runMigrations() {
   console.log('🔄 Running database migrations...');

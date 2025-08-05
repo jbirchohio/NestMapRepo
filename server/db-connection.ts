@@ -1,18 +1,9 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from "@shared/schema";
 import { DB_CONFIG } from './config';
 
 // This is a standard database configuration file that works with any hosting environment
-
-// Configure WebSocket support for Neon serverless
-// (only needed for Neon Database - can be removed for other PostgreSQL providers)
-try {
-  neonConfig.webSocketConstructor = ws;
-} catch (error) {
-  console.warn('Failed to set webSocketConstructor, continuing without it', error);
-}
 
 // Check if database URL is provided
 if (!DB_CONFIG.url) {
@@ -28,7 +19,7 @@ export const pool = new Pool({
 });
 
 // Create Drizzle ORM instance
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });
 
 // Utility function to test database connection
 export async function testConnection() {
