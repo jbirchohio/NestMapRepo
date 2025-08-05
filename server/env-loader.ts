@@ -8,7 +8,7 @@
 if (!process.env.RAILWAY_ENVIRONMENT && (!process.env.NODE_ENV || process.env.NODE_ENV === 'development')) {
   try {
     // Use the CommonJS loader to avoid ESM issues
-    await import('./load-env.js');
+    await import('./load-env.cjs');
   } catch (error) {
     console.log('ℹ️  Could not load environment variables:', error);
   }

@@ -32,68 +32,39 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Split node_modules into vendor chunks
-          if (id.includes('node_modules')) {
-            // Mapbox is huge, put it in its own chunk
-            if (id.includes('mapbox-gl')) {
-              return 'mapbox';
-            }
-            // All Radix UI components in one chunk
-            if (id.includes('@radix-ui')) {
-              return 'radix-ui';
-            }
-            // React ecosystem
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
-            // Form libraries
-            if (id.includes('react-hook-form') || id.includes('@hookform')) {
-              return 'forms';
-            }
-            // Date utilities
-            if (id.includes('date-fns')) {
-              return 'date-utils';
-            }
-            // Routing
-            if (id.includes('wouter')) {
-              return 'routing';
-            }
-            // Data fetching
-            if (id.includes('@tanstack/react-query')) {
-              return 'data-fetching';
-            }
-            // Animation libraries
-            if (id.includes('framer-motion')) {
-              return 'animation';
-            }
-            // All other vendor code
+        manualChunks: (id) => {
+          // Keep React in the main vendor chunk to ensure it loads first
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
             return 'vendor';
           }
-        },
-        // Use content hash for better caching
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+          // Split other large dependencies
+          if (id.includes('@radix-ui/')) {
+            return 'radix-ui';
+          }
+          if (id.includes('mapbox-gl')) {
+            return 'mapbox';
+          }
+          if (id.includes('date-fns') || id.includes('clsx') || id.includes('class-variance-authority')) {
+            return 'utils';
+          }
+        }
       }
     },
     // Performance optimizations
-    target: 'es2020', // Use modern JS features
-    chunkSizeWarningLimit: 1000, // 1MB warning threshold
-    sourcemap: false, // No sourcemaps in production
-    minify: 'esbuild', // Use faster esbuild minifier
-    reportCompressedSize: false, // Skip gzip calculation for faster builds
-    // CSS optimization
+    target: 'es2020',
+    chunkSizeWarningLimit: 1500,
+    sourcemap: false,
+    minify: 'esbuild',
+    reportCompressedSize: false,
     cssMinify: true,
     cssCodeSplit: true
   },
   // Development optimizations
   server: {
     warmup: {
-      // Pre-transform heavy dependencies
       clientFiles: [
         './client/src/App.tsx',
-        './client/src/components/**/*.tsx'
+        './client/src/main.tsx'
       ]
     }
   },

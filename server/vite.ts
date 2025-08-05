@@ -83,9 +83,26 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve static assets directly
+  app.use(express.static(distPath, {
+    // Don't serve index.html for root requests
+    index: false
+  }));
 
+  // Handle all routes by serving index.html with replaced placeholders
   app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    const indexPath = path.resolve(distPath, "index.html");
+    let html = fs.readFileSync(indexPath, 'utf-8');
+    
+    // Replace placeholders
+    const nonce = Date.now().toString();
+    const mapboxToken = process.env.VITE_MAPBOX_TOKEN || '';
+    
+    html = html
+      .replace(/%NONCE%/g, nonce)
+      .replace(/%MAPBOX_TOKEN%/g, mapboxToken);
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
   });
 }
