@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/JWTAuthContext";
+import GoogleSignIn from "@/components/auth/GoogleSignIn";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -86,6 +87,28 @@ export default function AuthModal({
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
+            {/* Google Sign In */}
+            <div className="space-y-3">
+              <GoogleSignIn 
+                onSuccess={() => {
+                  onClose();
+                  if (redirectPath) {
+                    window.location.href = redirectPath;
+                  }
+                }}
+                onError={(error) => setError(error)}
+              />
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Or continue with email</span>
+                </div>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {view === 'signup' && (

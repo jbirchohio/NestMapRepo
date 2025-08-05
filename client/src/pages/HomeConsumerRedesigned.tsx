@@ -3,11 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
 import NewTripModalConsumer from "@/components/NewTripModalConsumer";
 import AITripChatModal from "@/components/AITripChatModal";
+import PackageSearch from "@/components/PackageSearch";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import { motion } from "framer-motion";
@@ -16,6 +18,8 @@ import {
   MessageSquare, Compass, Clock, Users, Plane,
   Camera, Heart, Zap, Globe, Star, ArrowRight
 } from "lucide-react";
+
+import { Package } from 'lucide-react';
 
 // Quick action cards - dynamically adjust based on user state
 const getQuickActions = (hasAI: boolean, userTrips: number) => {
@@ -42,6 +46,18 @@ const getQuickActions = (hasAI: boolean, userTrips: number) => {
       iconColor: 'text-blue-600',
       action: 'quick-trip',
       enabled: true
+    },
+    {
+      id: 'bundle-save',
+      icon: Package,
+      title: 'Bundle & Save',
+      description: 'Book flight + hotel together and save 22%',
+      color: 'from-purple-500 to-pink-500',
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+      action: 'package-search',
+      enabled: true,
+      badge: 'Save 22%'
     }
   ];
 
@@ -119,6 +135,7 @@ export default function HomeConsumerRedesigned() {
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isPackageSearchOpen, setIsPackageSearchOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("signup");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   
@@ -180,6 +197,9 @@ export default function HomeConsumerRedesigned() {
         break;
       case 'quick-trip':
         setIsNewTripModalOpen(true);
+        break;
+      case 'package-search':
+        setIsPackageSearchOpen(true);
         break;
       case 'explore':
         // For now, just open new trip modal - explore page coming soon
@@ -547,6 +567,22 @@ export default function HomeConsumerRedesigned() {
         isOpen={isAIChatOpen}
         onClose={() => setIsAIChatOpen(false)}
       />
+
+      {/* Package Search Modal */}
+      <Dialog open={isPackageSearchOpen} onOpenChange={setIsPackageSearchOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Package className="w-6 h-6 text-purple-600" />
+              Flight + Hotel Packages
+            </DialogTitle>
+            <DialogDescription>
+              Save an average of 22% when you book together
+            </DialogDescription>
+          </DialogHeader>
+          <PackageSearch />
+        </DialogContent>
+      </Dialog>
 
       {isAuthModalOpen && (
         <AuthModal
