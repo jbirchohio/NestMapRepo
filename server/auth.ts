@@ -61,7 +61,6 @@ export async function authenticateUser(email: string, password: string) {
       id: user.id,
       email: user.email,
       role: user.role || 'user',
-      organizationId: user.organization_id,
       displayName: user.display_name
     };
   } catch (error) {
@@ -84,7 +83,6 @@ export async function getUserById(authId: string) {
         id: user.id,
         email: user.email,
         role: user.role || 'admin',
-        organizationId: user.organization_id || 1,
         displayName: user.display_name || user.email
       };
     }

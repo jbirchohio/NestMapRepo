@@ -6,7 +6,6 @@ import { logger } from '../utils/logger';
 interface JWTUser {
   id: number;
   email: string;
-  organization_id: number;
   role: string;
   username: string;
 }
@@ -16,8 +15,6 @@ declare global {
   namespace Express {
     interface Request {
       user?: JWTUser;
-      organizationId?: number;
-      organization_id?: number;
     }
   }
 }
@@ -103,13 +100,9 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     req.user = {
       id: payload.id,
       email: payload.email,
-      organization_id: payload.organization_id || payload.organizationId,
       role: payload.role,
       username: payload.username
     };
-
-    req.organizationId = payload.organization_id;
-    req.organization_id = payload.organization_id;
 
     next();
   } catch (error) {
@@ -129,7 +122,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 }
 
 /**
- * Admin Role Middleware
+ * Admin Role Middleware - for app administrators only
  */
 export function requireAdminRole(req: Request, res: Response, next: NextFunction): void {
   if (!req.user || req.user.role !== 'admin') {
@@ -138,20 +131,3 @@ export function requireAdminRole(req: Request, res: Response, next: NextFunction
   }
   next();
 }
-
-/**
- * Superadmin Role Middleware
- * Accepts all superadmin role variations
- */
-export function requireSuperadminRole(req: Request, res: Response, next: NextFunction): void {
-  const superadminRoles = ['super_admin', 'superadmin', 'superadmin_owner', 'superadmin_staff', 'superadmin_auditor'];
-  
-  if (!req.user || !superadminRoles.includes(req.user.role)) {
-    res.status(403).json({ message: 'Superadmin access required' });
-    return;
-  }
-  next();
-}
-
-// Alias for backwards compatibility
-export const requireSuperAdmin = requireSuperadminRole;

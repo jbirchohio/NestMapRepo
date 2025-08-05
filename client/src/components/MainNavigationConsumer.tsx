@@ -75,33 +75,37 @@ export default function MainNavigationConsumer() {
                 </Link>
               </div>
               
-              {/* Desktop navigation */}
-              <div className="hidden md:ml-8 md:flex md:space-x-6">
-                {navigation.map((item) => (
-                  <Link key={item.name} href={item.href}>
-                    <a className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
-                      location === item.href
-                        ? 'text-purple-600 border-b-2 border-purple-600'
-                        : 'text-gray-700 hover:text-purple-600'
-                    }`}>
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {item.name}
-                    </a>
-                  </Link>
-                ))}
-              </div>
+              {/* Desktop navigation - only show when logged in */}
+              {user && (
+                <div className="hidden md:ml-8 md:flex md:space-x-6">
+                  {navigation.map((item) => (
+                    <Link key={item.name} href={item.href}>
+                      <a className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
+                        location === item.href
+                          ? 'text-purple-600 border-b-2 border-purple-600'
+                          : 'text-gray-700 hover:text-purple-600'
+                      }`}>
+                        <item.icon className="h-4 w-4 mr-2" />
+                        {item.name}
+                      </a>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right side */}
             <div className="flex items-center space-x-4">
-              {/* Plan Trip Button */}
-              <Button
-                onClick={() => setShowNewTripModal(true)}
-                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
-              >
-                <Plus className="h-4 w-4" />
-                Plan a Trip
-              </Button>
+              {/* Plan Trip Button - only show when logged in */}
+              {user && (
+                <Button
+                  onClick={() => setShowNewTripModal(true)}
+                  className="hidden md:flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  Plan a Trip
+                </Button>
+              )}
 
               {/* User menu */}
               {user ? (
@@ -162,29 +166,77 @@ export default function MainNavigationConsumer() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px]">
                   <div className="flex flex-col space-y-4 mt-8">
-                    <Button
-                      onClick={() => {
-                        setShowNewTripModal(true);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full justify-start gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Plan a Trip
-                    </Button>
-                    
-                    {navigation.map((item) => (
-                      <Link key={item.name} href={item.href}>
+                    {user ? (
+                      <>
                         <Button
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={() => {
+                            setShowNewTripModal(true);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full justify-start gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
                         >
-                          <item.icon className="h-4 w-4 mr-2" />
-                          {item.name}
+                          <Plus className="h-4 w-4" />
+                          Plan a Trip
                         </Button>
-                      </Link>
-                    ))}
+                        
+                        {navigation.map((item) => (
+                          <Link key={item.name} href={item.href}>
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <item.icon className="h-4 w-4 mr-2" />
+                              {item.name}
+                            </Button>
+                          </Link>
+                        ))}
+                        
+                        <div className="pt-4 mt-4 border-t">
+                          <Link href="/profile">
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <User className="h-4 w-4 mr-2" />
+                              Profile
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-red-600"
+                            onClick={() => {
+                              handleLogout();
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Log out
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/login">
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Log in
+                          </Button>
+                        </Link>
+                        <Link href="/signup">
+                          <Button
+                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Sign up
+                          </Button>
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>
