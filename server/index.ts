@@ -7,7 +7,8 @@ import path from "path";
 import fs from "fs";
 import apiRoutes from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
-import { initializeSystemSettings, checkMaintenanceMode, getSetting } from "./services/systemSettingsService";
+// System settings not needed for consumer app
+// import { initializeSystemSettings, checkMaintenanceMode, getSetting } from "./services/systemSettingsService";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { performanceOptimizer } from "./services/performanceOptimizer";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
@@ -240,12 +241,12 @@ app.use((req, res, next) => {
 
   console.log('📍 Mounting API routes...');
   try {
-    // Initialize system settings
-    await initializeSystemSettings();
-    console.log('✅ System settings initialized');
+    // Skip system settings for consumer app - not needed
+    // await initializeSystemSettings();
+    // console.log('✅ System settings initialized');
     
-    // Add maintenance mode check middleware
-    app.use(checkMaintenanceMode);
+    // Skip maintenance mode check for consumer app
+    // app.use(checkMaintenanceMode);
     
     // Mount API routes with proper middleware order
     app.use('/api', apiRoutes);
