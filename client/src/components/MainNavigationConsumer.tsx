@@ -32,15 +32,15 @@ import {
 
 export default function MainNavigationConsumer() {
   const [location, setLocation] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNewTripModal, setShowNewTripModal] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await logout();
-      setLocation('/login');
+      await signOut();
+      setLocation('/');
       toast({
         title: "Logged out successfully",
         description: "See you next time!",

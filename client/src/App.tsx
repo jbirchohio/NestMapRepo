@@ -8,7 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/JWTAuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import MainNavigationConsumer from "@/components/MainNavigationConsumer";
 import SimpleFooter from "@/components/SimpleFooter";
-import HomeConsumer from "@/pages/HomeConsumer";
+import HomeConsumerRedesigned from "@/pages/HomeConsumerRedesigned";
 import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
 import Bookings from "@/pages/Bookings";
@@ -16,8 +16,6 @@ import TripOptimizer from "@/pages/TripOptimizer";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
-import Login from "@/pages/Login";
-import Signup from "@/pages/Signup";
 import FlightSearch from "@/pages/FlightSearch";
 import FlightBooking from "@/pages/FlightBooking";
 import FlightResults from "@/pages/FlightResults";
@@ -43,9 +41,19 @@ function Router() {
       <main className="flex-1">
         <Switch>
           {/* Core consumer routes */}
-          <Route path="/" component={HomeConsumer} />
-          <Route path="/login" component={Login} />
-          <Route path="/signup" component={Signup} />
+          <Route path="/" component={HomeConsumerRedesigned} />
+          <Route path="/login">
+            {() => {
+              window.location.href = '/?auth=login';
+              return <HomeConsumerRedesigned />;
+            }}
+          </Route>
+          <Route path="/signup">
+            {() => {
+              window.location.href = '/?auth=signup';
+              return <HomeConsumerRedesigned />;
+            }}
+          </Route>
           <Route path="/trip/:id" component={TripPlanner} />
           <Route path="/trip-planner/:id" component={TripPlanner} />
           <Route path="/trip-planner" component={TripPlanner} />
