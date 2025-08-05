@@ -21,6 +21,12 @@ export const SERVER_CONFIG = {
 function getCorsOrigin(): string | string[] {
   const env = process.env.NODE_ENV || 'development';
   
+  console.log('🔍 CORS Debug:', {
+    NODE_ENV: env,
+    CORS_ORIGIN: process.env.CORS_ORIGIN,
+    ALL_ENV_KEYS: Object.keys(process.env).filter(k => k.includes('CORS'))
+  });
+  
   if (env === 'production') {
     if (!process.env.CORS_ORIGIN) {
       throw new Error('CORS_ORIGIN environment variable is required in production');
