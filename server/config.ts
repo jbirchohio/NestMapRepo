@@ -24,11 +24,25 @@ function getCorsOrigin(): string | string[] {
   console.log('🔍 CORS Debug:', {
     NODE_ENV: env,
     CORS_ORIGIN: process.env.CORS_ORIGIN,
-    ALL_ENV_KEYS: Object.keys(process.env).filter(k => k.includes('CORS'))
+    ALL_ENV_KEYS: Object.keys(process.env).filter(k => k.includes('CORS')),
+    TOTAL_ENV_VARS: Object.keys(process.env).length,
+    RAILWAY_ENV: process.env.RAILWAY_ENVIRONMENT,
+    PORT: process.env.PORT,
+    DATABASE_URL_EXISTS: !!process.env.DATABASE_URL
   });
+  
+  // Special handling for Railway deployment
+  if (process.env.RAILWAY_ENVIRONMENT) {
+    // For Railway, check if CORS_ORIGIN is set, if not use the Railway domain
+    const corsOrigin = process.env.CORS_ORIGIN || `https://${process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'nestmaprepo-production.up.railway.app'}`;
+    console.log('🚂 Railway CORS configuration:', corsOrigin);
+    return corsOrigin.split(',').map(origin => origin.trim());
+  }
   
   if (env === 'production') {
     if (!process.env.CORS_ORIGIN) {
+      // Log all available environment variables for debugging
+      console.error('❌ CORS_ORIGIN not found. Available env vars:', Object.keys(process.env).sort());
       throw new Error('CORS_ORIGIN environment variable is required in production');
     }
     // Support comma-separated multiple origins

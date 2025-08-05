@@ -1,4 +1,6 @@
-import 'dotenv/config';
+// Load environment variables with platform-specific handling
+import './env-loader';
+import { performStartupCheck } from './startup-check';
 import express, { type Request, Response, NextFunction } from "express";
 // Session-based auth removed - using JWT only
 import path from "path";
@@ -221,6 +223,16 @@ app.use((req, res, next) => {
 
 (async () => {
   console.log('🚀 Starting server initialization...');
+  
+  // Perform startup environment check
+  const startupStatus = performStartupCheck();
+  if (!startupStatus.hasRequiredVars) {
+    console.error('❌ Missing required environment variables:', startupStatus.missingVars);
+    if (process.env.NODE_ENV === 'production') {
+      console.error('🛑 Stopping server due to missing configuration');
+      process.exit(1);
+    }
+  }
   
   // Initialize Sentry error monitoring first
   sentryService.init({
