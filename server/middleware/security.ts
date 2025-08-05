@@ -161,8 +161,9 @@ export function secureFileUpload(req: Request, res: Response, next: NextFunction
  * CORS security configuration
  */
 export async function configureCORS(req: Request, res: Response, next: NextFunction) {
-  // Get allowed origins from system settings
-  const corsOrigins = await getSetting('allowed_cors_origins') || 'http://localhost:5000,http://localhost:3000';
+  // Get allowed origins from environment variable first, then fall back to system settings
+  const envCorsOrigins = process.env.CORS_ORIGIN;
+  const corsOrigins = envCorsOrigins || await getSetting('allowed_cors_origins') || 'http://localhost:5000,http://localhost:3000';
   const allowedOrigins = corsOrigins.split(',').map((o: string) => o.trim());
   const origin = req.get('origin');
 
