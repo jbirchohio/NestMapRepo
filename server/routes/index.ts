@@ -11,6 +11,7 @@ import healthRoutes from './health';
 import flightRoutes from './flights';
 import weatherRoutes from './weather';
 import viatorRoutes from './viator';
+import consumerBookingsRouter from './bookings-consumer';
 
 const router = Router();
 
@@ -26,6 +27,7 @@ router.use('/health', healthRoutes);
 router.use('/flights', flightRoutes);
 router.use('/weather', weatherRoutes);
 router.use('/viator', viatorRoutes);
+router.use('/consumer/bookings', consumerBookingsRouter);
 
 // Templates endpoint
 router.get('/templates', async (req, res) => {

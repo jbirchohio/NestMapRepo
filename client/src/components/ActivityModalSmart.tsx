@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Coffee, Utensils, ShoppingBag, Camera, Loader2, MapPin, Star } from "lucide-react";
+import { X, Coffee, Utensils, ShoppingBag, Camera, Loader2, MapPin, Star, ShoppingCart, Sparkles } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import useTrip from "@/hooks/useTrip";
 import BookableActivity from "@/components/BookableActivity";
+import InAppBooking from "@/components/InAppBooking";
 
 interface QuickOption {
   emoji: string;
@@ -40,6 +41,9 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId }: an
   const [customSearch, setCustomSearch] = useState("");
   const { trip } = useTrip(tripId);
   const [selectedPlace, setSelectedPlace] = useState<SuggestedPlace | null>(null);
+  const [showBooking, setShowBooking] = useState(false);
+  const [bookableItems, setBookableItems] = useState<any[]>([]);
+  const [showAiSuggestions, setShowAiSuggestions] = useState(false);
 
   // Search for places when category is selected
   useEffect(() => {
@@ -149,6 +153,48 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId }: an
     }
   };
 
+  const getAiSuggestions = async () => {
+    setShowAiSuggestions(true);
+    setLoading(true);
+    try {
+      const response = await fetch("/api/ai/suggest-activities", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ 
+          city: trip?.city || "current location",
+          interests: ["popular attractions", "local favorites"],
+          duration: 1
+        })
+      });
+      
+      if (!response.ok) throw new Error("Failed to get suggestions");
+      
+      const data = await response.json();
+      
+      if (data.activities && Array.isArray(data.activities)) {
+        // Convert AI suggestions to quick options format
+        const aiOptions = data.activities.slice(0, 8).map((activity: any, idx: number) => ({
+          emoji: ["🏛️", "🎨", "🌳", "🎭", "🏰", "🎡", "🌊", "🏔️"][idx] || "📍",
+          text: activity.title,
+          search: activity.title,
+          time: activity.best_time || "10:00 AM"
+        }));
+        
+        // Replace quick options temporarily
+        quickOptions.splice(0, quickOptions.length, ...aiOptions);
+        setShowAiSuggestions(false);
+      }
+    } catch (error) {
+      console.error("Error getting AI suggestions:", error);
+    } finally {
+      setLoading(false);
+      setShowAiSuggestions(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
       <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg animate-slide-up max-h-[85vh] flex flex-col">
@@ -168,9 +214,25 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId }: an
           {/* Step 1: Choose activity type */}
           {!selectedCategory && !customSearch && (
             <div className="p-4">
-              <p className="text-sm text-gray-600 mb-4">
-                Pick something to do
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-600">
+                  Pick something to do
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={getAiSuggestions}
+                  disabled={loading}
+                  className="text-xs"
+                >
+                  {loading ? (
+                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  ) : (
+                    <Sparkles className="w-3 h-3 mr-1" />
+                  )}
+                  AI Suggestions
+                </Button>
+              </div>
               
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {quickOptions.map((option) => (

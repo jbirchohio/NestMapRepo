@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import SocialAuthButtons from '@/components/SocialAuthButtons';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -97,6 +98,8 @@ export default function Login() {
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
+
+              <SocialAuthButtons mode="login" />
 
               <div className="text-center text-sm">
                 <span className="text-gray-600">Don't have an account? </span>

@@ -8,6 +8,7 @@ import MapView from "@/components/MapView";
 import ShareTripModal from "@/components/ShareTripModal";
 import ActivityModal from "@/components/ActivityModal";
 import ActivityModalConsumer from "@/components/ActivityModalConsumer";
+import AITripChat from "@/components/AITripChat";
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
 import { useAutoComplete } from "@/hooks/useAutoComplete";
@@ -15,6 +16,7 @@ import { useMapboxDirections } from "@/hooks/useMapboxDirections";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
+import { MessageCircle, X } from "lucide-react";
 
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
@@ -69,6 +71,9 @@ export default function TripPlanner() {
   
   // State for map routes
   const [calculatedRoutes, setCalculatedRoutes] = useState<MapRoute[]>([]);
+  
+  // State for AI chat
+  const [showAIChat, setShowAIChat] = useState(false);
   
   // Centralized activity modal handlers
   const handleOpenActivityModal = (activity: ClientActivity | null = null, day: Date | null = null) => {
@@ -362,6 +367,21 @@ export default function TripPlanner() {
     setMobileView(mobileView === 'itinerary' ? 'map' : 'itinerary');
   };
 
+  // Handle adding activities from AI chat
+  const handleAddActivitiesFromAI = async (newActivities: any[]) => {
+    for (const activity of newActivities) {
+      try {
+        await apiRequest('POST', '/api/activities', {
+          ...activity,
+          tripId: trip.id,
+        });
+      } catch (error) {
+        console.error('Error adding activity:', error);
+      }
+    }
+    refetchActivities();
+  };
+
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
       {/* Mobile view toggle buttons */}
@@ -463,6 +483,40 @@ export default function TripPlanner() {
           onSave={handleActivitySaved}
         />
       )}
+      
+      {/* AI Chat Interface */}
+      {showAIChat && (
+        <div className="fixed bottom-4 right-4 w-96 h-[600px] z-50 shadow-2xl rounded-lg overflow-hidden animate-in slide-in-from-bottom-5">
+          <AITripChat
+            tripId={tripId}
+            tripDetails={{
+              trip: {
+                id: trip.id,
+                title: trip.title,
+                city: trip.city,
+                start_date: trip.startDate,
+                end_date: trip.endDate,
+              },
+              activities,
+            }}
+            onAddActivity={handleOpenActivityModal}
+            onUpdateItinerary={handleAddActivitiesFromAI}
+          />
+        </div>
+      )}
+      
+      {/* Floating AI Chat Button */}
+      <button
+        onClick={() => setShowAIChat(!showAIChat)}
+        className="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+        aria-label="Toggle AI Assistant"
+      >
+        {showAIChat ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <MessageCircle className="w-6 h-6" />
+        )}
+      </button>
     </AppShell>
   );
 }

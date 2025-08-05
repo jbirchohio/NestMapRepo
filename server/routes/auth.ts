@@ -4,6 +4,7 @@ import { db } from "../db-connection";
 import { users, organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';
+import socialAuthRoutes from './auth-social';
 
 const router = express.Router();
 
@@ -213,5 +214,8 @@ router.get('/user', async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to get user' });
   }
 });
+
+// Mount social auth routes
+router.use('/social', socialAuthRoutes);
 
 export default router;

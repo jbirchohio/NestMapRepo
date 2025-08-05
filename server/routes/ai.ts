@@ -642,4 +642,54 @@ Format as JSON:
   }
 });
 
+// POST /api/ai/trip-assistant - Conversational AI assistant for trip planning
+router.post("/trip-assistant", async (req, res) => {
+  try {
+    const { trip_id, question, trip_context, conversation_history } = req.body;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    
+    if (!question) {
+      return res.status(400).json({
+        success: false,
+        error: "Question is required"
+      });
+    }
+
+    // Import the tripAssistant function from openai.ts
+    const { tripAssistant } = await import("../openai");
+    
+    // Call the trip assistant with context
+    const result = await tripAssistant(question, {
+      trip: trip_context,
+      conversationHistory: conversation_history || []
+    });
+    
+    // Handle different response types
+    if (typeof result === 'string') {
+      res.json({
+        success: true,
+        answer: result,
+        suggestions: []
+      });
+    } else {
+      // Result contains activities (parsed itinerary)
+      res.json({
+        success: true,
+        answer: result.answer,
+        activities: result.activities || [],
+        suggestions: []
+      });
+    }
+  } catch (error) {
+    console.error("AI trip-assistant error:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to process your request" 
+    });
+  }
+});
+
 export default router;

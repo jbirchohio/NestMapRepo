@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Sparkles } from 'lucide-react';
+import SocialAuthButtons from '@/components/SocialAuthButtons';
 
 export default function Signup() {
   const [, setLocation] = useLocation();
@@ -113,6 +114,8 @@ export default function Signup() {
               >
                 {isLoading ? 'Creating account...' : 'Create Free Account'}
               </Button>
+
+              <SocialAuthButtons mode="signup" />
 
               <div className="text-center text-sm">
                 <span className="text-gray-600">Already have an account? </span>
