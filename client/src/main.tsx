@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import 'mapbox-gl/dist/mapbox-gl.css';
+import "./lib/fetchInterceptor";
 
 // Initialize the root element for React
 const root = document.getElementById("root");

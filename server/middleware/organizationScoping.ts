@@ -126,7 +126,7 @@ export async function resolveDomainOrganization(req: Request, res: Response, nex
 
   try {
     // Skip for localhost and main domain
-    if (host.includes('localhost') || host === 'nestmap.com' || host === 'www.nestmap.com') {
+    if (host.includes('localhost') || host === 'remvana.com' || host === 'www.remvana.com') {
       return next();
     }
 

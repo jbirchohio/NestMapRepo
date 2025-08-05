@@ -46,7 +46,7 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
 
   const { data: collaborators = [], isLoading } = useQuery<TripCollaborator[]>({
     queryKey: [`/api/trips/${tripId}/collaborators`],
-    queryFn: () => apiRequest('GET', `/api/trips/${tripId}/collaborators`).then(res => res.json()),
+    queryFn: () => apiRequest('GET', `/api/trips/${tripId}/collaborators`),
     enabled: !!tripId
   });
 

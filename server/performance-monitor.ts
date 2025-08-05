@@ -229,6 +229,14 @@ export function createPerformanceMiddleware() {
 }
 
 // Clean up old data every hour
-setInterval(() => {
+const performanceCleanupInterval = setInterval(() => {
   performanceMonitor.clearOldData();
 }, 60 * 60 * 1000);
+
+// Export cleanup function for tests
+export function stopPerformanceCleanup() {
+  if (performanceCleanupInterval) {
+    clearInterval(performanceCleanupInterval);
+    console.log('Performance cleanup interval stopped');
+  }
+}

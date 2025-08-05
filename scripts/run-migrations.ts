@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Database migration runner for NestMap
+ * Database migration runner for Remvana
  * Replaces the push-only system with proper migration management
  */
 

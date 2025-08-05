@@ -34,11 +34,11 @@ let commandArgs;
 if (mode === 'dev' || mode === 'development') {
   command = 'npm';
   commandArgs = ['run', 'dev'];
-  console.log('Starting NestMap in development mode...');
+  console.log('Starting Remvana in development mode...');
 } else if (mode === 'prod' || mode === 'production') {
   command = 'npm';
   commandArgs = ['start'];
-  console.log('Starting NestMap in production mode...');
+  console.log('Starting Remvana in production mode...');
 } else if (mode === 'db:push') {
   command = 'npm';
   commandArgs = ['run', 'db:push'];
@@ -46,7 +46,7 @@ if (mode === 'dev' || mode === 'development') {
 } else if (mode === 'build') {
   command = 'npm';
   commandArgs = ['run', 'build'];
-  console.log('Building NestMap for production...');
+  console.log('Building Remvana for production...');
 } else {
   console.error(`Unknown command: ${mode}`);
   console.log('Available commands: dev, prod, db:push, build');

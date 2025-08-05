@@ -128,7 +128,7 @@ async function validateMobileModalFixes() {
 
 // Run all validations
 async function runValidations() {
-  console.log('🧪 NestMap Platform Validation Suite');
+  console.log('🧪 Remvana Platform Validation Suite');
   console.log('=====================================\n');
   
   await validateSubscriptionTiers();

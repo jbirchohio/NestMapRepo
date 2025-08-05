@@ -44,6 +44,12 @@ export default function ItinerarySidebar({
   mobileView,
   setMobileView,
 }: ItinerarySidebarProps) {
+  console.log('ItinerarySidebar render:', { 
+    tripHasDays: !!trip.days, 
+    daysLength: trip.days?.length,
+    firstDay: trip.days?.[0],
+    activeDay 
+  });
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isOptimizationModalOpen, setIsOptimizationModalOpen] = useState(false);
@@ -63,34 +69,28 @@ export default function ItinerarySidebar({
       console.log("Optimization result:", result);
       
       // Apply each optimization by updating the activity times
+      let successfulUpdates = 0;
       for (const optimization of result.optimizedActivities) {
-        // Try to find activity by ID first, then by title as fallback
-        let activity = activities.find(a => a.id.toString() === optimization.id);
+        // Find activity by ID - optimization.id should be a string representation of the numeric ID
+        const activity = activities.find(a => a.id.toString() === optimization.id.toString());
         
-        // Fallback: If ID matching fails, try matching by title
         if (!activity) {
-          activity = activities.find(a => a.title.toLowerCase() === optimization.id.toLowerCase());
-          console.log(`Fallback: Matching by title "${optimization.id}" found:`, !!activity);
+          console.warn(`Could not find activity with ID ${optimization.id}`);
+          continue;
         }
         
-        console.log(`Processing optimization for activity ${optimization.id}:`, {
-          foundActivity: !!activity,
-          matchedById: activities.some(a => a.id.toString() === optimization.id),
-          matchedByTitle: activities.some(a => a.title.toLowerCase() === optimization.id.toLowerCase()),
-          currentTime: activity?.time,
-          suggestedTime: optimization.suggestedTime,
-          willUpdate: activity && activity.time !== optimization.suggestedTime
-        });
-        
-        if (activity && activity.time !== optimization.suggestedTime) {
+        if (activity.time !== optimization.suggestedTime) {
           try {
             console.log(`Updating activity ${activity.id} (${activity.title}) from ${activity.time} to ${optimization.suggestedTime}`);
+            
+            // Send update request with minimal data to avoid overwrites
             await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
-              ...activity,
               time: optimization.suggestedTime,
             });
+            
+            successfulUpdates++;
           } catch (updateError) {
-            console.error("Failed to update activity:", updateError);
+            console.error(`Failed to update activity ${activity.id}:`, updateError);
           }
         }
       }
@@ -100,7 +100,7 @@ export default function ItinerarySidebar({
       
       toast({
         title: "🚀 Itinerary Auto-Optimized!",
-        description: `Applied ${result.optimizedActivities.length} time optimizations. ${result.recommendations.join(". ")}`,
+        description: `Applied ${successfulUpdates} time optimization${successfulUpdates !== 1 ? 's' : ''}. ${result.recommendations?.length ? result.recommendations.join(". ") : ''}`,
       });
     } catch (error) {
       toast({
@@ -119,7 +119,7 @@ export default function ItinerarySidebar({
         ...todo,
         completed: !todo.completed,
       });
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id, "todos"] });
@@ -133,7 +133,7 @@ export default function ItinerarySidebar({
         task: newTodoText,
         completed: false,
       });
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id, "todos"] });
@@ -148,7 +148,7 @@ export default function ItinerarySidebar({
   const toggleTripCompletion = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("PUT", `/api/trips/${trip.id}/toggle-complete`, {});
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id] });
@@ -168,7 +168,7 @@ export default function ItinerarySidebar({
           tripId: trip.id,
           content: newNote,
         });
-        return res.json();
+        return res;
       } 
       // Otherwise update existing note (assuming there's only one note per trip for simplicity)
       else {
@@ -176,7 +176,7 @@ export default function ItinerarySidebar({
           tripId: trip.id,
           content: newNote,
         });
-        return res.json();
+        return res;
       }
     },
     onSuccess: () => {
@@ -254,7 +254,8 @@ export default function ItinerarySidebar({
             {/* Day Selection - better stacking for days */}
             <div className="mb-4">
               <div className="grid grid-cols-2 gap-2">
-                {trip.days?.map((day, index) => (
+                {trip.days && trip.days.length > 0 ? (
+                  trip.days.map((day, index) => (
                   <Button
                     key={day.toISOString()}
                     variant={day.toDateString() === activeDay.toDateString() ? "default" : "outline"}
@@ -263,7 +264,12 @@ export default function ItinerarySidebar({
                   >
                     Day {index + 1} - {formatDate(day)}
                   </Button>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground text-center py-2">
+                    No days available for this trip
+                  </div>
+                )}
               </div>
             </div>
 

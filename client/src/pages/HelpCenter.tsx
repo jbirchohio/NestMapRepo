@@ -167,7 +167,7 @@ export default function HelpCenter() {
             Help Center
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">
-            Get help with NestMap and make the most of your travel planning
+            Get help with Remvana and make the most of your travel planning
           </p>
           
           {/* Search */}
@@ -242,7 +242,7 @@ export default function HelpCenter() {
                   </div>
                   <CardTitle>Quick Start Guide</CardTitle>
                   <CardDescription>
-                    Learn the basics of creating and managing trips in NestMap
+                    Learn the basics of creating and managing trips in Remvana
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -368,7 +368,7 @@ export default function HelpCenter() {
                       <div>
                         <div className="font-medium">Email Support</div>
                         <div className="text-sm text-slate-600 dark:text-slate-400">
-                          support@nestmap.com
+                          support@remvana.com
                         </div>
                         <div className="text-xs text-slate-500">
                           Response within 24 hours

@@ -212,6 +212,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
+    console.log('Storage createTrip input:', {
+      city: insertTrip.city,
+      city_latitude: insertTrip.city_latitude,
+      city_longitude: insertTrip.city_longitude
+    });
+    
     // Transform camelCase frontend data to snake_case database format
     const dbData: any = {
       title: insertTrip.title,
@@ -226,10 +232,21 @@ export class DatabaseStorage implements IStorage {
       city: insertTrip.city,
       country: insertTrip.country,
       location: insertTrip.location,
+      // Add coordinate fields
+      city_latitude: insertTrip.city_latitude,
+      city_longitude: insertTrip.city_longitude,
       hotel: insertTrip.hotel,
+      hotel_latitude: insertTrip.hotel_latitude,
+      hotel_longitude: insertTrip.hotel_longitude,
       completed: insertTrip.completed || false,
       budget: insertTrip.budget
     };
+    
+    console.log('Storage dbData to insert:', {
+      city: dbData.city,
+      city_latitude: dbData.city_latitude,
+      city_longitude: dbData.city_longitude
+    });
     
     const [trip] = await db
       .insert(trips)
@@ -248,6 +265,12 @@ export class DatabaseStorage implements IStorage {
     if (tripData.end_date !== undefined) dbData.end_date = tripData.end_date;
     if (tripData.isPublic !== undefined) dbData.is_public = tripData.isPublic;
     if (tripData.budget !== undefined) dbData.budget = tripData.budget;
+    if (tripData.city !== undefined) dbData.city = tripData.city;
+    if (tripData.city_latitude !== undefined) dbData.city_latitude = tripData.city_latitude;
+    if (tripData.city_longitude !== undefined) dbData.city_longitude = tripData.city_longitude;
+    if (tripData.hotel !== undefined) dbData.hotel = tripData.hotel;
+    if (tripData.hotel_latitude !== undefined) dbData.hotel_latitude = tripData.hotel_latitude;
+    if (tripData.hotel_longitude !== undefined) dbData.hotel_longitude = tripData.hotel_longitude;
     
     const [updatedTrip] = await db
       .update(trips)
@@ -306,6 +329,12 @@ export class DatabaseStorage implements IStorage {
       date: insertActivity.date,
       time: insertActivity.time,
       location_name: insertActivity.locationName,
+      latitude: insertActivity.latitude,
+      longitude: insertActivity.longitude,
+      notes: insertActivity.notes,
+      tag: insertActivity.tag,
+      assigned_to: insertActivity.assignedTo,
+      travel_mode: insertActivity.travelMode || 'walking',
       order: insertActivity.order || 0,
       completed: insertActivity.completed || false,
       organization_id: insertActivity.organizationId || null
@@ -333,10 +362,27 @@ export class DatabaseStorage implements IStorage {
         return updatedActivity;
       }
 
+      // Transform camelCase to snake_case for database update
+      const dbData: any = {};
+      if (activityData.tripId !== undefined) dbData.trip_id = activityData.tripId;
+      if (activityData.title !== undefined) dbData.title = activityData.title;
+      if (activityData.date !== undefined) dbData.date = activityData.date;
+      if (activityData.time !== undefined) dbData.time = activityData.time;
+      if (activityData.locationName !== undefined) dbData.location_name = activityData.locationName;
+      if (activityData.latitude !== undefined) dbData.latitude = activityData.latitude;
+      if (activityData.longitude !== undefined) dbData.longitude = activityData.longitude;
+      if (activityData.notes !== undefined) dbData.notes = activityData.notes;
+      if (activityData.tag !== undefined) dbData.tag = activityData.tag;
+      if (activityData.assignedTo !== undefined) dbData.assigned_to = activityData.assignedTo;
+      if (activityData.travelMode !== undefined) dbData.travel_mode = activityData.travelMode;
+      if (activityData.order !== undefined) dbData.order = activityData.order;
+      if (activityData.completed !== undefined) dbData.completed = activityData.completed;
+      if (activityData.organizationId !== undefined) dbData.organization_id = activityData.organizationId;
+
       // Normal update for other cases
       const [updatedActivity] = await db
         .update(activities)
-        .set(activityData)
+        .set(dbData)
         .where(eq(activities.id, id))
         .returning();
 

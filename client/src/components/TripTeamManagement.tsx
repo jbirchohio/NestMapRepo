@@ -83,7 +83,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   // Fetch trip details to get destination information
   const { data: tripData } = useQuery<ClientTrip>({
     queryKey: [`/api/trips/${tripId}`],
-    queryFn: () => apiRequest('GET', `/api/trips/${tripId}`).then(res => res.json()),
+    queryFn: () => apiRequest('GET', `/api/trips/${tripId}`),
     enabled: !!tripId
   });
 

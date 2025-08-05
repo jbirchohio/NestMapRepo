@@ -16,7 +16,7 @@ try {
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = process.env.PORT || 5000;
 
-console.log(`Starting NestMap in ${NODE_ENV} mode on port ${PORT}`);
+console.log(`Starting Remvana in ${NODE_ENV} mode on port ${PORT}`);
 
 // Check for required environment variables
 const requiredVars = [

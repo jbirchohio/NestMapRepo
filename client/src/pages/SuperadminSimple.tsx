@@ -23,43 +23,43 @@ export default function Superadmin() {
   // Data queries
   const { data: organizations = [], isLoading: orgsLoading } = useQuery({
     queryKey: ['/api/superadmin/organizations'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/organizations').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/superadmin/organizations'),
     retry: false
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/superadmin/users'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/users').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/superadmin/users'),
     retry: false
   });
 
   const { data: activeSessions = [] } = useQuery({
     queryKey: ['/api/superadmin/sessions'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/sessions').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/superadmin/sessions'),
     retry: false
   });
 
   const { data: backgroundJobs = [] } = useQuery({
     queryKey: ['/api/superadmin/jobs'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/jobs').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/superadmin/jobs'),
     retry: false
   });
 
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['/api/superadmin/activity'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/activity').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/superadmin/activity'),
     retry: false
   });
 
   const { data: billingData = [] } = useQuery({
     queryKey: ['/api/superadmin/billing'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/billing').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/superadmin/billing'),
     retry: false
   });
 
   const { data: featureFlags = [] } = useQuery({
     queryKey: ['/api/superadmin/flags'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/flags').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/superadmin/flags'),
     retry: false
   });
 

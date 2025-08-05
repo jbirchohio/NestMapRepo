@@ -8,7 +8,7 @@ export default function useTrip(tripId: string | number) {
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
     if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("nestmap_guest_trips");
+    const stored = localStorage.getItem("remvana_guest_trips");
     if (!stored) return null;
     
     const guestTrips = JSON.parse(stored);
@@ -31,7 +31,7 @@ export default function useTrip(tripId: string | number) {
       
       // For regular trips, fetch from server with authentication
       const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}`, undefined);
-      return res.json();
+      return res; // apiRequest already parses JSON
     },
     enabled: !!tripId && Number(tripId) > 0, // Don't fetch for guest trips (negative IDs)
     initialData: () => {
@@ -64,7 +64,7 @@ export default function useTrip(tripId: string | number) {
       }
       
       const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/todos`, undefined);
-      return res.json();
+      return res; // apiRequest already parses JSON
     },
     enabled: !!tripId,
   });
@@ -86,7 +86,7 @@ export default function useTrip(tripId: string | number) {
       }
       
       const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/notes`, undefined);
-      return res.json();
+      return res; // apiRequest already parses JSON
     },
     enabled: !!tripId,
   });
@@ -100,7 +100,7 @@ export default function useTrip(tripId: string | number) {
     
     try {
       const res = await apiRequest("PUT", `${API_ENDPOINTS.TRIPS}/${tripId}`, updateData);
-      return await res.json();
+      return res; // apiRequest already parses JSON
     } catch (error) {
       console.error("Error updating trip:", error);
       throw error;

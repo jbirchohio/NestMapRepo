@@ -132,8 +132,8 @@ function generateProposalSentEmailHTML(data: ProposalNotificationData): string {
         </div>
         
         <div class="footer">
-          <p>This proposal was generated using NestMap's professional travel planning platform.</p>
-          <p>Need support? Contact us at support@nestmap.app</p>
+          <p>This proposal was generated using Remvana's professional travel planning platform.</p>
+          <p>Need support? Contact us at support@remvana.app</p>
         </div>
       </div>
     </body>
@@ -218,17 +218,17 @@ function generateAgentConfirmationHTML(data: ProposalNotificationData): string {
             <li>💬 Follow up proactively based on engagement data</li>
           </ul>
           
-          <p>Track this proposal's performance in your NestMap dashboard to see when it's opened, which sections get the most attention, and when it's ready for follow-up.</p>
+          <p>Track this proposal's performance in your Remvana dashboard to see when it's opened, which sections get the most attention, and when it's ready for follow-up.</p>
           
           <p>Good luck closing this deal!</p>
           
           <p>Best regards,<br>
-          The NestMap Team</p>
+          The Remvana Team</p>
         </div>
         
         <div class="footer">
-          <p>Professional travel proposals powered by NestMap</p>
-          <p>View analytics: <a href="https://nestmap.app/proposals/analytics">Dashboard</a></p>
+          <p>Professional travel proposals powered by Remvana</p>
+          <p>View analytics: <a href="https://remvana.app/proposals/analytics">Dashboard</a></p>
         </div>
       </div>
     </body>
@@ -256,12 +256,12 @@ Next Steps:
 - Get alerts when sections are viewed or signatures are collected
 - Follow up proactively based on engagement data
 
-Track this proposal's performance in your NestMap dashboard.
+Track this proposal's performance in your Remvana dashboard.
 
 Good luck closing this deal!
 
 Best regards,
-The NestMap Team
+The Remvana Team
   `.trim();
 }
 
@@ -319,7 +319,7 @@ function generateProposalViewedHTML(data: ProposalViewData): string {
           </ul>
           
           <div style="text-align: center;">
-            <a href="https://nestmap.app/proposals/analytics" class="cta-button">📈 View Full Analytics</a>
+            <a href="https://remvana.app/proposals/analytics" class="cta-button">📈 View Full Analytics</a>
           </div>
           
           <p>Remember: Engaged prospects are more likely to book. Use this momentum to guide them toward signing the proposal!</p>
@@ -327,11 +327,11 @@ function generateProposalViewedHTML(data: ProposalViewData): string {
           <p>Keep up the great work!</p>
           
           <p>Best regards,<br>
-          The NestMap Team</p>
+          The Remvana Team</p>
         </div>
         
         <div class="footer">
-          <p>Real-time proposal tracking powered by NestMap</p>
+          <p>Real-time proposal tracking powered by Remvana</p>
           <p>Maximize your conversion rates with engagement insights</p>
         </div>
       </div>
@@ -370,11 +370,11 @@ This is a great sign! Now might be perfect time to:
 
 Engaged prospects are more likely to book. Use this momentum!
 
-View full analytics: https://nestmap.app/proposals/analytics
+View full analytics: https://remvana.app/proposals/analytics
 
 Keep up the great work!
 
 Best regards,
-The NestMap Team
+The Remvana Team
   `.trim();
 }

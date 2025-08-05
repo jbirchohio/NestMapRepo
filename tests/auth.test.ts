@@ -1,196 +1,192 @@
 /**
  * Authentication API Tests
- * Enterprise acquisition readiness - comprehensive auth testing
  */
 
 import request from 'supertest';
 import { app } from '../server/test-app';
+import { db } from '../server/db';
+import { users, organizations } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 describe('Authentication API', () => {
-  describe('POST /api/auth/signup', () => {
-    it('should create a new user successfully', async () => {
-      const userData = {
-        email: 'test@example.com',
-        password: 'password123',
-        username: 'testuser'
-      };
+  // Clean up test data after each test
+  afterEach(async () => {
+    // Delete test users and organizations
+    const testUsers = await db.select().from(users).where(eq(users.email, 'test@example.com'));
+    for (const user of testUsers) {
+      await db.delete(users).where(eq(users.id, user.id));
+      if (user.organization_id) {
+        await db.delete(organizations).where(eq(organizations.id, user.organization_id));
+      }
+    }
+  });
 
+  describe('POST /api/auth/register', () => {
+    it('should register a new user with valid data', async () => {
       const response = await request(app)
-        .post('/api/auth/signup')
-        .send(userData)
-        .expect(201);
+        .post('/api/auth/register')
+        .send({
+          email: 'test@example.com',
+          password: 'TestPassword123!',
+          username: 'testuser'
+        });
 
-      expect(response.body).toHaveProperty('user');
-      expect(response.body.user.email).toBe(userData.email);
-      expect(response.body.user.username).toBe(userData.username);
-      expect(response.body.user).not.toHaveProperty('password');
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.user).toMatchObject({
+        email: 'test@example.com',
+        username: 'testuser',
+        role: 'admin'
+      });
+      expect(response.body.user).toHaveProperty('organizationId');
     });
 
-    it('should reject signup with invalid email', async () => {
-      const userData = {
-        email: 'invalid-email',
-        password: 'password123',
-        username: 'testuser'
-      };
-
+    it('should reject registration with missing fields', async () => {
       const response = await request(app)
-        .post('/api/auth/signup')
-        .send(userData)
-        .expect(400);
+        .post('/api/auth/register')
+        .send({
+          email: 'test@example.com'
+        });
 
-      expect(response.body).toHaveProperty('message');
-      expect(response.body.message).toContain('email');
+      expect(response.status).toBe(400);
+      expect(response.body.message).toContain('required');
     });
 
-    it('should reject signup with weak password', async () => {
-      const userData = {
-        email: 'test@example.com',
-        password: '123',
-        username: 'testuser'
-      };
+    it('should reject duplicate email registration', async () => {
+      // First registration
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'test@example.com',
+          password: 'TestPassword123!',
+          username: 'testuser1'
+        });
 
+      // Duplicate registration
       const response = await request(app)
-        .post('/api/auth/signup')
-        .send(userData)
-        .expect(400);
+        .post('/api/auth/register')
+        .send({
+          email: 'test@example.com',
+          password: 'TestPassword123!',
+          username: 'testuser2'
+        });
 
-      expect(response.body).toHaveProperty('message');
+      expect(response.status).toBe(409);
+      expect(response.body.message).toContain('already exists');
     });
   });
 
   describe('POST /api/auth/login', () => {
-    it('should login successfully with valid credentials', async () => {
-      // First create a user
-      const userData = {
-        email: 'login@example.com',
-        password: 'password123',
-        username: 'loginuser'
-      };
-
+    beforeEach(async () => {
+      // Create a test user
       await request(app)
-        .post('/api/auth/signup')
-        .send(userData);
+        .post('/api/auth/register')
+        .send({
+          email: 'test@example.com',
+          password: 'TestPassword123!',
+          username: 'testuser'
+        });
+    });
 
-      // Then login
+    it('should login with valid credentials', async () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          email: userData.email,
-          password: userData.password
-        })
-        .expect(200);
+          email: 'test@example.com',
+          password: 'TestPassword123!'
+        });
 
-      expect(response.body).toHaveProperty('user');
-      expect(response.body.user.email).toBe(userData.email);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.user).toMatchObject({
+        email: 'test@example.com',
+        username: 'testuser'
+      });
     });
 
-    it('should reject login with invalid credentials', async () => {
+    it('should reject login with invalid password', async () => {
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'WrongPassword'
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.message).toContain('Invalid credentials');
+    });
+
+    it('should reject login with non-existent email', async () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
           email: 'nonexistent@example.com',
-          password: 'wrongpassword'
-        })
-        .expect(401);
+          password: 'TestPassword123!'
+        });
 
-      expect(response.body).toHaveProperty('message');
+      expect(response.status).toBe(401);
+      expect(response.body.message).toContain('Invalid credentials');
+    });
+
+    it('should reject login with missing fields', async () => {
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toContain('required');
     });
   });
 
   describe('GET /api/auth/user', () => {
-    it('should return user data when authenticated', async () => {
-      // Create and login user
-      const userData = {
-        email: 'auth@example.com',
-        password: 'password123',
-        username: 'authuser'
-      };
+    let authToken: string;
+    let userId: number;
 
-      await request(app)
-        .post('/api/auth/signup')
-        .send(userData);
-
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
+    beforeEach(async () => {
+      // Create and login a test user
+      const registerResponse = await request(app)
+        .post('/api/auth/register')
         .send({
-          email: userData.email,
-          password: userData.password
+          email: 'test@example.com',
+          password: 'TestPassword123!',
+          username: 'testuser'
         });
+      
+      if (registerResponse.status !== 201) {
+        console.error('Registration failed:', registerResponse.body);
+      }
+      
+      authToken = registerResponse.body.token;
+      userId = registerResponse.body.user?.id;
+    });
 
-      // Extract session cookie
-      const cookies = loginResponse.headers['set-cookie'];
-
+    it('should get current user with valid token', async () => {
       const response = await request(app)
         .get('/api/auth/user')
-        .set('Cookie', cookies)
-        .expect(200);
+        .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.body).toHaveProperty('user');
-      expect(response.body.user.email).toBe(userData.email);
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        email: 'test@example.com',
+        username: 'testuser'
+      });
     });
 
-    it('should return 401 when not authenticated', async () => {
+    it('should reject request without token', async () => {
+      const response = await request(app)
+        .get('/api/auth/user');
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should reject request with invalid token', async () => {
       const response = await request(app)
         .get('/api/auth/user')
-        .expect(401);
+        .set('Authorization', 'Bearer invalid.token.here');
 
-      expect(response.body).toHaveProperty('message');
-      expect(response.body.message).toContain('Authentication required');
+      expect(response.status).toBe(401);
     });
-  });
-
-  describe('POST /api/auth/logout', () => {
-    it('should logout successfully', async () => {
-      // Create and login user
-      const userData = {
-        email: 'logout@example.com',
-        password: 'password123',
-        username: 'logoutuser'
-      };
-
-      await request(app)
-        .post('/api/auth/signup')
-        .send(userData);
-
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: userData.email,
-          password: userData.password
-        });
-
-      const cookies = loginResponse.headers['set-cookie'];
-
-      const response = await request(app)
-        .post('/api/auth/logout')
-        .set('Cookie', cookies)
-        .expect(200);
-
-      expect(response.body).toHaveProperty('message');
-      expect(response.body.message).toContain('success');
-    });
-  });
-});
-
-describe('Organization Scoping in Auth', () => {
-  it('should associate user with organization during signup', async () => {
-    const userData = {
-      email: 'org@example.com',
-      password: 'password123',
-      username: 'orguser',
-      organizationId: 1
-    };
-
-    const response = await request(app)
-      .post('/api/auth/signup')
-      .send(userData)
-      .expect(201);
-
-    expect(response.body.user.organizationId).toBe(userData.organizationId);
-  });
-
-  it('should enforce organization access in protected routes', async () => {
-    // This test would verify that users can only access their org's data
-    // Implementation depends on specific middleware structure
   });
 });

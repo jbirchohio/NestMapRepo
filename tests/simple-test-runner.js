@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Simple Test Runner for NestMap Platform
+ * Simple Test Runner for Remvana Platform
  * Executes comprehensive test validation
  */
 
@@ -142,7 +142,7 @@ class TestRunner {
   }
 
   async runAll() {
-    console.log('🧪 NestMap Comprehensive Test Suite');
+    console.log('🧪 Remvana Comprehensive Test Suite');
     console.log('===================================');
     
     await this.runIntegrationTests();

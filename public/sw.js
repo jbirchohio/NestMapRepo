@@ -9,7 +9,7 @@ self.addEventListener('push', function(event) {
       data: data.data || {},
       actions: data.actions || [],
       requireInteraction: true,
-      tag: 'nestmap-notification'
+      tag: 'remvana-notification'
     };
 
     event.waitUntil(

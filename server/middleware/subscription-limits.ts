@@ -140,6 +140,11 @@ export async function checkUserLimit(organizationId: number): Promise<{
 // Middleware to enforce trip creation limits
 export function enforceTripLimit() {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    // Skip limit check for demo users
+    if (req.isDemo || req.user?.email?.includes('.demo') || req.user?.username?.startsWith('demo-')) {
+      return next();
+    }
+    
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization required' });
     }

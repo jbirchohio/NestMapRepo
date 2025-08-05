@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document provides platform-agnostic deployment instructions for NestMap.
+This document provides platform-agnostic deployment instructions for Remvana.
 
 ## Environment Variables
 
@@ -54,7 +54,7 @@ For production environments, use a process manager like PM2:
 npm install -g pm2
 
 # Start the application
-pm2 start npm --name "nestmap" -- start
+pm2 start npm --name "remvana" -- start
 
 # Ensure it starts on boot
 pm2 startup

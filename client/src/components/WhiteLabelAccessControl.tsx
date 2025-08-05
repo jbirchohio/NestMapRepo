@@ -90,7 +90,7 @@ export default function WhiteLabelAccessControl({ children }: { children: React.
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-electric-500" />
-                  Remove "Powered by NestMap"
+                  Remove "Powered by Remvana"
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-electric-500" />

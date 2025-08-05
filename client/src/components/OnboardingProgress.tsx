@@ -55,7 +55,7 @@ export default function OnboardingProgress({ onTaskClick, className }: Onboardin
     {
       id: 'first-trip',
       title: 'Plan Your First Trip',
-      description: 'Create a trip to explore NestMap features',
+      description: 'Create a trip to explore Remvana features',
       icon: <MapPin className="h-5 w-5" />,
       completed: false,
       action: 'Create Trip',

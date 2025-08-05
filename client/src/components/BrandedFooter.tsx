@@ -7,9 +7,9 @@ export default function BrandedFooter() {
   
   // Use default branding if white label is not active
   const activeConfig = isWhiteLabelActive ? config : {
-    companyName: "NestMap",
+    companyName: "Remvana",
     tagline: "AI-Powered Corporate Travel Management",
-    footerText: "© 2025 NestMap. All rights reserved.",
+    footerText: "© 2025 Remvana. All rights reserved.",
     enableMobileApp: true,
     supportEmail: undefined,
     helpUrl: undefined,

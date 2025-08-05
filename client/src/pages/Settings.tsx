@@ -74,7 +74,7 @@ export default function Settings() {
   // Get white label config
   const { data: whiteLabelConfig } = useQuery<{ config?: any }>({
     queryKey: ['/api/white-label/config'],
-    queryFn: () => apiRequest('GET', '/api/white-label/config').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/white-label/config'),
     enabled: !!user,
   });
 
@@ -410,7 +410,7 @@ export default function Settings() {
                               type="button"
                               variant="outline"
                               onClick={() => {
-                                // Reset to VoyageOps default colors
+                                // Reset to Remvana default colors
                                 form.setValue('primaryColor', '#6D5DFB');
                                 form.setValue('secondaryColor', '#6D5DFB');
                                 form.setValue('accentColor', '#6D5DFB');
@@ -418,7 +418,7 @@ export default function Settings() {
                               className="flex items-center gap-2"
                             >
                               <RotateCcw className="h-4 w-4" />
-                              Reset to VoyageOps Colors
+                              Reset to Remvana Colors
                             </Button>
                           </div>
                         )}

@@ -32,5 +32,17 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'lucide-react'],
+          utils: ['@tanstack/react-query', 'wouter', 'date-fns']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000, // Set to 1MB instead of default 500KB
+    sourcemap: false, // Disable sourcemaps in production for smaller build
+    minify: true // Use esbuild minifier instead of terser
   },
 });

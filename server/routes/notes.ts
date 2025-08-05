@@ -39,7 +39,15 @@ router.get('/:tripId', async (req, res) => {
 // POST /api/notes - Create a new note
 router.post('/', async (req, res) => {
   try {
-    const validatedData = createNoteSchema.parse(req.body);
+    // After case conversion middleware, req.body has snake_case fields
+    // Map them to camelCase for the schema
+    const dataToValidate = {
+      tripId: req.body.trip_id,
+      content: req.body.content,
+      organizationId: req.body.organization_id
+    };
+    
+    const validatedData = createNoteSchema.parse(dataToValidate);
     
     // Set organization ID from authenticated user if not provided
     if (!validatedData.organizationId && req.user?.organization_id) {

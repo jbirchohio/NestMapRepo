@@ -5,6 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import BookableActivity from "@/components/BookableActivity";
 
 interface ActivityItemProps {
   activity: ClientActivity;
@@ -232,6 +233,20 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
               </div>
             )}
           </div>
+
+          {/* Bookable Activity Section */}
+          {activity.locationName && !activity.completed && (
+            <div className="mt-3 pt-3 border-t">
+              <BookableActivity
+                activityTitle={activity.title}
+                latitude={activity.latitude}
+                longitude={activity.longitude}
+                onBook={(product) => {
+                  console.log('Booking clicked for activity:', activity.title, product);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

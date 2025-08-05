@@ -11,13 +11,13 @@ interface Organization {
   name: string;
   domain: string;
   plan: string;
-  employee_count: number;
-  user_count: string;
-  subscription_status: string;
-  white_label_enabled: boolean;
-  stripe_connect_onboarded: boolean;
-  funding_source_status: string;
-  created_at: string;
+  employeeCount: number;
+  userCount: string;
+  subscriptionStatus: string;
+  whiteLabelEnabled: boolean;
+  stripeConnectOnboarded: boolean;
+  fundingSourceStatus: string;
+  createdAt: string;
 }
 
 interface OrganizationsListProps {
@@ -125,17 +125,17 @@ export function OrganizationsList({ organizations, onOrganizationSelect, isLoadi
                     <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {org.user_count} users
+                        {org.userCount} users
                       </span>
                       <span>
-                        Created: {new Date(org.created_at).toLocaleDateString()}
+                        Created: {new Date(org.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(org.subscription_status)}>
-                      {org.subscription_status}
+                    <Badge className={getStatusColor(org.subscriptionStatus)}>
+                      {org.subscriptionStatus}
                     </Badge>
                     
                     <DropdownMenu>
@@ -165,25 +165,25 @@ export function OrganizationsList({ organizations, onOrganizationSelect, isLoadi
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div className="flex items-center gap-1">
                     <span className="text-gray-500">White Label:</span>
-                    <Badge variant={org.white_label_enabled ? "default" : "secondary"} className="text-xs">
-                      {org.white_label_enabled ? 'Enabled' : 'Disabled'}
+                    <Badge variant={org.whiteLabelEnabled ? "default" : "secondary"} className="text-xs">
+                      {org.whiteLabelEnabled ? 'Enabled' : 'Disabled'}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-gray-500">Stripe:</span>
-                    <Badge variant={org.stripe_connect_onboarded ? "default" : "secondary"} className="text-xs">
-                      {org.stripe_connect_onboarded ? 'Connected' : 'Not Connected'}
+                    <Badge variant={org.stripeConnectOnboarded ? "default" : "secondary"} className="text-xs">
+                      {org.stripeConnectOnboarded ? 'Connected' : 'Not Connected'}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-gray-500">Funding:</span>
-                    <Badge className={`${getStatusColor(org.funding_source_status)} text-xs`}>
-                      {org.funding_source_status}
+                    <Badge className={`${getStatusColor(org.fundingSourceStatus)} text-xs`}>
+                      {org.fundingSourceStatus}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-gray-500">Employees:</span>
-                    <span className="font-medium">{org.employee_count}</span>
+                    <span className="font-medium">{org.employeeCount}</span>
                   </div>
                 </div>
               </div>

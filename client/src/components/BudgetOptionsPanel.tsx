@@ -27,12 +27,17 @@ interface BudgetSuggestion {
 }
 
 interface BudgetResponse {
-  budgetInfo: {
-    level: string;
-    estimatedDailyBudget: string;
-    savingTips: string[];
+  level: string;
+  location: string;
+  currency: string;
+  breakdown: {
+    accommodation: { low: number; high: number; average: number; suggestions: string[] };
+    food: { low: number; high: number; average: number; suggestions: string[] };
+    transportation: { low: number; high: number; average: number; suggestions: string[] };
+    activities: { low: number; high: number; average: number; suggestions: string[] };
   };
-  suggestions: BudgetSuggestion[];
+  dailyTotal: { low: number; high: number; average: number };
+  tips: string[];
 }
 
 export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOptionsPanelProps) {
@@ -47,7 +52,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
         budgetLevel,
         activityType: activityType || undefined
       });
-      return res.json() as Promise<BudgetResponse>;
+      return res as BudgetResponse;
     },
     onError: (error) => {
       toast({
@@ -139,52 +144,73 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
             <div className="flex items-center justify-between">
               <h4 className="font-medium flex items-center">
                 <BadgeDollarSign className="h-5 w-5 mr-2" />
-                {budgetMutation.data.budgetInfo.level.charAt(0).toUpperCase() + 
-                  budgetMutation.data.budgetInfo.level.slice(1)} Budget
+                {budgetMutation.data.level.charAt(0).toUpperCase() + 
+                  budgetMutation.data.level.slice(1)} Budget in {budgetMutation.data.location}
               </h4>
               <span className="text-sm font-bold">
-                ~{budgetMutation.data.budgetInfo.estimatedDailyBudget}/day
+                ${budgetMutation.data.dailyTotal.average} {budgetMutation.data.currency}/day
               </span>
             </div>
             
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="font-medium">Accommodation:</p>
+                <p>${budgetMutation.data.breakdown.accommodation.low} - ${budgetMutation.data.breakdown.accommodation.high}</p>
+              </div>
+              <div>
+                <p className="font-medium">Food:</p>
+                <p>${budgetMutation.data.breakdown.food.low} - ${budgetMutation.data.breakdown.food.high}</p>
+              </div>
+              <div>
+                <p className="font-medium">Transportation:</p>
+                <p>${budgetMutation.data.breakdown.transportation.low} - ${budgetMutation.data.breakdown.transportation.high}</p>
+              </div>
+              <div>
+                <p className="font-medium">Activities:</p>
+                <p>${budgetMutation.data.breakdown.activities.low} - ${budgetMutation.data.breakdown.activities.high}</p>
+              </div>
+            </div>
+            
             <div className="mt-3">
-              <p className="text-sm font-medium">Saving Tips:</p>
+              <p className="text-sm font-medium">Money-Saving Tips:</p>
               <ul className="text-sm mt-1 list-disc list-inside">
-                {budgetMutation.data.budgetInfo.savingTips.map((tip, i) => (
+                {budgetMutation.data.tips.map((tip, i) => (
                   <li key={i}>{tip}</li>
                 ))}
               </ul>
             </div>
           </div>
           
-          <h4 className="font-medium">Suggested Options</h4>
+          <h4 className="font-medium">Budget Breakdown by Category</h4>
           <div className="space-y-3">
-            {budgetMutation.data.suggestions.map((suggestion, index) => (
-              <Card key={index} className="overflow-hidden">
+            {Object.entries(budgetMutation.data.breakdown).map(([category, details]) => (
+              <Card key={category} className="overflow-hidden">
                 <CardContent className="p-4">
-                  <div className="flex justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <span className="p-1.5 rounded-full bg-primary/10 mr-2">
-                          {getCategoryIcon(suggestion.category)}
-                        </span>
-                        <h5 className="font-medium">{suggestion.title}</h5>
-                        <span className="ml-auto font-medium text-sm">{suggestion.cost}</span>
-                      </div>
-                      
-                      <div className="mt-1.5">
-                        <p className="text-sm">{suggestion.description}</p>
-                        <p className="text-xs italic mt-1 text-muted-foreground">Tip: {suggestion.tip}</p>
-                      </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="p-1.5 rounded-full bg-primary/10 mr-2">
+                        {getCategoryIcon(category as ActivityType)}
+                      </span>
+                      <h5 className="font-medium capitalize">{category}</h5>
                     </div>
+                    <span className="font-medium text-sm">
+                      ${details.average}/day
+                    </span>
                   </div>
+                  
+                  {details.suggestions.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm text-muted-foreground">Suggestions:</p>
+                      <ul className="text-sm mt-1 list-disc list-inside">
+                        {details.suggestions.map((suggestion, i) => (
+                          <li key={i}>{suggestion}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
-            
-            {budgetMutation.data.suggestions.length === 0 && (
-              <p className="text-sm text-muted-foreground">No suggestions found for this budget level.</p>
-            )}
           </div>
         </div>
       )}

@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
-import NewTripModal from "@/components/NewTripModal";
+import NewTripModalConsumer from "@/components/NewTripModalConsumer";
 import SwipeableTrip from "@/components/SwipeableTrip";
 import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
@@ -121,12 +121,10 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20">
       {/* Handle automatic routing for authenticated users */}
       {user && authReady && <RoleBasedRedirect />}
-      <NewTripModal 
+      <NewTripModalConsumer 
         isOpen={isNewTripModalOpen} 
         onClose={() => setIsNewTripModalOpen(false)} 
-        onSuccess={handleTripCreated}
-        userId={effectiveUserId}
-        isGuestMode={isGuestMode}
+        onTripCreated={(trip) => handleTripCreated(trip.id)}
       />
       
       <AuthModal 
@@ -213,6 +211,14 @@ export default function Home() {
                       <Sparkles className="mr-2 h-5 w-5" />
                       Get Started
                     </PrimaryButton>
+                    <Button
+                      onClick={() => setLocation('/demo')}
+                      variant="default"
+                      className="text-lg px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white border-0"
+                    >
+                      <Plane className="mr-2 h-5 w-5" />
+                      Try Demo
+                    </Button>
                     <Button
                       onClick={handleSignInClick}
                       variant="outline"

@@ -1,8 +1,8 @@
-# VoyageOps Production Deployment Guide
+# Remvana Production Deployment Guide
 
 ## Overview
 
-VoyageOps is an enterprise-grade travel management platform designed for production deployment with high availability, security, and scalability.
+Remvana is an enterprise-grade travel management platform designed for production deployment with high availability, security, and scalability.
 
 ## System Requirements
 
@@ -25,7 +25,7 @@ VoyageOps is an enterprise-grade travel management platform designed for product
 
 ```bash
 # Database
-DATABASE_URL="postgresql://username:password@host:5432/voyageops_production"
+DATABASE_URL="postgresql://username:password@host:5432/remvana_production"
 
 # Authentication
 JWT_SECRET="your-cryptographically-secure-jwt-secret-here"
@@ -67,14 +67,14 @@ SENTRY_DSN="your-sentry-dsn"
 
 ```bash
 # Create production database
-sudo -u postgres createdb nestmap_production
+sudo -u postgres createdb remvana_production
 
 # Create database user
-sudo -u postgres psql -c "CREATE USER nestmap_user WITH PASSWORD 'secure_password';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE nestmap_production TO nestmap_user;"
+sudo -u postgres psql -c "CREATE USER remvana_user WITH PASSWORD 'secure_password';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE remvana_production TO remvana_user;"
 
 # Test database connection
-psql -h localhost -U nestmap_user -d nestmap_production -c "SELECT version();"
+psql -h localhost -U remvana_user -d remvana_production -c "SELECT version();"
 ```
 
 ### 2. SSL Certificate Setup
@@ -95,7 +95,7 @@ sudo crontab -e
 ### 3. Reverse Proxy Setup (Nginx)
 
 ```nginx
-# /etc/nginx/sites-available/nestmap
+# /etc/nginx/sites-available/remvana
 server {
     listen 80;
     server_name yourdomain.com;
@@ -147,8 +147,8 @@ server {
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/nestmap.git
-cd nestmap
+git clone https://github.com/your-org/remvana.git
+cd remvana
 
 # Install dependencies
 npm install
@@ -177,7 +177,7 @@ npm install -g pm2
 cat > ecosystem.config.js << EOF
 module.exports = {
   apps: [{
-    name: 'nestmap',
+    name: 'remvana',
     script: 'dist/index.js',
     instances: 'max',
     exec_mode: 'cluster',
@@ -236,7 +236,7 @@ curl https://yourdomain.com/api/health
 
 ```bash
 # Application logs
-pm2 logs nestmap
+pm2 logs remvana
 
 # Nginx logs
 sudo tail -f /var/log/nginx/access.log
@@ -252,31 +252,31 @@ sudo tail -f /var/log/postgresql/postgresql-14-main.log
 
 ```bash
 # Create backup script
-cat > /opt/nestmap/backup-db.sh << 'EOF'
+cat > /opt/remvana/backup-db.sh << 'EOF'
 #!/bin/bash
-BACKUP_DIR="/opt/nestmap/backups"
+BACKUP_DIR="/opt/remvana/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="nestmap_backup_$DATE.sql"
+BACKUP_FILE="remvana_backup_$DATE.sql"
 
 mkdir -p $BACKUP_DIR
-pg_dump -h localhost -U nestmap_user nestmap_production > $BACKUP_DIR/$BACKUP_FILE
+pg_dump -h localhost -U remvana_user remvana_production > $BACKUP_DIR/$BACKUP_FILE
 gzip $BACKUP_DIR/$BACKUP_FILE
 
 # Keep only last 30 backups
-find $BACKUP_DIR -name "nestmap_backup_*.sql.gz" -mtime +30 -delete
+find $BACKUP_DIR -name "remvana_backup_*.sql.gz" -mtime +30 -delete
 EOF
 
-chmod +x /opt/nestmap/backup-db.sh
+chmod +x /opt/remvana/backup-db.sh
 
 # Schedule daily backups
-echo "0 2 * * * /opt/nestmap/backup-db.sh" | sudo crontab -
+echo "0 2 * * * /opt/remvana/backup-db.sh" | sudo crontab -
 ```
 
 ### File System Backup
 
 ```bash
 # Application files backup
-rsync -av --exclude node_modules --exclude logs /opt/nestmap/ /backup/nestmap/
+rsync -av --exclude node_modules --exclude logs /opt/remvana/ /backup/remvana/
 ```
 
 ## Security Hardening
@@ -372,10 +372,10 @@ sudo systemctl restart postgresql
 pm2 status
 
 # Check logs
-pm2 logs nestmap --lines 100
+pm2 logs remvana --lines 100
 
 # Restart application
-pm2 restart nestmap
+pm2 restart remvana
 ```
 
 #### High Memory Usage
@@ -385,7 +385,7 @@ free -h
 pm2 monit
 
 # Restart if memory leak detected
-pm2 restart nestmap
+pm2 restart remvana
 ```
 
 ## Maintenance
@@ -401,10 +401,10 @@ pm2 restart nestmap
 
 ```bash
 # 1. Backup current deployment
-cp -r /opt/nestmap /opt/nestmap-backup-$(date +%Y%m%d)
+cp -r /opt/remvana /opt/remvana-backup-$(date +%Y%m%d)
 
 # 2. Pull latest code
-cd /opt/nestmap
+cd /opt/remvana
 git pull origin main
 
 # 3. Install dependencies
@@ -417,7 +417,7 @@ npm run build
 npm run db:push
 
 # 6. Restart application
-pm2 restart nestmap
+pm2 restart remvana
 
 # 7. Verify deployment
 curl https://yourdomain.com/api/health
@@ -442,4 +442,4 @@ Set up alerts for:
 - High memory usage (> 90%)
 - SSL certificate expiration
 
-This deployment guide ensures NestMap runs securely and efficiently in production environments suitable for enterprise customers.
+This deployment guide ensures Remvana runs securely and efficiently in production environments suitable for enterprise customers.

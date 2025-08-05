@@ -245,7 +245,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
   const handleComplete = () => {
     toast({
-      title: "Welcome to NestMap!",
+      title: "Welcome to Remvana!",
       description: "Your organization is ready to start planning amazing trips.",
     });
     onComplete();
@@ -268,7 +268,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-electric-500" />
               <CardTitle className="text-2xl bg-gradient-to-r from-electric-600 to-electric-400 bg-clip-text text-transparent">
-                Welcome to NestMap
+                Welcome to Remvana
               </CardTitle>
             </div>
             <CardDescription className="text-navy-600 dark:text-navy-300">
@@ -496,7 +496,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                         Create Your First Trip
                       </h3>
                       <p className="text-navy-600 dark:text-navy-300 text-sm mb-4">
-                        We'll create a sample trip to help you explore NestMap's features. You can customize or delete it anytime.
+                        We'll create a sample trip to help you explore Remvana's features. You can customize or delete it anytime.
                       </p>
                     </div>
 

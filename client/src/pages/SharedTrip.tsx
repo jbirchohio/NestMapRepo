@@ -205,7 +205,7 @@ export default function SharedTrip() {
         {/* Call to action */}
         <div className="mt-8 text-center">
           <p className="text-muted-foreground mb-4">
-            Like this trip? Create your own with VoyageOps!
+            Like this trip? Create your own with Remvana!
           </p>
           <Button onClick={() => window.location.href = '/'}>
             Start Planning Your Trip

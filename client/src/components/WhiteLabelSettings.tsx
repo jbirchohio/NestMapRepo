@@ -66,7 +66,7 @@ export default function WhiteLabelSettings() {
   const form = useForm<WhiteLabelFormValues>({
     resolver: zodResolver(whiteLabelSchema),
     defaultValues: {
-      companyName: "NestMap",
+      companyName: "Remvana",
       primaryColor: "#3B82F6",
       secondaryColor: "#4682B4",
       accentColor: "#10b981",
@@ -75,7 +75,7 @@ export default function WhiteLabelSettings() {
       enableSocialLogin: true,
       enableMobileApp: true,
       tagline: "AI-Powered Corporate Travel Management",
-      footerText: "© 2025 NestMap. All rights reserved."
+      footerText: "© 2025 Remvana. All rights reserved."
     }
   });
 
@@ -421,7 +421,7 @@ export default function WhiteLabelSettings() {
                   >
                     <div className="flex items-center gap-2">
                       <div className="h-6 w-6 rounded bg-white/20"></div>
-                      <span className="font-medium">NestMap</span>
+                      <span className="font-medium">Remvana</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-full bg-white/20"></div>

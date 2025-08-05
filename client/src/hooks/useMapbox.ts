@@ -7,6 +7,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
+// Check if token is the placeholder value
+if (MAPBOX_TOKEN === 'pk.your_mapbox_token' || !MAPBOX_TOKEN) {
+  console.warn('Mapbox token not configured. Please set VITE_MAPBOX_TOKEN in your .env file.');
+}
+
 export default function useMapbox() {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -114,12 +119,34 @@ export default function useMapbox() {
       // Create marker element
       const el = document.createElement('div');
       el.className = 'custom-marker';
-      el.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23${(markerData as any).color || 'ff0000'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>')`;
-      el.style.width = '24px';
-      el.style.height = '24px';
-      el.style.backgroundSize = 'contain';
-      el.style.backgroundRepeat = 'no-repeat';
-      el.style.cursor = 'pointer';
+      el.style.position = 'relative';
+      el.style.width = '40px';
+      el.style.height = '40px';
+      
+      // Create the pin icon
+      const pin = document.createElement('div');
+      pin.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23${(markerData as any).color || 'ef4444'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>')`;
+      pin.style.width = '40px';
+      pin.style.height = '40px';
+      pin.style.backgroundSize = 'contain';
+      pin.style.backgroundRepeat = 'no-repeat';
+      pin.style.cursor = 'pointer';
+      
+      // Create label with the marker letter
+      const label = document.createElement('div');
+      label.textContent = markerData.label || '';
+      label.style.position = 'absolute';
+      label.style.top = '8px';
+      label.style.left = '50%';
+      label.style.transform = 'translateX(-50%)';
+      label.style.color = 'white';
+      label.style.fontSize = '14px';
+      label.style.fontWeight = 'bold';
+      label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.5)';
+      label.style.pointerEvents = 'none';
+      
+      el.appendChild(pin);
+      el.appendChild(label);
 
       // Create and add marker
       const marker = new mapboxgl.Marker(el)
@@ -136,47 +163,94 @@ export default function useMapbox() {
   }, []);
 
   const addRoutes = useCallback((routes: MapRoute[]) => {
-    if (!mapInstance.current || !routes.length) return;
+    if (!mapInstance.current) return;
+
+    const map = mapInstance.current;
+    
+    // Ensure map is loaded before manipulating styles
+    if (!map.loaded()) {
+      map.once('load', () => {
+        addRoutes(routes); // Retry once loaded
+      });
+      return;
+    }
+
+    try {
+      // First, remove all existing routes
+      const style = map.getStyle();
+      if (style && style.layers) {
+        // Remove all route layers
+        style.layers.forEach((layer: any) => {
+          if (layer.id && layer.id.startsWith('route-layer-')) {
+            if (map.getLayer(layer.id)) {
+              map.removeLayer(layer.id);
+            }
+          }
+        });
+      }
+      
+      // Remove all route sources
+      if (style && style.sources) {
+        Object.keys(style.sources).forEach(sourceId => {
+          if (sourceId.startsWith('route-')) {
+            if (map.getSource(sourceId)) {
+              map.removeSource(sourceId);
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('Error removing existing routes:', error);
+    }
+
+    // If no new routes, stop here (this clears all routes)
+    if (!routes.length) return;
 
     routes.forEach((route, index) => {
-      const sourceId = `route-${index}`;
-      const layerId = `route-layer-${index}`;
+      try {
+        const sourceId = `route-${index}`;
+        const layerId = `route-layer-${index}`;
 
-      // Remove existing route if it exists
-      if (mapInstance.current!.getLayer(layerId)) {
-        mapInstance.current!.removeLayer(layerId);
-      }
-      if (mapInstance.current!.getSource(sourceId)) {
-        mapInstance.current!.removeSource(sourceId);
-      }
+        // Remove existing route if it exists
+        if (map.getLayer(layerId)) {
+          map.removeLayer(layerId);
+        }
+        if (map.getSource(sourceId)) {
+          map.removeSource(sourceId);
+        }
 
-      // Add route source
-      mapInstance.current!.addSource(sourceId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: route.coordinates
+        // Add route source
+        map.addSource(sourceId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: route.coordinates
+            }
           }
-        }
-      });
+        });
 
-      // Add route layer
-      mapInstance.current!.addLayer({
-        id: layerId,
-        type: 'line',
-        source: sourceId,
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': (route as any).color || '#3b82f6',
-          'line-width': 3
-        }
-      });
+        // Add route layer
+        map.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': (route as any).color || '#3b82f6',
+            'line-width': 4,
+            'line-opacity': 0.7,
+            'line-dasharray': [0, 2]
+          }
+        });
+      } catch (error) {
+        console.warn(`Error adding route ${index}:`, error);
+      }
     });
   }, []);
 
@@ -204,7 +278,10 @@ export default function useMapbox() {
     longitude: number;
     fullAddress: string;
   } | null> => {
-    if (!MAPBOX_TOKEN || !searchQuery) return null;
+    if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'pk.your_mapbox_token' || !searchQuery) {
+      console.warn('Mapbox geocoding unavailable: token not configured');
+      return null;
+    }
     
     try {
       const response = await fetch(

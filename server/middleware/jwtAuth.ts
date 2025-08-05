@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
+import { logger } from '../utils/logger';
 
 // Define user interface for JWT authentication
 interface JWTUser {
@@ -26,24 +27,35 @@ declare global {
  * Provides authenticated user context without sessions
  */
 export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Define paths that don't require authentication
+  // Define paths that don't require authentication (relative to /api mount point)
   const publicPaths = [
-    '/api/auth/',
-    '/api/users/auth/',
-    '/api/health',
-    '/api/templates',
-    '/api/share/',
-    '/api/amadeus',
-    '/api/dashboard-stats',
-    '/api/stripe/',
-    '/api/webhooks/',
-    '/api/acme-challenge',
-    '/api/user/permissions',
-    '/api/white-label/config',
-    '/api/notifications'
+    '/auth',
+    '/users/auth',
+    '/health',
+    '/templates',
+    '/share',
+    '/amadeus',
+    '/stripe',
+    '/webhooks',
+    '/acme-challenge',
+    '/demo'
   ];
 
-  const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
+  // Get the path relative to the /api mount point
+  const relativePath = req.path;
+  const fullPath = req.originalUrl;
+  
+  // In test environment, log the paths for debugging
+  if (process.env.NODE_ENV === 'test' && relativePath.includes('auth')) {
+    logger.info('JWT middleware checking path:', { relativePath, fullPath, originalUrl: req.originalUrl });
+  }
+  
+  // Check both req.path and req.originalUrl for public paths
+  const isPublicPath = publicPaths.some(path => {
+    return relativePath.startsWith(path) || 
+           fullPath.startsWith(`/api${path}`) ||
+           fullPath.includes(`/api${path}`);
+  });
   
   if (isPublicPath) {
     return next();
@@ -67,7 +79,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     // Verify signature - require JWT_SECRET in production
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      console.error('JWT_SECRET environment variable is not set');
+      logger.error('JWT_SECRET environment variable is not set');
       return res.status(500).json({ message: 'Server configuration error' });
     }
     const expectedSignature = crypto
@@ -91,7 +103,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     req.user = {
       id: payload.id,
       email: payload.email,
-      organization_id: payload.organization_id,
+      organization_id: payload.organization_id || payload.organizationId,
       role: payload.role,
       username: payload.username
     };
@@ -129,9 +141,12 @@ export function requireAdminRole(req: Request, res: Response, next: NextFunction
 
 /**
  * Superadmin Role Middleware
+ * Accepts all superadmin role variations
  */
 export function requireSuperadminRole(req: Request, res: Response, next: NextFunction): void {
-  if (!req.user || req.user.role !== 'super_admin') {
+  const superadminRoles = ['super_admin', 'superadmin', 'superadmin_owner', 'superadmin_staff', 'superadmin_auditor'];
+  
+  if (!req.user || !superadminRoles.includes(req.user.role)) {
     res.status(403).json({ message: 'Superadmin access required' });
     return;
   }

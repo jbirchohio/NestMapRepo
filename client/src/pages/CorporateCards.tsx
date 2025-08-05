@@ -97,7 +97,7 @@ export default function CorporateCards() {
   // Fetch corporate cards
   const { data: cardsResponse, isLoading: cardsLoading } = useQuery({
     queryKey: ["/api/corporate-cards/cards"],
-    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards").then(res => res.json()),
+    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards"),
   });
 
   const cards = cardsResponse?.cards || [];
@@ -105,25 +105,25 @@ export default function CorporateCards() {
   // Fetch expenses
   const { data: expenses = [], isLoading: expensesLoading } = useQuery({
     queryKey: ["/api/expenses"],
-    queryFn: () => apiRequest("GET", "/api/expenses").then(res => res.json()),
+    queryFn: () => apiRequest("GET", "/api/expenses"),
   });
 
   // Fetch analytics
   const { data: analytics } = useQuery({
     queryKey: ["/api/corporate-card/analytics"],
-    queryFn: () => apiRequest("GET", "/api/corporate-card/analytics").then(res => res.json()),
+    queryFn: () => apiRequest("GET", "/api/corporate-card/analytics"),
   });
 
   // Fetch organization users for dropdown
   const { data: organizationUsers = [] } = useQuery({
     queryKey: ["/api/organizations/users"],
-    queryFn: () => apiRequest("GET", "/api/organizations/users").then(res => res.json()),
+    queryFn: () => apiRequest("GET", "/api/organizations/users"),
   });
 
   // Issue new card mutation
   const issueCardMutation = useMutation({
     mutationFn: (cardData: any) => 
-      apiRequest("POST", "/api/corporate-cards/cards", cardData).then(res => res.json()),
+      apiRequest("POST", "/api/corporate-cards/cards", cardData),
     onSuccess: () => {
       toast({
         title: "Card Issued Successfully",
@@ -277,7 +277,7 @@ export default function CorporateCards() {
   // Approve expense mutation
   const approveExpenseMutation = useMutation({
     mutationFn: (approvalData: any) =>
-      apiRequest("POST", "/api/expenses/approve", approvalData).then(res => res.json()),
+      apiRequest("POST", "/api/expenses/approve", approvalData),
     onSuccess: () => {
       toast({
         title: "Expense Processed",

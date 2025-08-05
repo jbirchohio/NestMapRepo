@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { logger } from '../utils/logger';
 
 /**
  * Global error handling middleware
@@ -6,7 +7,7 @@ import { Request, Response, NextFunction } from 'express';
  */
 export function globalErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
   // Log error with context
-  console.error('Global Error:', {
+  logger.error('Global Error:', {
     error: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     url: req.url,

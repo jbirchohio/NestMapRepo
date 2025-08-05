@@ -1,6 +1,7 @@
 import { db } from "./db-connection";
 import { trips, activities, todos, notes, users } from "@shared/schema";
 import { sql, count, avg, desc, asc, eq, and } from "drizzle-orm";
+import { logger } from './utils/logger';
 
 export interface AnalyticsData {
   overview: {
@@ -332,7 +333,7 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
       }
     };
   } catch (error) {
-    console.error('Error fetching personal analytics:', error);
+    logger.error('Error fetching personal analytics:', error);
     throw new Error('Failed to fetch personal analytics data');
   }
 }
@@ -583,7 +584,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       }
     };
   } catch (error) {
-    console.error('Error fetching analytics:', error);
+    logger.error('Error fetching analytics:', error);
     throw new Error('Failed to fetch analytics data');
   }
 }
@@ -900,7 +901,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       growthMetrics
     };
   } catch (error) {
-    console.error('Error fetching organization analytics:', error);
+    logger.error('Error fetching organization analytics:', error);
     throw new Error('Failed to fetch organization analytics data');
   }
 }

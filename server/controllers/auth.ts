@@ -6,6 +6,7 @@ import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { storage } from "../storage";
 import { ROLE_PERMISSIONS } from "../rbac";
+import { logger } from "../utils/logger";
 
 /**
  * Authentication Controller - Supabase Only
@@ -59,7 +60,7 @@ export async function getUserPermissions(req: Request, res: Response) {
       } else if (req.user!.role === 'admin' || req.user!.role === 'manager') {
         // Admins/managers can only view users in their organization
         if (!user[0] || user[0].organization_id !== req.user!.organization_id) {
-          console.warn('PERMISSIONS_ACCESS_DENIED: Cross-organization access attempt', {
+          logger.warn('PERMISSIONS_ACCESS_DENIED: Cross-organization access attempt', {
             requesterId: req.user!.id,
             requesterOrgId: req.user!.organization_id,
             targetUserId: targetUserId,
@@ -91,7 +92,7 @@ export async function getUserPermissions(req: Request, res: Response) {
       organizationId: user[0].organization_id 
     });
   } catch (error) {
-    console.error("Error fetching user permissions:", error);
+    logger.error("Error fetching user permissions:", error);
     res.status(500).json({ error: "Failed to fetch permissions" });
   }
 }
@@ -118,7 +119,7 @@ export async function createUser(req: Request, res: Response) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid user data", errors: error.errors });
     }
-    console.error("Error creating user:", error);
+    logger.error("Error creating user:", error);
     res.status(500).json({ message: "Could not create user" });
   }
 }
@@ -143,7 +144,7 @@ export async function getUserByAuthId(req: Request, res: Response) {
     
     res.status(200).json(user);
   } catch (error) {
-    console.error("Error getting user by auth ID:", error);
+    logger.error("Error getting user by auth ID:", error);
     res.status(500).json({ message: "Could not retrieve user" });
   }
 }

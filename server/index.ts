@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import apiRoutes from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeSystemSettings, checkMaintenanceMode, getSetting } from "./services/systemSettingsService";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { performanceOptimizer } from "./services/performanceOptimizer";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
@@ -21,6 +22,8 @@ import { authenticateUser, getUserById } from "./auth";
 import { jwtAuthMiddleware } from "./middleware/jwtAuth";
 import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
 import { trackUserActivity } from "./middleware/sessionTracking";
+import { logger } from './utils/logger';
+import { sentryService } from './services/sentryService';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -30,6 +33,10 @@ const HOST = process.env.HOST || "0.0.0.0";
 export { app };
 
 // Session store removed - using JWT-only authentication
+
+// Sentry request tracking middleware (must be first)
+app.use(sentryService.getRequestHandler());
+app.use(sentryService.getTracingHandler());
 
 // Security headers middleware with enhanced CSP
 app.use((req, res, next) => {
@@ -55,7 +62,7 @@ app.use((req, res, next) => {
     csp = [
       "default-src 'self'",
       `script-src 'self' 'nonce-${nonce}' https://cdn.jsdelivr.net https://unpkg.com`,
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.mapbox.com",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https: wss: ws:",
       "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
@@ -71,7 +78,7 @@ app.use((req, res, next) => {
     csp = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://api.mapbox.com",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
       "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
@@ -130,10 +137,18 @@ app.use(createPerformanceMiddleware());
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
 
-// Apply comprehensive rate limiting first for maximum protection
-app.use('/api', apiRateLimit); // Global API rate limiting
-app.use('/api/auth', authRateLimit); // Stricter limits for authentication endpoints
-app.use('/api', organizationRateLimit); // Organization-tier based limiting
+// Import demo middleware but apply it later after auth
+import { demoModeMiddleware, demoBannerMiddleware, demoLimitsMiddleware } from './middleware/demoMode';
+
+// Apply comprehensive rate limiting (demo users will be handled after auth)
+app.use('/api', apiRateLimit);
+app.use('/api/auth', authRateLimit);
+app.use('/api', organizationRateLimit);
+
+// Apply demo limits after rate limiting exemption
+if (process.env.ENABLE_DEMO_MODE === 'true') {
+  app.use('/api', demoLimitsMiddleware);
+}
 
 // Apply API security middleware only to API routes
 app.use('/api', apiVersioning);
@@ -147,12 +162,18 @@ app.use(domainRoutingMiddleware);
 app.use(caseConversionMiddleware);
 app.use('/api', jwtAuthMiddleware);
 
+// Apply demo mode detection middleware AFTER authentication
+if (process.env.ENABLE_DEMO_MODE === 'true') {
+  app.use(demoModeMiddleware);
+  app.use(demoBannerMiddleware);
+}
+
 // Track user activity for security monitoring
 app.use(trackUserActivity);
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Unhandled error:', {
+  logger.error('Unhandled error:', {
     error: err.message,
     stack: err.stack,
     url: req.url,
@@ -200,6 +221,25 @@ app.use((req, res, next) => {
 
 (async () => {
   console.log('🚀 Starting server initialization...');
+  
+  // Initialize Sentry error monitoring first
+  sentryService.init({
+    environment: process.env.NODE_ENV || 'development',
+    sampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0
+  });
+
+  // Start demo reset scheduler if demo mode is enabled
+  if (process.env.ENABLE_DEMO_MODE === 'true') {
+    const { startDemoResetScheduler } = await import('./services/demoResetService');
+    startDemoResetScheduler();
+    console.log('✅ Demo reset scheduler started');
+  }
+  
+  console.log('🔧 Environment check:');
+  console.log('  - NODE_ENV:', process.env.NODE_ENV);
+  console.log('  - DATABASE_URL loaded:', !!process.env.DATABASE_URL);
+  console.log('  - JWT_SECRET loaded:', !!process.env.JWT_SECRET);
+  console.log('  - SENTRY_DSN loaded:', !!process.env.SENTRY_DSN);
 
   // Run database migrations on startup
   if (process.env.NODE_ENV === 'production') {
@@ -208,13 +248,20 @@ app.use((req, res, next) => {
       await runMigrations();
       console.log('✅ Database migrations completed');
     } catch (error) {
-      console.error('❌ Migration failed:', error);
+      logger.error('❌ Migration failed:', error);
       process.exit(1);
     }
   }
 
   console.log('📍 Mounting API routes...');
   try {
+    // Initialize system settings
+    await initializeSystemSettings();
+    console.log('✅ System settings initialized');
+    
+    // Add maintenance mode check middleware
+    app.use(checkMaintenanceMode);
+    
     // Mount API routes with proper middleware order
     app.use('/api', apiRoutes);
 
@@ -256,16 +303,43 @@ app.use((req, res, next) => {
 
     console.log('✅ API routes mounted successfully');
   } catch (error) {
-    console.error('❌ Failed to mount API routes:', error);
+    logger.error('❌ Failed to mount API routes:', error);
     throw error;
   }
 
+  // Sentry error handler (must be before other error handlers)
+  app.use(sentryService.getErrorHandler());
+  
   // Error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    
+    // Capture additional context for Sentry
+    if (req.user) {
+      sentryService.setUser({
+        id: req.user.id,
+        email: req.user.email,
+        username: req.user.username,
+        organizationId: req.user.organization_id
+      });
+    }
+    
+    // Capture the error in Sentry
+    sentryService.captureException(err, {
+      tags: {
+        endpoint: req.path,
+        method: req.method,
+        status: status
+      },
+      extra: {
+        body: req.body,
+        query: req.query,
+        params: req.params
+      }
+    });
+    
     res.status(status).json({ message });
-    throw err;
   });
 
   if (process.env.NODE_ENV === "development") {
@@ -290,7 +364,7 @@ app.use((req, res, next) => {
         res.sendFile(path.join(staticPath, "index.html"));
       });
     } else {
-      console.error("❌ Static directory not found:", staticPath);
+      logger.error("❌ Static directory not found:", staticPath);
       serveStatic(app);
     }
 

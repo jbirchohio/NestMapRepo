@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { RoleGate, useRolePermissions } from '@/hooks/useRolePermissions';
 import NotificationCenter from '@/components/NotificationCenter';
+import NewTripModalConsumer from '@/components/NewTripModalConsumer';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { AnimatedCard } from '@/components/ui/animated-card';
 import { motion } from 'framer-motion';
@@ -56,7 +57,7 @@ import {
 
 
 // Travel Console Menu Component
-function TravelConsoleMenu({ location }: { location: string }) {
+function TravelConsoleMenu({ location, onPlanTrip }: { location: string; onPlanTrip: () => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const travelRoutes = [
@@ -95,17 +96,18 @@ function TravelConsoleMenu({ location }: { location: string }) {
           className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-2 z-[100] min-w-48"
         >
           <div className="space-y-1">
-            <Link href="/trip-planner">
-              <Button
-                variant={location === '/trip-planner' ? 'default' : 'ghost'}
-                size="sm"
-                className="w-full justify-start gap-2"
-                onClick={() => setIsExpanded(false)}
-              >
-                <MapPin className="h-4 w-4" />
-                Plan Trip
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => {
+                setIsExpanded(false);
+                onPlanTrip();
+              }}
+            >
+              <MapPin className="h-4 w-4" />
+              Plan Trip
+            </Button>
             
             <Link href="/flights">
               <Button
@@ -163,9 +165,10 @@ function TravelConsoleMenu({ location }: { location: string }) {
 
 export default function MainNavigation() {
   const { user, userId, roleType, signOut, loading } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const { config, isWhiteLabelActive } = useWhiteLabel();
 
   // Get user permissions - since you're the JonasCo owner, return all permissions
@@ -247,13 +250,14 @@ export default function MainNavigation() {
       show: hasOptimizerAccess,
       badge: 'Pro'
     },
-    {
-      path: '/trip-planner',
-      label: 'Plan Trip',
-      icon: MapPin,
-      active: location === '/trip-planner',
-      show: true
-    },
+    // Remove Plan Trip from nav items since it should open a modal
+    // {
+    //   path: '/trip-planner',
+    //   label: 'Plan Trip',
+    //   icon: MapPin,
+    //   active: location === '/trip-planner',
+    //   show: true
+    // },
     {
       path: '/flights',
       label: 'Book Flights',
@@ -317,6 +321,7 @@ export default function MainNavigation() {
   ];
 
   return (
+    <>
     <motion.nav 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -418,7 +423,7 @@ export default function MainNavigation() {
                       backgroundImage: `linear-gradient(to right, ${config.primaryColor || '#6D5DFB'}, ${config.secondaryColor || '#6D5DFB'})`
                     } : {}}
                   >
-                    {isWhiteLabelActive && config?.companyName ? config.companyName : 'NestMap'}
+                    {isWhiteLabelActive && config?.companyName ? config.companyName : 'Remvana'}
                   </span>
                   <span 
                     className={`text-xs -mt-1 hidden sm:block ${
@@ -537,7 +542,7 @@ export default function MainNavigation() {
             </Link>
 
             {/* Travel Console - Collapsible menu for trip planning tools */}
-            <TravelConsoleMenu location={location} />
+            <TravelConsoleMenu location={location} onPlanTrip={() => setIsNewTripModalOpen(true)} />
 
             {/* Analytics - Show if user has analytics access */}
             {hasAnalyticsAccess && (
@@ -631,5 +636,16 @@ export default function MainNavigation() {
 
       
     </motion.nav>
+    
+    {/* New Trip Modal */}
+    <NewTripModalConsumer 
+      isOpen={isNewTripModalOpen}
+      onClose={() => setIsNewTripModalOpen(false)}
+      onTripCreated={(trip) => {
+        setIsNewTripModalOpen(false);
+        setLocation(`/trip/${trip.id}`);
+      }}
+    />
+    </>
   );
 }

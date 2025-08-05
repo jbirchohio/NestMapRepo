@@ -22,7 +22,7 @@ export async function apiRequest(
       ...(token ? { "Authorization": `Bearer ${token}` } : {}),
     };
 
-    console.log(`Making ${method} request to ${url}`, data);
+    console.log(`Making ${method} request to ${url}`, data ? data : '');
 
     const res = await fetch(url, {
       method,

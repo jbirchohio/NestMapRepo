@@ -15,6 +15,7 @@ import TripDatePicker from "@/components/TripDatePicker";
 
 interface WeatherSuggestionsPanelProps {
   trip: ClientTrip;
+  activities?: any[];
   onAddActivity: (activity: any) => Promise<void>;
 }
 
@@ -22,18 +23,26 @@ type WeatherCondition = "sunny" | "rainy" | "hot" | "cold" | "windy";
 
 interface WeatherActivitySuggestion {
   title: string;
+  name?: string;
   category: "indoor" | "outdoor" | "either";
   description: string;
-  locationName: string;
-  tag: string;
+  locationName?: string;
+  location?: string;
+  tag?: string;
+  duration?: string;
+  weatherSuitability?: string;
+  tips?: string;
 }
 
 interface WeatherResponse {
-  weather: {
-    condition: string;
-    recommendation: string;
-  };
-  activities: WeatherActivitySuggestion[];
+  activities: Array<{
+    name: string;
+    description: string;
+    duration: string;
+    location: string;
+    weatherSuitability: string;
+    tips: string;
+  }>;
 }
 
 interface WeatherData {
@@ -51,15 +60,23 @@ interface WeatherForecastResponse {
   current?: WeatherData;
 }
 
-export default function WeatherSuggestionsPanel({ trip, onAddActivity }: WeatherSuggestionsPanelProps) {
+export default function WeatherSuggestionsPanel({ trip, activities = [], onAddActivity }: WeatherSuggestionsPanelProps) {
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<string>(
-    trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    if (trip.startDate) {
+      const date = new Date(trip.startDate);
+      // Get local date string
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+    return new Date().toISOString().split('T')[0];
+  });
   const [weatherCondition, setWeatherCondition] = useState<WeatherCondition>("sunny");
   const [autoWeatherData, setAutoWeatherData] = useState<WeatherData[]>([]);
   const [isAutoDetected, setIsAutoDetected] = useState(false);
   const [selectedDayWeather, setSelectedDayWeather] = useState<WeatherData | null>(null);
+  
+  // Track recently added activities in this session
+  const [pendingActivityTimes, setPendingActivityTimes] = useState<string[]>([]);
   
   const weatherIcons = {
     sunny: <CloudSun className="h-5 w-5 text-yellow-500" />,
@@ -84,8 +101,19 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
       if (trip.startDate) {
         const start = new Date(trip.startDate);
         const end = trip.endDate ? new Date(trip.endDate) : start;
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          tripDates.push(d.toISOString().split('T')[0]);
+        
+        // Create new date for iteration to avoid modifying original
+        let currentDate = new Date(start);
+        while (currentDate <= end) {
+          // Format date consistently without timezone issues
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const day = String(currentDate.getDate()).padStart(2, '0');
+          tripDates.push(`${year}-${month}-${day}`);
+          
+          // Move to next day
+          currentDate = new Date(currentDate);
+          currentDate.setDate(currentDate.getDate() + 1);
         }
       }
       
@@ -93,7 +121,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
         location: trip.city || trip.location || trip.title,
         dates: tripDates
       });
-      return res.json() as Promise<WeatherForecastResponse>;
+      return res as WeatherForecastResponse;
     },
     onSuccess: (data) => {
       if (data.forecast && data.forecast.length > 0) {
@@ -126,7 +154,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
     mutationFn: async () => {
       // Use actual weather data if available, otherwise fall back to manual selection
       const weatherToUse = selectedDayWeather ? 
-        selectedDayWeather.description : 
+        `${selectedDayWeather.description} with temperature ${selectedDayWeather.temperature}°F` : 
         weatherLabels[weatherCondition];
 
       const res = await apiRequest("POST", API_ENDPOINTS.AI.WEATHER_ACTIVITIES, {
@@ -134,7 +162,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
         date: selectedDate,
         weatherCondition: weatherToUse
       });
-      return res.json() as Promise<WeatherResponse>;
+      return res as WeatherResponse;
     },
     onError: (error) => {
       toast({
@@ -149,13 +177,12 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
   // General activity suggestions
   const generalMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", API_ENDPOINTS.AI.THEMED_ITINERARY, {
-        location: trip.city || trip.location || trip.title,
-        theme: "general exploration",
-        days: 1,
-        preferences: "popular attractions and local experiences"
+      const res = await apiRequest("POST", "/api/ai/suggest-activities", {
+        city: trip.city || trip.location || trip.title,
+        interests: ["popular attractions", "local experiences"],
+        duration: 1
       });
-      return res.json() as Promise<{ activities: WeatherActivitySuggestion[] }>;
+      return res as { activities: WeatherActivitySuggestion[] };
     },
     onError: (error) => {
       toast({
@@ -180,6 +207,8 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
       const dayWeather = autoWeatherData.find(weather => weather.date === selectedDate);
       setSelectedDayWeather(dayWeather || null);
     }
+    // Clear pending times when date changes
+    setPendingActivityTimes([]);
   }, [selectedDate, autoWeatherData]);
 
   // Handle date selection and trigger weather-based activities
@@ -190,8 +219,6 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
     const dayWeather = autoWeatherData.find(weather => weather.date === dateString);
     if (dayWeather) {
       setSelectedDayWeather(dayWeather);
-      // Auto-trigger weather activities for this day
-      weatherMutation.mutate();
     }
   };
 
@@ -225,24 +252,115 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
 
   const handleAddActivity = async (activitySuggestion: WeatherActivitySuggestion): Promise<void> => {
     try {
-      // Format the activity for saving
-      const activityDate = new Date(selectedDate);
+      // Format the activity for saving - use noon to avoid timezone issues
+      const activityDate = new Date(selectedDate + 'T12:00:00');
+      
+      // Get existing activities for this date
+      const existingActivitiesForDate = activities.filter(a => {
+        const actDate = new Date(a.date).toISOString().split('T')[0];
+        return actDate === selectedDate;
+      });
+      
+      // Get occupied time slots - combine existing activities and pending ones
+      const occupiedTimes = [
+        ...existingActivitiesForDate.map(a => a.time),
+        ...pendingActivityTimes
+      ];
+      
+      console.log('Weather activity scheduling:', {
+        selectedDate,
+        existingActivitiesCount: existingActivitiesForDate.length,
+        pendingCount: pendingActivityTimes.length,
+        occupiedTimes,
+        activityTitle: activitySuggestion.title || activitySuggestion.name
+      });
+      
+      // Determine appropriate time based on activity type and avoid conflicts
+      let defaultTime = "10:00"; // Default morning time
+      const lowerDesc = (activitySuggestion.description + activitySuggestion.name + activitySuggestion.title).toLowerCase();
+      
+      // Determine ideal time based on activity type
+      let idealTimes: string[] = [];
+      if (lowerDesc.includes('breakfast') || lowerDesc.includes('morning') || lowerDesc.includes('sunrise')) {
+        idealTimes = ["08:00", "09:00", "07:00"];
+      } else if (lowerDesc.includes('lunch') || lowerDesc.includes('midday') || lowerDesc.includes('noon')) {
+        idealTimes = ["12:00", "13:00", "11:30"];
+      } else if (lowerDesc.includes('dinner') || lowerDesc.includes('evening') || lowerDesc.includes('sunset')) {
+        idealTimes = ["18:00", "19:00", "17:30", "20:00"];
+      } else if (lowerDesc.includes('night') || lowerDesc.includes('bar') || lowerDesc.includes('club')) {
+        idealTimes = ["20:00", "21:00", "22:00", "19:00"];
+      } else if (lowerDesc.includes('museum') || lowerDesc.includes('gallery') || lowerDesc.includes('tour')) {
+        idealTimes = ["10:00", "11:00", "14:00", "15:00"];
+      } else if (lowerDesc.includes('beach') || lowerDesc.includes('park') || lowerDesc.includes('hike')) {
+        idealTimes = ["09:00", "10:00", "11:00", "08:00"];
+      } else {
+        // General activities - spread throughout the day
+        idealTimes = ["10:00", "11:00", "14:00", "15:00", "16:00", "13:00"];
+      }
+      
+      // Find first available time from ideal times
+      for (const time of idealTimes) {
+        if (!occupiedTimes.includes(time)) {
+          defaultTime = time;
+          break;
+        }
+      }
+      
+      // If all ideal times are taken, find any available slot
+      if (occupiedTimes.includes(defaultTime)) {
+        const allTimes = [
+          "07:00", "08:00", "09:00", "10:00", "11:00", 
+          "12:00", "13:00", "14:00", "15:00", "16:00", 
+          "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
+        ];
+        
+        for (const time of allTimes) {
+          if (!occupiedTimes.includes(time)) {
+            defaultTime = time;
+            break;
+          }
+        }
+      }
+      
+      console.log('Selected time for activity:', {
+        idealTimes,
+        finalTime: defaultTime,
+        wasConflict: occupiedTimes.includes(defaultTime)
+      });
+      
+      // Determine tag based on activity
+      let tag = 'event';
+      if (lowerDesc.includes('food') || lowerDesc.includes('restaurant') || lowerDesc.includes('eat') || 
+          lowerDesc.includes('breakfast') || lowerDesc.includes('lunch') || lowerDesc.includes('dinner')) {
+        tag = 'food';
+      } else if (lowerDesc.includes('museum') || lowerDesc.includes('art') || lowerDesc.includes('culture') || 
+                 lowerDesc.includes('historic') || lowerDesc.includes('gallery')) {
+        tag = 'culture';
+      } else if (lowerDesc.includes('shop') || lowerDesc.includes('market') || lowerDesc.includes('mall')) {
+        tag = 'shop';
+      } else if (lowerDesc.includes('spa') || lowerDesc.includes('relax') || lowerDesc.includes('massage')) {
+        tag = 'rest';
+      }
+      
       const formattedActivity = {
         tripId: trip.id,
-        title: activitySuggestion.title,
+        title: activitySuggestion.title || activitySuggestion.name || '',
         date: activityDate,
-        time: "12:00", // Default time
-        locationName: activitySuggestion.locationName,
-        notes: activitySuggestion.description,
-        tag: activitySuggestion.tag,
+        time: defaultTime,
+        locationName: activitySuggestion.locationName || activitySuggestion.location || activitySuggestion.title,
+        notes: `${activitySuggestion.description}${activitySuggestion.tips ? `\n\nTip: ${activitySuggestion.tips}` : ''}${activitySuggestion.weatherSuitability ? `\n\nWeather: ${activitySuggestion.weatherSuitability}` : ''}${activitySuggestion.duration ? `\n\nDuration: ${activitySuggestion.duration}` : ''}`,
+        tag: activitySuggestion.tag || tag,
         order: 0 // Will be adjusted when added
       };
       
       await onAddActivity(formattedActivity);
       
+      // Add this time to pending times so next activity picks a different time
+      setPendingActivityTimes(prev => [...prev, defaultTime]);
+      
       toast({
         title: "Activity added",
-        description: `Added "${activitySuggestion.title}" to your itinerary.`,
+        description: `Added "${activitySuggestion.title || activitySuggestion.name}" to ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at ${defaultTime}.${existingActivitiesForDate.length > 0 ? ` (${existingActivitiesForDate.length} other activities on this day)` : ''}`,
       });
     } catch (error) {
       toast({
@@ -275,23 +393,48 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {autoWeatherData.slice(0, 6).map((weather, index) => (
-              <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-md border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getWeatherIcon(weather.condition)}
-                    <div>
-                      <p className="text-sm font-medium">{new Date(weather.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{weather.description}</p>
+            {autoWeatherData.slice(0, 6).map((weather, index) => {
+              // Parse the date string directly without creating a Date object to avoid timezone issues
+              const [year, month, day] = weather.date.split('-');
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const weatherDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+              weatherDate.setHours(0, 0, 0, 0);
+              const daysFromNow = Math.floor((weatherDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+              const isForecast = daysFromNow >= 0 && daysFromNow <= 5;
+              
+              // Create display date string
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+              const displayMonth = monthNames[parseInt(month) - 1];
+              const displayDay = parseInt(day);
+              
+              return (
+                <div 
+                  key={index} 
+                  className="bg-white dark:bg-gray-800 p-3 rounded-md border cursor-pointer hover:border-blue-500 transition-colors"
+                  onClick={() => {
+                    handleDateSelect(weather.date);
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {getWeatherIcon(weather.condition)}
+                      <div>
+                        <p className="text-sm font-medium">
+                          {displayMonth} {displayDay}
+                          {!isForecast && <span className="text-xs text-muted-foreground"> (est.)</span>}
+                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">{weather.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold">{weather.temperature}°F</p>
+                      <p className="text-xs text-muted-foreground">{weather.humidity}% humidity</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold">{weather.temperature}°{weather.unit || 'C'}</p>
-                    <p className="text-xs text-muted-foreground">{weather.humidity}% humidity</p>
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -325,7 +468,11 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
                       {selectedDayWeather.description.charAt(0).toUpperCase() + selectedDayWeather.description.slice(1)}
                     </h4>
                     <p className="text-sm text-blue-600 dark:text-blue-300">
-                      {new Date(selectedDayWeather.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                      {(() => {
+                        const [year, month, day] = selectedDayWeather.date.split('-');
+                        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -339,12 +486,12 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
           
           <Button 
             onClick={handleGetSuggestions}
-            disabled={weatherMutation.isPending || !selectedDayWeather}
+            disabled={weatherMutation.isPending}
             className="w-full"
           >
             {weatherMutation.isPending ? "Getting suggestions..." : 
              selectedDayWeather ? `Get Activities for ${selectedDayWeather.description}` : 
-             "Select a day to see weather activities"}
+             "Get Weather-Based Activities"}
           </Button>
         </TabsContent>
 
@@ -367,13 +514,15 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
       {/* Weather-based activity suggestions */}
       {weatherMutation.isSuccess && weatherMutation.data && (
         <div className="mt-4 space-y-4">
-          <div className="bg-muted p-4 rounded-md">
-            <h4 className="font-medium flex items-center">
-              {weatherIcons[weatherCondition]}
-              <span className="ml-2">{weatherMutation.data.weather.condition}</span>
-            </h4>
-            <p className="text-sm mt-1">{weatherMutation.data.weather.recommendation}</p>
-          </div>
+          {selectedDayWeather && (
+            <div className="bg-muted p-4 rounded-md">
+              <h4 className="font-medium flex items-center">
+                {getWeatherIcon(selectedDayWeather.condition)}
+                <span className="ml-2">Activities for {selectedDayWeather.description}</span>
+              </h4>
+              <p className="text-sm mt-1">Perfect activities for {selectedDayWeather.temperature}°F weather</p>
+            </div>
+          )}
           
           <h4 className="font-medium">Weather-Based Activities</h4>
           <div className="space-y-3">
@@ -382,20 +531,28 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h5 className="font-medium">{activity.title}</h5>
+                      <h5 className="font-medium">{activity.title || activity.name}</h5>
                       <div className="flex items-center text-sm text-muted-foreground mt-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${
-                          activity.category === 'indoor' 
+                          activity.weatherSuitability?.toLowerCase().includes('indoor') 
                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
-                            : activity.category === 'outdoor'
+                            : activity.weatherSuitability?.toLowerCase().includes('outdoor')
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
                         }`}>
-                          {activity.category}
+                          {activity.weatherSuitability?.toLowerCase().includes('indoor') ? 'indoor' : 
+                           activity.weatherSuitability?.toLowerCase().includes('outdoor') ? 'outdoor' : 'either'}
                         </span>
-                        <span className="ml-2">{activity.locationName}</span>
+                        <span className="ml-2">{activity.locationName || activity.location}</span>
+                        {activity.duration && <span className="ml-2">• {activity.duration}</span>}
                       </div>
                       <p className="text-sm mt-2">{activity.description}</p>
+                      {activity.weatherSuitability && (
+                        <p className="text-xs text-muted-foreground mt-1">🌤️ {activity.weatherSuitability}</p>
+                      )}
+                      {activity.tips && (
+                        <p className="text-xs italic text-muted-foreground mt-1">💡 {activity.tips}</p>
+                      )}
                     </div>
                     <Button 
                       size="sm" 
@@ -429,7 +586,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h5 className="font-medium">{activity.title}</h5>
+                      <h5 className="font-medium">{activity.title || activity.name}</h5>
                       <div className="flex items-center text-sm text-muted-foreground mt-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${
                           activity.category === 'indoor' 
@@ -440,7 +597,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
                         }`}>
                           {activity.category || 'general'}
                         </span>
-                        <span className="ml-2">{activity.locationName}</span>
+                        <span className="ml-2">{activity.locationName || activity.location || trip.city}</span>
                       </div>
                       <p className="text-sm mt-2">{activity.description}</p>
                     </div>

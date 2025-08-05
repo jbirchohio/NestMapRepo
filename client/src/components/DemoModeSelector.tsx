@@ -47,7 +47,7 @@ export default function DemoModeSelector() {
       <div className="max-w-4xl w-full">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-navy-900 dark:text-white mb-4">
-            Experience NestMap's Dual-Mode Interface
+            Experience Remvana's Dual-Mode Interface
           </h1>
           <p className="text-lg text-navy-600 dark:text-navy-300 mb-2">
             Choose your business type to see how the interface adapts
@@ -127,7 +127,7 @@ export default function DemoModeSelector() {
 
         <div className="text-center mt-8">
           <p className="text-sm text-navy-500 dark:text-navy-400">
-            This demo shows how NestMap adapts its interface based on your business type.
+            This demo shows how Remvana adapts its interface based on your business type.
             <br />
             Navigation, branding, and features change automatically.
           </p>

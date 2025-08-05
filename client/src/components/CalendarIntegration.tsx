@@ -54,7 +54,7 @@ export default function CalendarIntegration() {
   // Fetch calendar connections
   const { data: connections = [], isLoading } = useQuery({
     queryKey: ['/api/calendar/connections'],
-    queryFn: () => apiRequest('GET', '/api/calendar/connections').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/calendar/connections'),
   });
 
   // Connect to calendar provider
@@ -452,7 +452,7 @@ export default function CalendarIntegration() {
               <div className="font-medium text-sm mb-1">All Trips</div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-sm p-2 bg-white dark:bg-slate-900 rounded border">
-                  https://nestmap.com/api/calendar/feed/all-trips?token=user_token_here
+                  https://remvana.com/api/calendar/feed/all-trips?token=user_token_here
                 </code>
                 <Button size="sm" variant="outline">
                   Copy
@@ -464,7 +464,7 @@ export default function CalendarIntegration() {
               <div className="font-medium text-sm mb-1">Upcoming Trips Only</div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-sm p-2 bg-white dark:bg-slate-900 rounded border">
-                  https://nestmap.com/api/calendar/feed/upcoming?token=user_token_here
+                  https://remvana.com/api/calendar/feed/upcoming?token=user_token_here
                 </code>
                 <Button size="sm" variant="outline">
                   Copy

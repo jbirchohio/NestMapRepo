@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 
 // Simple test runner for our comprehensive test suite
 async function runTests() {
-  console.log('🧪 Starting NestMap Test Suite');
+  console.log('🧪 Starting Remvana Test Suite');
   console.log('=====================================');
 
   const testFiles = [

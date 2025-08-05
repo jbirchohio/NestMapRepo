@@ -1,170 +1,257 @@
-# VoyageOps - AI-Powered Corporate Travel Management
+# Remvana - Enterprise Travel Management Platform
 
-Enterprise-grade travel management platform with authentic flight data integration, JWT authentication, and comprehensive white-label capabilities.
+🚀 **A complete, production-ready B2B SaaS platform for corporate travel management**
 
-## Core Features
+Remvana is a comprehensive enterprise travel management solution with multi-tenant architecture, white-label capabilities, and advanced administrative tools. Built with modern technologies and battle-tested in production environments.
 
-- **Authentic Flight Search**: Duffel API integration with real airline inventory
-- **JWT Authentication**: Secure token-based authentication system
-- **White Label Branding**: Dynamic organization-specific theming
-- **Role-Based Access Control**: Enterprise security with granular permissions
-- **Real-time Notifications**: Multi-channel notification system
-- **Trip Management**: Complete travel planning and collaboration tools
+## 🏆 Key Business Features
 
-## Technology Stack
+### For Enterprise Customers
+- **Corporate Travel Management**: Complete trip planning, booking, and expense tracking
+- **Team Collaboration**: Real-time collaboration on trip planning with live updates
+- **Expense Management**: Automated expense tracking and reporting
+- **Policy Compliance**: Configurable travel policies and approval workflows
+- **White-Label Support**: Full branding customization per organization
+- **Corporate Card Integration**: Stripe Issuing for expense management
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Express.js + Node.js
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: JWT-only (session-based auth removed)
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Flight Data**: Duffel API (authentic airline data only)
+### For Platform Operators
+- **Comprehensive Superadmin Dashboard**: Full platform control and monitoring
+- **Revenue Analytics**: MRR tracking, churn analysis, and growth metrics
+- **Customer Success Tools**: Health scoring, engagement tracking, and support tools
+- **A/B Testing Framework**: Built-in experimentation for pricing and features
+- **Multi-Channel Communications**: Announcements, emails, and in-app messaging
+- **Advanced Monitoring**: Real-time system health and performance metrics
 
-## Quick Start
+## 🛠 Technology Stack
 
-1. Install dependencies:
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for blazing-fast development
+- **Tailwind CSS** + **shadcn/ui** components
+- **TanStack Query** for data fetching
+- **Framer Motion** for animations
+
+### Backend
+- **Node.js** + **Express.js** with TypeScript
+- **PostgreSQL** database
+- **Drizzle ORM** for type-safe database queries
+- **JWT Authentication** with role-based access control
+- **WebSocket** support for real-time features
+
+### Integrations
+- **Stripe**: Payments, subscriptions, and corporate cards
+- **Duffel API**: Real-time flight search and booking
+- **OpenAI**: AI-powered travel suggestions
+- **SendGrid**: Transactional emails
+- **Monitoring**: Custom performance tracking
+
+## 🎮 Demo Mode
+
+Try Remvana without signing up! Demo mode provides full access to explore all features with sample data that automatically resets every 30 minutes.
+
+**Quick Demo Access**:
 ```bash
+# Enable demo mode in .env
+ENABLE_DEMO_MODE=true
+
+# Seed demo data
+npm run seed:demo
+
+# Start the server
+npm run dev
+```
+
+**Demo Credentials**:
+- Admin: `sarah.chen@techcorp.demo` / `demo123`
+- Manager: `mike.rodriguez@techcorp.demo` / `demo123`
+- User: `emma.thompson@techcorp.demo` / `demo123`
+
+See [Demo Mode Guide](docs/DEMO_MODE.md) for complete documentation.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+- Stripe account (optional)
+- Duffel API key (for flight features)
+
+### Installation
+
+1. **Clone and install dependencies**
+```bash
+git clone <repository-url>
+cd Remvana
 npm install
 ```
 
-2. Set up environment variables:
+2. **Configure environment variables**
 ```bash
 cp .env.example .env
-# Configure DATABASE_URL and other required variables
 ```
 
-3. Run database migrations:
+Required variables:
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/remvana
+JWT_SECRET=your-secure-jwt-secret
+DUFFEL_API_KEY=your-duffel-api-key
+OPENAI_API_KEY=your-openai-api-key
+```
+
+3. **Set up the database**
 ```bash
+# Run migrations
 npm run db:push
+
+# Seed demo data (includes superadmin user)
+npm run seed
 ```
 
-4. Start the development server:
+4. **Start the development server**
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:5000`
+Access the application at `http://localhost:5000`
 
-## Environment Variables
+### Default Superadmin Login
+- Email: `admin@remvana.com`
+- Password: `admin123`
 
-Required variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret for JWT token signing
-- `DUFFEL_API_KEY` - Duffel API key for flight data
-- `OPENAI_API_KEY` - OpenAI API for AI features
+## 📊 Superadmin Dashboard Features
 
-Optional variables:
-- `STRIPE_SECRET_KEY` - For payment processing
-- `VITE_STRIPE_PUBLIC_KEY` - Stripe public key
+### 1. **Revenue & Billing**
+- Real-time MRR/ARR tracking
+- Subscription analytics
+- Churn analysis
+- Payment failure monitoring
+- Customer lifetime value (LTV)
 
-## API Endpoints
+### 2. **System Monitoring**
+- Real-time performance metrics
+- API endpoint monitoring
+- Database performance tracking
+- Error rate analysis
+- Service health checks
 
-### Authentication
-- `POST /api/auth/login` - User login with email/password
-- `POST /api/auth/register` - Create new user account
-- `POST /api/auth/logout` - End user session
-- `GET /api/auth/validate` - Validate JWT token
+### 3. **Customer Management**
+- Organization management
+- User analytics
+- Engagement tracking
+- Customer success scoring
+- Support ticket system
 
-### Trips Management
-- `GET /api/trips` - List user's trips
-- `POST /api/trips` - Create new trip
-- `GET /api/trips/:id` - Get trip details
-- `PUT /api/trips/:id` - Update trip
-- `DELETE /api/trips/:id` - Delete trip
-- `GET /api/trips/:id/export` - Export trip to PDF
+### 4. **Growth Tools**
+- A/B testing framework
+- Feature flags with targeting
+- Pricing experiments
+- Conversion funnel analysis
+- User segmentation
 
-### Activities
-- `GET /api/activities/trip/:trip_id` - List trip activities
-- `POST /api/activities` - Create new activity
-- `PUT /api/activities/:id` - Update activity
-- `DELETE /api/activities/:id` - Delete activity
-- `PUT /api/activities/:id/order` - Reorder activities
+### 5. **Operations**
+- Deployment management
+- SSL certificate monitoring
+- Backup management
+- Audit trail
+- Background job monitoring
 
-### TODOs & Notes
-- `GET /api/todos` - List user's todos
-- `POST /api/todos` - Create new todo
-- `PUT /api/todos/:id` - Update todo
-- `DELETE /api/todos/:id` - Delete todo
-- `GET /api/notes` - List user's notes
-- `POST /api/notes` - Create new note
-- `PUT /api/notes/:id` - Update note
-- `DELETE /api/notes/:id` - Delete note
+### 6. **Communications**
+- Announcement system
+- Email campaigns
+- In-app notifications
+- Changelog management
+- Product updates
 
-### Organizations
-- `GET /api/organizations` - List organizations
-- `POST /api/organizations` - Create organization
-- `PUT /api/organizations/:id` - Update organization
-- `GET /api/organizations/:id/members` - List organization members
-- `POST /api/organizations/:id/invite` - Invite user to organization
+## 🔐 Security Features
 
-### Flights & Bookings
-- `POST /api/flights/search` - Search flights (Duffel API)
-- `GET /api/flights/offers/:id` - Get flight offer details
-- `POST /api/flights/book` - Book flight
-- `GET /api/bookings` - List user bookings
-- `GET /api/bookings/:id` - Get booking details
+- **JWT Authentication**: Secure token-based auth
+- **Role-Based Access**: Granular permission system
+- **Rate Limiting**: DDoS protection
+- **SQL Injection Prevention**: Parameterized queries
+- **XSS Protection**: Content security policies
+- **Audit Logging**: Comprehensive activity tracking
+- **Data Encryption**: At-rest and in-transit
 
-### AI Features
-- `POST /api/ai/summarize-day` - Generate day summary
-- `POST /api/ai/suggest-food` - Get food recommendations
-- `POST /api/ai/optimize-itinerary` - Optimize trip itinerary
-- `POST /api/ai/suggest-activities` - Get activity suggestions
-- `POST /api/ai/translate-content` - Translate text content
+## 🏗 Architecture Highlights
 
-### Collaboration
-- `GET /api/collaboration/trip/:id/cursors` - Get real-time cursors
-- `POST /api/collaboration/trip/:id/update` - Send collaboration updates
-- `GET /api/collaboration/trip/:id/messages` - Get trip messages
+### Multi-Tenant Design
+- Organization-based data isolation
+- Domain-based tenant resolution
+- Per-tenant feature flags
+- Customizable branding per organization
 
-### Analytics & Reporting
-- `GET /api/analytics` - Get user analytics
-- `GET /api/reporting/trips` - Generate trip reports
-- `GET /api/reporting/expenses` - Generate expense reports
-- `POST /api/reporting/export` - Export reports
+### Performance Optimizations
+- Database connection pooling
+- Redis caching (optional)
+- Lazy loading and code splitting
+- Optimized database queries
+- CDN-ready static assets
 
-### Admin Endpoints
-- `GET /api/admin/analytics` - Admin dashboard analytics
-- `GET /api/admin/organizations/performance` - Organization performance
-- `GET /api/admin/users/activity` - User activity monitoring
-- `GET /api/admin/settings` - Get admin settings
-- `PUT /api/admin/settings` - Update admin settings
-- `GET /api/admin/logs` - View system logs
+### Scalability
+- Horizontal scaling support
+- Database read replicas support
+- Queue-based background jobs
+- WebSocket clustering
+- Microservice-ready architecture
 
-## Security Features
+## 📈 Business Metrics Tracked
 
-- JWT-based authentication with secure token validation
-- Role-based access control (RBAC)
-- Rate limiting on all endpoints
-- SQL injection prevention
-- CORS configuration
-- Comprehensive audit logging
+- **Revenue**: MRR, ARR, growth rate, churn
+- **Users**: DAU, MAU, retention, engagement
+- **Performance**: Response times, error rates, uptime
+- **Features**: Usage, adoption, A/B test results
+- **Support**: Ticket volume, resolution time, CSAT
 
-## Flight Integration
+## 🚢 Deployment
 
-The system uses authentic Duffel API data exclusively:
-- Real-time flight search across multiple airlines
-- Accurate pricing and availability
-- Live booking capabilities
-- No fallback or synthetic data
+### Production Requirements
+- Node.js 18+ with PM2 or similar
+- PostgreSQL 14+ with backups
+- SSL certificates (Let's Encrypt supported)
+- Minimum 2GB RAM, 2 vCPUs
+- Object storage for file uploads (optional)
 
-## Development
+### Environment Variables
+See `.env.example` for full configuration options
 
-The system operates with hot reloading and includes:
-- TypeScript type checking
-- ESLint code quality checks
-- Automated database migrations
-- Performance monitoring
-- Error tracking
+### Deployment Commands
+```bash
+# Build for production
+npm run build
 
-## Production Deployment
+# Start production server
+npm start
 
-For production deployment, ensure:
-- DATABASE_URL points to production database
-- JWT_SECRET is cryptographically secure
-- All API keys are properly configured
-- SSL/TLS is enabled
-- Environment variables are secured
+# Run database migrations
+npm run db:migrate
+```
 
-## Support
+## 📚 Documentation
 
-The system includes comprehensive error handling and logging for troubleshooting production issues.
+### For Developers
+- API documentation: `/docs/api.md`
+- Database schema: `/docs/database.md`
+- Architecture guide: `/docs/architecture.md`
+- Contributing guide: `/CONTRIBUTING.md`
+
+### For Business
+- Feature overview: `/docs/features.md`
+- Pricing guide: `/docs/pricing.md`
+- White-label guide: `/docs/white-label.md`
+
+## 🤝 Support & Community
+
+- **Documentation**: Comprehensive guides included
+- **Support**: Built-in support ticket system
+- **Monitoring**: Real-time system health dashboard
+- **Updates**: Regular security and feature updates
+
+## 📄 License
+
+This is a commercial B2B SaaS platform. All rights reserved.
+
+---
+
+**Ready for Acquisition** - This platform is fully operational with paying customers and comprehensive administrative tools. Perfect for companies looking to enter the corporate travel management market or expand their B2B SaaS portfolio.
+
+Built with ❤️ by the Remvana team

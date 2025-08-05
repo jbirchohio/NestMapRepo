@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import authRoutes from './auth';
+import usersRoutes from './users';
+import debugRoutes from './debug';
 import tripRoutes from './trips';
 import activityRoutes from './activities';
 import organizationRoutes from './organizations';
@@ -26,12 +28,24 @@ import securityRoutes from './security';
 import healthRoutes from './health';
 import notificationsRoutes from './notifications';
 import flightRoutes from './flights';
+import weatherRoutes from './weather';
+import travelPoliciesRoutes from './travelPolicies';
+import enterpriseExpensesRoutes from './enterpriseExpenses';
+// Removed duty of care and ground transport - no real APIs available
+import teamCollaborationRoutes from './teamCollaboration';
+import workspaceIntegrationRoutes from './workspaceIntegration';
+import aiBookingRecommendationsRoutes from './aiBookingRecommendations';
+import mobileRoutes from './mobile';
+import demoRoutes from './demo';
 import { getUserById } from '../auth';
+import viatorRoutes from './viator';
 
 const router = Router();
 
 // Mount all route modules
 router.use('/auth', authRoutes);
+router.use('/users', usersRoutes);
+router.use('/debug', debugRoutes);
 router.use('/trips', tripRoutes);
 router.use('/activities', activityRoutes);
 router.use('/organizations', organizationRoutes);
@@ -63,6 +77,16 @@ import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
 router.use('/todos', todosRoutes);
 router.use('/notes', notesRoutes);
 router.use('/ai', aiRoutes);
+router.use('/weather', weatherRoutes);
+router.use('/travel-policies', travelPoliciesRoutes);
+router.use('/enterprise-expenses', enterpriseExpensesRoutes);
+// Removed duty of care and ground transport routes
+router.use('/team-collaboration', teamCollaborationRoutes);
+router.use('/workspace-integration', workspaceIntegrationRoutes);
+router.use('/ai-recommendations', aiBookingRecommendationsRoutes);
+router.use('/mobile', mobileRoutes);
+router.use('/demo', demoRoutes);
+router.use('/viator', viatorRoutes);
 
 // Templates endpoint
 router.get('/templates', async (req, res) => {
@@ -83,6 +107,33 @@ router.get('/user/permissions', async (req, res) => {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
+    // Debug logging
+    console.log('User permissions request:', {
+      userId: req.user.id,
+      email: req.user.email,
+      username: req.user.username,
+      role: req.user.role,
+      isDemo: req.isDemo,
+      organizationId: req.user.organization_id
+    });
+
+    // Special handling for demo users
+    if (req.isDemo || req.user.email?.includes('.demo') || req.user.username?.startsWith('demo-')) {
+      // Give demo users full permissions for their role
+      const demoPermissions = req.user.role === 'admin' 
+        ? ['manage_trips', 'manage_users', 'manage_organization', 'view_analytics', 'manage_billing', 'export_data']
+        : req.user.role === 'manager'
+        ? ['manage_trips', 'manage_team', 'view_analytics', 'export_data']
+        : ['manage_trips', 'view_trips'];
+        
+      return res.json({ 
+        permissions: demoPermissions,
+        role: req.user.role,
+        organizationId: req.user.organization_id,
+        isDemo: true
+      });
+    }
+
     // Get user's actual permissions from database based on role
     const { getUserPermissionsByRole } = await import('../permissions');
     const permissions = await getUserPermissionsByRole(req.user.id, req.user.role, req.user.organization_id);
@@ -100,7 +151,13 @@ router.get('/user/permissions', async (req, res) => {
 
 // Dashboard stats endpoint
 router.get('/dashboard-stats', (req, res) => {
-  if (!req.user || !req.user.organization_id) {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  
+  // Allow demo users even without organization_id
+  const isDemo = req.isDemo || req.user.email?.includes('.demo') || req.user.username?.startsWith('demo-');
+  if (!isDemo && !req.user.organization_id) {
     return res.status(401).json({ message: 'Organization membership required' });
   }
 
@@ -215,8 +272,8 @@ router.get('/organizations/members', async (req, res) => {
   }
 });
 
-// Airport code conversion endpoint
-router.post('/locations/airport-code', (req, res) => {
+// Airport code conversion endpoint with AI
+router.post('/locations/airport-code', async (req, res) => {
   try {
     const { cityName } = req.body;
 
@@ -224,116 +281,65 @@ router.post('/locations/airport-code', (req, res) => {
       return res.status(400).json({ error: 'City name is required' });
     }
 
-    const airportCode = getAirportCode(cityName);
-    res.json({ airportCode });
+    // Check if it's already an airport code
+    if (cityName.length === 3 && /^[A-Z]{3}$/i.test(cityName)) {
+      return res.json({ airportCode: cityName.toUpperCase() });
+    }
+
+    // Use AI to find the nearest major airport
+    try {
+      const { callOpenAI } = await import('../openai');
+      
+      const prompt = `Find the closest major commercial airport to ${cityName}. Consider:
+1. If it's a major city with multiple airports, return the main international airport
+2. If it's a smaller city, return the nearest major airport with good flight connections
+3. Consider practical travel distance - the airport people would actually use
+
+City: ${cityName}
+
+Return ONLY the 3-letter IATA airport code (e.g., LAX, JFK, ORD). Nothing else.`;
+
+      const aiResponse = await callOpenAI(prompt, { temperature: 0.1, max_tokens: 10 });
+      const airportCode = aiResponse.trim().toUpperCase().replace(/[^A-Z]/g, '');
+      
+      // Validate it's a 3-letter code
+      if (/^[A-Z]{3}$/.test(airportCode)) {
+        console.log(`AI found airport code for ${cityName}: ${airportCode}`);
+        return res.json({ airportCode });
+      } else {
+        console.error(`Invalid airport code from AI: ${aiResponse}`);
+      }
+    } catch (aiError) {
+      console.error('AI airport lookup failed:', aiError);
+    }
+
+    // Last resort fallback - ask AI for a major US hub
+    try {
+      const { callOpenAI } = await import('../openai');
+      const fallbackResponse = await callOpenAI('What is the airport code for a major US hub airport? Return only the 3-letter code.', { temperature: 0.1, max_tokens: 10 });
+      const fallbackCode = fallbackResponse.trim().toUpperCase().replace(/[^A-Z]/g, '');
+      if (/^[A-Z]{3}$/.test(fallbackCode)) {
+        return res.json({ airportCode: fallbackCode });
+      }
+    } catch (e) {
+      // Silent fail
+    }
+
+    // Ultimate fallback
+    res.json({ airportCode: 'ORD' }); // Chicago O'Hare as a central US hub
   } catch (error) {
     console.error('Airport code conversion error:', error);
     res.status(500).json({ error: 'Failed to convert city to airport code' });
   }
 });
 
-// Helper function to convert city names to airport codes
-function getAirportCode(cityName: string): string {
-  const airportMap: { [key: string]: string } = {
-    'san francisco': 'SFO',
-    'san francisco, ca': 'SFO',
-    'san francisco, united states': 'SFO',
-    'san francisco, california': 'SFO',
-    'sf': 'SFO',
-    'new york': 'JFK',
-    'new york city': 'JFK',
-    'new york, united states': 'JFK',
-    'new york, ny': 'JFK',
-    'nyc': 'JFK',
-    'ny': 'JFK',
-    'chicago': 'ORD',
-    'chicago, il': 'ORD',
-    'los angeles': 'LAX',
-    'la': 'LAX',
-    'seattle': 'SEA',
-    'seattle, wa': 'SEA',
-    'seattle, washington': 'SEA',
-    'denver': 'DEN',
-    'denver, co': 'DEN',
-    'miami': 'MIA',
-    'miami, fl': 'MIA',
-    'austin': 'AUS',
-    'austin, tx': 'AUS',
-    'boston': 'BOS',
-    'boston, ma': 'BOS',
-    'atlanta': 'ATL',
-    'atlanta, ga': 'ATL',
-    'washington': 'DCA',
-    'washington dc': 'DCA',
-    'dc': 'DCA',
-    'philadelphia': 'PHL',
-    'phoenix': 'PHX',
-    'las vegas': 'LAS',
-    'vegas': 'LAS',
-    'orlando': 'MCO',
-    'dallas': 'DFW',
-    'houston': 'IAH',
-    'detroit': 'DTW',
-    'minneapolis': 'MSP',
-    'charlotte': 'CLT',
-    'portland': 'PDX',
-    'salt lake city': 'SLC',
-    'nashville': 'BNA',
-    'london': 'LHR',
-    'uk': 'LHR',
-    'england': 'LHR',
-    'paris': 'CDG',
-    'france': 'CDG',
-    'tokyo': 'NRT',
-    'japan': 'NRT',
-    'singapore': 'SIN',
-    'amsterdam': 'AMS',
-    'netherlands': 'AMS'
-  };
-
-  const city = cityName?.toLowerCase().trim() || '';
-
-  console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
-
-  // Direct match
-  if (airportMap[city]) {
-    console.log(`Direct match found: ${airportMap[city]}`);
-    return airportMap[city];
-  }
-
-  // Check if it's already a 3-letter code
-  if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
-    console.log(`Already airport code: ${city.toUpperCase()}`);
-    return city.toUpperCase();
-  }
-
-  // Try partial matches for compound city names - check if city starts with any key
-  for (const [key, code] of Object.entries(airportMap)) {
-    if (city.startsWith(key) || key.startsWith(city)) {
-      console.log(`Partial match found: ${key} -> ${code}`);
-      return code;
-    }
-  }
-
-  // Try contains matches
-  for (const [key, code] of Object.entries(airportMap)) {
-    if (city.includes(key) || key.includes(city)) {
-      console.log(`Contains match found: ${key} -> ${code}`);
-      return code;
-    }
-  }
-
-  console.log(`No match found for "${city}", defaulting to JFK`);
-  // Default fallback to major airports
-  return 'JFK'; // Default to JFK if no match found
-}
 
 // Health check endpoint
 router.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
-    service: 'nestmap-api'
+    service: 'remvana-api'
   });
 });
 

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { getSetting } from '../services/systemSettingsService';
 
 /**
  * SQL injection prevention middleware
@@ -159,8 +160,10 @@ export function secureFileUpload(req: Request, res: Response, next: NextFunction
 /**
  * CORS security configuration
  */
-export function configureCORS(req: Request, res: Response, next: NextFunction) {
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+export async function configureCORS(req: Request, res: Response, next: NextFunction) {
+  // Get allowed origins from system settings
+  const corsOrigins = await getSetting('allowed_cors_origins') || 'http://localhost:5000,http://localhost:3000';
+  const allowedOrigins = corsOrigins.split(',').map((o: string) => o.trim());
   const origin = req.get('origin');
 
   if (origin && allowedOrigins.includes(origin)) {

@@ -1,5 +1,6 @@
 import { MailService } from '@sendgrid/mail';
 import { getBrandingConfig } from '../config/branding';
+import { logger } from './utils/logger';
 
 let mailService: MailService | null = null;
 
@@ -7,9 +8,9 @@ let mailService: MailService | null = null;
 if (process.env.SENDGRID_API_KEY) {
   mailService = new MailService();
   mailService.setApiKey(process.env.SENDGRID_API_KEY);
-  console.log('✓ SendGrid email service initialized');
+  logger.info('✓ SendGrid email service initialized');
 } else {
-  console.warn('⚠ SENDGRID_API_KEY not found - email features will be disabled');
+  logger.warn('⚠ SENDGRID_API_KEY not found - email features will be disabled');
 }
 
 interface BrandingContext {
@@ -47,7 +48,7 @@ function generateNotificationHTML(params: NotificationEmailParams): string {
         </div>
       ` : ''}
       <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-      <p style="color: #666; font-size: 14px;">This is an automated message from NestMap</p>
+      <p style="color: #666; font-size: 14px;">This is an automated message from Remvana</p>
     </div>
   `;
 }
@@ -64,7 +65,7 @@ export async function sendNotificationEmail(params: NotificationEmailParams): Pr
 
     const msg = {
       to: params.to,
-      from: process.env.FROM_EMAIL || 'noreply@nestmap.com',
+      from: process.env.FROM_EMAIL || 'noreply@remvana.com',
       subject: params.subject,
       html: generateNotificationHTML(params),
     };
@@ -92,7 +93,7 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Team Invitation - NestMap</title>
+          <title>Team Invitation - Remvana</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #334155; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -106,16 +107,16 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
         <body>
           <div class="container">
             <div class="header">
-              <h1>🗺️ You're Invited to Join NestMap</h1>
+              <h1>🗺️ You're Invited to Join Remvana</h1>
               <p>Professional Travel Management Platform</p>
             </div>
             
             <div class="content">
               <h2>Welcome to ${params.organizationName}!</h2>
               
-              <p><strong>${params.inviterName}</strong> has invited you to join their team on NestMap as a <span class="role-badge">${params.role.toUpperCase()}</span>.</p>
+              <p><strong>${params.inviterName}</strong> has invited you to join their team on Remvana as a <span class="role-badge">${params.role.toUpperCase()}</span>.</p>
               
-              <p>NestMap is a comprehensive travel planning platform that helps teams:</p>
+              <p>Remvana is a comprehensive travel planning platform that helps teams:</p>
               <ul>
                 <li>📅 Create and manage collaborative itineraries</li>
                 <li>🤝 Share trips with team members and clients</li>
@@ -131,7 +132,7 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
             </div>
             
             <div class="footer">
-              <p>© 2025 NestMap - Professional Travel Management</p>
+              <p>© 2025 Remvana - Professional Travel Management</p>
               <p>If you didn't expect this invitation, you can safely ignore this email.</p>
             </div>
           </div>
@@ -141,10 +142,10 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
 
     await mailService.send({
       to: params.to,
-      from: process.env.FROM_EMAIL || 'noreply@nestmap.app',
-      subject: `You're invited to join ${params.organizationName} on NestMap`,
+      from: process.env.FROM_EMAIL || 'noreply@remvana.app',
+      subject: `You're invited to join ${params.organizationName} on Remvana`,
       html: emailHTML,
-      text: `${params.inviterName} has invited you to join ${params.organizationName} on NestMap as a ${params.role}. Accept your invitation: ${invitationUrl}`
+      text: `${params.inviterName} has invited you to join ${params.organizationName} on Remvana as a ${params.role}. Accept your invitation: ${invitationUrl}`
     });
 
     console.log(`✓ Team invitation email sent to ${params.to}`);
@@ -173,7 +174,7 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Welcome to NestMap</title>
+          <title>Welcome to Remvana</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #334155; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -186,7 +187,7 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
         <body>
           <div class="container">
             <div class="header">
-              <h1>🗺️ Welcome to NestMap!</h1>
+              <h1>🗺️ Welcome to Remvana!</h1>
               <p>Professional Travel Management Platform</p>
             </div>
             
@@ -194,8 +195,8 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
               <h2>Hello ${params.name}! 👋</h2>
               
               ${params.organizationName ? 
-                `<p>You've successfully joined <strong>${params.organizationName}</strong> on NestMap!</p>` :
-                `<p>Welcome to NestMap! You're all set to start planning amazing trips.</p>`
+                `<p>You've successfully joined <strong>${params.organizationName}</strong> on Remvana!</p>` :
+                `<p>Welcome to Remvana! You're all set to start planning amazing trips.</p>`
               }
               
               <p>Here's what you can do now:</p>
@@ -212,7 +213,7 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
             </div>
             
             <div class="footer">
-              <p>© 2025 NestMap - Professional Travel Management</p>
+              <p>© 2025 Remvana - Professional Travel Management</p>
               <p>Need help? Reply to this email or visit our support center.</p>
             </div>
           </div>
@@ -222,10 +223,10 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
 
     await mailService.send({
       to: params.to,
-      from: process.env.FROM_EMAIL || 'noreply@nestmap.app',
-      subject: `Welcome to NestMap${params.organizationName ? ` - ${params.organizationName}` : ''}!`,
+      from: process.env.FROM_EMAIL || 'noreply@remvana.app',
+      subject: `Welcome to Remvana${params.organizationName ? ` - ${params.organizationName}` : ''}!`,
       html: emailHTML,
-      text: `Welcome to NestMap! ${params.organizationName ? `You've joined ${params.organizationName}.` : ''} Start planning: ${process.env.FRONTEND_URL || 'http://localhost:5000'}`
+      text: `Welcome to Remvana! ${params.organizationName ? `You've joined ${params.organizationName}.` : ''} Start planning: ${process.env.FRONTEND_URL || 'http://localhost:5000'}`
     });
 
     console.log(`✓ Welcome email sent to ${params.to}`);

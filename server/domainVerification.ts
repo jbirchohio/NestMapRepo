@@ -34,12 +34,12 @@ export async function verifyDomainOwnership(
   expectedToken: string
 ): Promise<DomainVerificationResult> {
   try {
-    // Check for TXT record: nestmap-verification=<token>
-    const txtRecords = await resolveTxt(`_nestmap-verification.${domain}`);
+    // Check for TXT record: remvana-verification=<token>
+    const txtRecords = await resolveTxt(`_remvana-verification.${domain}`);
     
     const flatRecords = txtRecords.flat();
     const verificationRecord = flatRecords.find((record: string) => 
-      record.includes(`nestmap-verification=${expectedToken}`)
+      record.includes(`remvana-verification=${expectedToken}`)
     );
     
     if (verificationRecord) {
@@ -51,7 +51,7 @@ export async function verifyDomainOwnership(
     
     return {
       verified: false,
-      error: `Verification record not found. Expected: _nestmap-verification.${domain} TXT "nestmap-verification=${expectedToken}"`,
+      error: `Verification record not found. Expected: _remvana-verification.${domain} TXT "remvana-verification=${expectedToken}"`,
       records: flatRecords
     };
   } catch (error) {
@@ -188,22 +188,22 @@ export function getDomainVerificationInstructions(
 } {
   return {
     dnsRecord: {
-      name: `_nestmap-verification.${domain}`,
+      name: `_remvana-verification.${domain}`,
       type: 'TXT',
-      value: `nestmap-verification=${verificationToken}`
+      value: `remvana-verification=${verificationToken}`
     },
     instructions: [
       `Add a TXT record to your domain's DNS settings:`,
-      `Name: _nestmap-verification.${domain}`,
+      `Name: _remvana-verification.${domain}`,
       `Type: TXT`,
-      `Value: nestmap-verification=${verificationToken}`,
+      `Value: remvana-verification=${verificationToken}`,
       ``,
       `Wait 5-10 minutes for DNS propagation, then click 'Verify Domain'`,
       ``,
       `For subdomain setup, also add a CNAME record:`,
       `Name: ${domain.split('.')[0]}`,
       `Type: CNAME`, 
-      `Value: domains.nestmap.com`
+      `Value: domains.remvana.com`
     ]
   };
 }

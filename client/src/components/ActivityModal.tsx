@@ -27,7 +27,9 @@ import PlacesSearch from "@/components/PlacesSearch";
 import { Search } from "lucide-react";
 import useTrip from "@/hooks/useTrip";
 import { useDebounce } from "@/hooks/use-debounce";
+import useActivities from "@/hooks/useActivities";
 import TripDatePicker from "@/components/TripDatePicker";
+import BookableActivity from "@/components/BookableActivity";
 
 interface ActivityModalProps {
   tripId: string | number;
@@ -62,6 +64,7 @@ export default function ActivityModal({
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
   const { trip } = useTrip(tripId);
+  const { activities } = useActivities(tripId);
   
   // Debug hotel data
   useEffect(() => {
@@ -104,16 +107,49 @@ export default function ActivityModal({
     ? activity.travelMode as "walking" | "driving" | "transit" 
     : "walking";
   
+  // Smart time scheduling
+  const getSmartDefaultTime = (): string => {
+    if (activity?.time) return activity.time; // Keep existing time if editing
+    
+    // Get activities for the selected date
+    const activitiesForDate = activities.filter(a => {
+      const actDate = new Date(a.date).toISOString().split('T')[0];
+      const selectedDateStr = new Date(selectedDate).toISOString().split('T')[0];
+      return actDate === selectedDateStr;
+    });
+    
+    // Get occupied times
+    const occupiedTimes = activitiesForDate.map(a => a.time).filter(Boolean);
+    
+    // Define ideal time slots throughout the day
+    const timeSlots = [
+      "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+      "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", 
+      "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
+      "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
+    ];
+    
+    // Find first available slot
+    for (const time of timeSlots) {
+      if (!occupiedTimes.includes(time)) {
+        return time;
+      }
+    }
+    
+    // If all slots taken, default to 12:00
+    return "12:00";
+  };
+  
   const defaultFormValues: ActivityFormValues = {
     title: activity?.title || "",
     date: new Date(selectedDate),
-    time: activity?.time || "12:00",
+    time: getSmartDefaultTime(),
     locationName: activity?.locationName || "",
     notes: activity?.notes || "",
-    tag: activity?.tag || undefined,
-    latitude: activity?.latitude || undefined,
-    longitude: activity?.longitude || undefined,
-    assignedTo: activity?.assignedTo || undefined,
+    tag: activity?.tag || "",
+    latitude: activity?.latitude || "",
+    longitude: activity?.longitude || "",
+    assignedTo: activity?.assignedTo || "",
     travelMode: travelMode,
   };
   
@@ -148,7 +184,7 @@ export default function ActivityModal({
       };
       
       // Check if this is guest mode by looking for trip in localStorage
-      const guestTripsData = localStorage.getItem("nestmap_guest_trips");
+      const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
       
 
@@ -174,7 +210,7 @@ export default function ActivityModal({
       
       // For authenticated users, use API
       const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, activityData);
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       // Invalidate queries for both guest and authenticated users
@@ -201,7 +237,7 @@ export default function ActivityModal({
       if (!activity) return null;
       
       // Check if this is guest mode by looking for trip in localStorage
-      const guestTripsData = localStorage.getItem("nestmap_guest_trips");
+      const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
       
       if (isGuestTrip) {
@@ -250,10 +286,7 @@ export default function ActivityModal({
 
       
       const res = await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, updateData);
-      
-      const result = await res.json();
-
-      return result;
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
@@ -688,6 +721,28 @@ export default function ActivityModal({
                   </Button>
                 </div>
               </div>
+
+              {/* Bookable Activity Section - only show after title and location are set */}
+              {watch("title") && watch("locationName") && (
+                <div className="mb-4 border-t pt-4">
+                  <BookableActivity
+                    activityTitle={watch("title")}
+                    latitude={watch("latitude")}
+                    longitude={watch("longitude")}
+                    onBook={(product) => {
+                      // Track booking click
+                      console.log('User clicked book for:', product);
+                      
+                      // Optionally add booking info to notes
+                      const currentNotes = watch("notes") || "";
+                      const bookingNote = `\n\n📍 Bookable tour: ${product.productName} (from $${product.fromPrice})`;
+                      if (!currentNotes.includes(bookingNote)) {
+                        setValue("notes", currentNotes + bookingNote);
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
             
             <div className="flex justify-end gap-2 mt-6">

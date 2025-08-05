@@ -24,10 +24,10 @@ import {
 
 interface AdminLog {
   id: number;
-  admin_user_id: number;
-  action_type: string;
-  action_data: any;
-  ip_address: string | null;
+  adminUserId: number;
+  actionType: string;
+  actionData: any;
+  ipAddress: string | null;
   timestamp: Date;
 }
 
@@ -245,19 +245,19 @@ export default function AdminLogs() {
                       >
                         <div className="flex items-center gap-3 flex-1">
                           <div className="p-2 bg-muted rounded-lg">
-                            {getActionIcon(log.action_type)}
+                            {getActionIcon(log.actionType)}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <Badge variant={getActionBadgeVariant(log.action_type)}>
-                                {formatActionType(log.action_type)}
+                              <Badge variant={getActionBadgeVariant(log.actionType)}>
+                                {formatActionType(log.actionType)}
                               </Badge>
                               <span className="text-sm text-muted-foreground">
-                                by Admin User #{log.admin_user_id}
+                                by Admin User #{log.adminUserId}
                               </span>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {log.action_data ? JSON.stringify(log.action_data).substring(0, 100) + '...' : 'No additional data'}
+                              {log.actionData ? JSON.stringify(log.actionData).substring(0, 100) + '...' : 'No additional data'}
                             </p>
                           </div>
                         </div>
@@ -266,9 +266,9 @@ export default function AdminLogs() {
                             <Clock className="w-3 h-3" />
                             {new Date(log.timestamp).toLocaleString()}
                           </div>
-                          {log.ip_address && (
+                          {log.ipAddress && (
                             <p className="text-xs text-muted-foreground">
-                              IP: {log.ip_address}
+                              IP: {log.ipAddress}
                             </p>
                           )}
                         </div>

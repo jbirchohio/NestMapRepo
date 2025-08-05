@@ -151,7 +151,7 @@ class Logger {
       message,
       context,
       environment: 'production',
-      service: 'nestmap-frontend'
+      service: 'remvana-frontend'
     };
 
     // Placeholder for production logging service

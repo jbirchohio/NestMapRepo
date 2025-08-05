@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 if (!process.env.DUFFEL_API_KEY) {
   throw new Error('DUFFEL_API_KEY environment variable is required');
 }
@@ -20,7 +22,7 @@ class DuffelHTTPClient {
       ...options.headers
     };
 
-    console.log(`Duffel API Request: ${options.method || 'GET'} ${url}`);
+    logger.debug(`Duffel API Request: ${options.method || 'GET'} ${url}`);
 
     const response = await fetch(url, {
       ...options,
@@ -29,12 +31,12 @@ class DuffelHTTPClient {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Duffel API Error: ${response.status} ${errorText}`);
+      logger.error(`Duffel API Error: ${response.status} ${errorText}`);
       throw new Error(`Duffel API Error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log(`Duffel API Response: ${response.status} - Data length: ${JSON.stringify(data).length}`);
+    logger.debug(`Duffel API Response: ${response.status} - Data length: ${JSON.stringify(data).length}`);
     return data;
   }
 }
@@ -178,7 +180,7 @@ export class DuffelFlightService {
    */
   async searchFlights(params: FlightSearchParams): Promise<FlightOffer[]> {
     try {
-      console.log('Searching flights with Duffel API:', params);
+      logger.info('Searching flights with Duffel API:', params);
       
       // Create offer request
       const offerRequestData = {
@@ -212,12 +214,12 @@ export class DuffelFlightService {
         body: JSON.stringify({ data: offerRequestData })
       });
       
-      console.log('Duffel offer request created:', offerRequest.data.id);
+      logger.info('Duffel offer request created:', offerRequest.data.id);
 
       // Get offers from the request
       const offersResponse = await duffelClient.request(`/air/offers?offer_request_id=${offerRequest.data.id}&limit=50`);
 
-      console.log(`Found ${offersResponse.data.length} flight offers`);
+      logger.info(`Found ${offersResponse.data.length} flight offers`);
 
       // Transform Duffel response to our format
       return offersResponse.data.map((offer: any) => ({
@@ -292,10 +294,10 @@ export class DuffelFlightService {
       }));
 
     } catch (error: any) {
-      console.error('Duffel flight search error:', error);
+      logger.error('Duffel flight search error:', error);
       
       if (error.response?.data) {
-        console.error('Duffel API error details:', error.response.data);
+        logger.error('Duffel API error details:', error.response.data);
       }
       
       throw new Error(`Flight search failed: ${error.message}`);
@@ -383,7 +385,7 @@ export class DuffelFlightService {
       };
 
     } catch (error: any) {
-      console.error('Duffel get offer error:', error);
+      logger.error('Duffel get offer error:', error);
       throw new Error(`Failed to get offer: ${error.message}`);
     }
   }
@@ -393,7 +395,7 @@ export class DuffelFlightService {
    */
   async createBooking(bookingData: BookingRequest): Promise<BookingResponse> {
     try {
-      console.log('Creating booking with Duffel API:', bookingData.offer_id);
+      logger.info('Creating booking with Duffel API:', bookingData.offer_id);
 
       const booking = await duffelClient.request('/air/orders', {
         method: 'POST',
@@ -412,7 +414,7 @@ export class DuffelFlightService {
         })
       });
 
-      console.log('Duffel booking created:', booking.id);
+      logger.info('Duffel booking created:', booking.id);
 
       return {
         id: booking.id,
@@ -446,10 +448,10 @@ export class DuffelFlightService {
       };
 
     } catch (error: any) {
-      console.error('Duffel booking error:', error);
+      logger.error('Duffel booking error:', error);
       
       if (error.response?.data) {
-        console.error('Duffel API booking error details:', error.response.data);
+        logger.error('Duffel API booking error details:', error.response.data);
       }
       
       throw new Error(`Booking failed: ${error.message}`);
@@ -495,7 +497,7 @@ export class DuffelFlightService {
       };
 
     } catch (error: any) {
-      console.error('Duffel get booking error:', error);
+      logger.error('Duffel get booking error:', error);
       throw new Error(`Failed to get booking: ${error.message}`);
     }
   }
@@ -505,7 +507,7 @@ export class DuffelFlightService {
    */
   async cancelBooking(bookingId: string): Promise<{ success: boolean; refund_amount?: string; refund_currency?: string }> {
     try {
-      console.log('Cancelling booking with Duffel API:', bookingId);
+      logger.info('Cancelling booking with Duffel API:', bookingId);
 
       const cancellation = await duffelClient.request('/air/order_cancellations', {
         method: 'POST',
@@ -514,7 +516,7 @@ export class DuffelFlightService {
         })
       });
 
-      console.log('Duffel booking cancelled:', cancellation.id);
+      logger.info('Duffel booking cancelled:', cancellation.id);
 
       return {
         success: true,
@@ -523,7 +525,7 @@ export class DuffelFlightService {
       };
 
     } catch (error: any) {
-      console.error('Duffel cancel booking error:', error);
+      logger.error('Duffel cancel booking error:', error);
       throw new Error(`Cancellation failed: ${error.message}`);
     }
   }
@@ -546,7 +548,7 @@ export class DuffelFlightService {
       }));
 
     } catch (error: any) {
-      console.error('Duffel airport search error:', error);
+      logger.error('Duffel airport search error:', error);
       throw new Error(`Airport search failed: ${error.message}`);
     }
   }

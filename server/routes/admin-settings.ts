@@ -37,7 +37,7 @@ interface SystemSettings {
 
 const defaultSettings: SystemSettings = {
   general: {
-    platformName: "NestMap",
+    platformName: "Remvana",
     maintenanceMode: false,
     registrationEnabled: true,
     emailVerificationRequired: true,
@@ -55,8 +55,8 @@ const defaultSettings: SystemSettings = {
     smtpHost: process.env.SMTP_HOST || "",
     smtpPort: parseInt(process.env.SMTP_PORT || "587"),
     smtpSecure: process.env.SMTP_SECURE === "true",
-    fromEmail: process.env.FROM_EMAIL || "noreply@nestmap.com",
-    fromName: process.env.FROM_NAME || "NestMap",
+    fromEmail: process.env.FROM_EMAIL || "noreply@remvana.com",
+    fromName: process.env.FROM_NAME || "Remvana",
   },
   features: {
     enableAIFeatures: true,

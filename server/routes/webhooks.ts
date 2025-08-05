@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { db } from '../db';
 import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -31,11 +32,11 @@ router.post('/stripe-connect', async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
+    logger.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log('Received Stripe Connect webhook:', event.type);
+  logger.info('Received Stripe Connect webhook:', event.type);
 
   try {
     switch (event.type) {
@@ -57,18 +58,18 @@ router.post('/stripe-connect', async (req, res) => {
         break;
       
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logger.debug(`Unhandled event type: ${event.type}`);
     }
 
     res.json({ received: true });
   } catch (error: any) {
-    console.error('Error processing webhook:', error);
+    logger.error('Error processing webhook:', error);
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
 
 async function handleAccountUpdated(account: Stripe.Account) {
-  console.log(`Account updated: ${account.id}`);
+  logger.info(`Account updated: ${account.id}`);
   
   try {
     // Find organization by Stripe account ID
@@ -78,7 +79,7 @@ async function handleAccountUpdated(account: Stripe.Account) {
       .where(eq(organizations.stripe_connect_account_id, account.id));
 
     if (!organization) {
-      console.warn(`No organization found for Stripe account: ${account.id}`);
+      logger.warn(`No organization found for Stripe account: ${account.id}`);
       return;
     }
 
@@ -108,43 +109,43 @@ async function handleAccountUpdated(account: Stripe.Account) {
       .set(updateData)
       .where(eq(organizations.id, organization.id));
 
-    console.log(`Updated organization ${organization.id} with account status`);
+    logger.info(`Updated organization ${organization.id} with account status`);
 
     // Log verification errors for debugging
     if (requirements?.errors && requirements.errors.length > 0) {
-      console.log('Account verification errors:', JSON.stringify(requirements.errors, null, 2));
+      logger.warn('Account verification errors:', JSON.stringify(requirements.errors, null, 2));
     }
 
     // Check if account needs immediate attention
     if (requirements?.currently_due && requirements.currently_due.length > 0) {
-      console.warn(`Account ${account.id} has currently due requirements:`, requirements.currently_due);
+      logger.warn(`Account ${account.id} has currently due requirements:`, requirements.currently_due);
     }
 
     if (requirements?.past_due && requirements.past_due.length > 0) {
-      console.error(`Account ${account.id} has past due requirements:`, requirements.past_due);
+      logger.error(`Account ${account.id} has past due requirements:`, requirements.past_due);
     }
 
   } catch (error) {
-    console.error('Error updating organization from account webhook:', error);
+    logger.error('Error updating organization from account webhook:', error);
   }
 }
 
 async function handlePersonUpdated(person: Stripe.Person) {
-  console.log(`Person updated: ${person.id} for account: ${person.account}`);
+  logger.info(`Person updated: ${person.id} for account: ${person.account}`);
   
   // Log person verification status for debugging
   if (person.verification?.status) {
-    console.log(`Person ${person.id} verification status: ${person.verification.status}`);
+    logger.info(`Person ${person.id} verification status: ${person.verification.status}`);
   }
 
   if (person.verification?.details_code) {
-    console.log(`Person ${person.id} verification details: ${person.verification.details_code}`);
+    logger.info(`Person ${person.id} verification details: ${person.verification.details_code}`);
   }
 }
 
 async function handleCapabilityUpdated(capability: Stripe.Capability) {
-  console.log(`Capability updated: ${capability.id} for account: ${capability.account}`);
-  console.log(`Capability ${capability.id} status: ${capability.status}`);
+  logger.info(`Capability updated: ${capability.id} for account: ${capability.account}`);
+  logger.info(`Capability ${capability.id} status: ${capability.status}`);
 
   try {
     // Find organization by Stripe account ID
@@ -154,7 +155,7 @@ async function handleCapabilityUpdated(capability: Stripe.Capability) {
       .where(eq(organizations.stripe_connect_account_id, capability.account as string));
 
     if (!organization) {
-      console.warn(`No organization found for Stripe account: ${capability.account}`);
+      logger.warn(`No organization found for Stripe account: ${capability.account}`);
       return;
     }
 
@@ -178,15 +179,15 @@ async function handleCapabilityUpdated(capability: Stripe.Capability) {
       .set(updateData)
       .where(eq(organizations.id, organization.id));
 
-    console.log(`Updated organization ${organization.id} capability: ${capability.id} = ${capability.status}`);
+    logger.info(`Updated organization ${organization.id} capability: ${capability.id} = ${capability.status}`);
 
   } catch (error) {
-    console.error('Error updating organization from capability webhook:', error);
+    logger.error('Error updating organization from capability webhook:', error);
   }
 }
 
 async function handleExternalAccountUpdated(externalAccount: Stripe.ExternalAccount) {
-  console.log(`External account updated: ${externalAccount.id} for account: ${externalAccount.account}`);
+  logger.info(`External account updated: ${externalAccount.id} for account: ${externalAccount.account}`);
   
   try {
     // Find organization by Stripe account ID
@@ -196,7 +197,7 @@ async function handleExternalAccountUpdated(externalAccount: Stripe.ExternalAcco
       .where(eq(organizations.stripe_connect_account_id, externalAccount.account as string));
 
     if (!organization) {
-      console.warn(`No organization found for Stripe account: ${externalAccount.account}`);
+      logger.warn(`No organization found for Stripe account: ${externalAccount.account}`);
       return;
     }
 
@@ -209,10 +210,10 @@ async function handleExternalAccountUpdated(externalAccount: Stripe.ExternalAcco
       })
       .where(eq(organizations.id, organization.id));
 
-    console.log(`Updated organization ${organization.id} with external account: ${externalAccount.id}`);
+    logger.info(`Updated organization ${organization.id} with external account: ${externalAccount.id}`);
 
   } catch (error) {
-    console.error('Error updating organization from external account webhook:', error);
+    logger.error('Error updating organization from external account webhook:', error);
   }
 }
 

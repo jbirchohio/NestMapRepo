@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-VoyageOps is an enterprise-grade travel management platform with a React frontend and Express.js backend. The architecture follows a clear separation between client and server with automatic case conversion between database (snake_case) and frontend (camelCase).
+Remvana is an enterprise-grade B2B SaaS travel management platform with comprehensive administrative tools. It features a React frontend and Express.js backend with multi-tenant architecture, white-label capabilities, and an extensive superadmin dashboard. The architecture follows a clear separation between client and server with automatic case conversion between database (snake_case) and frontend (camelCase).
 
 ### Key Architectural Patterns
 
@@ -52,6 +52,10 @@ npm run dev                    # Start development server (http://localhost:5000
 
 # Database
 npm run db:push               # Apply database schema changes
+
+# Demo Mode
+npm run seed:demo             # Seed demo data for testing
+# Set ENABLE_DEMO_MODE=true in .env to enable demo mode
 
 # Type Checking
 npm run check                 # Run TypeScript type checking
@@ -193,6 +197,21 @@ Optional:
 - Organization funding: `server/services/organizationFundingService.ts`
 - Superadmin: `server/routes/superadmin.ts`
 - Analytics: `server/analytics.ts`
+
+### Superadmin Dashboard
+- Main component: `client/src/pages/SuperadminClean.tsx`
+- Navigation: `client/src/components/SuperadminNavigation.tsx`
+- Features include:
+  - Revenue & billing tracking (MRR, churn, LTV)
+  - System health monitoring
+  - User & organization management
+  - Feature flags with A/B testing
+  - Pricing management with Stripe sync
+  - Customer support tools
+  - DevOps deployment management
+  - White-label configuration
+  - Communications hub
+  - Comprehensive audit trail
 
 ## WebSocket Protocol
 

@@ -57,7 +57,7 @@ const mockSecurityEvents: SecurityEvent[] = [
     timestamp: '2025-06-07T02:30:00Z',
     type: 'security_alert',
     severity: 'critical',
-    user: { id: '1', name: 'Admin User', email: 'admin@nestmap.com' },
+    user: { id: '1', name: 'Admin User', email: 'admin@remvana.com' },
     details: 'Multiple failed login attempts detected from suspicious IP',
     ip: '192.168.1.100',
     location: 'Unknown',

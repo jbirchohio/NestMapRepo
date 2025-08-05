@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { Shield, Users, Building2, Activity, CreditCard, Settings, LogOut, BarChart3, Flag, Briefcase, Menu, X } from 'lucide-react';
+import { Shield, Users, Building2, Activity, CreditCard, CreditCard as CreditCardIcon, Settings, LogOut, BarChart3, Flag, Briefcase, Menu, X, DollarSign, HeartPulse, ScrollText, Headphones, TrendingUp, Rocket, Palette, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/JWTAuthContext';
@@ -8,10 +8,20 @@ import { useState } from 'react';
 
 const superadminNavItems = [
   { id: 'overview', label: 'Overview', icon: BarChart3, path: '/superadmin' },
+  { id: 'revenue', label: 'Revenue', icon: DollarSign, path: '/superadmin/revenue' },
+  { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/superadmin/analytics' },
+  { id: 'monitoring', label: 'Health', icon: HeartPulse, path: '/superadmin/monitoring' },
+  { id: 'devops', label: 'DevOps', icon: Rocket, path: '/superadmin/devops' },
+  { id: 'whitelabel', label: 'White Label', icon: Palette, path: '/superadmin/whitelabel' },
+  { id: 'communications', label: 'Communications', icon: Megaphone, path: '/superadmin/communications' },
+  { id: 'audit', label: 'Audit Trail', icon: ScrollText, path: '/superadmin/audit' },
+  { id: 'support', label: 'Support', icon: Headphones, path: '/superadmin/support' },
   { id: 'organizations', label: 'Organizations', icon: Building2, path: '/superadmin/organizations' },
   { id: 'users', label: 'Users', icon: Users, path: '/superadmin/users' },
   { id: 'activity', label: 'Activity Logs', icon: Activity, path: '/superadmin/activity' },
   { id: 'billing', label: 'Billing', icon: CreditCard, path: '/superadmin/billing' },
+  { id: 'pricing', label: 'Pricing', icon: DollarSign, path: '/superadmin/pricing' },
+  { id: 'stripe', label: 'Stripe Webhooks', icon: CreditCardIcon, path: '/superadmin/stripe' },
   { id: 'sessions', label: 'Sessions', icon: Shield, path: '/superadmin/sessions' },
   { id: 'flags', label: 'Feature Flags', icon: Flag, path: '/superadmin/flags' },
   { id: 'jobs', label: 'Background Jobs', icon: Briefcase, path: '/superadmin/jobs' },

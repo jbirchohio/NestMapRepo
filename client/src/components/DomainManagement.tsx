@@ -17,10 +17,10 @@ interface Domain {
   domain: string;
   subdomain: string;
   status: 'pending' | 'active' | 'failed' | 'disabled';
-  dns_verified: boolean;
-  ssl_verified: boolean;
-  created_at: string;
-  verified_at: string;
+  dnsVerified: boolean;
+  sslVerified: boolean;
+  createdAt: string;
+  verifiedAt: string;
 }
 
 interface DomainDashboard {
@@ -222,7 +222,7 @@ export default function DomainManagement() {
                           value={subdomain}
                           onChange={(e) => setSubdomain(e.target.value)}
                         />
-                        <span className="text-sm text-gray-500">.nestmap.com</span>
+                        <span className="text-sm text-gray-500">.remvana.com</span>
                       </div>
                     </div>
                   </TabsContent>
@@ -272,17 +272,17 @@ export default function DomainManagement() {
                       <div className="flex items-center space-x-4">
                         <div>
                           <h4 className="font-medium">
-                            {domain.domain || `${domain.subdomain}.nestmap.com`}
+                            {domain.domain || `${domain.subdomain}.remvana.com`}
                           </h4>
                           <div className="flex items-center space-x-2 mt-1">
                             {getStatusBadge(domain)}
-                            {domain.dns_verified && (
+                            {domain.dnsVerified && (
                               <Badge variant="outline" className="text-green-600">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 DNS Verified
                               </Badge>
                             )}
-                            {domain.ssl_verified && (
+                            {domain.sslVerified && (
                               <Badge variant="outline" className="text-green-600">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 SSL Active
@@ -304,7 +304,7 @@ export default function DomainManagement() {
                         {domain.status === 'active' && (
                           <Button size="sm" variant="outline" asChild>
                             <a
-                              href={`https://${domain.domain || `${domain.subdomain}.nestmap.com`}`}
+                              href={`https://${domain.domain || `${domain.subdomain}.remvana.com`}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -329,11 +329,11 @@ export default function DomainManagement() {
                           <div className="space-y-2">
                             <p>Add this CNAME record to your DNS:</p>
                             <div className="bg-gray-100 p-2 rounded font-mono text-sm flex items-center justify-between">
-                              <span>{domain.domain} CNAME your-nestmap-domain.com</span>
+                              <span>{domain.domain} CNAME your-remvana-domain.com</span>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => copyToClipboard(`${domain.domain} CNAME your-nestmap-domain.com`)}
+                                onClick={() => copyToClipboard(`${domain.domain} CNAME your-remvana-domain.com`)}
                               >
                                 <Copy className="h-4 w-4" />
                               </Button>

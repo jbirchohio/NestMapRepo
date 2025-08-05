@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { db } from './db-connection';
 import { customDomains } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from './utils/logger';
 
 interface ACMEChallenge {
   token: string;
@@ -32,12 +33,12 @@ export function storeACMEChallenge(
     expiresAt
   });
 
-  console.log(`ACME challenge stored for ${domain}: ${token}`);
+  logger.info(`ACME challenge stored for ${domain}: ${token}`);
   
   // Clean up expired challenges
   setTimeout(() => {
     challengeStore.delete(token);
-    console.log(`ACME challenge expired for ${domain}: ${token}`);
+    logger.info(`ACME challenge expired for ${domain}: ${token}`);
   }, ttlMinutes * 60 * 1000);
 }
 
@@ -58,7 +59,7 @@ export async function serveACMEChallenge(req: Request, res: Response): Promise<v
     const challenge = challengeStore.get(token);
     
     if (!challenge) {
-      console.log(`ACME challenge not found for token: ${token}`);
+      logger.warn(`ACME challenge not found for token: ${token}`);
       res.status(404).send('Challenge not found');
       return;
     }
@@ -66,23 +67,23 @@ export async function serveACMEChallenge(req: Request, res: Response): Promise<v
     // Check if challenge has expired
     if (new Date() > challenge.expiresAt) {
       challengeStore.delete(token);
-      console.log(`ACME challenge expired for token: ${token}`);
+      logger.warn(`ACME challenge expired for token: ${token}`);
       res.status(404).send('Challenge expired');
       return;
     }
 
     // Verify domain matches
     if (challenge.domain !== host) {
-      console.log(`ACME challenge domain mismatch: expected ${challenge.domain}, got ${host}`);
+      logger.warn(`ACME challenge domain mismatch: expected ${challenge.domain}, got ${host}`);
       res.status(400).send('Domain mismatch');
       return;
     }
 
     // Serve the key authorization
-    console.log(`Serving ACME challenge for ${host}: ${token}`);
+    logger.info(`Serving ACME challenge for ${host}: ${token}`);
     res.type('text/plain').send(challenge.keyAuthorization);
   } catch (error) {
-    console.error('Error serving ACME challenge:', error);
+    logger.error('Error serving ACME challenge:', error);
     res.status(500).send('Internal server error');
   }
 }
@@ -98,17 +99,17 @@ export async function validateACMEChallenge(
   try {
     const challengeUrl = `http://${domain}/.well-known/acme-challenge/${token}`;
     
-    console.log(`Validating ACME challenge: ${challengeUrl}`);
+    logger.info(`Validating ACME challenge: ${challengeUrl}`);
     
     const response = await fetch(challengeUrl, {
       method: 'GET',
       headers: {
-        'User-Agent': 'VoyageOps-ACME-Client/1.0'
+        'User-Agent': 'Remvana-ACME-Client/1.0'
       }
     });
 
     if (!response.ok) {
-      console.log(`ACME challenge validation failed: ${response.status} ${response.statusText}`);
+      logger.warn(`ACME challenge validation failed: ${response.status} ${response.statusText}`);
       return false;
     }
 
@@ -117,13 +118,13 @@ export async function validateACMEChallenge(
     
     // ACME challenge validation completed
     if (!isValid) {
-      console.log(`Expected: ${expectedKeyAuthorization}`);
-      console.log(`Received: ${responseText}`);
+      logger.debug(`Expected: ${expectedKeyAuthorization}`);
+      logger.debug(`Received: ${responseText}`);
     }
     
     return isValid;
   } catch (error) {
-    console.error('ACME challenge validation error:', error);
+    logger.error('ACME challenge validation error:', error);
     return false;
   }
 }
@@ -143,7 +144,7 @@ export function cleanupExpiredChallenges(): void {
   }
 
   if (cleanedCount > 0) {
-    console.log(`Cleaned up ${cleanedCount} expired ACME challenges`);
+    logger.info(`Cleaned up ${cleanedCount} expired ACME challenges`);
   }
 }
 
@@ -195,18 +196,26 @@ export function createACMEValidationCallback(domain: string) {
       const isValid = await validateACMEChallenge(domain, token, keyAuthorization);
       
       if (isValid) {
-        console.log(`ACME challenge validation successful for ${domain}`);
+        logger.info(`ACME challenge validation successful for ${domain}`);
         return true;
       } else {
-        console.log(`ACME challenge validation failed for ${domain}`);
+        logger.warn(`ACME challenge validation failed for ${domain}`);
         return false;
       }
     } catch (error) {
-      console.error(`ACME challenge error for ${domain}:`, error);
+      logger.error(`ACME challenge error for ${domain}:`, error);
       return false;
     }
   };
 }
 
 // Start cleanup interval (run every 5 minutes)
-setInterval(cleanupExpiredChallenges, 5 * 60 * 1000);
+const acmeCleanupInterval = setInterval(cleanupExpiredChallenges, 5 * 60 * 1000);
+
+// Export cleanup function for tests
+export function stopAcmeCleanup() {
+  if (acmeCleanupInterval) {
+    clearInterval(acmeCleanupInterval);
+    console.log('ACME cleanup interval stopped');
+  }
+}

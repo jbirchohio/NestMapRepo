@@ -27,14 +27,14 @@ interface OrganizationBranding {
  * Uses environment variables for easy deployment customization
  */
 const DEFAULT_BRANDING: BrandingConfig = {
-  appName: process.env.DEFAULT_BRAND_NAME || "NestMap",
+  appName: process.env.DEFAULT_BRAND_NAME || "Remvana",
   tagline: process.env.DEFAULT_TAGLINE || "AI-Powered Travel Planning",
   logo: process.env.DEFAULT_LOGO_URL || "/logo.svg",
   favicon: process.env.DEFAULT_FAVICON_URL || "/favicon.ico",
   primaryColor: process.env.DEFAULT_PRIMARY_COLOR || "#3B82F6",
   secondaryColor: process.env.DEFAULT_SECONDARY_COLOR || "#64748B", 
   accentColor: process.env.DEFAULT_ACCENT_COLOR || "#10B981",
-  supportEmail: process.env.DEFAULT_SUPPORT_EMAIL || "support@nestmap.com",
+  supportEmail: process.env.DEFAULT_SUPPORT_EMAIL || "support@remvana.com",
   helpUrl: process.env.DEFAULT_HELP_URL || "/help",
   privacyUrl: process.env.DEFAULT_PRIVACY_URL || "/privacy",
   termsUrl: process.env.DEFAULT_TERMS_URL || "/terms"
@@ -165,9 +165,9 @@ function getPageTitle(path: string, appName: string): string {
  */
 export function replaceBrandReferences(content: string, branding: BrandingConfig): string {
   return content
-    .replace(/\bNestMap\b/g, branding.appName)
-    .replace(/\bsupport@nestmap\.com\b/g, branding.supportEmail)
-    .replace(/\bnestmap\.com\b/g, branding.domain || 'your-domain.com');
+    .replace(/\bRemvana\b/g, branding.appName)
+    .replace(/\bsupport@remvana\.com\b/g, branding.supportEmail)
+    .replace(/\bremvana\.com\b/g, branding.domain || 'your-domain.com');
 }
 
 /**

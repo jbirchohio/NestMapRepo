@@ -33,7 +33,7 @@ export async function domainRoutingMiddleware(req: Request, res: Response, next:
     }
 
     // Skip routing for default domain or localhost
-    if (host.includes('localhost') || host.includes('nestmap.com') || host.includes('replit.dev') || host.includes('replit.app')) {
+    if (host.includes('localhost') || host.includes('remvana.com') || host.includes('replit.dev') || host.includes('replit.app')) {
       return next();
     }
 
@@ -182,7 +182,7 @@ export class CloudflareDNSManager {
   async verifyTXTRecord(domain: string, expectedValue: string): Promise<boolean> {
     try {
       const response = await fetch(
-        `https://api.cloudflare.com/client/v4/zones/${this.zoneId}/dns_records?type=TXT&name=_nestmap-verification.${domain}`
+        `https://api.cloudflare.com/client/v4/zones/${this.zoneId}/dns_records?type=TXT&name=_remvana-verification.${domain}`
       );
 
       const result = await response.json();
@@ -213,11 +213,11 @@ export function generateNginxConfig(domains: DomainConfig[]): string {
 server {
     listen 80;
     listen 443 ssl http2;
-    server_name nestmap.com *.nestmap.com;
+    server_name remvana.com *.remvana.com;
     
     # SSL configuration for main domain
-    ssl_certificate /etc/ssl/certs/nestmap.com.pem;
-    ssl_certificate_key /etc/ssl/private/nestmap.com.key;
+    ssl_certificate /etc/ssl/certs/remvana.com.pem;
+    ssl_certificate_key /etc/ssl/private/remvana.com.key;
     
     location / {
         proxy_pass http://localhost:5000;
@@ -328,7 +328,7 @@ async function handleRequest(request) {
     modifiedRequest.headers.set('X-White-Label-Domain', hostname)
     modifiedRequest.headers.set('X-Organization-ID', config.organization_id.toString())
     
-    return fetch('https://origin.nestmap.com', modifiedRequest)
+    return fetch('https://origin.remvana.com', modifiedRequest)
   }
   
   return new Response('Domain not found', { status: 404 })

@@ -107,13 +107,20 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
   
   // Look up city coordinates when city field changes
   useEffect(() => {
+    console.log('City geocoding effect triggered:', { city, length: city?.length });
     if (city && city.length > 3) {
       const timer = setTimeout(async () => {
         try {
+          console.log('Attempting to geocode city:', city);
           const result = await geocodeLocation(city, true);
+          console.log('Geocoding result:', result);
           if (result) {
             setValue("cityLatitude", result.latitude.toString());
             setValue("cityLongitude", result.longitude.toString());
+            console.log('Set form values:', {
+              cityLatitude: result.latitude.toString(),
+              cityLongitude: result.longitude.toString()
+            });
             
             // Show success message
             toast({
@@ -179,6 +186,11 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
       };
       
       console.log("Creating trip with data:", tripData);
+      console.log("Form data values:", {
+        cityLatitude: data.cityLatitude,
+        cityLongitude: data.cityLongitude,
+        city: data.city
+      });
       console.log("Current userId from auth context:", userId);
       console.log("Is guest mode:", isGuestMode);
       
@@ -197,9 +209,9 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
         };
         
         // Store in localStorage
-        const existingTrips = JSON.parse(localStorage.getItem("nestmap_guest_trips") || "[]");
+        const existingTrips = JSON.parse(localStorage.getItem("remvana_guest_trips") || "[]");
         const updatedTrips = [...existingTrips, guestTrip];
-        localStorage.setItem("nestmap_guest_trips", JSON.stringify(updatedTrips));
+        localStorage.setItem("remvana_guest_trips", JSON.stringify(updatedTrips));
         
         return guestTrip;
       }
@@ -211,7 +223,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
       
       // Regular authenticated user flow
       const res = await apiRequest("POST", API_ENDPOINTS.TRIPS, tripData);
-      return res.json();
+      return res; // apiRequest already parses JSON
     },
     onSuccess: (data) => {
       toast({

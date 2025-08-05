@@ -112,7 +112,7 @@ router.get("/export/csv", requireOrgPermission('export_data'), async (req: Reque
     const csvContent = "Export not implemented";
     
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="nestmap_analytics_${new Date().toISOString().split('T')[0]}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="remvana_analytics_${new Date().toISOString().split('T')[0]}.csv"`);
     res.send(csvContent);
   } catch (error) {
     console.error("Error exporting analytics:", error);

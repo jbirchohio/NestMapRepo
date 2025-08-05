@@ -360,7 +360,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
       res.json({
         isWhiteLabelActive: organization.white_label_enabled && brandingConfig !== null,
         config: brandingConfig || {
-          companyName: "NestMap",
+          companyName: "Remvana",
           tagline: "",
           primaryColor: "#6D5DFB",
           secondaryColor: "#6D5DFB",

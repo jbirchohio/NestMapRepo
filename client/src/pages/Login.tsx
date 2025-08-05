@@ -47,7 +47,7 @@ export default function Login() {
     localStorage.setItem('demo-mode', 'true');
     localStorage.setItem('demo-user', JSON.stringify({
       id: 1,
-      email: 'demo@nestmap.com',
+      email: 'demo@remvana.com',
       name: 'Demo User',
       roleType: 'corporate'
     }));
@@ -61,7 +61,7 @@ export default function Login() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-            Welcome to VoyageOps
+            Welcome to Remvana
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Sign in to your account or continue with demo mode

@@ -21,7 +21,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
   const [formData, setFormData] = useState({
     clientName: "",
     agentName: "",
-    companyName: "NestMap Travel Services",
+    companyName: "Remvana Travel Services",
     proposalNotes: "",
     contactEmail: "",
     contactPhone: "",
@@ -229,7 +229,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
                     id="companyName"
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
-                    placeholder="NestMap Travel Services"
+                    placeholder="Remvana Travel Services"
                   />
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
                     type="email"
                     value={formData.contactEmail}
                     onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                    placeholder="agent@nestmap.com"
+                    placeholder="agent@remvana.com"
                     required
                   />
                 </div>
@@ -270,7 +270,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
                     id="contactWebsite"
                     value={formData.contactWebsite}
                     onChange={(e) => handleInputChange('contactWebsite', e.target.value)}
-                    placeholder="https://nestmap.com"
+                    placeholder="https://remvana.com"
                   />
                 </div>
               </div>

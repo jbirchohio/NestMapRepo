@@ -62,11 +62,13 @@ export default function NotificationCenter() {
   const queryClient = useQueryClient();
 
   // Fetch notifications
-  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
+  const { data: notificationData, isLoading } = useQuery({
     queryKey: ['/api/notifications'],
-    queryFn: () => apiRequest('GET', '/api/notifications').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/notifications'),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  const notifications = notificationData?.data?.notifications || [];
 
   // Mark notification as read
   const markAsReadMutation = useMutation({

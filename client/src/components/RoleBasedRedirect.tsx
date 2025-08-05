@@ -11,11 +11,15 @@ export default function RoleBasedRedirect() {
     // Only redirect if authentication is ready and user is logged in
     if (!authReady || !user || permissionsChecked) return;
 
+
     // Check user's actual role from database, not organization permissions
     const checkPermissions = async () => {
       try {
         // Get the user's actual role from the database
-        const userResponse = await fetch(`/api/users/auth/${user.id}`);
+        const token = (await import('@/lib/jwtAuth')).jwtAuth.getToken();
+        const userResponse = await fetch(`/api/users/auth/${user.id}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         if (userResponse.ok) {
           const userData = await userResponse.json();
           
@@ -31,7 +35,9 @@ export default function RoleBasedRedirect() {
           }
           
           // Check for organization-level admin permissions (but not system superadmin)
-          const permissionsResponse = await fetch('/api/user/permissions');
+          const permissionsResponse = await fetch('/api/user/permissions', {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          });
           if (permissionsResponse.ok) {
             const data = await permissionsResponse.json();
             const permissions = data.permissions || [];
@@ -49,6 +55,17 @@ export default function RoleBasedRedirect() {
         // Could not check permissions, proceeding with role-based redirect
       }
 
+      // Check if user role is already superadmin from JWT
+      if (user.role === 'superadmin' || 
+          user.role === 'superadmin_owner' || 
+          user.role === 'superadmin_staff' || 
+          user.role === 'superadmin_auditor' || 
+          user.role === 'super_admin') {
+        setLocation('/superadmin');
+        setPermissionsChecked(true);
+        return;
+      }
+      
       // Map role types to unified dashboard route
       setLocation('/dashboard');
       setPermissionsChecked(true);

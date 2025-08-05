@@ -8,6 +8,7 @@ import { getOrganizationAnalytics } from '../analytics';
 import { db } from '../db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -57,10 +58,10 @@ router.get('/users', async (req: Request, res: Response) => {
       .where(eq(users.organization_id, targetOrgId))
       .orderBy(users.display_name);
 
-    console.log(`Found ${organizationUsers.length} users for organization ${targetOrgId}`);
+    logger.info(`Found ${organizationUsers.length} users for organization ${targetOrgId}`);
     res.json(organizationUsers);
   } catch (error) {
-    console.error('Error fetching organization users:', error);
+    logger.error('Error fetching organization users:', error);
     res.status(500).json({ message: "Failed to fetch organization users" });
   }
 });
@@ -86,7 +87,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
     res.json(organization);
   } catch (error) {
-    console.error("Error fetching organization:", error);
+    logger.error("Error fetching organization:", error);
     res.status(500).json({ message: "Could not fetch organization details" });
   }
 });
@@ -117,7 +118,7 @@ router.put("/:id", requireOrgPermission('manage_organization'), async (req: Requ
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid organization data", errors: error.errors });
     }
-    console.error("Error updating organization:", error);
+    logger.error("Error updating organization:", error);
     res.status(500).json({ message: "Could not update organization" });
   }
 });
@@ -139,7 +140,7 @@ router.get("/:id/members", requireOrgPermission('view_members'), async (req: Req
     const members = await storage.getOrganizationMembers(orgId);
     res.json(members);
   } catch (error) {
-    console.error("Error fetching organization members:", error);
+    logger.error("Error fetching organization members:", error);
     res.status(500).json({ message: "Could not fetch organization members" });
   }
 });
@@ -176,7 +177,7 @@ router.post("/:id/invite", requireOrgPermission('invite_members'), async (req: R
 
     res.status(201).json({ message: "Invitation sent successfully", invitation });
   } catch (error) {
-    console.error("Error creating invitation:", error);
+    logger.error("Error creating invitation:", error);
     res.status(500).json({ message: "Could not send invitation" });
   }
 });
@@ -185,7 +186,7 @@ router.post("/:id/invite", requireOrgPermission('invite_members'), async (req: R
 router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async (req: Request, res: Response) => {
   try {
     const orgId = parseInt(req.params.id);
-    const userId = parseInt(req.params.user_id);
+    const userId = parseInt(req.params.userId);
 
     if (isNaN(orgId) || isNaN(userId)) {
       return res.status(400).json({ message: "Invalid organization or user ID" });
@@ -210,7 +211,7 @@ router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async
 
     res.json(updatedMember);
   } catch (error) {
-    console.error("Error updating organization member:", error);
+    logger.error("Error updating organization member:", error);
     res.status(500).json({ message: "Could not update organization member" });
   }
 });
@@ -219,7 +220,7 @@ router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async
 router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), async (req: Request, res: Response) => {
   try {
     const orgId = parseInt(req.params.id);
-    const userId = parseInt(req.params.user_id);
+    const userId = parseInt(req.params.userId);
 
     if (isNaN(orgId) || isNaN(userId)) {
       return res.status(400).json({ message: "Invalid organization or user ID" });
@@ -229,6 +230,11 @@ router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), as
     const userOrgId = req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot manage this organization's members" });
+    }
+    
+    // Only admins and super_admins can remove members
+    if (req.user?.role !== 'admin' && req.user?.role !== 'super_admin' && req.user?.role !== 'superadmin_owner') {
+      return res.status(403).json({ message: "Access denied: Only administrators can remove members" });
     }
 
     // Prevent removing self
@@ -243,7 +249,7 @@ router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), as
 
     res.json({ message: "Member removed from organization successfully" });
   } catch (error) {
-    console.error("Error removing organization member:", error);
+    logger.error("Error removing organization member:", error);
     res.status(500).json({ message: "Could not remove organization member" });
   }
 });
@@ -265,7 +271,7 @@ router.get("/:id/analytics", requireOrgPermission('access_analytics'), async (re
     const analytics = await getOrganizationAnalytics(orgId);
     res.json(analytics);
   } catch (error) {
-    console.error("Error fetching organization analytics:", error);
+    logger.error("Error fetching organization analytics:", error);
     res.status(500).json({ message: "Could not fetch organization analytics" });
   }
 });
@@ -294,7 +300,7 @@ router.get('/members', async (req: Request, res: Response) => {
 
     res.json(members);
   } catch (error) {
-    console.error('Error fetching organization members:', error);
+    logger.error('Error fetching organization members:', error);
     res.status(500).json({ message: "Failed to fetch organization members" });
   }
 });

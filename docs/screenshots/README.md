@@ -1,6 +1,6 @@
-# NestMap Screenshots
+# Remvana Screenshots
 
-This directory contains screenshots showcasing the key features of the NestMap application.
+This directory contains screenshots showcasing the key features of the Remvana application.
 
 ## Main App Views
 

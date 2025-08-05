@@ -386,7 +386,7 @@ export default function BrandingSetup() {
                   </div>
                   <p className="text-sm text-orange-800 dark:text-orange-200 mb-4">
                     Upgrade to Professional to automatically enable custom branding, 
-                    remove "Powered by NestMap", and present a fully branded experience to your clients.
+                    remove "Powered by Remvana", and present a fully branded experience to your clients.
                   </p>
                   <Button 
                     onClick={handleUpgradeToProfessional}
@@ -438,7 +438,7 @@ export default function BrandingSetup() {
                     </div>
                     <h3 className="font-medium">Professional Identity</h3>
                     <p className="text-sm text-muted-foreground">
-                      Remove all references to NestMap for a seamless client experience
+                      Remove all references to Remvana for a seamless client experience
                     </p>
                   </div>
                   <div className="text-center space-y-2">

@@ -368,15 +368,14 @@ export default function SequentialBookingFlights() {
         return cityName.toUpperCase();
       }
 
-      // Use AI to find the airport code for this city
-      const response = await fetch('/api/locations/search', {
+      // Use the airport code endpoint
+      const response = await fetch('/api/locations/airport-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          searchQuery: `${cityName} airport`,
-          cityContext: cityName
+          cityName: cityName
         })
       });
 
@@ -384,60 +383,21 @@ export default function SequentialBookingFlights() {
         throw new Error('Failed to get airport code');
       }
 
-      const aiData = await response.json();
-      console.log('AI airport search result:', aiData);
+      const data = await response.json();
+      console.log('Airport code result:', data);
 
-      // Extract airport code from AI response
-      if (aiData.locations && Array.isArray(aiData.locations) && aiData.locations.length > 0) {
-        const location = aiData.locations[0];
-        // Look for airport code in the location data
-        const airportMatch = location.description?.match(/\b([A-Z]{3})\b/) || 
-                           location.name?.match(/\b([A-Z]{3})\b/);
-        
-        if (airportMatch) {
-          console.log(`Found airport code: ${airportMatch[1]}`);
-          return airportMatch[1];
-        }
+      if (data.airportCode) {
+        console.log(`Found airport code: ${data.airportCode} for ${cityName}`);
+        return data.airportCode;
       }
 
-      // Fallback to hardcoded mapping for common cities
-      const fallbackMap: Record<string, string> = {
-        'san francisco': 'SFO',
-        'new york': 'JFK',
-        'new york city': 'JFK',
-        'seattle': 'SEA',
-        'los angeles': 'LAX',
-        'chicago': 'ORD',
-        'miami': 'MIA',
-        'denver': 'DEN',
-        'atlanta': 'ATL',
-        'boston': 'BOS',
-        'washington': 'DCA',
-        'dallas': 'DFW',
-        'houston': 'IAH'
-      };
-      
-      const normalizedCity = cityName.toLowerCase().trim();
-      const airportCode = fallbackMap[normalizedCity];
-      
-      if (airportCode) {
-        console.log(`Using fallback mapping: ${cityName} -> ${airportCode}`);
-        return airportCode;
-      }
-
-      // Last resort - return original if no mapping found
-      console.log(`No airport code found for ${cityName}, using as-is`);
-      return cityName.toUpperCase();
+      // Should not reach here if backend is working properly
+      console.warn(`No airport code returned for ${cityName}`);
+      return 'ORD'; // Central US hub as fallback
       
     } catch (error) {
       console.error('Error getting airport code:', error);
-      // Fallback to basic mapping
-      const basicMap: Record<string, string> = {
-        'new york': 'JFK',
-        'seattle': 'SEA',
-        'san francisco': 'SFO'
-      };
-      return basicMap[cityName.toLowerCase()] || 'JFK';
+      return 'ORD'; // Central US hub as fallback
     }
   };
 

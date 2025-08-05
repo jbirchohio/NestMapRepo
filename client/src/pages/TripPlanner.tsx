@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import AppShell from "@/components/AppShell";
@@ -7,17 +7,29 @@ import ItinerarySidebar from "@/components/ItinerarySidebar";
 import MapView from "@/components/MapView";
 import ShareTripModal from "@/components/ShareTripModal";
 import ActivityModal from "@/components/ActivityModal";
+import ActivityModalConsumer from "@/components/ActivityModalConsumer";
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
 import { useAutoComplete } from "@/hooks/useAutoComplete";
+import { useMapboxDirections } from "@/hooks/useMapboxDirections";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
+  const [location, setLocation] = useLocation();
   const tripId = params?.id || "";
   const { toast } = useToast();
+  const { fetchRouteDirections } = useMapboxDirections();
+  
+  // If no trip ID, redirect to home
+  useEffect(() => {
+    if (!tripId) {
+      console.log('No trip ID provided, redirecting to home');
+      setLocation('/');
+    }
+  }, [tripId, setLocation]);
   
   // Fetch trip data
   const { 
@@ -42,6 +54,9 @@ export default function TripPlanner() {
   // State for currently active day
   const [activeDay, setActiveDay] = useState<Date | null>(null);
   
+  // State for trip days
+  const [tripDays, setTripDays] = useState<Date[]>([]);
+  
   // State for mobile view toggle (map or itinerary)
   const [mobileView, setMobileView] = useState<'itinerary' | 'map'>('itinerary');
   
@@ -51,6 +66,9 @@ export default function TripPlanner() {
   // State for activity modal management
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ClientActivity | null>(null);
+  
+  // State for map routes
+  const [calculatedRoutes, setCalculatedRoutes] = useState<MapRoute[]>([]);
   
   // Centralized activity modal handlers
   const handleOpenActivityModal = (activity: ClientActivity | null = null, day: Date | null = null) => {
@@ -68,19 +86,26 @@ export default function TripPlanner() {
     handleCloseActivityModal();
   };
   
-  // Set active day when trip data loads and store trip destination info for geocoding
+  // Set active day when trip data loads
   useEffect(() => {
     if (trip && trip.startDate && !activeDay) {
       setActiveDay(new Date(trip.startDate));
-      
+    }
+  }, [trip, activeDay]);
+
+  // Calculate days and store trip info whenever trip changes
+  useEffect(() => {
+    if (trip && trip.startDate && trip.endDate) {
       // Calculate days between start and end date
       const days = getDaysBetweenDates(
         new Date(trip.startDate),
         new Date(trip.endDate)
       );
       
-      // Add days array to trip object
-      trip.days = days;
+      console.log('Setting tripDays:', days.length, 'days for trip', trip.id);
+      
+      // Set days in state
+      setTripDays(days);
       
       // Store trip destination info in localStorage for geocoding context
       // This helps the map search find more relevant POIs within the trip's context
@@ -94,7 +119,7 @@ export default function TripPlanner() {
         console.error("Error saving trip geocoding context:", e);
       }
     }
-  }, [trip, activeDay, tripId]);
+  }, [trip, tripId]);
   
   // Show errors
   useEffect(() => {
@@ -135,26 +160,65 @@ export default function TripPlanner() {
       // Only include activities with valid coordinates
       const hasLat = activity.latitude && activity.latitude !== "0" && !isNaN(parseFloat(activity.latitude));
       const hasLng = activity.longitude && activity.longitude !== "0" && !isNaN(parseFloat(activity.longitude));
+      
+      // Debug log
+      console.log('Activity coordinate check:', {
+        id: activity.id,
+        title: activity.title,
+        latitude: activity.latitude,
+        longitude: activity.longitude,
+        hasLat,
+        hasLng,
+        included: hasLat && hasLng
+      });
+      
       return hasLat && hasLng;
     })
     .map((activity, index) => ({
       id: activity.id,
       latitude: parseFloat(activity.latitude || "0"),
       longitude: parseFloat(activity.longitude || "0"),
-      label: String.fromCharCode(65 + index), // A, B, C, etc.
+      label: String(index + 1), // 1, 2, 3, etc.
       activity,
       completed: activity.completed || false, // Pass completion status to map component
     }));
   
-  // Prepare map routes (simplified for now)
-  const mapRoutes: MapRoute[] = mapMarkers.length > 1 
-    ? [{
-        id: "main-route",
-        coordinates: mapMarkers.map(marker => [marker.longitude, marker.latitude]),
-        duration: 0,
-        distance: 0,
-      }]
-    : [];
+  // Prepare map routes - sort markers by activity time first
+  const sortedMapMarkers = [...mapMarkers].sort((a, b) => {
+    const timeA = a.activity?.time || "00:00";
+    const timeB = b.activity?.time || "00:00";
+    return timeA.localeCompare(timeB);
+  });
+  
+  // Fetch directions when markers change
+  useEffect(() => {
+    if (sortedMapMarkers.length > 1) {
+      // Determine travel mode based on trip context
+      // For now, default to walking in cities
+      const travelMode = 'walking';
+      
+      fetchRouteDirections(sortedMapMarkers, travelMode).then(route => {
+        if (route) {
+          setCalculatedRoutes([{
+            id: "main-route",
+            coordinates: route.geometry.coordinates,
+            duration: route.duration,
+            distance: route.distance,
+          }]);
+        } else {
+          // Fallback to straight lines if directions API fails
+          setCalculatedRoutes([{
+            id: "main-route",
+            coordinates: sortedMapMarkers.map(marker => [marker.longitude, marker.latitude]),
+            duration: 0,
+            distance: 0,
+          }]);
+        }
+      });
+    } else {
+      setCalculatedRoutes([]);
+    }
+  }, [JSON.stringify(sortedMapMarkers.map(m => ({ id: m.id, lat: m.latitude, lng: m.longitude }))), fetchRouteDirections]);
   
   // Calculate map center based on markers or trip city coordinates
   const mapCenter = mapMarkers.length > 0
@@ -225,7 +289,7 @@ export default function TripPlanner() {
   };
   
   // Loading state
-  if (isTripLoading || isActivitiesLoading || !activeDay) {
+  if (isTripLoading || isActivitiesLoading) {
     return (
       <AppShell>
         <div className="flex-1 flex items-center justify-center">
@@ -238,8 +302,44 @@ export default function TripPlanner() {
     );
   }
   
+  // Check if trip exists
+  if (!isTripLoading && !trip && tripId) {
+    console.log('Trip not found:', { tripId, trip, tripError });
+    return (
+      <AppShell>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-4">Trip not found</h2>
+            <p className="text-gray-600 mb-4">The trip you're looking for doesn't exist or you don't have access to it.</p>
+            <Button onClick={() => setLocation('/')}>
+              Go back home
+            </Button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+  
+  // Check if activeDay is set
+  if (!activeDay && trip) {
+    console.log('Trip loaded but no active day:', { trip });
+    // This shouldn't happen, but if it does, set it
+    if (trip.startDate) {
+      setActiveDay(new Date(trip.startDate));
+    }
+    return null; // Wait for next render
+  }
+  
   // Error state
   if (!trip || tripError || activitiesError) {
+    console.log('Trip planner error state:', {
+      trip,
+      tripError,
+      activitiesError,
+      isTripLoading,
+      isActivitiesLoading,
+      tripId
+    });
     return (
       <AppShell>
         <div className="flex-1 flex items-center justify-center">
@@ -286,7 +386,7 @@ export default function TripPlanner() {
       <div className="hidden md:grid h-[calc(100vh-110px)]" style={{ gridTemplateColumns: '400px calc(100vw - 400px)' }}>
         <div className="h-full overflow-y-auto">
           <ItinerarySidebar
-            trip={trip}
+            trip={{ ...trip, days: tripDays }}
             activities={activities}
             todos={todos}
             notes={notes}
@@ -302,7 +402,7 @@ export default function TripPlanner() {
         <div className="h-full">
           <MapView
             markers={mapMarkers}
-            routes={mapRoutes}
+            routes={calculatedRoutes}
             center={mapCenter}
             zoom={13}
             onMarkerClick={handleMarkerClick}
@@ -316,7 +416,7 @@ export default function TripPlanner() {
         {mobileView === 'itinerary' && (
           <div className="h-[calc(100vh-120px)] overflow-y-auto">
             <ItinerarySidebar
-              trip={trip}
+              trip={{ ...trip, days: tripDays }}
               activities={activities}
               todos={todos}
               notes={notes}
@@ -336,7 +436,7 @@ export default function TripPlanner() {
         <div className="md:hidden fixed inset-0 top-[108px] z-10" style={{ height: 'calc(100vh - 108px)' }}>
           <MapView
             markers={mapMarkers}
-            routes={mapRoutes}
+            routes={calculatedRoutes}
             center={mapCenter}
             zoom={13}
             onMarkerClick={handleMarkerClick}
@@ -354,7 +454,8 @@ export default function TripPlanner() {
       
       {/* Centralized Activity Modal */}
       {isActivityModalOpen && activeDay && (
-        <ActivityModal
+        // Use consumer-friendly modal for better UX
+        <ActivityModalConsumer
           onClose={handleCloseActivityModal}
           tripId={tripId}
           date={activeDay}

@@ -11,6 +11,7 @@ import { generateAIProposal } from '../proposalGenerator';
 import { db } from '../db';
 import { trips as tripsTable, users } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -33,7 +34,7 @@ router.get("/", async (req: Request, res: Response) => {
     const trips = await storage.getTripsByUserId(userId, orgId);
     res.json(trips);
   } catch (error) {
-    console.error("Error fetching trips:", error);
+    logger.error("Error fetching trips:", error);
     res.status(500).json({ message: "Could not fetch trips" });
   }
 });
@@ -74,10 +75,10 @@ router.get('/corporate', async (req: Request, res: Response) => {
       })
     );
 
-    console.log(`Found ${trips.length} trips for organization ${orgId}`);
+    logger.info(`Found ${trips.length} trips for organization ${orgId}`);
     res.json(tripsWithUserDetails);
   } catch (error) {
-    console.error('Error fetching corporate trips:', error);
+    logger.error('Error fetching corporate trips:', error);
     res.status(500).json({ message: "Failed to fetch corporate trips" });
   }
 });
@@ -111,7 +112,7 @@ router.get("/:id/todos", async (req: Request, res: Response) => {
     const todos = await storage.getTodosByTripId(tripId);
     res.json(todos);
   } catch (error) {
-    console.error("Error fetching todos for trip", req.params.id, ":", error);
+    logger.error("Error fetching todos for trip", { tripId: req.params.id, error });
     res.status(500).json({ message: "Could not fetch todos", error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
@@ -145,7 +146,7 @@ router.get("/:id/notes", async (req: Request, res: Response) => {
     const notes = await storage.getNotesByTripId(tripId);
     res.json(notes);
   } catch (error) {
-    console.error("Error fetching notes for trip", req.params.id, ":", error);
+    logger.error("Error fetching notes for trip", { tripId: req.params.id, error });
     res.status(500).json({ message: "Could not fetch notes", error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
@@ -179,7 +180,7 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
     const activities = await storage.getActivitiesByTripId(tripId);
     res.json(activities);
   } catch (error) {
-    console.error("Error fetching activities for trip", req.params.id, ":", error);
+    logger.error("Error fetching activities for trip", { tripId: req.params.id, error });
     res.status(500).json({ message: "Could not fetch activities", error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
@@ -190,6 +191,13 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   req.skipCaseConversion = true;
   try {
     const tripId = parseInt(req.params.id);
+    console.log('Trip GET request:', { 
+      tripId, 
+      userId: req.user?.id, 
+      orgId: req.user?.organization_id,
+      isDemo: req.isDemo 
+    });
+    
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -209,6 +217,13 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
+    
+    console.log('Trip from database:', {
+      id: trip.id,
+      city: trip.city,
+      city_latitude: trip.city_latitude,
+      city_longitude: trip.city_longitude
+    });
 
     // Manual transformation to ensure dates are properly formatted as ISO date strings
     const transformedTrip = {
@@ -243,7 +258,7 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 
     res.json(transformedTrip);
   } catch (error) {
-    console.error("Error fetching trip:", error);
+    logger.error("Error fetching trip:", error);
     res.status(500).json({ message: "Could not fetch trip" });
   }
 });
@@ -251,19 +266,48 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 // Create new trip with organization context and subscription limits
 router.post("/", enforceTripLimit(), async (req: Request, res: Response) => {
   try {
-    const tripData = insertTripSchema.parse({
-      ...req.body,
-      user_id: req.user?.id,
-      organization_id: req.user?.organization_id
+    console.log('Trip POST request:', {
+      body: req.body,
+      userId: req.user?.id,
+      orgId: req.user?.organization_id,
+      isDemo: req.isDemo,
+      // Debug coordinate fields
+      cityLat: req.body.city_latitude,
+      cityLng: req.body.city_longitude
     });
+    
+    let tripData;
+    try {
+      tripData = insertTripSchema.parse({
+        ...req.body,
+        user_id: req.user?.id,
+        organization_id: req.user?.organization_id
+      });
+      
+      console.log('Parsed trip data to save:', {
+        city: tripData.city,
+        city_latitude: tripData.city_latitude,
+        city_longitude: tripData.city_longitude,
+        fullTripData: tripData
+      });
+    } catch (parseError) {
+      console.error('Schema parsing error:', parseError);
+      throw parseError;
+    }
 
     const trip = await storage.createTrip(tripData);
+    console.log('Created trip with coordinates:', {
+      id: trip.id,
+      city: trip.city,
+      cityLat: trip.city_latitude,
+      cityLng: trip.city_longitude
+    });
     res.status(201).json(trip);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
     }
-    console.error("Error creating trip:", error);
+    logger.error("Error creating trip:", error);
     res.status(500).json({ message: "Could not create trip" });
   }
 });
@@ -299,7 +343,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
     }
-    console.error("Error updating trip:", error);
+    logger.error("Error updating trip:", error);
     res.status(500).json({ message: "Could not update trip" });
   }
 });
@@ -330,7 +374,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 
     res.json({ message: "Trip deleted successfully" });
   } catch (error) {
-    console.error("Error deleting trip:", error);
+    logger.error("Error deleting trip:", error);
     res.status(500).json({ message: "Could not delete trip" });
   }
 });
@@ -371,7 +415,7 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
     res.setHeader('Content-Disposition', `attachment; filename="${trip.title.replace(/[^a-z0-9]/gi, '_')}_itinerary.pdf"`);
     res.send(pdfBuffer);
   } catch (error) {
-    console.error("Error generating PDF:", error);
+    logger.error("Error generating PDF:", error);
     res.status(500).json({ message: "Could not generate PDF export" });
   }
 });
@@ -408,7 +452,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
       activities,
       clientName,
       agentName: (req.user as any)?.displayName || req.user?.username || "Travel Agent",
-      companyName: "NestMap Travel Services",
+      companyName: "Remvana Travel Services",
       estimatedCost: trip.budget || 0,
       costBreakdown: {
         flights: Math.round((trip.budget || 0) * 0.4),
@@ -433,7 +477,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
     res.setHeader('Content-Disposition', `attachment; filename="Travel_Proposal_${clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
     res.send(pdfBuffer);
   } catch (error: any) {
-    console.error("Error generating proposal:", error);
+    logger.error("Error generating proposal:", error);
     res.status(500).json({ message: "Error generating proposal: " + error.message });
   }
 });
@@ -463,7 +507,7 @@ router.get("/:tripId/share", async (req: Request, res: Response) => {
       shareCode: trip.share_code
     });
   } catch (error) {
-    console.error("Error fetching sharing settings:", error);
+    logger.error("Error fetching sharing settings:", error);
     res.status(500).json({ message: "Could not fetch sharing settings" });
   }
 });
@@ -509,7 +553,7 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
       shareCode: updatedTrip.share_code
     });
   } catch (error) {
-    console.error("Error updating sharing settings:", error);
+    logger.error("Error updating sharing settings:", error);
     res.status(500).json({ message: "Could not update sharing settings" });
   }
 });
@@ -528,7 +572,7 @@ router.get("/:id/travelers", async (req: Request, res: Response) => {
     const travelers = await storage.getTripTravelers(tripId);
     res.json(travelers);
   } catch (error) {
-    console.error("Error fetching trip travelers:", error);
+    logger.error("Error fetching trip travelers:", error);
     res.status(500).json({ message: "Could not fetch trip travelers" });
   }
 });
@@ -549,7 +593,7 @@ router.post("/:id/travelers", async (req: Request, res: Response) => {
     const newTraveler = await storage.addTripTraveler(travelerData);
     res.status(201).json(newTraveler);
   } catch (error) {
-    console.error("Error adding trip traveler:", error);
+    logger.error("Error adding trip traveler:", error);
     res.status(500).json({ message: "Could not add trip traveler" });
   }
 });
@@ -571,7 +615,7 @@ router.put("/:id/travelers/:travelerId", async (req: Request, res: Response) => 
     
     res.json(updatedTraveler);
   } catch (error) {
-    console.error("Error updating trip traveler:", error);
+    logger.error("Error updating trip traveler:", error);
     res.status(500).json({ message: "Could not update trip traveler" });
   }
 });
@@ -589,7 +633,7 @@ router.delete("/:id/travelers/:travelerId", async (req: Request, res: Response) 
     await storage.removeTripTraveler(travelerId);
     res.status(204).send();
   } catch (error) {
-    console.error("Error removing trip traveler:", error);
+    logger.error("Error removing trip traveler:", error);
     res.status(500).json({ message: "Could not remove trip traveler" });
   }
 });

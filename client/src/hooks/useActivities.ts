@@ -8,7 +8,7 @@ export default function useActivities(tripId: string | number) {
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
     if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("nestmap_guest_trips");
+    const stored = localStorage.getItem("remvana_guest_trips");
     if (!stored) return null;
     
     const guestTrips: ClientTrip[] = JSON.parse(stored);
@@ -26,7 +26,7 @@ export default function useActivities(tripId: string | number) {
       if (!tripId) return [];
       
       // Check if this is guest mode by looking for trip in localStorage
-      const guestTripsData = localStorage.getItem("nestmap_guest_trips");
+      const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
       
       if (isGuestTrip) {
@@ -45,7 +45,7 @@ export default function useActivities(tripId: string | number) {
       }
       
       const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/activities`);
-      const activitiesData = await res.json();
+      const activitiesData = res; // apiRequest already parses JSON
       
       // Process activities to add travel time information
       const processedActivities = processActivities(activitiesData);
@@ -143,16 +143,41 @@ export default function useActivities(tripId: string | number) {
           const isLongDistance = distance > 50; // More than 50km is considered long distance
           const isMediumDistance = distance > 10 && distance <= 50; // 10-50km is medium distance
           
+          // Get trip city from localStorage to determine traffic patterns
+          let tripCity = "";
+          try {
+            const tripData = localStorage.getItem(`trip_${tripId}`);
+            if (tripData) {
+              const parsed = JSON.parse(tripData);
+              tripCity = parsed.city?.toLowerCase() || "";
+            }
+          } catch (e) {
+            // Ignore errors
+          }
+          
+          // Determine if this is a high-traffic city
+          const isHighTrafficCity = tripCity.includes('new york') || 
+                                   tripCity.includes('nyc') ||
+                                   tripCity.includes('los angeles') ||
+                                   tripCity.includes('chicago') ||
+                                   tripCity.includes('san francisco') ||
+                                   tripCity.includes('boston') ||
+                                   tripCity.includes('washington') ||
+                                   tripCity.includes('seattle') ||
+                                   tripCity.includes('london') ||
+                                   tripCity.includes('paris') ||
+                                   tripCity.includes('tokyo');
+          
           if (travelMode === 'driving') {
             if (isLongDistance) {
-              // Highway speeds for long distances (65 mph / 105 km/h)
-              speedKmh = 105; 
+              // Highway speeds for long distances
+              speedKmh = 90; 
             } else if (isMediumDistance) {
               // Mix of highways and urban for medium distances
-              speedKmh = 70;
+              speedKmh = isHighTrafficCity ? 40 : 60;
             } else {
-              // Urban driving with traffic lights and congestion
-              speedKmh = 30;
+              // Urban driving
+              speedKmh = isHighTrafficCity ? 15 : 30;
             }
             modeName = "driving";
           } else if (travelMode === 'transit') {
@@ -160,26 +185,26 @@ export default function useActivities(tripId: string | number) {
               // Intercity trains or express buses
               speedKmh = 90;
             } else if (isMediumDistance) {
-              // Regional transit options
-              speedKmh = 50;
+              // Regional/express transit options
+              speedKmh = isHighTrafficCity ? 35 : 50;
             } else {
-              // Local buses, subways with stops
-              speedKmh = 20;
+              // Local transit with stops
+              speedKmh = isHighTrafficCity ? 15 : 25;
             }
             modeName = "transit";
           } else {
             // Walking
             if (isLongDistance) {
-              // Very long walks aren't realistic, use transit as fallback
-              speedKmh = 90;
-              modeName = "walking (estimated)";
+              // Very long walks aren't realistic, suggest transit
+              speedKmh = isHighTrafficCity ? 35 : 50;
+              modeName = "transit (suggested)";
             } else if (isMediumDistance) {
               // Medium distance walks also unlikely
-              speedKmh = 50;
-              modeName = "walking (estimated)";
+              speedKmh = isHighTrafficCity ? 25 : 35;
+              modeName = "transit (suggested)";
             } else {
               // Reasonable walking distance
-              speedKmh = 4.8;
+              speedKmh = isHighTrafficCity ? 4.5 : 5.0;
               modeName = "walking";
             }
           }
@@ -214,6 +239,9 @@ export default function useActivities(tripId: string | number) {
           } else if (travelMode === 'transit') {
             // Middle ground for transit
             conflictThreshold = isLongDistance ? 360 : 45; // 6 hours for long trips, 45 min for urban
+          } else {
+            // Walking threshold based on distance
+            conflictThreshold = distance > 2 ? 30 : 20; // 30 min for > 2km, 20 min for shorter
           }
           
           const conflict = travelTimeMinutes > conflictThreshold;

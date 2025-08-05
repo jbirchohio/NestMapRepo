@@ -50,7 +50,7 @@ export default function EnhancedAIAssistantModal({
   const [conversation, setConversation] = useState<MessageType[]>([
     {
       role: "assistant",
-      content: `Hi there! I'm your NestMap AI Assistant. I can help you with your trip to ${trip?.city || trip?.title}. Ask me anything about your trip, get weather-based suggestions, or budget recommendations!`
+      content: `Hi there! I'm your Remvana AI Assistant. I can help you with your trip to ${trip?.city || trip?.title}. Ask me anything about your trip, get weather-based suggestions, or budget recommendations!`
     }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -90,11 +90,13 @@ export default function EnhancedAIAssistantModal({
 
   const createActivityMutation = useMutation({
     mutationFn: async (activity: any) => {
-      const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, activity);
-      return res.json();
+      return await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, activity);
     },
     onSuccess: () => {
-      onActivitiesUpdated();
+      // Add a small delay to ensure the backend has processed the activity
+      setTimeout(() => {
+        onActivitiesUpdated();
+      }, 100);
     },
     onError: (error) => {
       toast({
@@ -199,7 +201,7 @@ export default function EnhancedAIAssistantModal({
         <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b">
           <DialogTitle className="flex items-center">
             <Sparkles className="h-5 w-5 mr-2 text-primary" />
-            NestMap AI Assistant
+            Remvana AI Assistant
           </DialogTitle>
           <DialogDescription>
             Get personalized travel recommendations, weather-based suggestions, and budget options
@@ -357,6 +359,7 @@ export default function EnhancedAIAssistantModal({
             <div className="flex-1 min-h-0 overflow-auto">
               <WeatherSuggestionsPanel 
                 trip={trip} 
+                activities={activities}
                 onAddActivity={handleAddActivity} 
               />
             </div>

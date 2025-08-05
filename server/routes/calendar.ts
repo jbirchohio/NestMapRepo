@@ -140,7 +140,7 @@ function generateICalendar(trip: any, activities: any[]): string {
   let ical = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//NestMap//Business Travel//EN',
+    'PRODID:-//Remvana//Business Travel//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH'
   ];
@@ -148,7 +148,7 @@ function generateICalendar(trip: any, activities: any[]): string {
   // Main trip event
   ical.push(
     'BEGIN:VEVENT',
-    `UID:trip-${trip.id}@nestmap.com`,
+    `UID:trip-${trip.id}@remvana.com`,
     `DTSTART;VALUE=DATE:${formatDate(startDate)}`,
     `DTEND;VALUE=DATE:${formatDate(new Date(endDate.getTime() + 86400000))}`, // Add 1 day
     `SUMMARY:Business Trip: ${trip.title}`,
@@ -172,7 +172,7 @@ function generateICalendar(trip: any, activities: any[]): string {
     
     ical.push(
       'BEGIN:VEVENT',
-      `UID:activity-${activity.id}@nestmap.com`,
+      `UID:activity-${activity.id}@remvana.com`,
       `DTSTART:${formatDateTime(activityDate)}`,
       `DTEND:${formatDateTime(new Date(activityDate.getTime() + 3600000))}`, // 1 hour duration
       `SUMMARY:${activity.title}`,

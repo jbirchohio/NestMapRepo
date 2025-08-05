@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -59,6 +59,7 @@ export const organizations = pgTable("organizations", {
   funding_source_status: text("funding_source_status").default("pending"), // pending, active, inactive, failed
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
+  risk_level: text("risk_level").default("low"), // low, medium, high
 });
 
 // Custom roles for organizations
@@ -781,7 +782,7 @@ export const customDomains = pgTable("custom_domains", {
   id: serial("id").primaryKey(),
   organization_id: integer("organization_id").references(() => organizations.id).notNull(),
   domain: text("domain").notNull().unique(),
-  subdomain: text("subdomain"), // For subdomain.nestmap.com
+  subdomain: text("subdomain"), // For subdomain.remvana.com
   ssl_certificate: text("ssl_certificate"),
   dns_verified: boolean("dns_verified").default(false),
   ssl_verified: boolean("ssl_verified").default(false),
@@ -1215,6 +1216,7 @@ export const superadminAuditLogs = pgTable("superadmin_audit_logs", {
   details: jsonb("details").$type<Record<string, any>>(),
   ip_address: text("ip_address"),
   user_agent: text("user_agent"),
+  risk_level: text("risk_level").default("low"), // low, medium, high, critical
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -1279,6 +1281,58 @@ export const backgroundJobs = pgTable("background_jobs", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Revenue Metrics
+export const revenueMetrics = pgTable("revenue_metrics", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull().unique(),
+  mrr: decimal("mrr", { precision: 10, scale: 2 }).notNull().default("0"),
+  new_mrr: decimal("new_mrr", { precision: 10, scale: 2 }).notNull().default("0"),
+  churned_mrr: decimal("churned_mrr", { precision: 10, scale: 2 }).notNull().default("0"),
+  total_customers: integer("total_customers").notNull().default(0),
+  new_customers: integer("new_customers").notNull().default(0),
+  churned_customers: integer("churned_customers").notNull().default(0),
+  churn_rate: decimal("churn_rate", { precision: 5, scale: 2 }).notNull().default("0"),
+  growth_rate: decimal("growth_rate", { precision: 5, scale: 2 }).notNull().default("0"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Superadmin Background Jobs
+export const superadminBackgroundJobs = pgTable("superadmin_background_jobs", {
+  id: serial("id").primaryKey(),
+  job_type: text("job_type").notNull(),
+  status: text("status").notNull().default("pending"),
+  payload: jsonb("payload").$type<Record<string, any>>(),
+  result: jsonb("result").$type<Record<string, any>>(),
+  error_message: text("error_message"),
+  attempts: integer("attempts").default(0),
+  max_attempts: integer("max_attempts").default(3),
+  scheduled_at: timestamp("scheduled_at").defaultNow(),
+  started_at: timestamp("started_at"),
+  completed_at: timestamp("completed_at"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Deployments
+export const deployments = pgTable("deployments", {
+  id: serial("id").primaryKey(),
+  deployment_id: text("deployment_id").notNull().unique(),
+  version: text("version").notNull(),
+  environment: text("environment").notNull(),
+  deployment_type: text("deployment_type").notNull(),
+  status: text("status").notNull().default("pending"),
+  deployed_by: integer("deployed_by").references(() => users.id),
+  git_commit: text("git_commit"),
+  git_branch: text("git_branch"),
+  rollback_to: integer("rollback_to"), // Will add self-reference later
+  error_logs: text("error_logs"),
+  deployment_logs: text("deployment_logs"),
+  health_check_status: text("health_check_status"),
+  started_at: timestamp("started_at"),
+  completed_at: timestamp("completed_at"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 // Billing Events
 export const billingEvents = pgTable("billing_events", {
   id: serial("id").primaryKey(),
@@ -1341,6 +1395,389 @@ export type BackgroundJob = typeof backgroundJobs.$inferSelect;
 export type InsertBackgroundJob = z.infer<typeof insertBackgroundJobSchema>;
 export type BillingEvent = typeof billingEvents.$inferSelect;
 export type InsertBillingEvent = z.infer<typeof insertBillingEventSchema>;
+export type RevenueMetric = typeof revenueMetrics.$inferSelect;
+export type SuperadminBackgroundJob = typeof superadminBackgroundJobs.$inferSelect;
+export type Deployment = typeof deployments.$inferSelect;
+
+// Travel Policy Schema
+export const travelPolicies = pgTable("travel_policies", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  is_active: boolean("is_active").default(true),
+  applies_to: text("applies_to").default("all"), // all, departments, roles, users
+  target_departments: jsonb("target_departments").$type<string[]>(),
+  target_roles: jsonb("target_roles").$type<string[]>(),
+  target_users: jsonb("target_users").$type<number[]>(),
+  
+  // Flight policies
+  flight_class_domestic: text("flight_class_domestic").default("economy"), // economy, premium_economy, business, first
+  flight_class_international: text("flight_class_international").default("economy"),
+  flight_booking_window: integer("flight_booking_window"), // Days in advance required
+  flight_price_limit_domestic: integer("flight_price_limit_domestic"), // Price limit in cents
+  flight_price_limit_international: integer("flight_price_limit_international"),
+  preferred_airlines: jsonb("preferred_airlines").$type<string[]>(),
+  
+  // Hotel policies
+  hotel_star_rating_max: integer("hotel_star_rating_max").default(4),
+  hotel_price_limit_domestic: integer("hotel_price_limit_domestic"), // Per night in cents
+  hotel_price_limit_international: integer("hotel_price_limit_international"),
+  preferred_hotel_chains: jsonb("preferred_hotel_chains").$type<string[]>(),
+  
+  // Ground transport policies
+  ground_transport_types: jsonb("ground_transport_types").$type<string[]>(), // taxi, uber, rental_car, public_transport
+  rental_car_class: text("rental_car_class").default("economy"),
+  ride_share_max_class: text("ride_share_max_class").default("uberx"), // uberx, comfort, black
+  
+  // Meal policies
+  breakfast_limit: integer("breakfast_limit"), // In cents
+  lunch_limit: integer("lunch_limit"),
+  dinner_limit: integer("dinner_limit"),
+  per_diem_domestic: integer("per_diem_domestic"),
+  per_diem_international: jsonb("per_diem_international").$type<Record<string, number>>(), // By country
+  
+  // Approval requirements
+  requires_pre_approval: boolean("requires_pre_approval").default(false),
+  auto_approve_in_policy: boolean("auto_approve_in_policy").default(true),
+  approval_chain: jsonb("approval_chain").$type<Array<{level: number, approver_role: string, threshold?: number}>>(),
+  
+  // Compliance settings
+  require_business_purpose: boolean("require_business_purpose").default(true),
+  require_cost_center: boolean("require_cost_center").default(false),
+  require_project_code: boolean("require_project_code").default(false),
+  allowed_expense_types: jsonb("allowed_expense_types").$type<string[]>(),
+  
+  // Time restrictions
+  advance_booking_required: integer("advance_booking_required"), // Days
+  weekend_travel_allowed: boolean("weekend_travel_allowed").default(false),
+  holiday_travel_allowed: boolean("holiday_travel_allowed").default(false),
+  
+  created_by: integer("created_by").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Travel Policy Violations
+export const policyViolations = pgTable("policy_violations", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  policy_id: integer("policy_id").references(() => travelPolicies.id).notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  trip_id: integer("trip_id").references(() => trips.id),
+  expense_id: integer("expense_id").references(() => expenses.id),
+  booking_id: integer("booking_id").references(() => bookings.id),
+  
+  violation_type: text("violation_type").notNull(), // over_budget, out_of_policy, no_approval, etc
+  violation_details: jsonb("violation_details").$type<{
+    rule: string;
+    expected: any;
+    actual: any;
+    difference?: number;
+  }>().notNull(),
+  
+  severity: text("severity").default("medium"), // low, medium, high, critical
+  status: text("status").default("pending"), // pending, approved, rejected, escalated
+  
+  justification: text("justification"),
+  approved_by: integer("approved_by").references(() => users.id),
+  approval_notes: text("approval_notes"),
+  
+  created_at: timestamp("created_at").defaultNow(),
+  resolved_at: timestamp("resolved_at"),
+});
+
+// Enhanced Expense Receipts with OCR
+export const expenseReceipts = pgTable("expense_receipts", {
+  id: serial("id").primaryKey(),
+  expense_id: integer("expense_id").references(() => expenses.id).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  
+  file_url: text("file_url").notNull(),
+  file_type: text("file_type").notNull(), // image/jpeg, image/png, application/pdf
+  file_size: integer("file_size"), // In bytes
+  
+  // OCR Results
+  ocr_status: text("ocr_status").default("pending"), // pending, processing, completed, failed
+  ocr_confidence: decimal("ocr_confidence"), // 0-1 confidence score
+  ocr_extracted_data: jsonb("ocr_extracted_data").$type<{
+    merchant_name?: string;
+    amount?: number;
+    currency?: string;
+    date?: string;
+    tax_amount?: number;
+    tip_amount?: number;
+    items?: Array<{name: string; quantity: number; price: number}>;
+    payment_method?: string;
+  }>(),
+  
+  ocr_raw_text: text("ocr_raw_text"),
+  ocr_processed_at: timestamp("ocr_processed_at"),
+  
+  verification_status: text("verification_status").default("unverified"), // unverified, verified, flagged
+  verified_by: integer("verified_by").references(() => users.id),
+  verified_at: timestamp("verified_at"),
+  
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Mileage Tracking
+export const mileageTracking = pgTable("mileage_tracking", {
+  id: serial("id").primaryKey(),
+  expense_id: integer("expense_id").references(() => expenses.id).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  
+  trip_date: date("trip_date").notNull(),
+  start_location: text("start_location").notNull(),
+  end_location: text("end_location").notNull(),
+  
+  // GPS Tracking
+  start_latitude: decimal("start_latitude"),
+  start_longitude: decimal("start_longitude"),
+  end_latitude: decimal("end_latitude"),
+  end_longitude: decimal("end_longitude"),
+  
+  route_polyline: text("route_polyline"), // Encoded polyline for map display
+  
+  distance_miles: decimal("distance_miles").notNull(),
+  rate_per_mile: decimal("rate_per_mile").notNull(), // IRS or custom rate
+  total_amount: integer("total_amount").notNull(), // In cents
+  
+  purpose: text("purpose").notNull(),
+  vehicle_type: text("vehicle_type").default("personal"), // personal, company, rental
+  
+  tracking_method: text("tracking_method").default("manual"), // manual, gps, connected_car
+  
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Duty of Care - Traveler Tracking
+export const travelerTracking = pgTable("traveler_tracking", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  trip_id: integer("trip_id").references(() => trips.id).notNull(),
+  
+  current_location: text("current_location"),
+  current_latitude: decimal("current_latitude"),
+  current_longitude: decimal("current_longitude"),
+  location_updated_at: timestamp("location_updated_at"),
+  
+  check_in_status: text("check_in_status").default("pending"), // pending, checked_in, delayed, emergency
+  last_check_in: timestamp("last_check_in"),
+  next_check_in_due: timestamp("next_check_in_due"),
+  
+  // Emergency Information
+  emergency_contact_notified: boolean("emergency_contact_notified").default(false),
+  local_emergency_numbers: jsonb("local_emergency_numbers").$type<{
+    police?: string;
+    medical?: string;
+    embassy?: string;
+  }>(),
+  
+  // Health & Safety
+  travel_alerts: jsonb("travel_alerts").$type<Array<{
+    type: string; // weather, political, health, security
+    severity: string;
+    message: string;
+    issued_at: Date;
+  }>>(),
+  
+  medical_info_on_file: boolean("medical_info_on_file").default(false),
+  travel_insurance_policy: text("travel_insurance_policy"),
+  
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Travel Risk Assessments
+export const travelRiskAssessments = pgTable("travel_risk_assessments", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  destination_country: text("destination_country").notNull(),
+  destination_city: text("destination_city"),
+  
+  risk_level: text("risk_level").default("low"), // low, medium, high, extreme
+  
+  // Risk Categories
+  health_risk: text("health_risk").default("low"),
+  health_details: jsonb("health_details").$type<{
+    diseases?: string[];
+    vaccinations_required?: string[];
+    medical_facilities_quality?: string;
+  }>(),
+  
+  security_risk: text("security_risk").default("low"),
+  security_details: jsonb("security_details").$type<{
+    crime_level?: string;
+    terrorism_threat?: string;
+    civil_unrest?: boolean;
+    areas_to_avoid?: string[];
+  }>(),
+  
+  covid_risk: text("covid_risk").default("low"),
+  covid_details: jsonb("covid_details").$type<{
+    entry_requirements?: string[];
+    quarantine_rules?: string;
+    vaccination_required?: boolean;
+    testing_required?: boolean;
+  }>(),
+  
+  travel_advisories: jsonb("travel_advisories").$type<Array<{
+    source: string;
+    level: string;
+    message: string;
+    updated_at: Date;
+  }>>(),
+  
+  last_updated: timestamp("last_updated").defaultNow(),
+  expires_at: timestamp("expires_at"),
+});
+
+// Corporate Card Integration Enhancements
+export const corporateCardPolicies = pgTable("corporate_card_policies", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  card_id: integer("card_id").references(() => corporateCards.id),
+  
+  // Real-time controls
+  merchant_category_restrictions: jsonb("merchant_category_restrictions").$type<{
+    allowed?: string[];
+    blocked?: string[];
+  }>(),
+  
+  time_restrictions: jsonb("time_restrictions").$type<{
+    allowed_days?: number[]; // 0-6 (Sunday-Saturday)
+    allowed_hours?: {start: string; end: string};
+    timezone?: string;
+  }>(),
+  
+  geographic_restrictions: jsonb("geographic_restrictions").$type<{
+    allowed_countries?: string[];
+    blocked_countries?: string[];
+    allowed_regions?: string[];
+  }>(),
+  
+  transaction_limits: jsonb("transaction_limits").$type<{
+    single_transaction?: number;
+    daily?: number;
+    weekly?: number;
+    monthly?: number;
+    per_merchant_category?: Record<string, number>;
+  }>(),
+  
+  // Automated actions
+  auto_lock_rules: jsonb("auto_lock_rules").$type<Array<{
+    condition: string;
+    action: string;
+  }>>(),
+  
+  notification_settings: jsonb("notification_settings").$type<{
+    transaction_alerts?: boolean;
+    threshold_amount?: number;
+    alert_channels?: string[]; // email, sms, push, slack
+  }>(),
+  
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Integration Mappings for Accounting Software
+export const accountingIntegrations = pgTable("accounting_integrations", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  integration_type: text("integration_type").notNull(), // quickbooks, sap, netsuite, xero
+  
+  connection_status: text("connection_status").default("disconnected"), // connected, disconnected, error
+  last_sync: timestamp("last_sync"),
+  
+  // Field Mappings
+  expense_category_mappings: jsonb("expense_category_mappings").$type<Record<string, string>>(), // Our category -> Their account
+  tax_code_mappings: jsonb("tax_code_mappings").$type<Record<string, string>>(),
+  department_mappings: jsonb("department_mappings").$type<Record<string, string>>(),
+  project_mappings: jsonb("project_mappings").$type<Record<string, string>>(),
+  
+  // Sync Settings
+  auto_sync_enabled: boolean("auto_sync_enabled").default(true),
+  sync_frequency: text("sync_frequency").default("daily"), // realtime, hourly, daily, weekly
+  sync_direction: text("sync_direction").default("one_way"), // one_way, two_way
+  
+  // API Credentials (encrypted)
+  api_credentials: jsonb("api_credentials").$type<{
+    client_id?: string;
+    client_secret?: string;
+    access_token?: string;
+    refresh_token?: string;
+    company_id?: string;
+  }>(),
+  
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for new tables
+export const insertTravelPolicySchema = createInsertSchema(travelPolicies).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertPolicyViolationSchema = createInsertSchema(policyViolations).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertExpenseReceiptSchema = createInsertSchema(expenseReceipts).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertMileageTrackingSchema = createInsertSchema(mileageTracking).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertTravelerTrackingSchema = createInsertSchema(travelerTracking).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertTravelRiskAssessmentSchema = createInsertSchema(travelRiskAssessments).omit({
+  id: true,
+  last_updated: true,
+});
+
+export const insertCorporateCardPolicySchema = createInsertSchema(corporateCardPolicies).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertAccountingIntegrationSchema = createInsertSchema(accountingIntegrations).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+// Types for new tables
+export type TravelPolicy = typeof travelPolicies.$inferSelect;
+export type InsertTravelPolicy = z.infer<typeof insertTravelPolicySchema>;
+export type PolicyViolation = typeof policyViolations.$inferSelect;
+export type InsertPolicyViolation = z.infer<typeof insertPolicyViolationSchema>;
+export type ExpenseReceipt = typeof expenseReceipts.$inferSelect;
+export type InsertExpenseReceipt = z.infer<typeof insertExpenseReceiptSchema>;
+export type MileageTracking = typeof mileageTracking.$inferSelect;
+export type InsertMileageTracking = z.infer<typeof insertMileageTrackingSchema>;
+export type TravelerTracking = typeof travelerTracking.$inferSelect;
+export type InsertTravelerTracking = z.infer<typeof insertTravelerTrackingSchema>;
+export type TravelRiskAssessment = typeof travelRiskAssessments.$inferSelect;
+export type InsertTravelRiskAssessment = z.infer<typeof insertTravelRiskAssessmentSchema>;
+export type CorporateCardPolicy = typeof corporateCardPolicies.$inferSelect;
+export type InsertCorporateCardPolicy = z.infer<typeof insertCorporateCardPolicySchema>;
+export type AccountingIntegration = typeof accountingIntegrations.$inferSelect;
+export type InsertAccountingIntegration = z.infer<typeof insertAccountingIntegrationSchema>;
 
 // User roles constants
 export const USER_ROLES = {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { WhiteLabelProvider, useWhiteLabel } from "@/contexts/WhiteLabelContext"
 import ErrorBoundary from "@/components/ErrorBoundary";
 import MainNavigation from "@/components/MainNavigation";
 import BrandedFooter from "@/components/BrandedFooter";
+import DemoModeBanner from "@/components/DemoModeBanner";
 import Home from "@/pages/Home";
 import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
@@ -26,6 +27,7 @@ import Dashboard from "@/pages/Dashboard";
 import CorporateDashboard from "@/pages/CorporateDashboard";
 import AgencyDashboard from "@/pages/AgencyDashboard";
 import DemoModeSelector from "@/components/DemoModeSelector";
+import Demo from "@/pages/Demo";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
@@ -35,13 +37,14 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminRoles from "@/pages/AdminRoles";
 import AdminSecurity from "@/pages/AdminSecurity";
 import AdminSettings from "@/pages/AdminSettings";
-import AdminLogs from "@/pages/AdminLogs";
 import AdminSystemMetrics from "@/pages/AdminSystemMetrics";
 import PerformanceDashboard from "@/pages/PerformanceDashboard";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
-import Superadmin from "@/pages/SuperadminClean";
-import SuperadminOrganizationDetail from "@/pages/SuperadminOrganizationDetail";
+// Lazy load heavy admin components
+const Superadmin = lazy(() => import("@/pages/SuperadminClean"));
+const SuperadminOrganizationDetail = lazy(() => import("@/pages/SuperadminOrganizationDetail"));
+const AdminLogs = lazy(() => import("@/pages/AdminLogs"));
 import BillingDemo from "@/pages/BillingDemo";
 import Onboarding from "@/pages/Onboarding";
 import Login from "@/pages/Login";
@@ -77,6 +80,7 @@ function Router() {
   
   return (
     <div className="min-h-screen flex flex-col bg-soft-100 dark:bg-navy-900">
+      <DemoModeBanner />
       <NavigationWrapper />
       <main className="flex-1">
         <Switch>
@@ -106,7 +110,8 @@ function Router() {
           {/* Legacy routes for backward compatibility */}
           <Route path="/dashboard/corporate" component={Dashboard} />
           <Route path="/dashboard/agency" component={Dashboard} />
-          <Route path="/demo" component={DemoModeSelector} />
+          <Route path="/demo" component={Demo} />
+          <Route path="/demo-selector" component={DemoModeSelector} />
           <Route path="/profile" component={ProfileSettings} />
           <Route path="/help" component={HelpCenter} />
           <Route path="/calendar" component={CalendarSettings} />
@@ -120,9 +125,27 @@ function Router() {
           <Route path="/admin/logs" component={AdminLogs} />
           <Route path="/admin/system-metrics" component={AdminSystemMetrics} />
           <Route path="/admin/performance" component={PerformanceDashboard} />
-          <Route path="/superadmin" component={Superadmin} />
-          <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
-          <Route path="/superadmin/:section" component={Superadmin} />
+          <Route path="/superadmin" component={() => (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>}>
+              <Superadmin />
+            </Suspense>
+          )} />
+          <Route path="/superadmin/organizations/:id" component={() => (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>}>
+              <SuperadminOrganizationDetail />
+            </Suspense>
+          )} />
+          <Route path="/superadmin/:section" component={() => (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>}>
+              <Superadmin />
+            </Suspense>
+          )} />
           <Route path="/billing-demo" component={BillingDemo} />
           <Route path="/corporate-cards" component={CorporateCards} />
           <Route path="/organization-funding" component={OrganizationFunding} />

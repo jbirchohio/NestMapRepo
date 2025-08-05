@@ -864,3 +864,22 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
     };
   }
 }
+
+/**
+ * Generic OpenAI call function for other uses
+ */
+export async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: options.model || "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      temperature: options.temperature || 0.7,
+      max_tokens: options.max_tokens || 150,
+    });
+
+    return response.choices[0].message.content || "";
+  } catch (error) {
+    console.error("Error calling OpenAI:", error);
+    throw error;
+  }
+}

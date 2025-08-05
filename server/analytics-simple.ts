@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { trips, users, activities } from "@shared/schema";
 import { eq, and, count, sql } from "drizzle-orm";
+import { logger } from './utils/logger';
 
 export interface SimpleAnalyticsData {
   overview: {
@@ -184,7 +185,7 @@ export async function getSimpleAnalytics(organizationId?: number): Promise<Simpl
       }
     };
   } catch (error) {
-    console.error('Error fetching simple analytics:', error);
+    logger.error('Error fetching simple analytics:', error);
     throw new Error('Failed to fetch analytics data');
   }
 }

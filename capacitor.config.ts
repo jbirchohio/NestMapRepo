@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.voyageops.app',
-  appName: 'VoyageOps',
+  appId: 'com.remvana.app',
+  appName: 'Remvana',
   webDir: 'dist',
   server: {
     // Production URL - update this to your custom domain for enterprise deployment
@@ -13,11 +13,11 @@ const config: CapacitorConfig = {
   android: {
     buildOptions: {
       keystorePath: 'android.keystore',
-      keystoreAlias: 'voyageops',
+      keystoreAlias: 'remvana',
     }
   },
   ios: {
-    scheme: 'VoyageOps',
+    scheme: 'Remvana',
     limitsNavigationsToAppBoundDomains: true
   },
   plugins: {

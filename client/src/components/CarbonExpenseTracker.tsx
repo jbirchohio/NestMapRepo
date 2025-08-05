@@ -48,21 +48,21 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
   // Fetch carbon footprint data
   const { data: carbonData = { totalEmissions: 0, comparison: { average: 0 } }, isLoading: carbonLoading } = useQuery({
     queryKey: ['/api/carbon/footprint', tripId],
-    queryFn: () => apiRequest('GET', `/api/carbon/footprint/${tripId}`).then(res => res.json()),
+    queryFn: () => apiRequest('GET', `/api/carbon/footprint/${tripId}`),
     enabled: !!tripId
   });
 
   // Fetch expense data
   const { data: expenseData = { totalCost: 0, currency: 'USD' }, isLoading: expenseLoading } = useQuery({
     queryKey: ['/api/expenses/report', tripId],
-    queryFn: () => apiRequest('GET', `/api/expenses/report/${tripId}`).then(res => res.json()),
+    queryFn: () => apiRequest('GET', `/api/expenses/report/${tripId}`),
     enabled: !!tripId
   });
 
   // Fetch offset options
   const { data: offsetOptions = [], isLoading: offsetLoading } = useQuery({
     queryKey: ['/api/carbon/offsets', tripId],
-    queryFn: () => apiRequest('GET', `/api/carbon/offsets/${tripId}`).then(res => res.json()),
+    queryFn: () => apiRequest('GET', `/api/carbon/offsets/${tripId}`),
     enabled: !!tripId && !!carbonData
   });
 

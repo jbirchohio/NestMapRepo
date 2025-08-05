@@ -47,7 +47,7 @@ function getSessionSecret(): string {
   
   // Development fallback - clearly marked as insecure
   console.warn('⚠️  Using development SESSION_SECRET - NOT suitable for production');
-  return process.env.SESSION_SECRET || 'nestmap-dev-secret-INSECURE';
+  return process.env.SESSION_SECRET || 'remvana-dev-secret-INSECURE';
 }
 
 // Database configuration
@@ -58,12 +58,12 @@ export const DB_CONFIG = {
 
 // Branding and white-label configuration
 export const BRANDING_CONFIG = {
-  defaultAppName: process.env.APP_NAME || 'NestMap',
+  defaultAppName: process.env.APP_NAME || 'Remvana',
   defaultPrimaryColor: process.env.PRIMARY_COLOR || '#3B82F6',
   defaultSecondaryColor: process.env.SECONDARY_COLOR || '#64748B',
   defaultAccentColor: process.env.ACCENT_COLOR || '#10B981',
-  companyUrl: process.env.COMPANY_URL || (process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'nestmap.app'),
-  supportEmail: process.env.SUPPORT_EMAIL || `support@${process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'nestmap.app'}`,
+  companyUrl: process.env.COMPANY_URL || (process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'remvana.app'),
+  supportEmail: process.env.SUPPORT_EMAIL || `support@${process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'remvana.app'}`,
   logoUrl: process.env.LOGO_URL || null,
   privacyUrl: process.env.PRIVACY_URL,
   termsUrl: process.env.TERMS_URL,

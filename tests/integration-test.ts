@@ -1,6 +1,6 @@
 /**
  * Integration Test Suite - Manual Execution
- * Comprehensive verification of NestMap platform functionality
+ * Comprehensive verification of Remvana platform functionality
  */
 
 import { app } from '../server/test-app';
@@ -105,7 +105,7 @@ async function testStripeIntegration() {
 
 // Main test execution
 async function runAllTests() {
-  console.log('\n🧪 NestMap Integration Test Suite');
+  console.log('\n🧪 Remvana Integration Test Suite');
   console.log('=====================================');
   
   const tests = [

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Viator Integration</title>
+</head>
+<body>
+    <h1>Viator Integration Test</h1>
+    <button onclick="testViator()">Test Viator Search</button>
+    <div id="results"></div>
+    
+    <script>
+        async function testViator() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Testing...';
+            
+            try {
+                // First, let's check if we can access the API without auth
+                const response = await fetch('http://localhost:5000/api/viator/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        activityName: 'Statue of Liberty Tour'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (response.status === 401) {
+                    resultsDiv.innerHTML = 'Authentication required. The API needs a JWT token.';
+                } else {
+                    resultsDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@shared/*": ["./shared/*"],
+      "@db/*": ["./server/db/*"]
+    },
+    "typeRoots": ["../node_modules/@types", "./types"],
+    "types": ["node", "express"]
+  },
+  "include": ["./**/*", "../shared/**/*"],
+  "exclude": ["../node_modules", "../dist"]
+}

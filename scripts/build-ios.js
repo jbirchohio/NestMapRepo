@@ -57,7 +57,7 @@ async function prepareiOSBuild() {
     console.log('   npx cap open ios');
     console.log('2. Configure signing in Xcode:');
     console.log('   - Select the project in the Navigator');
-    console.log('   - Select the "NestMap" target');
+    console.log('   - Select the "Remvana" target');
     console.log('   - Go to the "Signing & Capabilities" tab');
     console.log('   - Select your team and ensure signing is set up properly');
     console.log('3. Build for archiving:');

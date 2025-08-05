@@ -24,6 +24,7 @@ export class CollaborationWebSocketServer {
   private wss: WebSocketServer;
   private tripRooms: Map<number, Set<AuthenticatedWebSocket>> = new Map();
   private userPresence: Map<number, { userId: number; lastSeen: Date }> = new Map();
+  private cleanupInterval: NodeJS.Timeout;
 
   constructor(server: Server) {
     this.wss = new WebSocketServer({ 
@@ -34,7 +35,7 @@ export class CollaborationWebSocketServer {
     this.wss.on('connection', this.handleConnection.bind(this));
     
     // Clean up inactive connections every 30 seconds
-    setInterval(() => this.cleanupInactiveConnections(), 30000);
+    this.cleanupInterval = setInterval(() => this.cleanupInactiveConnections(), 30000);
   }
 
   private async handleConnection(ws: AuthenticatedWebSocket, request: any) {
@@ -214,7 +215,7 @@ export class CollaborationWebSocketServer {
       const activeClients = new Set<AuthenticatedWebSocket>();
       
       room.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
+        if (client.readyState === 1) { // OPEN state
           activeClients.add(client);
         }
       });
@@ -247,6 +248,73 @@ export class CollaborationWebSocketServer {
       .map(client => client.user_id!)
       .filter(userId => userId !== undefined);
   }
+
+  // Cleanup method for tests and shutdown
+  public async cleanup(): Promise<void> {
+    try {
+      // Clear the cleanup interval
+      if (this.cleanupInterval) {
+        clearInterval(this.cleanupInterval);
+      }
+
+      // Close all WebSocket connections
+      this.wss.clients.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      });
+
+      // Clear all data structures
+      this.tripRooms.clear();
+      this.userPresence.clear();
+
+      // Close the WebSocket server
+      await new Promise<void>((resolve, reject) => {
+        this.wss.close((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+
+      console.log('WebSocket server cleaned up successfully');
+    } catch (error) {
+      console.error('Error cleaning up WebSocket server:', error);
+      throw error;
+    }
+  }
 }
+
+// Global instance for WebSocket operations
+let wsInstance: CollaborationWebSocketServer | null = null;
+
+export const WebSocketService = {
+  setInstance: (instance: CollaborationWebSocketServer) => {
+    wsInstance = instance;
+  },
+  
+  broadcast: (organizationId: number, data: any) => {
+    if (!wsInstance) {
+      console.warn('WebSocket instance not initialized');
+      return;
+    }
+    
+    // Get all clients for this organization
+    const message = JSON.stringify({
+      type: 'broadcast',
+      organizationId,
+      data
+    });
+    
+    wsInstance.wss.clients.forEach((client) => {
+      if (client.readyState === 1) { // OPEN state
+        // In a real implementation, check if client belongs to organizationId
+        client.send(message);
+      }
+    });
+  }
+};
 
 export let collaborationWS: CollaborationWebSocketServer;

@@ -59,11 +59,11 @@ async function buildAndroidApk() {
       
       console.log('\nTo sign the APK, follow these steps:');
       console.log('1. Generate a signing key if you don\'t have one:');
-      console.log('   keytool -genkey -v -keystore nestmap-release-key.keystore -alias nestmap -keyalg RSA -keysize 2048 -validity 10000');
+      console.log('   keytool -genkey -v -keystore remvana-release-key.keystore -alias remvana -keyalg RSA -keysize 2048 -validity 10000');
       console.log('2. Sign the APK:');
-      console.log('   jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore nestmap-release-key.keystore android/app/build/outputs/apk/release/app-release-unsigned.apk nestmap');
+      console.log('   jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore remvana-release-key.keystore android/app/build/outputs/apk/release/app-release-unsigned.apk remvana');
       console.log('3. Optimize the APK:');
-      console.log('   zipalign -v 4 android/app/build/outputs/apk/release/app-release-unsigned.apk nestmap-release.apk');
+      console.log('   zipalign -v 4 android/app/build/outputs/apk/release/app-release-unsigned.apk remvana-release.apk');
     } else {
       // Instructions for manual build
       console.log('\n===== ANDROID BUILD INSTRUCTIONS =====');

@@ -3,6 +3,8 @@
  * Replaces console.log statements with proper logging levels
  */
 
+import { sentryService } from '../services/sentryService';
+
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
 interface LogEntry {
@@ -60,6 +62,15 @@ class Logger {
 
   error(message: string, meta?: any): void {
     this.output(this.formatMessage('error', message, meta));
+    
+    // Also send errors to Sentry if initialized
+    if (meta instanceof Error) {
+      sentryService.captureException(meta, { extra: { logMessage: message } });
+    } else if (typeof meta === 'object' && meta?.error instanceof Error) {
+      sentryService.captureException(meta.error, { extra: { logMessage: message, ...meta } });
+    } else {
+      sentryService.captureMessage(message, 'error', meta);
+    }
   }
 
   warn(message: string, meta?: any): void {

@@ -54,13 +54,13 @@ export default function CorporateCardsManagement() {
   // Fetch organization cards
   const { data: cards, isLoading } = useQuery({
     queryKey: ["/api/corporate-cards/cards"],
-    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards").then(res => res.json()),
+    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards"),
   });
 
   // Fetch card transactions
   const { data: transactions } = useQuery({
     queryKey: ["/api/corporate-cards/cards", selectedCard?.id, "transactions"],
-    queryFn: () => apiRequest("GET", `/api/corporate-cards/cards/${selectedCard?.id}/transactions`).then(res => res.json()),
+    queryFn: () => apiRequest("GET", `/api/corporate-cards/cards/${selectedCard?.id}/transactions`),
     enabled: !!selectedCard,
   });
 

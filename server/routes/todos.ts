@@ -41,7 +41,16 @@ router.get('/:tripId', async (req, res) => {
 // POST /api/todos - Create a new todo
 router.post('/', async (req, res) => {
   try {
-    const validatedData = createTodoSchema.parse(req.body);
+    // After case conversion middleware, req.body has snake_case fields
+    // Map them to camelCase for the schema
+    const dataToValidate = {
+      tripId: req.body.trip_id,
+      task: req.body.task,
+      completed: req.body.completed,
+      organizationId: req.body.organization_id
+    };
+    
+    const validatedData = createTodoSchema.parse(dataToValidate);
     
     // Set organization ID from authenticated user if not provided
     if (!validatedData.organizationId && req.user?.organization_id) {

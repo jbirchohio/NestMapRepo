@@ -86,7 +86,7 @@ export default function CorporateDashboard() {
   // Fetch corporate cards
   const { data: corporateCards = [], isLoading: cardsLoading } = useQuery({
     queryKey: ["/api/corporate-cards/cards"],
-    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards").then(res => res.json()),
+    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards"),
     enabled: !!user,
   });
 

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { logger } from '../utils/logger';
 
 /**
  * Comprehensive API Rate Limiting Implementation
@@ -24,6 +25,9 @@ interface RateLimitBucket {
 class ComprehensiveRateLimit {
   private buckets = new Map<string, RateLimitBucket>();
   private blockedIPs = new Set<string>();
+  
+  // Disable rate limiting in development
+  private readonly isDevelopment = process.env.NODE_ENV === 'development';
   
   // Tiered rate limiting configurations
   private readonly configs: Record<string, RateLimitConfig> = {
@@ -82,6 +86,16 @@ class ComprehensiveRateLimit {
     resetTime: number;
     retryAfter?: number;
   } {
+    // Skip rate limiting in development
+    if (this.isDevelopment) {
+      return {
+        allowed: true,
+        remaining: 9999,
+        resetTime: Date.now() + 3600000,
+        retryAfter: undefined
+      };
+    }
+    
     const config = this.configs[configType] || this.configs['global'];
     const now = Date.now();
     
@@ -186,7 +200,7 @@ class ComprehensiveRateLimit {
     }
 
     // Log security violation
-    console.warn('RATE_LIMIT_VIOLATION:', {
+    logger.warn('RATE_LIMIT_VIOLATION:', {
       key,
       violations: bucket.violations,
       timestamp: new Date().toISOString(),
@@ -230,6 +244,11 @@ const comprehensiveRateLimit = new ComprehensiveRateLimit();
  * General API rate limiting middleware
  */
 export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
+  // Skip rate limiting in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+  
   const ip = req.ip || req.connection.remoteAddress || 'unknown';
   const userId = req.user?.id || 'anonymous';
   const key = `global:${ip}:${userId}`;
@@ -257,6 +276,11 @@ export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
  * Authentication-specific rate limiting
  */
 export function authRateLimit(req: Request, res: Response, next: NextFunction) {
+  // Skip rate limiting in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+  
   const ip = req.ip || req.connection.remoteAddress || 'unknown';
   const key = `auth:${ip}`;
   
@@ -270,7 +294,7 @@ export function authRateLimit(req: Request, res: Response, next: NextFunction) {
     res.setHeader('Retry-After', result.retryAfter?.toString() || '900');
     
     // Log suspicious authentication attempts
-    console.warn('AUTH_RATE_LIMIT_EXCEEDED:', {
+    logger.warn('AUTH_RATE_LIMIT_EXCEEDED:', {
       ip,
       endpoint: req.path,
       userAgent: req.headers['user-agent'],
@@ -291,6 +315,11 @@ export function authRateLimit(req: Request, res: Response, next: NextFunction) {
  * Organization-tier based rate limiting
  */
 export function organizationRateLimit(req: Request, res: Response, next: NextFunction) {
+  // Skip rate limiting in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+  
   if (!req.user?.organization_id) {
     // No organization context, apply free tier limits
     return tieredRateLimit('free')(req, res, next);

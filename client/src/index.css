@@ -3,6 +3,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Modal/Dialog positioning fixes */
+[data-radix-popper-content-wrapper] {
+  transform-origin: var(--radix-popper-transform-origin) !important;
+  z-index: 50 !important;
+}
+
+[data-state="open"][data-radix-dialog-content] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 50 !important;
+  max-height: 85vh !important;
+  max-width: 90vw !important;
+}
+
+/* Ensure dialog overlay covers entire viewport */
+[data-radix-dialog-overlay] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 40 !important;
+}
+
+/* Fix for any popover/dropdown positioning */
+[data-radix-popover-content] {
+  z-index: 60 !important;
+}
+
+/* Ensure proper viewport on mobile/responsive */
+html, body {
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+}
+
+/* Additional modal fixes for specific components */
+.fixed {
+  position: fixed !important;
+}
+
+/* Ensure all dialogs are properly centered */
+[role="dialog"] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-height: 90vh !important;
+  max-width: 95vw !important;
+  z-index: 50 !important;
+}
+
+/* Toast/notification positioning */
+[data-radix-toast-viewport] {
+  position: fixed !important;
+  z-index: 100 !important;
+}
+
+/* Dropdown menu positioning */
+[data-radix-dropdown-menu-content] {
+  z-index: 60 !important;
+  position: absolute !important;
+}
+
+/* Command palette / combobox */
+[data-radix-combobox-content] {
+  z-index: 60 !important;
+}
+
 /* Premium Electric Violet Theme - Global */
 :root {
   --background: 0 0% 100%;
@@ -503,4 +576,18 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
 /* Add bottom spacing to prevent content being cut off by mobile browser bars */
 .main-content {
   padding-bottom: 4rem;
+}
+
+/* Simple animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }

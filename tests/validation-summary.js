@@ -5,7 +5,7 @@
  * Validates subscription tier enforcement and mobile modal fixes
  */
 
-console.log('🧪 NestMap Platform Validation Summary');
+console.log('🧪 Remvana Platform Validation Summary');
 console.log('=====================================\n');
 
 console.log('🔒 SUBSCRIPTION TIER ENFORCEMENT');
@@ -51,7 +51,7 @@ console.log('   • All major mobile devices supported');
 
 console.log('\n🎯 TESTING CREDENTIALS');
 console.log('----------------------');
-console.log('✅ Login: demo@nestmap.com / password');
+console.log('✅ Login: demo@remvana.com / password');
 console.log('✅ Organization automatically has Pro plan ($99)');
 console.log('✅ White-label branding automatically enabled');
 console.log('✅ Analytics access automatically granted');

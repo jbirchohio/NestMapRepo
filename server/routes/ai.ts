@@ -7,8 +7,11 @@ import { trips, activities } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 
 // Initialize OpenAI client
+const apiKey = process.env.OPENAI_API_KEY;
+console.log('OpenAI API Key configured:', apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}` : 'NOT SET');
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: apiKey,
 });
 
 const router = Router();
@@ -214,15 +217,15 @@ router.post("/optimize-itinerary", async (req, res) => {
       });
     }
 
-    // Create optimization prompt
+    // Create optimization prompt with activity details including times
     const activitiesText = tripActivities
-      .map(activity => `- ${activity.title} (${activity.date.toISOString().split('T')[0]}) at ${activity.location_name}: ${activity.notes || 'No description'}`)
+      .map(activity => `- ID: ${activity.id}, Title: "${activity.title}", Date: ${activity.date.toISOString().split('T')[0]}, Time: ${activity.time || 'No time set'}, Location: ${activity.location_name}`)
       .join('\n');
 
     const travelStyle = preferences?.travel_style || 'balanced';
     const interests = preferences?.interests?.join(', ') || 'general sightseeing';
 
-    const prompt = `Analyze and optimize this travel itinerary:
+    const prompt = `Analyze and optimize this travel itinerary by suggesting better times for activities:
 
 Trip: ${trip.title}
 Location: ${trip.city || trip.country || 'Unknown location'}
@@ -233,17 +236,31 @@ Interests: ${interests}
 Current Activities:
 ${activitiesText}
 
-Provide optimization suggestions in JSON format:
+Analyze the itinerary and suggest optimal times for each activity. Consider:
+- Venue opening hours (museums usually open 10am, restaurants for lunch 12pm-2pm, dinner 6pm-9pm)
+- Travel time between locations
+- Natural flow of the day (breakfast early, sightseeing mid-day, dinner evening)
+- Avoiding crowds (popular spots better early morning or late afternoon)
+
+Return ONLY activities that need time changes. Use the exact activity ID from above.
+For suggestedTime use 24-hour format like "09:00", "14:30", "18:00".
+
+Provide specific time optimizations in JSON format:
 {
-  "optimization_score": "1-10 rating",
-  "suggestions": [
-    "Specific actionable suggestions for improving the itinerary"
+  "optimizedActivities": [
+    {
+      "id": "exact numeric ID from the list above",
+      "suggestedTime": "HH:MM in 24-hour format",
+      "suggestedDay": 1,
+      "reason": "Specific reason why this time is better"
+    }
   ],
-  "timing_recommendations": [
-    "Suggestions for better activity timing and sequencing"
+  "recommendations": [
+    "Max 3 general recommendations for improving the itinerary"
   ],
+  "optimization_score": "1-10 rating as a string",
   "missing_experiences": [
-    "Recommended activities or experiences to add"
+    "Max 2 recommended activities to add"
   ]
 }`;
 
@@ -262,12 +279,20 @@ Provide optimization suggestions in JSON format:
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
+    
+    // Ensure the response has the expected structure
+    const formattedResult = {
+      optimizedActivities: result.optimizedActivities || [],
+      recommendations: result.recommendations || [],
+      optimization_score: result.optimization_score || "5",
+      missing_experiences: result.missing_experiences || []
+    };
 
     res.json({
       success: true,
       trip_id,
       activities_count: tripActivities.length,
-      ...result
+      ...formattedResult
     });
   } catch (error) {
     console.error("AI optimize-itinerary error:", error);
@@ -352,6 +377,81 @@ Format as JSON:
   }
 });
 
+// POST /api/ai/find-location - Find hotels and locations using AI
+router.post("/find-location", async (req, res) => {
+  try {
+    const { search_query, city_context } = req.body;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    
+    if (!search_query) {
+      return res.status(400).json({
+        success: false,
+        error: "Search query is required"
+      });
+    }
+
+    const prompt = `Find places matching "${search_query}" in or near ${city_context || 'the specified location'}.
+
+Search for ANY type of location including:
+- Restaurants, cafes, bars
+- Tourist attractions, landmarks, museums
+- Parks, beaches, recreational areas
+- Shopping centers, stores, markets
+- Entertainment venues, theaters, stadiums
+- Hotels and accommodations
+- Transportation hubs
+- Any other places that match the search
+
+Return up to 5 locations that best match the search query. Focus on popular, well-known places.
+
+Format as JSON:
+{
+  "locations": [
+    {
+      "name": "Place Name",
+      "address": "Full street address or location description",
+      "city": "${city_context || 'City'}",
+      "region": "State/Province",
+      "country": "Country",
+      "description": "Brief description of what this place is (1-2 sentences)"
+    }
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a travel expert specializing in hotel recommendations. Provide real hotel information in valid JSON format."
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 800,
+      temperature: 0.7,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+
+    res.json({
+      success: true,
+      searchQuery: search_query,
+      cityContext: city_context,
+      ...result
+    });
+  } catch (error) {
+    console.error("AI find-location error:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to find locations" 
+    });
+  }
+});
+
 // POST /api/ai/translate-content - Translate content using AI
 router.post("/translate-content", async (req, res) => {
   try {
@@ -407,6 +507,137 @@ Provide the translation in JSON format:
     res.status(500).json({ 
       success: false, 
       error: "Failed to translate content" 
+    });
+  }
+});
+
+// POST /api/ai/weather-activities - Get weather-based activity suggestions
+router.post("/weather-activities", async (req, res) => {
+  try {
+    // After case conversion middleware, fields are in snake_case
+    const location = req.body.location;
+    const date = req.body.date;
+    const weatherCondition = req.body.weather_condition;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    
+    if (!location || !weatherCondition) {
+      return res.status(400).json({
+        success: false,
+        error: "Location and weather condition are required"
+      });
+    }
+
+    const prompt = `Suggest 5 activities in ${location} that are perfect for ${weatherCondition} weather.
+    ${date ? `Date: ${date}` : ''}
+
+Format as JSON:
+{
+  "activities": [
+    {
+      "name": "Activity Name",
+      "description": "Brief description",
+      "duration": "estimated time (e.g., 2-3 hours)",
+      "location": "Specific location or area",
+      "weatherSuitability": "Why this is good for the weather",
+      "tips": "Any helpful tips"
+    }
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a travel advisor specializing in weather-appropriate activities."
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error("AI weather-activities error:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to get weather activity suggestions" 
+    });
+  }
+});
+
+// POST /api/ai/budget-options - Get budget-based suggestions
+router.post("/budget-options", async (req, res) => {
+  try {
+    // After case conversion middleware, fields are in snake_case
+    const location = req.body.location;
+    const budgetLevel = req.body.budget_level;
+    const activityType = req.body.activity_type;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    
+    if (!location || !budgetLevel) {
+      return res.status(400).json({
+        success: false,
+        error: "Location and budget level are required"
+      });
+    }
+
+    const prompt = `Suggest budget-friendly options in ${location} for a ${budgetLevel} budget.
+    ${activityType ? `Focus on: ${activityType}` : 'Include various categories'}
+
+Format as JSON:
+{
+  "level": "${budgetLevel}",
+  "location": "${location}",
+  "currency": "USD",
+  "breakdown": {
+    "accommodation": { "low": 50, "high": 100, "average": 75, "suggestions": ["Hotel A", "Hotel B"] },
+    "food": { "low": 30, "high": 60, "average": 45, "suggestions": ["Restaurant A", "Restaurant B"] },
+    "transportation": { "low": 10, "high": 30, "average": 20, "suggestions": ["Metro", "Bus"] },
+    "activities": { "low": 20, "high": 50, "average": 35, "suggestions": ["Museum", "Park"] }
+  },
+  "dailyTotal": { "low": 110, "high": 240, "average": 175 },
+  "tips": ["Tip 1", "Tip 2", "Tip 3"]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a travel budget advisor providing realistic cost estimates."
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 1000,
+      temperature: 0.5,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error("AI budget-options error:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to get budget suggestions" 
     });
   }
 });

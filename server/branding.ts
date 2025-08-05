@@ -62,17 +62,17 @@ const ORGANIZATION_BRANDING: OrganizationBranding = {
 
 // Default branding fallback
 const DEFAULT_BRANDING: BrandingConfig = {
-  appName: "VoyageOps",
+  appName: "Remvana",
   logo: "/logo.svg",
   primaryColor: "#2563eb",
   secondaryColor: "#3b82f6",
   accentColor: "#f59e0b",
   favicon: "/favicon.ico",
   description: "AI-powered travel planning platform for seamless trip management",
-  supportEmail: "support@nestmap.com",
-  privacyUrl: "https://nestmap.com/privacy",
-  termsUrl: "https://nestmap.com/terms",
-  helpUrl: "https://help.nestmap.com"
+  supportEmail: "support@remvana.com",
+  privacyUrl: "https://remvana.com/privacy",
+  termsUrl: "https://remvana.com/terms",
+  helpUrl: "https://help.remvana.com"
 };
 
 /**

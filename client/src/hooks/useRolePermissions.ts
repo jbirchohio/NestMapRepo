@@ -40,7 +40,7 @@ interface PermissionsResponse {
 export function useRolePermissions() {
   const { data: permissionsData, isLoading } = useQuery<PermissionsResponse>({
     queryKey: ['/api/user/permissions'],
-    queryFn: () => apiRequest('GET', '/api/user/permissions').then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/user/permissions'),
   });
 
   // Handle both object and array permission formats

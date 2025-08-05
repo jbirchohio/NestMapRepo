@@ -107,7 +107,24 @@ export const ROLE_PERMISSIONS = {
   
   super_admin: [
     ...Object.values(PERMISSIONS) // All permissions
-  ]
+  ],
+  
+  // Additional superadmin role variations
+  superadmin: [
+    ...Object.values(PERMISSIONS) // All permissions
+  ],
+  
+  superadmin_owner: [
+    ...Object.values(PERMISSIONS) // All permissions
+  ],
+  
+  superadmin_staff: [
+    ...Object.values(PERMISSIONS) // All permissions
+  ],
+  
+  superadmin_auditor: [
+    ...Object.values(PERMISSIONS) // All permissions except USER_IMPERSONATION for security
+  ].filter(p => p !== PERMISSIONS.USER_IMPERSONATION)
 };
 
 // Department-specific permission enhancements
@@ -268,6 +285,12 @@ export const FEATURE_PERMISSIONS = {
   invoice_access: [PERMISSIONS.VIEW_INVOICES],
   billing_portal: [PERMISSIONS.BILLING_ACCESS]
 };
+
+// Helper function to check if user has any superadmin role
+export function isSuperadmin(role: string): boolean {
+  const superadminRoles = ['super_admin', 'superadmin', 'superadmin_owner', 'superadmin_staff', 'superadmin_auditor'];
+  return superadminRoles.includes(role);
+}
 
 // Helper functions for permission checking
 export function getUserPermissions(userRole: string, department?: string): string[] {

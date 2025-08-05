@@ -89,10 +89,9 @@ export default function useAIAssistant() {
       }>;
       recommendations: string[];
     }> => {
-      const res = await apiRequest("POST", "/api/ai/optimize-itinerary", {
+      return await apiRequest("POST", "/api/ai/optimize-itinerary", {
         tripId,
       });
-      return res.json();
     },
   });
 

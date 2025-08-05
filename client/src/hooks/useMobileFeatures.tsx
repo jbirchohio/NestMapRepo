@@ -138,7 +138,7 @@ export function useMobileFeatures(): MobileFeatures {
 
   // Load offline data from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('nestmap_offline_data');
+    const saved = localStorage.getItem('remvana_offline_data');
     if (saved) {
       try {
         setOfflineData(JSON.parse(saved));
@@ -171,7 +171,7 @@ export function useMobileFeatures(): MobileFeatures {
       
       // Clear offline data after successful sync
       setOfflineData([]);
-      localStorage.removeItem('nestmap_offline_data');
+      localStorage.removeItem('remvana_offline_data');
     } catch (error) {
       console.error('Error syncing offline data:', error);
     }
@@ -263,7 +263,7 @@ export function useMobileFeatures(): MobileFeatures {
     const defaultOptions = {
       icon: '/icon-192x192.png',
       badge: '/icon-192x192.png',
-      tag: 'nestmap-notification',
+      tag: 'remvana-notification',
       ...options
     };
 
@@ -292,7 +292,7 @@ export function useMobileFeatures(): MobileFeatures {
       setTimeout(() => {
         sendNotification(
           'Travel Mode Active',
-          'VoyageOps is now tracking your journey and will send helpful updates!'
+          'Remvana is now tracking your journey and will send helpful updates!'
         );
       }, 1000);
     }

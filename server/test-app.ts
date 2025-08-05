@@ -21,6 +21,9 @@ const sessionStore = new PgSession({
   createTableIfMissing: true
 });
 
+// Export session store for cleanup in tests
+export { sessionStore };
+
 // Security headers middleware
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
@@ -65,10 +68,10 @@ app.use(jwtAuthMiddleware as any);
 // Enhanced session security middleware
 app.use(session({
   store: sessionStore,
-  secret: process.env.SESSION_SECRET || 'nestmap-test-secret',
+  secret: process.env.SESSION_SECRET || 'remvana-test-secret',
   resave: false,
   saveUninitialized: false,
-  name: 'nestmap.sid',
+  name: 'remvana.sid',
   cookie: { 
     secure: false, // Set to false for testing
     httpOnly: true,
@@ -94,5 +97,62 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     message: err.message || 'Internal server error'
   });
 });
+
+// Cleanup function for tests
+export const cleanupTestApp = async () => {
+  try {
+    console.log('Starting test app cleanup...');
+
+    // Clean up all intervals and timers
+    try {
+      const { stopBackupSchedule } = await import('./services/systemSettingsService');
+      stopBackupSchedule();
+    } catch (error) {
+      console.warn('Could not stop backup schedule:', error);
+    }
+
+    try {
+      const { stopAcmeCleanup } = await import('./acmeChallenge');
+      stopAcmeCleanup();
+    } catch (error) {
+      console.warn('Could not stop ACME cleanup:', error);
+    }
+
+    try {
+      const { stopPerformanceCleanup } = await import('./performance-monitor');
+      stopPerformanceCleanup();
+    } catch (error) {
+      console.warn('Could not stop performance cleanup:', error);
+    }
+
+    // Clean up WebSocket server if it exists
+    try {
+      const { collaborationWS } = await import('./websocket');
+      if (collaborationWS) {
+        await collaborationWS.cleanup();
+      }
+    } catch (error) {
+      console.warn('Could not cleanup WebSocket server:', error);
+    }
+
+    // Close session store connection
+    if (sessionStore) {
+      console.log('Closing session store...');
+      try {
+        // PgSession store has a close method that returns void
+        if (typeof sessionStore.close === 'function') {
+          sessionStore.close();
+          console.log('Session store closed successfully');
+        }
+      } catch (error) {
+        console.warn('Session store close warning:', error);
+      }
+    }
+
+    console.log('Test app cleanup completed');
+  } catch (error) {
+    console.warn('Test app cleanup warning:', error);
+  }
+};
 
 export { app };

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PROD_URL = process.env.PROD_URL || 'https://your-nestmap-production-url.com';
+const PROD_URL = process.env.PROD_URL || 'https://your-remvana-production-url.com';
 
 /**
  * Run shell command as a promise
@@ -38,7 +38,7 @@ const updateCapacitorConfig = () => {
     
     // Update the server URL for production
     configContent = configContent.replace(
-      /\/\/ url: 'https:\/\/nestmap\.vercel\.app'/,
+      /\/\/ url: 'https:\/\/remvana\.vercel\.app'/,
       `url: '${PROD_URL}'`
     );
     
@@ -56,7 +56,7 @@ const updateCapacitorConfig = () => {
  */
 async function prepareMobile() {
   try {
-    console.log('Preparing NestMap for mobile app stores...');
+    console.log('Preparing Remvana for mobile app stores...');
     
     // 1. Update capacitor config with production URL
     updateCapacitorConfig();
@@ -66,7 +66,7 @@ async function prepareMobile() {
     
     // 3. Initialize Capacitor if needed (first time)
     if (!fs.existsSync('capacitor.config.json')) {
-      await runCommand('npx cap init NestMap com.nestmap.app --web-dir=dist');
+      await runCommand('npx cap init Remvana com.remvana.app --web-dir=dist');
     }
     
     // 4. Copy the web assets to the Capacitor app

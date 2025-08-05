@@ -105,8 +105,8 @@ export function registerDomainRoutes(app: Express) {
         verification: {
           token: verificationToken,
           instructions: domain ? 
-            `Add CNAME record: ${domain} -> your-nestmap-domain.com` :
-            `Subdomain ${subdomain}.nestmap.com will be automatically configured`
+            `Add CNAME record: ${domain} -> your-remvana-domain.com` :
+            `Subdomain ${subdomain}.remvana.com will be automatically configured`
         }
       });
     } catch (error) {
