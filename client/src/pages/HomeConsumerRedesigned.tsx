@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
 import NewTripModalConsumer from "@/components/NewTripModalConsumer";
+import AITripChatModal from "@/components/AITripChatModal";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import { motion } from "framer-motion";
@@ -16,49 +17,66 @@ import {
   Camera, Heart, Zap, Globe, Star, ArrowRight
 } from "lucide-react";
 
-// Quick action cards for new users
-const quickActions = [
-  {
-    id: 'ai-plan',
-    icon: Sparkles,
-    title: 'AI Trip Planner',
-    description: 'Tell me your dream destination and I\'ll plan everything',
-    color: 'from-purple-500 to-pink-500',
-    bgColor: 'bg-purple-50',
-    iconColor: 'text-purple-600',
-    action: 'ai-chat'
-  },
-  {
-    id: 'quick-escape',
-    icon: Zap,
-    title: 'Weekend Getaway',
-    description: 'Find the perfect 2-3 day escape near you',
-    color: 'from-blue-500 to-cyan-500',
-    bgColor: 'bg-blue-50',
-    iconColor: 'text-blue-600',
-    action: 'quick-trip'
-  },
-  {
-    id: 'inspire',
-    icon: Compass,
-    title: 'Get Inspired',
-    description: 'Browse trending destinations and experiences',
-    color: 'from-green-500 to-emerald-500',
-    bgColor: 'bg-green-50',
-    iconColor: 'text-green-600',
-    action: 'explore'
-  },
-  {
-    id: 'group',
-    icon: Users,
-    title: 'Plan with Friends',
-    description: 'Create a shared trip and invite your crew',
-    color: 'from-orange-500 to-red-500',
-    bgColor: 'bg-orange-50',
-    iconColor: 'text-orange-600',
-    action: 'group-trip'
+// Quick action cards - dynamically adjust based on user state
+const getQuickActions = (hasAI: boolean, userTrips: number) => {
+  const baseActions = [
+    {
+      id: 'ai-plan',
+      icon: Sparkles,
+      title: 'AI Trip Planner',
+      description: hasAI ? 'Chat with AI to plan your perfect trip' : 'Coming soon - AI-powered trip planning',
+      color: 'from-purple-500 to-pink-500',
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+      action: 'ai-chat',
+      enabled: hasAI,
+      badge: !hasAI ? 'Coming Soon' : null
+    },
+    {
+      id: 'quick-escape',
+      icon: Zap,
+      title: 'Quick Trip',
+      description: 'Start planning a trip in seconds',
+      color: 'from-blue-500 to-cyan-500',
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      action: 'quick-trip',
+      enabled: true
+    }
+  ];
+
+  // Add more options as user engages
+  if (userTrips > 0) {
+    baseActions.push({
+      id: 'templates',
+      icon: Globe,
+      title: 'Trip Templates',
+      description: 'Use popular itineraries as a starting point',
+      color: 'from-green-500 to-emerald-500',
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600',
+      action: 'templates',
+      enabled: true
+    });
   }
-];
+
+  if (userTrips > 2) {
+    baseActions.push({
+      id: 'group',
+      icon: Users,
+      title: 'Group Planning',
+      description: 'Unlock after 3 trips - Plan with friends',
+      color: 'from-orange-500 to-red-500',
+      bgColor: 'bg-orange-50',
+      iconColor: 'text-orange-600',
+      action: 'group-trip',
+      enabled: userTrips > 2,
+      badge: userTrips <= 2 ? `${3 - userTrips} trips to unlock` : null
+    });
+  }
+
+  return baseActions;
+};
 
 // Trip template cards
 const tripTemplates = [
@@ -99,6 +117,7 @@ const tripTemplates = [
 export default function HomeConsumerRedesigned() {
   const [location, setLocation] = useLocation();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("signup");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
@@ -140,6 +159,12 @@ export default function HomeConsumerRedesigned() {
     return startDate >= new Date();
   });
 
+  // Check if OpenAI is configured
+  const hasAI = !!process.env.OPENAI_API_KEY || true; // For now, show AI as available
+  
+  // Get dynamic quick actions based on user progress
+  const quickActions = getQuickActions(hasAI, trips.length);
+
   const handleAction = (action: string) => {
     if (!user) {
       setAuthView("signup");
@@ -151,17 +176,18 @@ export default function HomeConsumerRedesigned() {
     
     switch(action) {
       case 'ai-chat':
-        // Will implement AI chat modal
-        setLocation('/trip/new?mode=ai');
+        setIsAIChatOpen(true);
         break;
       case 'quick-trip':
         setIsNewTripModalOpen(true);
         break;
       case 'explore':
-        setLocation('/explore');
+        // For now, just open new trip modal - explore page coming soon
+        setIsNewTripModalOpen(true);
         break;
       case 'group-trip':
-        setLocation('/trip/new?mode=group');
+        // For now, just open new trip modal with a note
+        setIsNewTripModalOpen(true);
         break;
       default:
         setIsNewTripModalOpen(true);
@@ -175,8 +201,9 @@ export default function HomeConsumerRedesigned() {
       return;
     }
     
-    // Will implement template-based trip creation
-    setLocation(`/trip/new?template=${templateId}`);
+    // For now, just open the new trip modal
+    // TODO: Pass template data to pre-fill the form
+    setIsNewTripModalOpen(true);
   };
 
   const handleTripCreated = (trip: any) => {
@@ -290,21 +317,40 @@ export default function HomeConsumerRedesigned() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card 
-                  className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-0 overflow-hidden"
-                  onClick={() => handleAction(action.action)}
+                  className={`group transition-all duration-300 border-0 overflow-hidden relative ${
+                    action.enabled 
+                      ? 'cursor-pointer hover:shadow-xl' 
+                      : 'opacity-75 cursor-not-allowed'
+                  }`}
+                  onClick={() => action.enabled && handleAction(action.action)}
                 >
-                  <div className={`h-2 bg-gradient-to-r ${action.color}`} />
+                  {action.badge && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <span className="text-xs bg-gray-900 text-white px-2 py-1 rounded-full">
+                        {action.badge}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`h-2 bg-gradient-to-r ${action.color} ${!action.enabled ? 'opacity-50' : ''}`} />
                   <CardHeader className="pb-4">
-                    <div className={`w-12 h-12 ${action.bgColor} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <div className={`w-12 h-12 ${action.bgColor} rounded-xl flex items-center justify-center mb-4 ${
+                      action.enabled ? 'group-hover:scale-110' : ''
+                    } transition-transform`}>
                       <action.icon className={`h-6 w-6 ${action.iconColor}`} />
                     </div>
                     <CardTitle className="text-lg">{action.title}</CardTitle>
                     <CardDescription>{action.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
-                      <span className="text-sm font-medium">Get started</span>
-                      <ArrowRight className="h-4 w-4" />
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-between p-0 h-auto hover:bg-transparent"
+                      disabled={!action.enabled}
+                    >
+                      <span className="text-sm font-medium">
+                        {action.enabled ? 'Get started' : 'Locked'}
+                      </span>
+                      <ArrowRight className={`h-4 w-4 ${!action.enabled ? 'opacity-50' : ''}`} />
                     </Button>
                   </CardContent>
                 </Card>
@@ -419,37 +465,74 @@ export default function HomeConsumerRedesigned() {
             </motion.div>
           )}
 
-          {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-center py-12 border-t"
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div>
-                <div className="text-3xl font-bold text-purple-600">1M+</div>
-                <p className="text-gray-600 text-sm">Trips planned</p>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-purple-600">4.9</div>
-                <div className="flex justify-center mb-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
-                  ))}
+          {/* Features for non-logged in users */}
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="text-center py-12 border-t"
+            >
+              <h3 className="text-2xl font-bold text-gray-900 mb-8">Why travelers love Remvana</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div>
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <h4 className="font-semibold mb-2">AI-Powered Planning</h4>
+                  <p className="text-gray-600 text-sm">
+                    Chat with AI to create personalized itineraries in seconds
+                  </p>
                 </div>
-                <p className="text-gray-600 text-sm">User rating</p>
+                <div>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Heart className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h4 className="font-semibold mb-2">Save Time & Stress</h4>
+                  <p className="text-gray-600 text-sm">
+                    No more juggling multiple tabs - everything in one place
+                  </p>
+                </div>
+                <div>
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h4 className="font-semibold mb-2">Plan Together</h4>
+                  <p className="text-gray-600 text-sm">
+                    Share trips and collaborate with friends and family
+                  </p>
+                </div>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-purple-600">50+</div>
-                <p className="text-gray-600 text-sm">Countries</p>
+            </motion.div>
+          )}
+
+          {/* User Stats - Only show real data */}
+          {user && trips.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="text-center py-8 border-t"
+            >
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Your travel stats</h3>
+              <div className="flex justify-center gap-12">
+                <div>
+                  <div className="text-3xl font-bold text-purple-600">{trips.length}</div>
+                  <p className="text-gray-600 text-sm">Trips planned</p>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-purple-600">{upcomingTrips.length}</div>
+                  <p className="text-gray-600 text-sm">Upcoming</p>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-purple-600">
+                    {trips.filter(t => new Date(t.endDate) < new Date()).length}
+                  </div>
+                  <p className="text-gray-600 text-sm">Completed</p>
+                </div>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-purple-600">24/7</div>
-                <p className="text-gray-600 text-sm">AI assistance</p>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -458,6 +541,11 @@ export default function HomeConsumerRedesigned() {
         isOpen={isNewTripModalOpen}
         onClose={() => setIsNewTripModalOpen(false)}
         onTripCreated={handleTripCreated}
+      />
+
+      <AITripChatModal
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
       />
 
       {isAuthModalOpen && (
