@@ -9,9 +9,11 @@ import notesRoutes from './notes';
 import aiRoutes from './ai';
 import healthRoutes from './health';
 import flightRoutes from './flights';
+import hotelRoutes from './hotels';
 import weatherRoutes from './weather';
 import viatorRoutes from './viator';
 import consumerBookingsRouter from './bookings-consumer';
+import packageRoutes from './packages';
 
 const router = Router();
 
@@ -25,9 +27,11 @@ router.use('/notes', notesRoutes);
 router.use('/ai', aiRoutes);
 router.use('/health', healthRoutes);
 router.use('/flights', flightRoutes);
+router.use('/hotels', hotelRoutes);
 router.use('/weather', weatherRoutes);
 router.use('/viator', viatorRoutes);
 router.use('/consumer/bookings', consumerBookingsRouter);
+router.use('/packages', packageRoutes);
 
 // Templates endpoint
 router.get('/templates', async (req, res) => {
