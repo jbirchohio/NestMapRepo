@@ -140,6 +140,14 @@ class JWTAuth {
     this.token = token;
     this.notifyListeners();
   }
+
+  // Set auth state (for social login)
+  setAuth(token: string, user: User): void {
+    this.token = token;
+    this.user = user;
+    localStorage.setItem('auth_token', token);
+    this.notifyListeners();
+  }
 }
 
 export const jwtAuth = new JWTAuth();

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/contexts/JWTAuthContext';
+import { jwtAuth } from '@/lib/jwtAuth';
 import { Loader2 } from 'lucide-react';
 
 // Google Sign In
@@ -22,7 +22,6 @@ export default function SocialAuthButtons({ mode, onSuccess }: SocialAuthButtons
   const [providers, setProviders] = useState<any[]>([]);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
 
   // Load available providers
   useEffect(() => {
@@ -58,12 +57,8 @@ export default function SocialAuthButtons({ mode, onSuccess }: SocialAuthButtons
 
       const data = await res.json();
       
-      // Store token and user data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      // Update auth context
-      login(data.token, data.user);
+      // Update auth using jwtAuth
+      jwtAuth.setAuth(data.token, data.user);
       
       toast({
         title: 'Success!',
