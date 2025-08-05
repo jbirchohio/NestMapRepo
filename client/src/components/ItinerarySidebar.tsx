@@ -7,8 +7,6 @@ import { formatDateRange, formatDate } from "@/lib/constants";
 import { ClientTrip, ClientActivity, Todo } from "@/lib/types";
 import ActivityTimeline from "./ActivityTimeline";
 import EnhancedAIAssistantModal from "./EnhancedAIAssistantModal";
-import { TripTeamManagement } from "./TripTeamManagement";
-
 import PdfExport from "./PdfExport";
 import { ItineraryOptimizationModal } from "./ItineraryOptimizationModal";
 import { useMutation } from "@tanstack/react-query";
