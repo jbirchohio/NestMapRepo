@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   userId: number | null;
-  roleType: 'corporate' | 'agency' | null;
   loading: boolean;
   authReady: boolean;
   error: string | null;
@@ -20,7 +19,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
-  const [roleType, setRoleType] = useState<'corporate' | 'agency' | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (currentUser) {
           setUser(currentUser);
           setUserId(currentUser.id);
-          setRoleType(currentUser.role === 'corporate' ? 'corporate' : 'agency');
         } else {
           setUser(null);
           setUserId(null);
-          setRoleType(null);
         }
         
         setAuthReady(true);
@@ -49,7 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError(error instanceof Error ? error.message : 'Failed to load user');
         setUser(null);
         setUserId(null);
-        setRoleType(null);
         setAuthReady(true);
       } finally {
         setLoading(false);
@@ -63,11 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         setUser(user);
         setUserId(user.id);
-        setRoleType(user.role === 'corporate' ? 'corporate' : 'agency');
       } else {
         setUser(null);
         setUserId(null);
-        setRoleType(null);
       }
     });
 
@@ -88,7 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         setUser(user);
         setUserId(user.id);
-        setRoleType(user.role === 'corporate' ? 'corporate' : 'agency');
         
         toast({
           title: "Welcome back!",
@@ -123,7 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         setUser(user);
         setUserId(user.id);
-        setRoleType(user.role === 'corporate' ? 'corporate' : 'agency');
         
         toast({
           title: "Account created!",
@@ -149,7 +140,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       jwtAuth.signOut();
       setUser(null);
       setUserId(null);
-      setRoleType(null);
       
       toast({
         title: "Signed out",
@@ -190,7 +180,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     userId,
-    roleType,
     loading,
     authReady,
     error,
