@@ -15,7 +15,16 @@ interface GoogleSignInProps {
 }
 
 export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) {
+  // Use the same client ID that was working before
+  const clientId = '856158383068-c7806t6cmp3d26epm1cuktdmp299crfh.apps.googleusercontent.com';
+  
   useEffect(() => {
+    // Check if client ID is configured
+    if (!clientId) {
+      console.warn('Google Sign-In: VITE_GOOGLE_CLIENT_ID not configured');
+      return;
+    }
+
     // Load Google Sign-In script
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
@@ -24,9 +33,9 @@ export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) 
     document.body.appendChild(script);
 
     script.onload = () => {
-      if (window.google) {
+      if (window.google && clientId) {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: clientId,
           callback: handleGoogleResponse,
           auto_select: false,
           cancel_on_tap_outside: true,
@@ -35,13 +44,15 @@ export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) 
     };
 
     return () => {
-      document.body.removeChild(script);
+      if (script.parentNode) {
+        document.body.removeChild(script);
+      }
     };
-  }, []);
+  }, [clientId]);
 
   const handleGoogleResponse = async (response: any) => {
     try {
-      const res = await fetch('/api/auth/google', {
+      const res = await fetch('/api/auth/social/google', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,12 +79,17 @@ export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) 
   };
 
   const handleGoogleSignIn = () => {
+    if (!clientId) {
+      onError?.('Google Sign-In is not configured. Please add VITE_GOOGLE_CLIENT_ID to your environment variables.');
+      return;
+    }
+    
     if (window.google) {
       window.google.accounts.id.prompt((notification: any) => {
         if (notification.isNotDisplayed()) {
           // If One Tap is not displayed, fall back to button flow
           const tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            client_id: clientId,
             scope: 'email profile',
             callback: (response: any) => {
               // For OAuth2 flow, we get an access token

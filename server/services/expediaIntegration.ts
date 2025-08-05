@@ -213,5 +213,5 @@ export class ExpediaIntegration {
 
 // Singleton instance
 export const expediaService = new ExpediaIntegration(
-  process.env.EXPEDIA_AFFILIATE_ID || 'your-affiliate-id'
+  process.env.EXPEDIA_AFFILIATE_ID || ''
 );

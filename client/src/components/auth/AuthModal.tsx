@@ -133,6 +133,7 @@ export default function AuthModal({
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="your@email.com"
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -145,6 +146,7 @@ export default function AuthModal({
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   placeholder={view === 'login' ? 'Enter your password' : 'Choose a secure password'}
+                  autoComplete={view === 'login' ? 'current-password' : 'new-password'}
                   required
                   minLength={view === 'signup' ? 6 : undefined}
                 />

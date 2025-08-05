@@ -569,20 +569,22 @@ export default function HomeConsumerRedesigned() {
       />
 
       {/* Package Search Modal */}
-      <Dialog open={isPackageSearchOpen} onOpenChange={setIsPackageSearchOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Package className="w-6 h-6 text-purple-600" />
-              Flight + Hotel Packages
-            </DialogTitle>
-            <DialogDescription>
-              Save an average of 22% when you book together
-            </DialogDescription>
-          </DialogHeader>
-          <PackageSearch />
-        </DialogContent>
-      </Dialog>
+      {isPackageSearchOpen && (
+        <Dialog open={isPackageSearchOpen} onOpenChange={setIsPackageSearchOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                <Package className="w-6 h-6 text-purple-600" />
+                Flight + Hotel Packages
+              </DialogTitle>
+              <DialogDescription>
+                Save an average of 22% when you book together
+              </DialogDescription>
+            </DialogHeader>
+            <PackageSearch />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {isAuthModalOpen && (
         <AuthModal
