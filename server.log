@@ -1,0 +1,58 @@
+
+> remvana@1.0.0 dev
+> cross-env NODE_ENV=development tsx --require dotenv/config server/index.ts
+
+
+🚀 === STARTUP ENVIRONMENT CHECK ===
+📅 Timestamp: 2025-08-06T17:50:59.576Z
+🖥️  Platform: win32
+🔧 Node Version: v22.14.0
+📦 NPM Version: unknown
+
+🔐 CRITICAL ENVIRONMENT VARIABLES:
+  NODE_ENV: ✅ development
+  DATABASE_URL: ✅ SET
+  SESSION_SECRET: ✅ SET
+  JWT_SECRET: ✅ SET
+  CORS_ORIGIN: ✅ http://localhost:3000
+  PORT: ✅ 5000
+
+📋 ALL ENVIRONMENT VARIABLES:
+  Total count: 156
+  Variables: ACLOCAL_PATH, ALLUSERSPROFILE, AMAZON_INCENTIVES_PARTNER_ID, APPDATA, BASE_URL, BCRYPT_SALT_ROUNDS, CLAUDECODE, CLAUDE_CODE_ENTRYPOINT, COLOR, COMMONPROGRAMFILES, COMPUTERNAME, COMSPEC, CONFIG_SITE, COREPACK_ENABLE_AUTO_PIN, CORS_ORIGIN, ChocolateyInstall, ChocolateyLastPathUpdate, CommonProgramFiles(x86), CommonProgramW6432, DEMO_RESET_INTERVAL, DISPLAY, DOMAIN, DriverData, EDITOR, ENABLE_ANALYTICS, ENABLE_BILLING, ENABLE_DEMO_MODE, ENABLE_NOTIFICATIONS, ENABLE_WHITE_LABEL, EXEPATH, GIT_EDITOR, HOME, HOMEDRIVE, HOMEPATH, HOSTNAME, INFOPATH, INIT_CWD, LANG, LOCALAPPDATA, LOGONSERVER, LOGTAIL_SOURCE_TOKEN, MANPATH, MINGW_CHOST, MINGW_PACKAGE_PREFIX, MINGW_PREFIX, MSYSTEM, MSYSTEM_CARCH, MSYSTEM_CHOST, MSYSTEM_PREFIX, NODE, NODE_ENV, NUMBER_OF_PROCESSORS, ORIGINAL_PATH, ORIGINAL_TEMP, ORIGINAL_TMP, OS, OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE, OneDrive, OneDriveConsumer, PATH, PATHEXT, PAYPAL_CLIENT_ID, PAYPAL_MODE, PKG_CONFIG_PATH, PKG_CONFIG_SYSTEM_INCLUDE_PATH, PKG_CONFIG_SYSTEM_LIBRARY_PATH, PLINK_PROTOCOL, PORT, PROCESSOR_ARCHITECTURE, PROCESSOR_IDENTIFIER, PROCESSOR_LEVEL, PROCESSOR_REVISION, PROGRAMFILES, PROMPT, PSModulePath, PUBLIC, PWD, PostgreSQL, ProgramData, ProgramFiles(x86), ProgramW6432, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS, SENDGRID_FROM_EMAIL, SENTRY_DSN, SESSIONNAME, SHELL, SHLVL, SLACK_BOT_TOKEN, SLACK_WEBHOOK_URL, SSH_ASKPASS, SSL_CERT_PATH, STRIPE_CONNECT_CLIENT_ID, SYSTEMDRIVE, SYSTEMROOT, TEMP, TERM, TMP, TMPDIR, TREMENDOUS_MODE, USERDOMAIN, USERDOMAIN_ROAMINGPROFILE, USERNAME, USERPROFILE, VAPID_SUBJECT, VIATOR_MCID, VIATOR_PARTNER_ID, VITE_MAPBOX_TOKEN, VITE_SUPABASE_URL, WINDIR, WSLENV, WT_PROFILE_ID, WT_SESSION, _, npm_command, npm_config_cache, npm_config_global_prefix, npm_config_globalconfig, npm_config_init_module, npm_config_local_prefix, npm_config_node_gyp, npm_config_noproxy, npm_config_npm_version, npm_config_prefix, npm_config_user_agent, npm_config_userconfig, npm_execpath, npm_lifecycle_event, npm_lifecycle_script, npm_node_execpath, npm_package_json, npm_package_name, npm_package_version
+ℹ️ @sentry/node not found - error monitoring disabled
+⚠️ Sentry not available - monitoring disabled
+🔍 CORS Debug: {
+  NODE_ENV: 'development',
+  CORS_ORIGIN: 'http://localhost:3000',
+  ALL_ENV_KEYS: [ 'CORS_ORIGIN' ],
+  TOTAL_ENV_VARS: 156,
+  RAILWAY_ENV: undefined,
+  PORT: '5000',
+  DATABASE_URL_EXISTS: true
+}
+⚠️  Using development SESSION_SECRET - NOT suitable for production
+ℹ️ Puppeteer not installed - PDF generation disabled
+OpenAI API Key configured: sk-proj-Lu...0-gA
+✅ Loaded .env file for development
+🚀 Starting server initialization...
+
+✅ Startup check completed
+⚠️ Sentry not available - monitoring disabled
+🔧 Environment check:
+  - NODE_ENV: development
+  - DATABASE_URL loaded: true
+  - JWT_SECRET loaded: true
+  - SENTRY_DSN loaded: true
+📍 Mounting API routes...
+✅ API routes mounted successfully
+1:51:01 PM [express] serving on http://0.0.0.0:5000
+[2m1:51:18 PM[22m [31m[1m[vite][22m[39m Pre-transform error: C:\Users\Jonas\Desktop\NestMapRepo\client\src\pages\TemplateDetails.tsx: Identifier 'ShareModal' has already been declared. (566:9)
+
+[0m [90m 564 |[39m
+ [90m 565 |[39m [90m// Share Modal Component[39m
+[31m[1m>[22m[39m[90m 566 |[39m [36mfunction[39m [33mShareModal[39m({ 
+ [90m     |[39m          [31m[1m^[22m[39m
+ [90m 567 |[39m   isOpen[33m,[39m 
+ [90m 568 |[39m   onClose[33m,[39m 
+ [90m 569 |[39m   template[33m,[39m [0m

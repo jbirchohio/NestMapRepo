@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, SlidersHorizontal, TrendingUp, Clock, DollarSign, MapPin, Star, Users, Grid, List } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, TrendingUp, Clock, DollarSign, MapPin, Star, Users, Grid, List, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,10 +75,12 @@ export default function TemplateMarketplace() {
             className="text-center"
           >
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Discover Perfect Trip Templates
+              {templates?.length ? 'Discover Perfect Trip Templates' : 'Be the First Creator'}
             </h1>
             <p className="text-xl text-purple-100 max-w-2xl mx-auto">
-              Skip the planning, jump straight to exploring. Hand-crafted itineraries by travel experts.
+              {templates?.length 
+                ? 'Skip the planning, jump straight to exploring. Hand-crafted itineraries by fellow travelers.'
+                : 'Join our new creator marketplace. Share your travel experiences and earn from your adventures.'}
             </p>
           </motion.div>
 
@@ -100,7 +102,7 @@ export default function TemplateMarketplace() {
             </div>
           </motion.div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats - Real Numbers */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -108,16 +110,16 @@ export default function TemplateMarketplace() {
             className="mt-8 grid grid-cols-3 gap-4 max-w-xl mx-auto"
           >
             <div className="text-center">
-              <div className="text-2xl font-bold">{templates?.length || '500+'}</div>
+              <div className="text-2xl font-bold">{templates?.length || 0}</div>
               <div className="text-sm text-purple-100">Templates</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">50+</div>
-              <div className="text-sm text-purple-100">Destinations</div>
+              <div className="text-2xl font-bold">New</div>
+              <div className="text-sm text-purple-100">Platform</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">100+</div>
-              <div className="text-sm text-purple-100">Creators</div>
+              <div className="text-2xl font-bold">Join</div>
+              <div className="text-sm text-purple-100">Early</div>
             </div>
           </motion.div>
         </div>
@@ -304,8 +306,62 @@ export default function TemplateMarketplace() {
               </div>
             ) : (
               <Card className="p-12 text-center">
-                <p className="text-gray-500 mb-4">No templates found matching your criteria</p>
-                <Button onClick={clearFilters}>Clear filters</Button>
+                {hasFilters ? (
+                  <>
+                    <p className="text-gray-500 mb-4">No templates found matching your criteria</p>
+                    <Button onClick={clearFilters}>Clear filters</Button>
+                  </>
+                ) : (
+                  <div className="max-w-md mx-auto">
+                    <div className="mb-6">
+                      <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <TrendingUp className="h-12 w-12 text-purple-600" />
+                      </div>
+                      <h3 className="text-2xl font-bold mb-2">Be Among the First</h3>
+                      <p className="text-gray-600 mb-6">
+                        We're a brand new marketplace. Create the first travel templates and become a founding creator with early-mover advantages.
+                      </p>
+                    </div>
+                    <div className="space-y-4 text-left mb-6">
+                      <div className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div>
+                          <p className="font-semibold">70% Revenue Share</p>
+                          <p className="text-sm text-gray-600">Keep most of what you earn</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div>
+                          <p className="font-semibold">Featured Creator Status</p>
+                          <p className="text-sm text-gray-600">Early creators get special recognition</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div>
+                          <p className="font-semibold">Shape the Platform</p>
+                          <p className="text-sm text-gray-600">Your feedback drives our features</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 justify-center">
+                      <Button 
+                        size="lg"
+                        onClick={() => window.location.href = '/trips'}
+                      >
+                        Create Your First Template
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        onClick={() => window.location.href = '/auth/register'}
+                      >
+                        Sign Up
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </Card>
             )}
           </div>

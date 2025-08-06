@@ -498,7 +498,6 @@ export default function TemplateDetails() {
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
           template={template}
-          onShare={trackShare}
         />
       )}
     </div>
@@ -558,73 +557,6 @@ function ReviewCard({ review }: { review: ClientTemplateReview }) {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// Share Modal Component
-function ShareModal({ 
-  isOpen, 
-  onClose, 
-  template, 
-  onShare 
-}: { 
-  isOpen: boolean;
-  onClose: () => void;
-  template: ClientTemplate;
-  onShare: (platform: string) => void;
-}) {
-  const shareUrl = `${window.location.origin}/templates/${template.slug}`;
-  const shareText = `Check out this amazing ${template.duration}-day trip to ${template.destinations[0]}!`;
-
-  const handleShare = (platform: string) => {
-    onShare(platform);
-    
-    switch (platform) {
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`);
-        break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
-        break;
-      case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`);
-        break;
-      case 'copy':
-        navigator.clipboard.writeText(shareUrl);
-        break;
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader>
-          <CardTitle>Share Template</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={() => handleShare('twitter')}>
-              <Twitter className="h-4 w-4 mr-2" />
-              Twitter
-            </Button>
-            <Button variant="outline" onClick={() => handleShare('facebook')}>
-              Facebook
-            </Button>
-            <Button variant="outline" onClick={() => handleShare('whatsapp')}>
-              WhatsApp
-            </Button>
-            <Button variant="outline" onClick={() => handleShare('copy')}>
-              Copy Link
-            </Button>
-          </div>
-          <Button className="w-full mt-4" variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
