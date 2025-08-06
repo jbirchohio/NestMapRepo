@@ -17,7 +17,7 @@ import {
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import NewTripModalConsumer from '@/components/NewTripModalConsumer';
-import AuthModal from '@/components/auth/AuthModal';
+import AuthModalSimple from '@/components/auth/AuthModalSimple';
 import { 
   Menu,
   X, 
@@ -252,7 +252,7 @@ export default function MainNavigationConsumer() {
 
       {/* Auth Modal */}
       {showAuthModal && (
-        <AuthModal
+        <AuthModalSimple
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           initialView={authView}
