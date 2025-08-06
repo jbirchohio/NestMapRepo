@@ -211,23 +211,27 @@ export default function MainNavigationConsumer() {
                       </>
                     ) : (
                       <>
-                        <Link href="/login">
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            Log in
-                          </Button>
-                        </Link>
-                        <Link href="/signup">
-                          <Button
-                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            Sign up
-                          </Button>
-                        </Link>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setAuthView('login');
+                            setShowAuthModal(true);
+                          }}
+                        >
+                          Log in
+                        </Button>
+                        <Button
+                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setAuthView('signup');
+                            setShowAuthModal(true);
+                          }}
+                        >
+                          Sign up
+                        </Button>
                       </>
                     )}
                   </div>
