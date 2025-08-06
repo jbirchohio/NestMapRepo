@@ -106,7 +106,7 @@ export class ViatorService {
    */
   async searchActivities(params: ViatorSearchParams): Promise<ViatorProduct[]> {
     try {
-      console.log('Viator searchActivities called with params:', params);
+      // console.log('Viator searchActivities called with params:', params);
       
       // For now, use New York as default destination
       // TODO: Get proper destId based on location
@@ -129,9 +129,10 @@ export class ViatorService {
       };
 
       const url = `${VIATOR_API_URL}/products/search`;
-      console.log('Viator API URL:', url);
-      console.log('Viator API request body:', JSON.stringify(requestBody));
-      console.log('Viator API headers:', this.headers);
+      // Removed verbose logging to prevent Railway rate limits
+      // console.log('Viator API URL:', url);
+      // console.log('Viator API request body:', JSON.stringify(requestBody));
+      // console.log('Viator API headers:', this.headers);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -174,7 +175,7 @@ export class ViatorService {
       return filteredProducts.slice(0, 5).map((product: any) => {
         // Log the first product to see its structure
         if (filteredProducts.indexOf(product) === 0) {
-          console.log('First Viator product structure:', JSON.stringify(product, null, 2));
+          // console.log('First Viator product structure:', JSON.stringify(product, null, 2));
         }
         
         return {
@@ -224,7 +225,7 @@ export class ViatorService {
     const affiliateLink = `https://www.viator.com/tours/${productCode}?pid=${VIATOR_PARTNER_ID}&mcid=${VIATOR_MCID}&medium=link&medium_version=selector`;
     
     // Log affiliate link generation for tracking
-    console.log('Viator affiliate link generated:', {
+    // console.log('Viator affiliate link generated:', {
       productCode,
       partnerId: VIATOR_PARTNER_ID,
       mcid: VIATOR_MCID,
@@ -256,7 +257,7 @@ export class ViatorService {
         destId = 645; // Los Angeles
       }
       
-      console.log(`Mapped coordinates (${latitude}, ${longitude}) to destination ID: ${destId}`);
+      // console.log(`Mapped coordinates (${latitude}, ${longitude}) to destination ID: ${destId}`);
       
       return this.searchActivities({
         destId,

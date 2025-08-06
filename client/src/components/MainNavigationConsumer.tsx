@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import NewTripModalConsumer from '@/components/NewTripModalConsumer';
+import AuthModal from '@/components/auth/AuthModal';
 import { 
   Menu,
   X, 
@@ -38,6 +39,8 @@ export default function MainNavigationConsumer() {
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNewTripModal, setShowNewTripModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
 
   const handleLogout = async () => {
     try {
@@ -135,15 +138,25 @@ export default function MainNavigationConsumer() {
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href="/login">
-                      Log in
-                    </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setAuthView('login');
+                      setShowAuthModal(true);
+                    }}
+                  >
+                    Log in
                   </Button>
-                  <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white" asChild>
-                    <Link href="/signup">
-                      Sign up
-                    </Link>
+                  <Button 
+                    size="sm" 
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
+                    onClick={() => {
+                      setAuthView('signup');
+                      setShowAuthModal(true);
+                    }}
+                  >
+                    Sign up
                   </Button>
                 </div>
               )}
@@ -233,6 +246,16 @@ export default function MainNavigationConsumer() {
             setShowNewTripModal(false);
             setLocation(`/trip/${tripId}`);
           }}
+        />
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          initialView={authView}
+          redirectPath="/"
         />
       )}
     </>

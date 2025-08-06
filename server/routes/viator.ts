@@ -8,7 +8,8 @@ const router = Router();
  */
 router.post('/search', async (req, res) => {
   try {
-    console.log('Viator search request body:', req.body);
+    // Removed verbose logging - was flooding Railway logs
+    // console.log('Viator search request body:', req.body);
     
     const { latitude, longitude, activity_name, activityName, startDate, endDate } = req.body;
     
@@ -16,7 +17,7 @@ router.post('/search', async (req, res) => {
     const searchName = activityName || activity_name;
 
     if (!searchName) {
-      console.log('Missing activity name. Body keys:', Object.keys(req.body));
+      // console.log('Missing activity name. Body keys:', Object.keys(req.body));
       return res.status(400).json({ error: 'Activity name is required' });
     }
 
