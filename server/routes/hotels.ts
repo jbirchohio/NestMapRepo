@@ -34,13 +34,8 @@ router.post('/search', jwtAuthMiddleware, async (req, res) => {
       rooms: params.rooms
     });
 
-    // Add tracking URLs if user is logged in
-    const hotelsWithTracking = hotels.map(hotel => ({
-      ...hotel,
-      bookingUrl: userId 
-        ? expediaService.createTrackingUrl(hotel.bookingUrl, params.tripId, userId.toString())
-        : hotel.bookingUrl
-    }));
+    // Hotel search has been removed
+    const hotelsWithTracking = [];
 
     res.json({ hotels: hotelsWithTracking });
   } catch (error) {
@@ -55,11 +50,7 @@ router.post('/search', jwtAuthMiddleware, async (req, res) => {
     
     res.status(500).json({ 
       error: 'Hotel search failed',
-      fallbackUrl: expediaService.generateHotelSearchUrl({
-        destination: req.body.destination || '',
-        checkIn: req.body.checkIn || '',
-        checkOut: req.body.checkOut || ''
-      })
+      fallbackUrl: '#'
     });
   }
 });

@@ -9,7 +9,7 @@ import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
 import NewTripModalConsumer from "@/components/NewTripModalConsumer";
 import AITripChatModal from "@/components/AITripChatModal";
-import PackageSearch from "@/components/PackageSearch";
+// Removed PackageSearch import
 import PopularDestinations from "@/components/PopularDestinations";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModal from "@/components/auth/AuthModal";
@@ -136,7 +136,6 @@ export default function HomeConsumerRedesigned() {
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isPackageSearchOpen, setIsPackageSearchOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("signup");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   
@@ -200,11 +199,10 @@ export default function HomeConsumerRedesigned() {
         setIsNewTripModalOpen(true);
         break;
       case 'package-search':
-        setIsPackageSearchOpen(true);
+        // Package search removed
         break;
       case 'explore':
-        // For now, just open new trip modal - explore page coming soon
-        setIsNewTripModalOpen(true);
+        setLocation('/explore');
         break;
       case 'group-trip':
         // For now, just open new trip modal with a note
@@ -572,23 +570,6 @@ export default function HomeConsumerRedesigned() {
         onClose={() => setIsAIChatOpen(false)}
       />
 
-      {/* Package Search Modal */}
-      {isPackageSearchOpen && (
-        <Dialog open={isPackageSearchOpen} onOpenChange={setIsPackageSearchOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                <Package className="w-6 h-6 text-purple-600" />
-                Flight + Hotel Packages
-              </DialogTitle>
-              <DialogDescription>
-                Save an average of 22% when you book together
-              </DialogDescription>
-            </DialogHeader>
-            <PackageSearch />
-          </DialogContent>
-        </Dialog>
-      )}
 
       {isAuthModalOpen && (
         <AuthModal

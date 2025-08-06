@@ -22,6 +22,7 @@ import FlightResults from "@/pages/FlightResults";
 import BookingConfirmation from "@/pages/BookingConfirmation";
 import DestinationGuide from "@/pages/DestinationGuide";
 import NotFound from "@/pages/not-found";
+import Explore from "@/pages/Explore";
 
 function NavigationWrapper() {
   const { user } = useAuth();
@@ -55,6 +56,7 @@ function Router() {
               return <HomeConsumerRedesigned />;
             }}
           </Route>
+          <Route path="/explore" component={Explore} />
           <Route path="/trip/:id" component={TripPlanner} />
           <Route path="/trip-planner/:id" component={TripPlanner} />
           <Route path="/trip-planner" component={TripPlanner} />

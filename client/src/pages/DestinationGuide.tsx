@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import MetaTags from '@/components/seo/MetaTags';
 import { generateMetadata, generateFAQSchema, generateBreadcrumbSchema } from '@/lib/seo/metadata';
-import HotelSearch from '@/components/HotelSearch';
-import PackageSearch from '@/components/PackageSearch';
+// Removed hotel and package search components
 import { 
   MapPin, Calendar, Utensils, Car, Hotel, Plane, 
   Info, Star, TrendingUp, Heart, Camera, Sun
@@ -140,8 +139,6 @@ export default function DestinationGuide() {
             <div className="flex gap-8 overflow-x-auto py-4">
               {[
                 { id: 'overview', label: 'Overview', icon: Info },
-                { id: 'hotels', label: 'Hotels', icon: Hotel },
-                { id: 'packages', label: 'Packages', icon: Plane },
                 { id: 'activities', label: 'Activities', icon: Camera }
               ].map(tab => (
                 <button
@@ -296,20 +293,6 @@ export default function DestinationGuide() {
                   </CardContent>
                 </Card>
               </div>
-            </div>
-          )}
-          
-          {activeTab === 'hotels' && (
-            <div>
-              <h2 className="text-3xl font-bold mb-6">Hotels in {destinationName}</h2>
-              <HotelSearch destination={destinationName} />
-            </div>
-          )}
-          
-          {activeTab === 'packages' && (
-            <div>
-              <h2 className="text-3xl font-bold mb-6">Flight + Hotel Packages to {destinationName}</h2>
-              <PackageSearch destination={destinationName} />
             </div>
           )}
           

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '../middleware/jwtAuth';
-import { expediaService } from '../services/expediaIntegration';
+// Removed expediaService import
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -64,24 +64,13 @@ router.post('/generate-url', jwtAuthMiddleware, async (req, res) => {
       }
     }
 
-    // Generate the package URL
-    const packageUrl = expediaService.generatePackageUrl({
-      from: fromCode.toUpperCase(),
-      to: toCode.toUpperCase(),
-      depart: params.depart,
-      returnDate: params.returnDate,
-      adults: params.adults,
-      rooms: params.rooms
-    });
-
-    // Add tracking if user is logged in
-    const trackedUrl = userId 
-      ? expediaService.createTrackingUrl(packageUrl, params.tripId, userId.toString())
-      : packageUrl;
+    // Package search has been removed
+    const packageUrl = '#';
+    const trackedUrl = '#';
 
     res.json({ 
       url: trackedUrl,
-      savings: expediaService.calculateBundleSavings(600, 400) // Example calculation
+      savings: { percentage: 0, savings: 0, total: 0 } // Removed calculation
     });
   } catch (error) {
     logger.error('Package URL generation error', { error });
