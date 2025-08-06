@@ -14,8 +14,11 @@ import {
 
 dotenv.config();
 
+// Use Railway URL directly for seeding
+const RAILWAY_URL = "postgresql://postgres:VzwcdGSjRqKxBtrpMcdjBgQYjaGDqhWN@shuttle.proxy.rlwy.net:20957/railway";
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: RAILWAY_URL,
 });
 
 const db = drizzle(pool);
