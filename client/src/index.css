@@ -470,10 +470,20 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
     zoom: 1;
   }
 
-  /* Let dialog component handle its own positioning for proper centering */
+  /* Force proper centering on mobile */
+  [data-radix-dialog-content] {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 2rem) !important;
+    max-width: 400px !important;
+    max-height: 85vh !important;
+    margin: 0 !important;
+  }
 
   .modal-content, [role="dialog"] .card, [data-radix-dialog-content] .card {
-    max-width: 90vw;
+    max-width: 100%;
     width: 100%;
     font-size: 14px;
   }
