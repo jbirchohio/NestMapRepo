@@ -236,9 +236,23 @@ export default function Explore() {
                 placeholder="Search any city..."
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && selectedCity.trim()) {
+                    // Force re-render of ViatorMarketplace with new city
+                    setSelectedCity(selectedCity.trim());
+                  }
+                }}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => {
+                  // Force re-render by trimming
+                  if (selectedCity.trim()) {
+                    setSelectedCity(selectedCity.trim());
+                  }
+                }}
+              >
                 Search
               </Button>
             </div>

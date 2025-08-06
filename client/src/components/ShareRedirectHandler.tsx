@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import SharedTrip from "@/pages/SharedTrip";
+import SimpleShare from "@/pages/SimpleShare";
 
 export default function ShareRedirectHandler() {
   const { shareCode } = useParams<{ shareCode: string }>();
@@ -37,6 +37,6 @@ export default function ShareRedirectHandler() {
     );
   }
 
-  // For read-only or when loading, render the SharedTrip component
-  return <SharedTrip />;
+  // For read-only or when loading, render the SimpleShare component
+  return <SimpleShare />;
 }

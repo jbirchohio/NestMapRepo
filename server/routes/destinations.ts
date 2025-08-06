@@ -50,7 +50,7 @@ router.get('/popular', async (req, res) => {
         slug: 'new-york',
         name: 'New York',
         country: 'USA',
-        image: 'https://source.unsplash.com/400x300/?new-york-city',
+        image: 'https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=300&fit=crop',
         description: 'The city that never sleeps',
         activities: 1250,
         avgPrice: '$150'
@@ -59,7 +59,7 @@ router.get('/popular', async (req, res) => {
         slug: 'paris',
         name: 'Paris',
         country: 'France',
-        image: 'https://source.unsplash.com/400x300/?paris,eiffel-tower',
+        image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop',
         description: 'City of lights and romance',
         activities: 980,
         avgPrice: '$120'
@@ -68,7 +68,7 @@ router.get('/popular', async (req, res) => {
         slug: 'tokyo',
         name: 'Tokyo',
         country: 'Japan',
-        image: 'https://source.unsplash.com/400x300/?tokyo,japan',
+        image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=300&fit=crop',
         description: 'Where tradition meets future',
         activities: 1100,
         avgPrice: '$130'
@@ -77,7 +77,7 @@ router.get('/popular', async (req, res) => {
         slug: 'london',
         name: 'London',
         country: 'UK',
-        image: 'https://source.unsplash.com/400x300/?london,big-ben',
+        image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&h=300&fit=crop',
         description: 'History and modernity combined',
         activities: 890,
         avgPrice: '$140'
@@ -86,7 +86,7 @@ router.get('/popular', async (req, res) => {
         slug: 'dubai',
         name: 'Dubai',
         country: 'UAE',
-        image: 'https://source.unsplash.com/400x300/?dubai,burj-khalifa',
+        image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=300&fit=crop',
         description: 'Luxury in the desert',
         activities: 650,
         avgPrice: '$180'
@@ -95,7 +95,7 @@ router.get('/popular', async (req, res) => {
         slug: 'barcelona',
         name: 'Barcelona',
         country: 'Spain',
-        image: 'https://source.unsplash.com/400x300/?barcelona,sagrada-familia',
+        image: 'https://images.unsplash.com/photo-1562883676-8c7feb83f09b?w=400&h=300&fit=crop',
         description: 'Art, architecture, and beaches',
         activities: 720,
         avgPrice: '$100'

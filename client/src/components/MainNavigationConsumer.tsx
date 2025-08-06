@@ -56,8 +56,6 @@ export default function MainNavigationConsumer() {
 
   const navigation = [
     { name: 'My Trips', href: '/', icon: Home },
-    { name: 'Flights', href: '/flights', icon: Plane },
-    { name: 'My Bookings', href: '/bookings', icon: Calendar },
   ];
 
   return (
@@ -96,17 +94,6 @@ export default function MainNavigationConsumer() {
 
             {/* Right side */}
             <div className="flex items-center space-x-4">
-              {/* Plan Trip Button - only show when logged in */}
-              {user && (
-                <Button
-                  onClick={() => setShowNewTripModal(true)}
-                  className="hidden md:flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
-                >
-                  <Plus className="h-4 w-4" />
-                  Plan a Trip
-                </Button>
-              )}
-
               {/* User menu */}
               {user ? (
                 <DropdownMenu>
@@ -168,17 +155,6 @@ export default function MainNavigationConsumer() {
                   <div className="flex flex-col space-y-4 mt-8">
                     {user ? (
                       <>
-                        <Button
-                          onClick={() => {
-                            setShowNewTripModal(true);
-                            setMobileMenuOpen(false);
-                          }}
-                          className="w-full justify-start gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Plan a Trip
-                        </Button>
-                        
                         {navigation.map((item) => (
                           <Link key={item.name} href={item.href}>
                             <Button

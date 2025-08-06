@@ -93,8 +93,6 @@ function Router() {
           
           {/* SEO Destination Pages */}
           <Route path="/destinations/:destination" component={DestinationGuide} />
-          <Route path="/hotels/:destination" component={DestinationGuide} />
-          <Route path="/packages/:destination" component={DestinationGuide} />
           
           {/* User account */}
           <Route path="/profile" component={ProfileSettings} />

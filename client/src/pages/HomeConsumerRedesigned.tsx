@@ -170,6 +170,7 @@ export default function HomeConsumerRedesigned() {
   const quickActions = getQuickActions(hasAI, trips.length);
 
   const handleAction = (action: string) => {
+    // Only show auth modal if user is not logged in (for non-logged in landing page)
     if (!user) {
       setAuthView("signup");
       setIsAuthModalOpen(true);
@@ -183,6 +184,11 @@ export default function HomeConsumerRedesigned() {
         setIsAIChatOpen(true);
         break;
       case 'quick-trip':
+        // Always open new trip modal for quick trip
+        setIsNewTripModalOpen(true);
+        break;
+      case 'templates':
+        // Open new trip modal for templates
         setIsNewTripModalOpen(true);
         break;
       case 'explore':
@@ -271,7 +277,13 @@ export default function HomeConsumerRedesigned() {
             >
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Welcome back, {user.displayName || user.fullName || user.username}! 👋
+                  Welcome back, {(() => {
+                    const name = user.displayName || user.fullName || user.username || user.email;
+                    // Extract first name from full name or username
+                    const firstName = name?.split(' ')[0] || name;
+                    // Capitalize first letter
+                    return firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1) : 'there';
+                  })()}! 👋
                 </h1>
                 <p className="text-gray-600 mt-1">
                   {upcomingTrips.length > 0 
