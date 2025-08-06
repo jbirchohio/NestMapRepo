@@ -27,6 +27,39 @@ router.get('/', async (req, res) => {
     // Get published templates with filters
     let templates = await storage.getPublishedTemplates();
     
+    // Transform templates to include activities array for frontend
+    templates = templates.map(template => {
+      const tripData = template.trip_data as any || {};
+      let activities = [];
+      
+      // Extract activities from the days structure
+      if (tripData.days && Array.isArray(tripData.days)) {
+        tripData.days.forEach((day: any) => {
+          if (day.activities && Array.isArray(day.activities)) {
+            day.activities.forEach((activity: any) => {
+              activities.push({
+                ...activity,
+                day: day.day,
+                dayTitle: day.title
+              });
+            });
+          }
+        });
+      }
+      
+      // Add the activities array to tripData
+      tripData.activities = activities;
+      
+      return {
+        ...template,
+        tripData, // Frontend expects camelCase
+        salesCount: template.sales_count || 0, // Add camelCase versions
+        reviewCount: template.review_count || 0,
+        coverImage: template.cover_image,
+        viewCount: template.view_count || 0
+      };
+    });
+    
     // Apply filters
     if (search) {
       const searchLower = String(search).toLowerCase();
@@ -163,8 +196,35 @@ router.get('/:slug', async (req, res) => {
     // Get reviews
     const reviews = await storage.getTemplateReviews(template.id);
     
+    // Transform template data for frontend
+    const tripData = template.trip_data as any || {};
+    let activities = [];
+    
+    // Extract activities from the days structure
+    if (tripData.days && Array.isArray(tripData.days)) {
+      tripData.days.forEach((day: any) => {
+        if (day.activities && Array.isArray(day.activities)) {
+          day.activities.forEach((activity: any) => {
+            activities.push({
+              ...activity,
+              day: day.day,
+              dayTitle: day.title
+            });
+          });
+        }
+      });
+    }
+    
+    // Add the activities array to tripData
+    tripData.activities = activities;
+    
     res.json({
       ...template,
+      tripData, // Frontend expects camelCase
+      salesCount: template.sales_count || 0,
+      reviewCount: template.review_count || 0,
+      coverImage: template.cover_image,
+      viewCount: template.view_count || 0,
       hasPurchased,
       creator: creatorProfile,
       reviews,
