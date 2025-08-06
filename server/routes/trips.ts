@@ -7,7 +7,6 @@ import { fieldTransformMiddleware } from '../middleware/fieldTransform';
 import { enforceTripLimit } from '../middleware/subscription-limits';
 import { storage } from '../storage';
 import { generatePdfBuffer } from '../utils/pdfHelper';
-import { generateAIProposal } from '../proposalGenerator';
 import { db } from '../db-connection';
 import { trips as tripsTable, users } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -471,11 +470,8 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
       }
     };
 
-    const pdfBuffer = await generateAIProposal(proposalData);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Travel_Proposal_${clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
-    res.send(pdfBuffer);
+    // Proposal generation removed - not needed for consumer app
+    return res.status(400).json({ message: "Proposal generation not available" });
   } catch (error: any) {
     logger.error("Error generating proposal:", error);
     res.status(500).json({ message: "Error generating proposal: " + error.message });

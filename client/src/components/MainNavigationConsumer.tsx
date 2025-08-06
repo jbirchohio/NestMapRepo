@@ -27,7 +27,9 @@ import {
   HelpCircle,
   Plus,
   Home,
-  Calendar
+  Calendar,
+  ShoppingBag,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function MainNavigationConsumer() {
@@ -56,6 +58,8 @@ export default function MainNavigationConsumer() {
 
   const navigation = [
     { name: 'My Trips', href: '/', icon: Home },
+    { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag },
+    { name: 'Creator Hub', href: '/creator/dashboard', icon: LayoutDashboard },
   ];
 
   return (

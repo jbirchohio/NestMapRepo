@@ -11,18 +11,16 @@ import SimpleFooter from "@/components/SimpleFooter";
 import HomeConsumerRedesigned from "@/pages/HomeConsumerRedesigned";
 import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
-import Bookings from "@/pages/Bookings";
 import TripOptimizer from "@/pages/TripOptimizer";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
-import FlightSearchSimple from "@/pages/FlightSearchSimple";
-import FlightBooking from "@/pages/FlightBooking";
-import FlightResults from "@/pages/FlightResults";
-import BookingConfirmation from "@/pages/BookingConfirmation";
 import DestinationGuide from "@/pages/DestinationGuide";
 import NotFound from "@/pages/not-found";
 import Explore from "@/pages/Explore";
+import TemplateMarketplace from "@/pages/TemplateMarketplace";
+import TemplateDetails from "@/pages/TemplateDetails";
+import CreatorDashboard from "@/pages/CreatorDashboard";
 
 function NavigationWrapper() {
   const { user } = useAuth();
@@ -83,13 +81,13 @@ function Router() {
           <Route path="/share/:shareCode" component={SimpleShare} />
           
           {/* Travel features */}
-          <Route path="/flights" component={FlightSearchSimple} />
-          <Route path="/flights/results" component={FlightResults} />
-          <Route path="/flights/book/:offerId" component={FlightBooking} />
-          <Route path="/bookings" component={Bookings} />
-          <Route path="/bookings/:bookingId" component={BookingConfirmation} />
           <Route path="/ai-generator" component={AITripGeneratorPage} />
           <Route path="/optimizer" component={TripOptimizer} />
+          
+          {/* Creator Economy */}
+          <Route path="/marketplace" component={TemplateMarketplace} />
+          <Route path="/templates/:slug" component={TemplateDetails} />
+          <Route path="/creator/dashboard" component={CreatorDashboard} />
           
           {/* SEO Destination Pages */}
           <Route path="/destinations/:destination" component={DestinationGuide} />

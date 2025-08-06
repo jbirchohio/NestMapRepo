@@ -343,6 +343,169 @@ export const approvals = pgTable("approvals", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// ======================================
+// CREATOR ECONOMY TABLES
+// ======================================
+
+// Trip templates marketplace
+export const templates = pgTable("templates", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  slug: text("slug").unique().notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).default("0"),
+  currency: text("currency").default("USD"),
+  cover_image: text("cover_image"),
+  destinations: jsonb("destinations").$type<string[]>().default([]), // ["Paris", "London"]
+  duration: integer("duration"), // days
+  trip_data: jsonb("trip_data"), // Full itinerary JSON
+  tags: jsonb("tags").$type<string[]>().default([]), // ["romantic", "budget", "foodie"]
+  sales_count: integer("sales_count").default(0),
+  rating: decimal("rating", { precision: 3, scale: 2 }),
+  review_count: integer("review_count").default(0),
+  status: text("status").default("draft"), // draft, published, archived
+  featured: boolean("featured").default(false),
+  view_count: integer("view_count").default(0),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// Template purchases tracking
+export const templatePurchases = pgTable("template_purchases", {
+  id: serial("id").primaryKey(),
+  template_id: integer("template_id").references(() => templates.id).notNull(),
+  buyer_id: integer("buyer_id").references(() => users.id).notNull(),
+  seller_id: integer("seller_id").references(() => users.id).notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  platform_fee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
+  seller_earnings: decimal("seller_earnings", { precision: 10, scale: 2 }).notNull(),
+  stripe_payment_id: text("stripe_payment_id"),
+  stripe_payment_intent_id: text("stripe_payment_intent_id"),
+  status: text("status").default("pending"), // pending, completed, refunded
+  refunded_at: timestamp("refunded_at"),
+  purchased_at: timestamp("purchased_at").defaultNow()
+});
+
+// Creator payouts management
+export const creatorPayouts = pgTable("creator_payouts", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  method: text("method").notNull(), // paypal, amazon, credits, bank
+  status: text("status").default("pending"), // pending, processing, completed, failed
+  processed_at: timestamp("processed_at"),
+  paypal_batch_id: text("paypal_batch_id"),
+  paypal_payout_id: text("paypal_payout_id"),
+  gift_card_code: text("gift_card_code"),
+  notes: text("notes"),
+  error_message: text("error_message"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+// Creator balance tracking
+export const creatorBalances = pgTable("creator_balances", {
+  user_id: integer("user_id").references(() => users.id).primaryKey(),
+  available_balance: decimal("available_balance", { precision: 10, scale: 2 }).default("0"),
+  pending_balance: decimal("pending_balance", { precision: 10, scale: 2 }).default("0"),
+  lifetime_earnings: decimal("lifetime_earnings", { precision: 10, scale: 2 }).default("0"),
+  lifetime_payouts: decimal("lifetime_payouts", { precision: 10, scale: 2 }).default("0"),
+  total_sales: integer("total_sales").default(0),
+  last_payout_at: timestamp("last_payout_at"),
+  payout_method: text("payout_method"), // preferred payout method
+  payout_email: text("payout_email"), // PayPal email
+  tax_info_submitted: boolean("tax_info_submitted").default(false),
+  w9_on_file: boolean("w9_on_file").default(false),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// Template reviews and ratings
+export const templateReviews = pgTable("template_reviews", {
+  id: serial("id").primaryKey(),
+  template_id: integer("template_id").references(() => templates.id).notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  purchase_id: integer("purchase_id").references(() => templatePurchases.id),
+  rating: integer("rating").notNull(), // 1-5
+  review: text("review"),
+  helpful_count: integer("helpful_count").default(0),
+  verified_purchase: boolean("verified_purchase").default(false),
+  creator_response: text("creator_response"),
+  creator_responded_at: timestamp("creator_responded_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// Track template sharing for viral growth
+export const templateShares = pgTable("template_shares", {
+  id: serial("id").primaryKey(),
+  template_id: integer("template_id").references(() => templates.id).notNull(),
+  shared_by: integer("shared_by").references(() => users.id),
+  platform: text("platform").notNull(), // twitter, facebook, whatsapp, email, link
+  share_code: text("share_code").unique(),
+  clicks: integer("clicks").default(0),
+  conversions: integer("conversions").default(0),
+  revenue_generated: decimal("revenue_generated", { precision: 10, scale: 2 }).default("0"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+// Creator profiles for marketplace
+export const creatorProfiles = pgTable("creator_profiles", {
+  user_id: integer("user_id").references(() => users.id).primaryKey(),
+  bio: text("bio"),
+  specialties: jsonb("specialties").$type<string[]>().default([]), // ["Europe", "Budget Travel", "Food Tours"]
+  social_twitter: text("social_twitter"),
+  social_instagram: text("social_instagram"),
+  social_youtube: text("social_youtube"),
+  website_url: text("website_url"),
+  verified: boolean("verified").default(false),
+  featured: boolean("featured").default(false),
+  follower_count: integer("follower_count").default(0),
+  total_templates: integer("total_templates").default(0),
+  total_sales: integer("total_sales").default(0),
+  average_rating: decimal("average_rating", { precision: 3, scale: 2 }),
+  stripe_connect_account_id: text("stripe_connect_account_id"),
+  stripe_connect_onboarded: boolean("stripe_connect_onboarded").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// Viator commission tracking from template-generated bookings
+export const viatorCommissions = pgTable("viator_commissions", {
+  id: serial("id").primaryKey(),
+  template_id: integer("template_id").references(() => templates.id),
+  creator_id: integer("creator_id").references(() => users.id).notNull(),
+  buyer_id: integer("buyer_id").references(() => users.id).notNull(),
+  activity_id: integer("activity_id").references(() => activities.id),
+  booking_id: integer("booking_id").references(() => bookings.id),
+  viator_product_id: text("viator_product_id"),
+  booking_amount: decimal("booking_amount", { precision: 10, scale: 2 }).notNull(),
+  commission_rate: decimal("commission_rate", { precision: 5, scale: 2 }).default("8"), // 8% default
+  commission_amount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(),
+  creator_share_rate: decimal("creator_share_rate", { precision: 5, scale: 2 }).default("50"), // Creator gets 50% of commission
+  creator_earnings: decimal("creator_earnings", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").default("pending"), // pending, confirmed, paid
+  confirmed_at: timestamp("confirmed_at"),
+  paid_at: timestamp("paid_at"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+// Template collections for bundling
+export const templateCollections = pgTable("template_collections", {
+  id: serial("id").primaryKey(),
+  creator_id: integer("creator_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  slug: text("slug").unique().notNull(),
+  description: text("description"),
+  cover_image: text("cover_image"),
+  template_ids: jsonb("template_ids").$type<number[]>().default([]),
+  price: decimal("price", { precision: 10, scale: 2 }),
+  discount_percentage: integer("discount_percentage"),
+  sales_count: integer("sales_count").default(0),
+  status: text("status").default("draft"), // draft, published, archived
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
 // Export schemas and types (keeping same exports for compatibility)
 export const insertUserSchema = createInsertSchema(users);
 
@@ -484,3 +647,14 @@ export type Note = typeof notes.$inferSelect;
 export type Todo = typeof todos.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type TripCollaborator = typeof tripCollaborators.$inferSelect;
+
+// Creator economy types
+export type Template = typeof templates.$inferSelect;
+export type TemplatePurchase = typeof templatePurchases.$inferSelect;
+export type CreatorPayout = typeof creatorPayouts.$inferSelect;
+export type CreatorBalance = typeof creatorBalances.$inferSelect;
+export type TemplateReview = typeof templateReviews.$inferSelect;
+export type TemplateShare = typeof templateShares.$inferSelect;
+export type CreatorProfile = typeof creatorProfiles.$inferSelect;
+export type ViatorCommission = typeof viatorCommissions.$inferSelect;
+export type TemplateCollection = typeof templateCollections.$inferSelect;

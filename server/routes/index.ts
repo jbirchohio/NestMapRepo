@@ -3,18 +3,17 @@ import authRoutes from './auth';
 import usersRoutes from './users';
 import tripRoutes from './trips';
 import activityRoutes from './activities';
-import { registerBookingRoutes } from './bookings';
 import todosRoutes from './todos';
 import notesRoutes from './notes';
 import aiRoutes from './ai';
 import healthRoutes from './health';
-import flightRoutes from './flights';
 import weatherRoutes from './weather';
 import viatorRoutes from './viator';
-import consumerBookingsRouter from './bookings-consumer';
 import sitemapRoutes from './sitemap';
 import destinationRoutes from './destinations';
 import subscriptionRoutes from './subscription';
+import templateRoutes from './templates';
+import creatorRoutes from './creators';
 
 const router = Router();
 
@@ -27,24 +26,13 @@ router.use('/todos', todosRoutes);
 router.use('/notes', notesRoutes);
 router.use('/ai', aiRoutes);
 router.use('/health', healthRoutes);
-router.use('/flights', flightRoutes);
 router.use('/weather', weatherRoutes);
 router.use('/viator', viatorRoutes);
-router.use('/consumer/bookings', consumerBookingsRouter);
 router.use('/destinations', destinationRoutes);
 router.use('/subscription', subscriptionRoutes);
+router.use('/templates', templateRoutes);
+router.use('/creators', creatorRoutes);
 
-// Templates endpoint
-router.get('/templates', async (req, res) => {
-  try {
-    const { getAllTemplates } = await import('../tripTemplates');
-    const templates = getAllTemplates();
-    res.json(templates);
-  } catch (error) {
-    console.error('Templates error:', error);
-    res.status(500).json({ message: 'Failed to get templates' });
-  }
-});
 
 // User permissions endpoint - simplified for consumer app
 router.get('/user/permissions', async (req, res) => {

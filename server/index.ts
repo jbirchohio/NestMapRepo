@@ -255,10 +255,6 @@ app.use((req, res, next) => {
     // Mount SEO routes at root level (no /api prefix)
     app.use('/', sitemapRoutes);
 
-    // Register booking routes with full Express app instance
-    const { registerBookingRoutes } = await import('./routes/bookings');
-    registerBookingRoutes(app);
-
     // Corporate routes removed for consumer app
 
     // Admin analytics removed for consumer app

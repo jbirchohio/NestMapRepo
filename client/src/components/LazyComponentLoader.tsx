@@ -6,7 +6,6 @@ import { Sparkles } from 'lucide-react';
 export const LazyActivityModal = lazy(() => import('./ActivityModal'));
 export const LazyActivityModalConsumer = lazy(() => import('./ActivityModalConsumer'));
 export const LazyBookableActivity = lazy(() => import('./BookableActivity'));
-export const LazyFlightSearch = lazy(() => import('../pages/FlightSearchSimple'));
 export const LazyAITripGenerator = lazy(() => import('../pages/AITripGenerator'));
 
 // Loading fallback component
@@ -43,5 +42,4 @@ export function withLazyLoading<T extends {}>(
 export const ActivityModalLazy = withLazyLoading(LazyActivityModal, 'Activities');
 export const ActivityModalConsumerLazy = withLazyLoading(LazyActivityModalConsumer, 'Activity Search');
 export const BookableActivityLazy = withLazyLoading(LazyBookableActivity, 'Bookable Activities');
-export const FlightSearchLazy = withLazyLoading(LazyFlightSearch, 'Flight Search');
 export const AITripGeneratorLazy = withLazyLoading(LazyAITripGenerator, 'AI Trip Generator');

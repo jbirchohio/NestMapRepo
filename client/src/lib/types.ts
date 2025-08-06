@@ -4,6 +4,120 @@ import { Trip, Activity, Todo, Note } from "@shared/schema";
 // Re-export shared types for easier imports
 export { Todo, Note };
 
+// ======================================
+// CREATOR ECONOMY TYPES
+// ======================================
+
+export interface ClientTemplate {
+  id: number;
+  userId: number;
+  title: string;
+  slug: string;
+  description?: string;
+  price: string;
+  currency: string;
+  coverImage?: string;
+  destinations: string[];
+  duration?: number;
+  tripData?: any;
+  tags: string[];
+  salesCount: number;
+  rating?: string;
+  reviewCount: number;
+  status: 'draft' | 'published' | 'archived';
+  featured: boolean;
+  viewCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  // Additional client fields
+  creator?: ClientCreatorProfile;
+  hasPurchased?: boolean;
+  reviews?: ClientTemplateReview[];
+}
+
+export interface ClientTemplatePurchase {
+  id: number;
+  templateId: number;
+  buyerId: number;
+  sellerId: number;
+  price: string;
+  platformFee: string;
+  sellerEarnings: string;
+  status: 'pending' | 'completed' | 'refunded';
+  purchasedAt: Date;
+  // Additional fields
+  templateTitle?: string;
+  templateSlug?: string;
+}
+
+export interface ClientCreatorProfile {
+  userId: number;
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  bio?: string;
+  specialties: string[];
+  socialTwitter?: string;
+  socialInstagram?: string;
+  socialYoutube?: string;
+  websiteUrl?: string;
+  verified: boolean;
+  featured: boolean;
+  followerCount: number;
+  totalTemplates: number;
+  totalSales: number;
+  averageRating?: string;
+}
+
+export interface ClientCreatorBalance {
+  userId: number;
+  availableBalance: string;
+  pendingBalance: string;
+  lifetimeEarnings: string;
+  lifetimePayouts: string;
+  totalSales: number;
+  lastPayoutAt?: Date;
+  payoutMethod?: string;
+  payoutEmail?: string;
+  taxInfoSubmitted: boolean;
+  w9OnFile: boolean;
+}
+
+export interface ClientTemplateReview {
+  id: number;
+  templateId: number;
+  userId: number;
+  userName?: string;
+  userAvatar?: string;
+  rating: number;
+  review?: string;
+  helpfulCount: number;
+  verifiedPurchase: boolean;
+  creatorResponse?: string;
+  creatorRespondedAt?: Date;
+  createdAt: Date;
+}
+
+export interface ClientCreatorDashboard {
+  profile: ClientCreatorProfile;
+  balance: ClientCreatorBalance;
+  metrics: {
+    totalTemplates: number;
+    publishedTemplates: number;
+    totalViews: number;
+    totalSales: number;
+    totalRevenue: number;
+    averagePrice: number;
+    conversionRate: string;
+  };
+  templates: ClientTemplate[];
+  recentSales: ClientTemplatePurchase[];
+  monthlyRevenue: Array<{
+    month: string;
+    revenue: number;
+  }>;
+}
+
 // Extended types with additional client-side properties
 export interface ClientTrip {
   id: number;

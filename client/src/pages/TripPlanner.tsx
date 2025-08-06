@@ -17,7 +17,8 @@ import { useMapboxDirections } from "@/hooks/useMapboxDirections";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
-import { MessageCircle, X, Sparkles } from "lucide-react";
+import { MessageCircle, X, Sparkles, Package, Share2 } from "lucide-react";
+import CreateTemplateModal from "@/components/CreateTemplateModal";
 
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
@@ -65,6 +66,9 @@ export default function TripPlanner() {
   
   // State for share modal
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  
+  // State for create template modal
+  const [createTemplateModalOpen, setCreateTemplateModalOpen] = useState(false);
   
   // State for activity modal management
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -387,7 +391,11 @@ export default function TripPlanner() {
   };
 
   return (
-    <AppShell trip={trip} onOpenShare={handleOpenShare}>
+    <AppShell 
+      trip={trip} 
+      onOpenShare={handleOpenShare}
+      onCreateTemplate={() => setCreateTemplateModalOpen(true)}
+    >
       {/* Mobile view toggle buttons */}
       <div className="md:hidden flex border rounded-md overflow-hidden shadow-sm m-2 relative z-50 bg-white dark:bg-[hsl(var(--card))]">
         <Button
@@ -563,6 +571,15 @@ export default function TripPlanner() {
           )}
         </button>
       </div>
+
+      {/* Create Template Modal */}
+      {trip && createTemplateModalOpen && (
+        <CreateTemplateModal
+          isOpen={createTemplateModalOpen}
+          onClose={() => setCreateTemplateModalOpen(false)}
+          trip={trip}
+        />
+      )}
     </AppShell>
   );
 }

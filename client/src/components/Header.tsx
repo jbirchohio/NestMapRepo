@@ -15,6 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface HeaderProps {
   trip?: ClientTrip;
   onOpenShare?: () => void;
+  onCreateTemplate?: () => void;
   onToggleSidebar?: () => void;
   onRenameTrip?: () => void;
   onDuplicateTrip?: () => void;
@@ -25,6 +26,7 @@ interface HeaderProps {
 export default function Header({ 
   trip, 
   onOpenShare,
+  onCreateTemplate,
   onToggleSidebar,
   onRenameTrip,
   onDuplicateTrip,
@@ -68,6 +70,18 @@ export default function Header({
           
           {trip && (
             <>
+              <Button
+                variant="ghost"
+                className="hidden md:flex items-center text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+                onClick={onCreateTemplate}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1a1 1 0 100-2h1a4 4 0 014 4v6a4 4 0 01-4 4H6a4 4 0 01-4-4V7a4 4 0 014-4z" clipRule="evenodd" />
+                </svg>
+                <span>Save as Template</span>
+              </Button>
+              
               <Button
                 variant="ghost"
                 className="hidden md:flex items-center text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"

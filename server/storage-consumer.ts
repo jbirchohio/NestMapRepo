@@ -2,9 +2,13 @@ import { db } from './db';
 import { 
   users, trips, activities, notes, todos, bookings,
   tripCollaborators, invitations, waitlist,
+  templates, templatePurchases, creatorBalances, templateReviews,
+  templateShares, creatorProfiles, viatorCommissions, templateCollections,
   insertTripSchema, insertActivitySchema, insertNoteSchema, 
   insertTodoSchema, insertBookingSchema, registerUserSchema,
-  User, Trip, Activity, Note, Todo, Booking
+  User, Trip, Activity, Note, Todo, Booking,
+  Template, TemplatePurchase, CreatorBalance, TemplateReview,
+  TemplateShare, CreatorProfile, ViatorCommission, TemplateCollection
 } from '../shared/schema';
 import { eq, and, desc, inArray, sql, or } from 'drizzle-orm';
 import { hashPassword } from './auth';
@@ -59,6 +63,44 @@ export interface IStorage {
   
   // Waitlist
   addToWaitlist(email: string, referralSource?: string): Promise<any>;
+  
+  // Template management
+  createTemplate(templateData: any): Promise<Template>;
+  getTemplate(id: number): Promise<Template | undefined>;
+  getTemplateBySlug(slug: string): Promise<Template | undefined>;
+  getTemplatesByUserId(userId: number): Promise<Template[]>;
+  getPublishedTemplates(): Promise<Template[]>;
+  searchTemplates(query: string, filters?: any): Promise<Template[]>;
+  updateTemplate(id: number, updates: any): Promise<Template | undefined>;
+  deleteTemplate(id: number): Promise<boolean>;
+  incrementTemplateViews(id: number): Promise<void>;
+  
+  // Template purchases
+  createTemplatePurchase(purchaseData: any): Promise<TemplatePurchase>;
+  getTemplatePurchases(templateId: number): Promise<TemplatePurchase[]>;
+  getUserPurchases(userId: number): Promise<TemplatePurchase[]>;
+  hasUserPurchasedTemplate(userId: number, templateId: number): Promise<boolean>;
+  
+  // Creator profiles
+  getOrCreateCreatorProfile(userId: number): Promise<CreatorProfile>;
+  updateCreatorProfile(userId: number, updates: any): Promise<CreatorProfile | undefined>;
+  getCreatorProfile(userId: number): Promise<CreatorProfile | undefined>;
+  
+  // Creator balances
+  getOrCreateCreatorBalance(userId: number): Promise<CreatorBalance>;
+  updateCreatorBalance(userId: number, amount: number, type: 'add' | 'subtract'): Promise<CreatorBalance>;
+  getCreatorBalance(userId: number): Promise<CreatorBalance | undefined>;
+  
+  // Template reviews
+  createTemplateReview(reviewData: any): Promise<TemplateReview>;
+  getTemplateReviews(templateId: number): Promise<TemplateReview[]>;
+  getUserReview(userId: number, templateId: number): Promise<TemplateReview | undefined>;
+  updateTemplateRating(templateId: number): Promise<void>;
+  
+  // Template sharing
+  trackTemplateShare(shareData: any): Promise<TemplateShare>;
+  incrementShareClicks(shareCode: string): Promise<void>;
+  trackShareConversion(shareCode: string): Promise<void>;
 }
 
 // Consumer-focused database storage implementation
@@ -378,6 +420,288 @@ export class ConsumerDatabaseStorage implements IStorage {
     }).returning();
     
     return entry;
+  }
+  
+  // Template management
+  async createTemplate(templateData: any): Promise<Template> {
+    const slug = await this.generateUniqueSlug(templateData.title);
+    
+    const [newTemplate] = await db.insert(templates).values({
+      ...templateData,
+      slug,
+      status: templateData.status || 'draft',
+      sales_count: 0,
+      view_count: 0,
+      review_count: 0,
+    }).returning();
+    
+    // Update creator profile template count
+    await this.incrementCreatorTemplateCount(templateData.user_id);
+    
+    return newTemplate;
+  }
+  
+  async getTemplate(id: number): Promise<Template | undefined> {
+    const [template] = await db.select().from(templates).where(eq(templates.id, id)).limit(1);
+    return template;
+  }
+  
+  async getTemplateBySlug(slug: string): Promise<Template | undefined> {
+    const [template] = await db.select().from(templates).where(eq(templates.slug, slug)).limit(1);
+    return template;
+  }
+  
+  async getTemplatesByUserId(userId: number): Promise<Template[]> {
+    return await db.select()
+      .from(templates)
+      .where(eq(templates.user_id, userId))
+      .orderBy(desc(templates.created_at));
+  }
+  
+  async getPublishedTemplates(): Promise<Template[]> {
+    return await db.select()
+      .from(templates)
+      .where(eq(templates.status, 'published'))
+      .orderBy(desc(templates.created_at));
+  }
+  
+  async searchTemplates(query: string, filters?: any): Promise<Template[]> {
+    let baseQuery = db.select().from(templates).where(eq(templates.status, 'published'));
+    
+    // Add search and filters logic here
+    // For now, return all published templates
+    return await baseQuery.orderBy(desc(templates.sales_count));
+  }
+  
+  async updateTemplate(id: number, updates: any): Promise<Template | undefined> {
+    const [updated] = await db.update(templates)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(templates.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(templates).where(eq(templates.id, id)).returning({ id: templates.id });
+    return result.length > 0;
+  }
+  
+  async incrementTemplateViews(id: number): Promise<void> {
+    await db.update(templates)
+      .set({ view_count: sql`${templates.view_count} + 1` })
+      .where(eq(templates.id, id));
+  }
+  
+  // Template purchases
+  async createTemplatePurchase(purchaseData: any): Promise<TemplatePurchase> {
+    const [purchase] = await db.insert(templatePurchases).values(purchaseData).returning();
+    
+    // Update template sales count
+    await db.update(templates)
+      .set({ sales_count: sql`${templates.sales_count} + 1` })
+      .where(eq(templates.id, purchaseData.template_id));
+    
+    // Update creator balance
+    await this.updateCreatorBalance(purchaseData.seller_id, purchaseData.seller_earnings, 'add');
+    
+    return purchase;
+  }
+  
+  async getTemplatePurchases(templateId: number): Promise<TemplatePurchase[]> {
+    return await db.select()
+      .from(templatePurchases)
+      .where(eq(templatePurchases.template_id, templateId))
+      .orderBy(desc(templatePurchases.purchased_at));
+  }
+  
+  async getUserPurchases(userId: number): Promise<TemplatePurchase[]> {
+    return await db.select()
+      .from(templatePurchases)
+      .where(eq(templatePurchases.buyer_id, userId))
+      .orderBy(desc(templatePurchases.purchased_at));
+  }
+  
+  async hasUserPurchasedTemplate(userId: number, templateId: number): Promise<boolean> {
+    const [purchase] = await db.select()
+      .from(templatePurchases)
+      .where(and(
+        eq(templatePurchases.buyer_id, userId),
+        eq(templatePurchases.template_id, templateId),
+        eq(templatePurchases.status, 'completed')
+      ))
+      .limit(1);
+    return !!purchase;
+  }
+  
+  // Creator profiles
+  async getOrCreateCreatorProfile(userId: number): Promise<CreatorProfile> {
+    let [profile] = await db.select().from(creatorProfiles).where(eq(creatorProfiles.user_id, userId)).limit(1);
+    
+    if (!profile) {
+      [profile] = await db.insert(creatorProfiles).values({
+        user_id: userId,
+        bio: '',
+        specialties: [],
+        verified: false,
+        featured: false,
+        follower_count: 0,
+        total_templates: 0,
+        total_sales: 0,
+      }).returning();
+    }
+    
+    return profile;
+  }
+  
+  async updateCreatorProfile(userId: number, updates: any): Promise<CreatorProfile | undefined> {
+    const [updated] = await db.update(creatorProfiles)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(creatorProfiles.user_id, userId))
+      .returning();
+    return updated;
+  }
+  
+  async getCreatorProfile(userId: number): Promise<CreatorProfile | undefined> {
+    const [profile] = await db.select().from(creatorProfiles).where(eq(creatorProfiles.user_id, userId)).limit(1);
+    return profile;
+  }
+  
+  // Creator balances
+  async getOrCreateCreatorBalance(userId: number): Promise<CreatorBalance> {
+    let [balance] = await db.select().from(creatorBalances).where(eq(creatorBalances.user_id, userId)).limit(1);
+    
+    if (!balance) {
+      [balance] = await db.insert(creatorBalances).values({
+        user_id: userId,
+        available_balance: '0',
+        pending_balance: '0',
+        lifetime_earnings: '0',
+        lifetime_payouts: '0',
+        total_sales: 0,
+      }).returning();
+    }
+    
+    return balance;
+  }
+  
+  async updateCreatorBalance(userId: number, amount: number, type: 'add' | 'subtract'): Promise<CreatorBalance> {
+    const operator = type === 'add' ? '+' : '-';
+    
+    const [updated] = await db.update(creatorBalances)
+      .set({ 
+        available_balance: sql`${creatorBalances.available_balance} ${sql.raw(operator)} ${amount}`,
+        lifetime_earnings: type === 'add' ? sql`${creatorBalances.lifetime_earnings} + ${amount}` : creatorBalances.lifetime_earnings,
+        total_sales: type === 'add' ? sql`${creatorBalances.total_sales} + 1` : creatorBalances.total_sales,
+        updated_at: new Date()
+      })
+      .where(eq(creatorBalances.user_id, userId))
+      .returning();
+    
+    if (!updated) {
+      // Create balance if it doesn't exist
+      await this.getOrCreateCreatorBalance(userId);
+      return await this.updateCreatorBalance(userId, amount, type);
+    }
+    
+    return updated;
+  }
+  
+  async getCreatorBalance(userId: number): Promise<CreatorBalance | undefined> {
+    const [balance] = await db.select().from(creatorBalances).where(eq(creatorBalances.user_id, userId)).limit(1);
+    return balance;
+  }
+  
+  // Template reviews
+  async createTemplateReview(reviewData: any): Promise<TemplateReview> {
+    const [review] = await db.insert(templateReviews).values(reviewData).returning();
+    
+    // Update template rating
+    await this.updateTemplateRating(reviewData.template_id);
+    
+    return review;
+  }
+  
+  async getTemplateReviews(templateId: number): Promise<TemplateReview[]> {
+    return await db.select()
+      .from(templateReviews)
+      .where(eq(templateReviews.template_id, templateId))
+      .orderBy(desc(templateReviews.created_at));
+  }
+  
+  async getUserReview(userId: number, templateId: number): Promise<TemplateReview | undefined> {
+    const [review] = await db.select()
+      .from(templateReviews)
+      .where(and(
+        eq(templateReviews.user_id, userId),
+        eq(templateReviews.template_id, templateId)
+      ))
+      .limit(1);
+    return review;
+  }
+  
+  async updateTemplateRating(templateId: number): Promise<void> {
+    const reviews = await this.getTemplateReviews(templateId);
+    const count = reviews.length;
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    const average = count > 0 ? (sum / count).toFixed(2) : null;
+    
+    await db.update(templates)
+      .set({ 
+        rating: average,
+        review_count: count 
+      })
+      .where(eq(templates.id, templateId));
+  }
+  
+  // Template sharing
+  async trackTemplateShare(shareData: any): Promise<TemplateShare> {
+    const shareCode = nanoid(10);
+    const [share] = await db.insert(templateShares).values({
+      ...shareData,
+      share_code: shareCode,
+      clicks: 0,
+      conversions: 0,
+      revenue_generated: '0',
+    }).returning();
+    
+    return share;
+  }
+  
+  async incrementShareClicks(shareCode: string): Promise<void> {
+    await db.update(templateShares)
+      .set({ clicks: sql`${templateShares.clicks} + 1` })
+      .where(eq(templateShares.share_code, shareCode));
+  }
+  
+  async trackShareConversion(shareCode: string): Promise<void> {
+    await db.update(templateShares)
+      .set({ conversions: sql`${templateShares.conversions} + 1` })
+      .where(eq(templateShares.share_code, shareCode));
+  }
+  
+  // Helper methods
+  private async generateUniqueSlug(title: string): Promise<string> {
+    const baseSlug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    
+    let slug = baseSlug;
+    let counter = 1;
+    
+    while (await this.getTemplateBySlug(slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    
+    return slug;
+  }
+  
+  private async incrementCreatorTemplateCount(userId: number): Promise<void> {
+    const profile = await this.getOrCreateCreatorProfile(userId);
+    await db.update(creatorProfiles)
+      .set({ total_templates: sql`${creatorProfiles.total_templates} + 1` })
+      .where(eq(creatorProfiles.user_id, userId));
   }
 }
 
