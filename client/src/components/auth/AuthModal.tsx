@@ -64,7 +64,7 @@ export default function AuthModal({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="w-[95vw] max-w-md p-0 data-[state=open]:!left-[50%] data-[state=open]:!top-[50%]">
+      <DialogContent className="sm:max-w-md p-0">
         <Card className="border-0 max-h-[80vh] overflow-y-auto">
           <CardHeader className="text-center pb-4 px-4 sm:px-6">
             <div className="flex justify-center mb-2">
