@@ -452,8 +452,8 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
   @apply border border-border bg-background;
 }
 
-/* Prevent iOS zoom on input focus */
-@media screen and (max-width: 767px) {
+/* Mobile-first: Prevent iOS zoom on input focus */
+@media screen and (max-width: 768px) {
   input[type="text"], 
   input[type="email"], 
   input[type="password"], 
@@ -478,7 +478,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
     width: calc(100vw - 2rem) !important;
-    max-width: 400px !important;
+    max-width: min(400px, 90vw) !important;
     max-height: 85vh !important;
     margin: 0 !important;
   }
@@ -500,8 +500,8 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
   @apply border border-border/50 shadow-sm;
 }
 
-/* Mobile responsive adjustments */
-@media (max-width: 767px) {
+/* Mobile-first responsive adjustments */
+@media (max-width: 768px) {
   .map-container {
     height: 50vh;
     min-height: 300px;
