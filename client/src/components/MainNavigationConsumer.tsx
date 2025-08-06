@@ -241,6 +241,7 @@ export default function MainNavigationConsumer() {
       {/* New Trip Modal */}
       {showNewTripModal && (
         <NewTripModalConsumer
+          isOpen={showNewTripModal}
           onClose={() => setShowNewTripModal(false)}
           onTripCreated={(tripId) => {
             setShowNewTripModal(false);

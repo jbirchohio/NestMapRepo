@@ -226,12 +226,12 @@ export class ViatorService {
     
     // Log affiliate link generation for tracking
     // console.log('Viator affiliate link generated:', {
-      productCode,
-      partnerId: VIATOR_PARTNER_ID,
-      mcid: VIATOR_MCID,
-      link: affiliateLink,
-      timestamp: new Date().toISOString()
-    });
+    //   productCode,
+    //   partnerId: VIATOR_PARTNER_ID,
+    //   mcid: VIATOR_MCID,
+    //   link: affiliateLink,
+    //   timestamp: new Date().toISOString()
+    // });
     
     return affiliateLink;
   }
