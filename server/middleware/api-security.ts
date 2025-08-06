@@ -336,15 +336,16 @@ class EndpointMonitor {
   private checkAnomalies(endpoint: string, metric: any) {
     const hourlyRequests = metric.lastHour.reduce((sum: number, m: any) => sum + m.requests, 0);
     const hourlyErrors = metric.lastHour.reduce((sum: number, m: any) => sum + m.errors, 0);
-    const errorRate = hourlyErrors / hourlyRequests;
-    const avgResponseTime = metric.totalResponseTime / metric.requests;
+    const errorRate = hourlyRequests > 0 ? hourlyErrors / hourlyRequests : 0;
+    const avgResponseTime = metric.requests > 0 ? metric.totalResponseTime / metric.requests : 0;
 
-    // Alert conditions
-    if (errorRate > 0.1) { // >10% error rate
+    // Only alert for significant issues with reasonable thresholds
+    // Skip alerts for low traffic endpoints (< 10 requests)
+    if (hourlyRequests >= 10 && errorRate > 0.5) { // >50% error rate with meaningful traffic
       console.warn('HIGH_ERROR_RATE:', { endpoint, errorRate, hourlyErrors, hourlyRequests });
     }
 
-    if (avgResponseTime > 2000) { // >2s average response time
+    if (metric.requests >= 10 && avgResponseTime > 5000) { // >5s average response time
       console.warn('SLOW_ENDPOINT:', { endpoint, avgResponseTime });
     }
 

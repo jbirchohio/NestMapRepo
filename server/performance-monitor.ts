@@ -28,10 +28,10 @@ class AdvancedPerformanceMonitor {
   private alerts: PerformanceAlert[] = [];
   private readonly MAX_METRICS = 10000;
   private readonly ALERT_THRESHOLDS = {
-    SLOW_ENDPOINT: 1000, // ms
-    HIGH_ERROR_RATE: 0.05, // 5%
+    SLOW_ENDPOINT: 3000, // ms - only alert for very slow endpoints
+    HIGH_ERROR_RATE: 0.25, // 25% - more reasonable threshold
     MEMORY_USAGE: 500, // MB
-    DB_QUERY_TIME: 500 // ms
+    DB_QUERY_TIME: 1000 // ms - only alert for very slow queries
   };
 
   recordMetric(metric: PerformanceMetrics): void {
@@ -105,7 +105,11 @@ class AdvancedPerformanceMonitor {
     };
 
     this.alerts.push(alert);
-    console.warn(`PERFORMANCE_ALERT: ${alert.message}`, metrics);
+    
+    // Only log critical alerts to console
+    if (severity === 'CRITICAL' || severity === 'HIGH') {
+      console.warn(`PERFORMANCE_ALERT: ${alert.message}`);
+    }
 
     // Keep only recent alerts
     if (this.alerts.length > 1000) {

@@ -78,7 +78,9 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
     setLoading(true);
     try {
       const response = await apiRequest('POST', '/api/viator/search', {
-        destination,
+        activityName: destination, // API expects activityName, not destination
+        latitude: 0, // TODO: Get actual coordinates for destination
+        longitude: 0,
         startDate: dates.start.toISOString(),
         endDate: dates.end.toISOString(),
       });
