@@ -32,15 +32,26 @@ router.get('/', async (req, res) => {
       const tripData = template.trip_data as any || {};
       let activities = [];
       
+      // Calculate a base date for the template (30 days from now)
+      const baseDate = new Date();
+      baseDate.setDate(baseDate.getDate() + 30);
+      
       // Extract activities from the days structure
       if (tripData.days && Array.isArray(tripData.days)) {
         tripData.days.forEach((day: any) => {
           if (day.activities && Array.isArray(day.activities)) {
+            // Calculate the date for this day
+            const dayDate = new Date(baseDate);
+            dayDate.setDate(dayDate.getDate() + (day.day - 1));
+            const dateStr = dayDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+            
             day.activities.forEach((activity: any) => {
               activities.push({
                 ...activity,
                 day: day.day,
-                dayTitle: day.title
+                dayTitle: day.title,
+                date: dateStr, // Add the date field for grouping
+                locationName: activity.location // Frontend expects locationName
               });
             });
           }
@@ -200,15 +211,26 @@ router.get('/:slug', async (req, res) => {
     const tripData = template.trip_data as any || {};
     let activities = [];
     
+    // Calculate a base date for the template (30 days from now)
+    const baseDate = new Date();
+    baseDate.setDate(baseDate.getDate() + 30);
+    
     // Extract activities from the days structure
     if (tripData.days && Array.isArray(tripData.days)) {
       tripData.days.forEach((day: any) => {
         if (day.activities && Array.isArray(day.activities)) {
+          // Calculate the date for this day
+          const dayDate = new Date(baseDate);
+          dayDate.setDate(dayDate.getDate() + (day.day - 1));
+          const dateStr = dayDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+          
           day.activities.forEach((activity: any) => {
             activities.push({
               ...activity,
               day: day.day,
-              dayTitle: day.title
+              dayTitle: day.title,
+              date: dateStr, // Add the date field for grouping
+              locationName: activity.location // Frontend expects locationName
             });
           });
         }
