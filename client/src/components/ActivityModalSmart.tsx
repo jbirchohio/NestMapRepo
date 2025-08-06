@@ -4,7 +4,7 @@ import { X, Coffee, Utensils, ShoppingBag, Camera, Loader2, MapPin, Star, Shoppi
 import { apiRequest } from "@/lib/queryClient";
 import useTrip from "@/hooks/useTrip";
 import BookableActivity from "@/components/BookableActivity";
-import InAppBooking from "@/components/InAppBooking";
+// Removed InAppBooking import
 
 interface QuickOption {
   emoji: string;

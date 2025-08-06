@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '../middleware/jwtAuth';
-import { expediaService } from '../services/expediaIntegration';
+// Removed expediaService import
 import { logger } from '../utils/logger';
 
 const router = Router();
