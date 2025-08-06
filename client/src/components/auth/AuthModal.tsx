@@ -64,9 +64,9 @@ export default function AuthModal({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="sm:max-w-md p-0">
-        <Card className="border-0">
-          <CardHeader className="text-center pb-4">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-md p-0 mx-auto left-4 right-4 sm:left-[50%] sm:translate-x-[-50%]">
+        <Card className="border-0 max-h-[85vh] overflow-y-auto">
+          <CardHeader className="text-center pb-4 px-4 sm:px-6">
             <div className="flex justify-center mb-2">
               <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
                 <Sparkles className="h-6 w-6 text-white" />
@@ -81,7 +81,7 @@ export default function AuthModal({
                 : 'Start planning amazing trips in seconds'}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6 pb-6">
             {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{error}</AlertDescription>
