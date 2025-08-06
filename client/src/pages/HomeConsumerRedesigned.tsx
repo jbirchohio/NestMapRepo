@@ -176,8 +176,8 @@ export default function HomeConsumerRedesigned() {
     staleTime: 0, // Always refetch to rotate templates
   });
 
-  // Check if OpenAI is configured
-  const hasAI = !!process.env.OPENAI_API_KEY || true; // For now, show AI as available
+  // Check if OpenAI is configured - disable by default to avoid costs
+  const hasAI = false; // Disabled to avoid OpenAI costs
   
   // Get dynamic quick actions based on user progress
   const quickActions = getQuickActions(hasAI, trips.length);

@@ -18,8 +18,8 @@ import { ClientTemplate, ClientTemplateReview } from '@/lib/types';
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import AuthModal from '@/components/auth/AuthModal';
-import ShareModal from '@/components/ShareModal';
+import AuthModalSimple from '@/components/auth/AuthModalSimple';
+import ShareModalSimple from '@/components/ShareModalSimple';
 
 export default function TemplateDetails() {
   const { slug } = useParams();
@@ -483,18 +483,15 @@ export default function TemplateDetails() {
 
       {/* Modals */}
       {showAuthModal && (
-        <AuthModal
+        <AuthModalSimple
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          onSuccess={() => {
-            setShowAuthModal(false);
-            purchaseMutation.mutate();
-          }}
+          initialView="signup"
         />
       )}
 
       {showShareModal && template && (
-        <ShareModal
+        <ShareModalSimple
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
           template={template}

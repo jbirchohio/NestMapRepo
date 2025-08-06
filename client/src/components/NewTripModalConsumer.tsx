@@ -394,6 +394,7 @@ export default function NewTripModalConsumer({
                   onFocus={() => setFocusedField('startDate')}
                   onBlur={() => setFocusedField(null)}
                   min={format(new Date(), "yyyy-MM-dd")}
+                  defaultValue={format(addDays(new Date(), 7), "yyyy-MM-dd")}
                   className="w-full bg-transparent outline-none text-slate-900 dark:text-white"
                 />
               </div>
@@ -409,7 +410,8 @@ export default function NewTripModalConsumer({
                   {...register("endDate", { valueAsDate: true })}
                   onFocus={() => setFocusedField('endDate')}
                   onBlur={() => setFocusedField(null)}
-                  min={format(watchedStartDate, "yyyy-MM-dd")}
+                  min={format(watchedStartDate || new Date(), "yyyy-MM-dd")}
+                  defaultValue={format(addDays(new Date(), 10), "yyyy-MM-dd")}
                   className="w-full bg-transparent outline-none text-slate-900 dark:text-white"
                 />
               </div>
