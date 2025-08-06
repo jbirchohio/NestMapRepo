@@ -20,7 +20,6 @@ import {
   Camera, Heart, Zap, Globe, Star, ArrowRight
 } from "lucide-react";
 
-import { Package } from 'lucide-react';
 
 // Quick action cards - dynamically adjust based on user state
 const getQuickActions = (hasAI: boolean, userTrips: number) => {
@@ -47,18 +46,6 @@ const getQuickActions = (hasAI: boolean, userTrips: number) => {
       iconColor: 'text-blue-600',
       action: 'quick-trip',
       enabled: true
-    },
-    {
-      id: 'bundle-save',
-      icon: Package,
-      title: 'Bundle & Save',
-      description: 'Book flight + hotel together and save 22%',
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
-      action: 'package-search',
-      enabled: true,
-      badge: 'Save 22%'
     }
   ];
 
@@ -197,9 +184,6 @@ export default function HomeConsumerRedesigned() {
         break;
       case 'quick-trip':
         setIsNewTripModalOpen(true);
-        break;
-      case 'package-search':
-        // Package search removed
         break;
       case 'explore':
         setLocation('/explore');

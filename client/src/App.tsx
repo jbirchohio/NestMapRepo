@@ -36,6 +36,12 @@ function NavigationWrapper() {
   return null;
 }
 
+function HomePage() {
+  const { user } = useAuth();
+  // Show Explore page for logged-out users, dashboard for logged-in
+  return user ? <HomeConsumerRedesigned /> : <Explore />;
+}
+
 function Router() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -43,7 +49,7 @@ function Router() {
       <main className="flex-1">
         <Switch>
           {/* Core consumer routes */}
-          <Route path="/" component={HomeConsumerRedesigned} />
+          <Route path="/" component={HomePage} />
           <Route path="/login">
             {() => {
               window.location.href = '/?auth=login';

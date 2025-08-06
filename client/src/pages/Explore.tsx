@@ -73,7 +73,6 @@ export default function Explore() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
-  const [showViator, setShowViator] = useState(false);
 
   const handleGetStarted = () => {
     if (user) {
@@ -114,7 +113,7 @@ export default function Explore() {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => setShowViator(true)}
+                onClick={() => document.getElementById('experiences')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Browse Experiences
               </Button>
@@ -205,20 +204,18 @@ export default function Explore() {
       </section>
 
       {/* Viator Marketplace Section */}
-      {showViator && (
-        <section className="py-16 px-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Book Amazing Experiences</h2>
-              <p className="text-gray-600">Powered by Viator - Instant confirmation on thousands of tours</p>
-            </div>
-            <ViatorMarketplace 
-              destination="New York"
-              dates={{ start: new Date(), end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }}
-            />
+      <section id="experiences" className="py-16 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-4">Book Amazing Experiences</h2>
+            <p className="text-gray-600">Powered by Viator - Instant confirmation on thousands of tours</p>
           </div>
-        </section>
-      )}
+          <ViatorMarketplace 
+            destination="New York"
+            dates={{ start: new Date(), end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }}
+          />
+        </div>
+      </section>
 
       {/* Popular Destinations */}
       <section className="py-16 px-4">
