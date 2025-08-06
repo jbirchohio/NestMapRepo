@@ -12,7 +12,7 @@ import AITripChatModal from "@/components/AITripChatModal";
 // Removed PackageSearch import
 import PopularDestinations from "@/components/PopularDestinations";
 import { useAuth } from "@/contexts/JWTAuthContext";
-import AuthModal from "@/components/auth/AuthModal";
+import AuthModalSimple from "@/components/auth/AuthModalSimple";
 import { motion } from "framer-motion";
 import { 
   Plus, MapPin, Calendar, TrendingUp, Sparkles, 
@@ -163,6 +163,19 @@ export default function HomeConsumerRedesigned() {
     return startDate >= new Date();
   });
 
+  // Fetch real templates from database
+  const { data: realTemplates } = useQuery({
+    queryKey: ['templates-featured'],
+    queryFn: async () => {
+      const response = await fetch('/api/templates?limit=4');
+      if (!response.ok) return [];
+      const templates = await response.json();
+      // Shuffle and pick random 4 templates on each refresh
+      return templates.sort(() => Math.random() - 0.5).slice(0, 4);
+    },
+    staleTime: 0, // Always refetch to rotate templates
+  });
+
   // Check if OpenAI is configured
   const hasAI = !!process.env.OPENAI_API_KEY || true; // For now, show AI as available
   
@@ -188,8 +201,8 @@ export default function HomeConsumerRedesigned() {
         setIsNewTripModalOpen(true);
         break;
       case 'templates':
-        // Open new trip modal for templates
-        setIsNewTripModalOpen(true);
+        // Navigate to marketplace for templates
+        setLocation('/marketplace');
         break;
       case 'explore':
         setLocation('/explore');
@@ -210,9 +223,8 @@ export default function HomeConsumerRedesigned() {
       return;
     }
     
-    // For now, just open the new trip modal
-    // TODO: Pass template data to pre-fill the form
-    setIsNewTripModalOpen(true);
+    // Navigate to marketplace to see real templates
+    setLocation('/marketplace');
   };
 
   const handleTripCreated = (trip: any) => {
@@ -390,9 +402,10 @@ export default function HomeConsumerRedesigned() {
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {tripTemplates.map((template, index) => (
+              {/* Use real templates if available, otherwise show hardcoded ones */}
+              {(realTemplates && realTemplates.length > 0 ? realTemplates : tripTemplates).map((template: any, index) => (
                 <motion.div
-                  key={template.id}
+                  key={template.id || template.slug}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.5 + index * 0.1 }}
@@ -400,29 +413,39 @@ export default function HomeConsumerRedesigned() {
                 >
                   <Card 
                     className="group cursor-pointer overflow-hidden border-0 shadow-md hover:shadow-xl transition-all"
-                    onClick={() => handleTemplateSelect(template.id)}
+                    onClick={() => {
+                      if (realTemplates && realTemplates.length > 0) {
+                        // For real templates, navigate to the template details
+                        setLocation(`/templates/${template.slug}`);
+                      } else {
+                        handleTemplateSelect(template.id);
+                      }
+                    }}
                   >
                     <div className="relative h-48 overflow-hidden">
                       <img 
-                        src={template.image} 
+                        src={template.image || template.imageUrl} 
                         alt={template.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                      <div className="absolute top-4 left-4 text-3xl">{template.emoji}</div>
+                      {template.emoji && <div className="absolute top-4 left-4 text-3xl">{template.emoji}</div>}
                       <div className="absolute bottom-4 left-4 text-white">
                         <h3 className="font-bold text-lg">{template.title}</h3>
-                        <p className="text-sm opacity-90">{template.duration}</p>
+                        <p className="text-sm opacity-90">
+                          {template.duration || `${template.tripLength || 5} days`}
+                        </p>
                       </div>
                     </div>
                     <CardContent className="p-4">
                       <div className="flex flex-wrap gap-2">
-                        {template.highlights.map((highlight, i) => (
+                        {/* Display tags for real templates, highlights for hardcoded */}
+                        {(template.tags || template.highlights || []).slice(0, 3).map((item: string, i: number) => (
                           <span 
                             key={i}
                             className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
                           >
-                            {highlight}
+                            {item}
                           </span>
                         ))}
                       </div>
@@ -568,7 +591,7 @@ export default function HomeConsumerRedesigned() {
 
 
       {isAuthModalOpen && (
-        <AuthModal
+        <AuthModalSimple
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
           initialView={authView}
