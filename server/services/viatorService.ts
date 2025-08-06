@@ -139,7 +139,8 @@ export class ViatorService {
         body: JSON.stringify(requestBody)
       });
 
-      console.log('Viator API response status:', response.status);
+      // Removed verbose logging to prevent log spam
+      // console.log('Viator API response status:', response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -150,7 +151,8 @@ export class ViatorService {
       }
 
       const data = await response.json();
-      console.log('Viator API response data:', JSON.stringify(data, null, 2));
+      // Removed verbose data logging - was causing Railway rate limits
+      // console.log('Viator API response data:', JSON.stringify(data, null, 2));
       
       // Handle both data.data and data.products
       const products = data.data || data.products || [];

@@ -135,16 +135,16 @@ export default function MainNavigationConsumer() {
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <Link href="/login">
-                    <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/login">
                       Log in
-                    </Button>
-                  </Link>
-                  <Link href="/signup">
-                    <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white">
+                    </Link>
+                  </Button>
+                  <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white" asChild>
+                    <Link href="/signup">
                       Sign up
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               )}
 

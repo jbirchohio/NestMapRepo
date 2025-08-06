@@ -25,12 +25,15 @@ declare global {
  * Provides authenticated user context without sessions
  */
 export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunction) {
+  // Get the path relative to the /api mount point
+  const relativePath = req.path;
+  const fullPath = req.originalUrl;
+  
   // Define paths that don't require authentication (relative to /api mount point)
   const publicPaths = [
     '/auth',
     '/users/auth',
     '/health',
-    '/templates',
     '/share',
     '/amadeus',
     '/stripe',
@@ -38,10 +41,12 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     '/acme-challenge',
     '/demo'
   ];
-
-  // Get the path relative to the /api mount point
-  const relativePath = req.path;
-  const fullPath = req.originalUrl;
+  
+  // Templates need special handling - GET is public, but POST/PUT need auth
+  const isTemplateRead = relativePath.match(/^\/templates($|\/\d+$|\/[^\/]+$)/) && req.method === 'GET';
+  if (isTemplateRead) {
+    return next();
+  }
   
   // In test environment, log the paths for debugging
   if (process.env.NODE_ENV === 'test' && relativePath.includes('auth')) {
