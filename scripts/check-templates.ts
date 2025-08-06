@@ -5,9 +5,9 @@ import { templates, users, creatorProfiles } from '../shared/schema';
 
 dotenv.config();
 
-// Use Railway URL directly
+// Use Railway URL from environment or fallback to direct URL
 const pool = new Pool({
-  connectionString: "postgresql://postgres:VzwcdGSjRqKxBtrpMcdjBgQYjaGDqhWN@shuttle.proxy.rlwy.net:20957/railway",
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:VzwcdGSjRqKxBtrpMcdjBgQYjaGDqhWN@shuttle.proxy.rlwy.net:20957/railway",
 });
 
 const db = drizzle(pool);
