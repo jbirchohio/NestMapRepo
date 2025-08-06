@@ -55,34 +55,64 @@ export class TemplateCopyService {
       });
 
       // Copy activities if they exist
-      if (tripData.activities && Array.isArray(tripData.activities)) {
+      // Handle both formats: new format (days array) and old format (flat activities array)
+      if (tripData.days && Array.isArray(tripData.days)) {
+        // New format: structured by days
         const startDate = new Date();
         
-        for (let dayIndex = 0; dayIndex < tripData.activities.length; dayIndex++) {
-          const dayActivities = Array.isArray(tripData.activities[dayIndex]) 
-            ? tripData.activities[dayIndex] 
-            : [tripData.activities[dayIndex]];
+        for (const day of tripData.days) {
+          if (!day.activities || !Array.isArray(day.activities)) continue;
           
-          for (const activity of dayActivities) {
+          const activityDate = new Date(startDate);
+          activityDate.setDate(startDate.getDate() + (day.day - 1));
+          
+          let order = 0;
+          for (const activity of day.activities) {
             if (!activity || !activity.title) continue;
-            
-            const activityDate = new Date(startDate);
-            activityDate.setDate(startDate.getDate() + dayIndex);
             
             await storage.createActivity({
               trip_id: newTrip.id,
               title: activity.title,
               date: activityDate,
               time: activity.time || null,
-              location_name: activity.locationName || activity.location_name,
-              latitude: activity.latitude,
-              longitude: activity.longitude,
+              location_name: activity.location || activity.locationName || activity.location_name,
+              latitude: activity.latitude?.toString() || null,
+              longitude: activity.longitude?.toString() || null,
               notes: activity.notes,
               tag: activity.tag,
-              order: activity.order || dayIndex,
+              order: order++,
               travel_mode: activity.travelMode || activity.travel_mode,
             });
           }
+        }
+      } else if (tripData.activities && Array.isArray(tripData.activities)) {
+        // Old format: flat activities array (for backwards compatibility)
+        const startDate = new Date();
+        
+        for (const activity of tripData.activities) {
+          if (!activity || !activity.title) continue;
+          
+          // Use the activity's date if available, otherwise calculate from day number
+          let activityDate = new Date(startDate);
+          if (activity.date) {
+            activityDate = new Date(activity.date);
+          } else if (activity.day) {
+            activityDate.setDate(startDate.getDate() + (activity.day - 1));
+          }
+          
+          await storage.createActivity({
+            trip_id: newTrip.id,
+            title: activity.title,
+            date: activityDate,
+            time: activity.time || null,
+            location_name: activity.location || activity.locationName || activity.location_name,
+            latitude: activity.latitude?.toString() || null,
+            longitude: activity.longitude?.toString() || null,
+            notes: activity.notes,
+            tag: activity.tag,
+            order: activity.order || 0,
+            travel_mode: activity.travelMode || activity.travel_mode,
+          });
         }
       }
 
