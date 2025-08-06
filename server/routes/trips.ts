@@ -558,6 +558,78 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
   }
 });
 
+// Add hotel to trip
+router.post("/:id/add-hotel", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    const trip = await storage.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Verify user owns this trip
+    if (trip.user_id !== req.user?.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { hotel, checkIn, checkOut, trackingId, confirmed } = req.body;
+
+    // Update trip with hotel information
+    const updatedTrip = await storage.updateTrip(tripId, {
+      hotel: hotel.name,
+      hotelLatitude: hotel.latitude || null,
+      hotelLongitude: hotel.longitude || null,
+      hotelCheckIn: checkIn,
+      hotelCheckOut: checkOut,
+      hotelBookingUrl: hotel.bookingUrl,
+      hotelPrice: hotel.price,
+      hotelConfirmed: confirmed || false,
+      hotelTrackingId: trackingId
+    });
+
+    // Also create an activity for the hotel stay
+    await storage.createActivity({
+      trip_id: tripId,
+      title: `Check-in: ${hotel.name}`,
+      description: `Hotel stay at ${hotel.name}`,
+      date: new Date(checkIn),
+      time: "15:00", // Standard check-in time
+      type: "accommodation",
+      latitude: hotel.latitude,
+      longitude: hotel.longitude,
+      address: hotel.address,
+      booking_reference: trackingId
+    });
+
+    // Create check-out activity
+    await storage.createActivity({
+      trip_id: tripId,
+      title: `Check-out: ${hotel.name}`,
+      description: `Check out from ${hotel.name}`,
+      date: new Date(checkOut),
+      time: "11:00", // Standard check-out time
+      type: "accommodation",
+      latitude: hotel.latitude,
+      longitude: hotel.longitude,
+      address: hotel.address,
+      booking_reference: trackingId
+    });
+
+    res.json({ 
+      success: true, 
+      trip: updatedTrip,
+      message: "Hotel added to your trip!" 
+    });
+  } catch (error) {
+    logger.error("Error adding hotel to trip:", error);
+    res.status(500).json({ message: "Could not add hotel to trip" });
+  }
+});
+
 // Export the router
 // Trip Travelers Routes - Team member management for corporate trips
 

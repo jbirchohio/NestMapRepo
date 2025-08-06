@@ -6,6 +6,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import fs from "fs";
 import apiRoutes from "./routes/index";
+import sitemapRoutes from "./routes/sitemap";
 import { setupVite, serveStatic, log } from "./vite";
 // System settings not needed for consumer app
 // import { initializeSystemSettings, checkMaintenanceMode, getSetting } from "./services/systemSettingsService";
@@ -250,6 +251,9 @@ app.use((req, res, next) => {
     
     // Mount API routes with proper middleware order
     app.use('/api', apiRoutes);
+    
+    // Mount SEO routes at root level (no /api prefix)
+    app.use('/', sitemapRoutes);
 
     // Register booking routes with full Express app instance
     const { registerBookingRoutes } = await import('./routes/bookings');

@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import NewTripModalConsumer from "@/components/NewTripModalConsumer";
 import AITripChatModal from "@/components/AITripChatModal";
 import PackageSearch from "@/components/PackageSearch";
+import PopularDestinations from "@/components/PopularDestinations";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import { motion } from "framer-motion";
@@ -555,6 +556,9 @@ export default function HomeConsumerRedesigned() {
           )}
         </div>
       </section>
+      
+      {/* Popular Destinations Section */}
+      <PopularDestinations />
 
       {/* Modals */}
       <NewTripModalConsumer

@@ -14,6 +14,9 @@ import weatherRoutes from './weather';
 import viatorRoutes from './viator';
 import consumerBookingsRouter from './bookings-consumer';
 import packageRoutes from './packages';
+import sitemapRoutes from './sitemap';
+import destinationRoutes from './destinations';
+import bookingTrackingRoutes from './bookings-tracking';
 
 const router = Router();
 
@@ -32,6 +35,8 @@ router.use('/weather', weatherRoutes);
 router.use('/viator', viatorRoutes);
 router.use('/consumer/bookings', consumerBookingsRouter);
 router.use('/packages', packageRoutes);
+router.use('/destinations', destinationRoutes);
+router.use('/bookings', bookingTrackingRoutes);
 
 // Templates endpoint
 router.get('/templates', async (req, res) => {

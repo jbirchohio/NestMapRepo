@@ -20,6 +20,7 @@ import FlightSearchSimple from "@/pages/FlightSearchSimple";
 import FlightBooking from "@/pages/FlightBooking";
 import FlightResults from "@/pages/FlightResults";
 import BookingConfirmation from "@/pages/BookingConfirmation";
+import DestinationGuide from "@/pages/DestinationGuide";
 import NotFound from "@/pages/not-found";
 
 function NavigationWrapper() {
@@ -67,6 +68,11 @@ function Router() {
           <Route path="/bookings/:bookingId" component={BookingConfirmation} />
           <Route path="/ai-generator" component={AITripGeneratorPage} />
           <Route path="/optimizer" component={TripOptimizer} />
+          
+          {/* SEO Destination Pages */}
+          <Route path="/destinations/:destination" component={DestinationGuide} />
+          <Route path="/hotels/:destination" component={DestinationGuide} />
+          <Route path="/packages/:destination" component={DestinationGuide} />
           
           {/* User account */}
           <Route path="/profile" component={ProfileSettings} />

@@ -185,9 +185,10 @@ export default function AITripGenerator() {
 
   const generateTripMutation = useMutation({
     mutationFn: async (userPrompt: string) => {
-      const response = await apiRequest('POST', '/api/generate-ai-trip', { 
+      const response = await apiRequest('POST', '/api/ai/generate-trip', { 
         prompt: userPrompt,
-        conversation 
+        conversation,
+        tripId: null // Can be connected to existing trip if needed
       });
       if (!response.ok) {
         throw new Error('Failed to generate trip');
@@ -239,13 +240,15 @@ export default function AITripGenerator() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-2">
-          <Sparkles className="w-8 h-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">AI Trip Assistant</h1>
+          <Sparkles className="w-8 h-8 text-purple-600" />
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            AI Vacation Planner
+          </h1>
         </div>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           {showQuestions ? 
-            "Let me gather a few more details to find the best flights and hotels for your trip!" :
-            "Describe your business trip and I'll help plan everything with real pricing and availability."
+            "Let me gather a few more details to create your perfect vacation itinerary!" :
+            "Tell me about your dream vacation and I'll create a complete itinerary with activities, hotels, and restaurants."
           }
         </p>
       </div>
@@ -280,14 +283,14 @@ export default function AITripGenerator() {
         </Card>
       )}
 
-      <Card className="w-full">
+      <Card className="w-full border-purple-200">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Briefcase className="w-5 h-5 text-blue-600" />
-            <span>Describe Your Business Trip</span>
+            <MapPin className="w-5 h-5 text-purple-600" />
+            <span>Describe Your Dream Vacation</span>
           </CardTitle>
           <CardDescription>
-            Tell us about your destination, dates, budget, business requirements, and preferences. Be as detailed as you'd like!
+            Tell me where you want to go, when you want to travel, your budget, and what kind of experiences you're looking for!
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -296,7 +299,7 @@ export default function AITripGenerator() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Example: I need a 3-day business trip to New York City from March 15-17, 2024. Budget around $2500. I have client meetings on March 16th from 2-4pm. I prefer business hotels near Manhattan, enjoy fine dining, and would like some cultural activities in the evenings. I have dietary restrictions for vegetarian food..."
+              placeholder="Example: I want to visit Paris for 5 days in April with my partner. Budget around $4000 total. We love art museums, romantic restaurants, and want to see all the iconic sights. Looking for a charming boutique hotel in a central location. We're vegetarian and enjoy wine tasting..."
               className="min-h-[120px] resize-none"
               disabled={isGenerating}
             />
@@ -309,7 +312,7 @@ export default function AITripGenerator() {
             <Button
               onClick={handleGenerateTrip}
               disabled={!prompt.trim() || isGenerating}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
             >
               {isGenerating ? (
                 <>
@@ -319,7 +322,7 @@ export default function AITripGenerator() {
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>Generate Trip</span>
+                  <span>Plan My Vacation</span>
                 </>
               )}
             </Button>
@@ -337,32 +340,32 @@ export default function AITripGenerator() {
       </Card>
 
       <div className="grid md:grid-cols-3 gap-4">
-        <Card className="p-4">
+        <Card className="p-4 border-purple-100">
           <div className="flex items-center space-x-3">
-            <MapPin className="w-5 h-5 text-blue-600" />
+            <MapPin className="w-5 h-5 text-purple-600" />
             <div>
-              <h3 className="font-medium">Smart Destinations</h3>
-              <p className="text-sm text-gray-600">AI finds the best locations and venues</p>
+              <h3 className="font-medium">Hidden Gems</h3>
+              <p className="text-sm text-gray-600">Discover local favorites & must-see spots</p>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4">
+        <Card className="p-4 border-pink-100">
           <div className="flex items-center space-x-3">
-            <Calendar className="w-5 h-5 text-green-600" />
+            <Calendar className="w-5 h-5 text-pink-600" />
             <div>
-              <h3 className="font-medium">Schedule Optimization</h3>
-              <p className="text-sm text-gray-600">Conflicts avoided, time maximized</p>
+              <h3 className="font-medium">Perfect Timing</h3>
+              <p className="text-sm text-gray-600">Optimized daily schedules & routes</p>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4">
+        <Card className="p-4 border-purple-100">
           <div className="flex items-center space-x-3">
             <DollarSign className="w-5 h-5 text-purple-600" />
             <div>
-              <h3 className="font-medium">Budget Planning</h3>
-              <p className="text-sm text-gray-600">Detailed cost breakdown and optimization</p>
+              <h3 className="font-medium">Smart Budget</h3>
+              <p className="text-sm text-gray-600">Best value hotels, flights & activities</p>
             </div>
           </div>
         </Card>
@@ -468,10 +471,10 @@ function TripResultsView({ trip, onBack }: TripResultsViewProps) {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <CheckCircle className="w-6 h-6 text-green-600" />
-            <span>{trip.tripSummary?.title || "Generated Business Trip"}</span>
+            <span>{trip.tripSummary?.title || "Your Vacation Itinerary"}</span>
           </CardTitle>
           <CardDescription>
-            {trip.tripSummary?.description || "Your AI-generated business trip itinerary"}
+            {trip.tripSummary?.description || "Your personalized vacation itinerary with flights, hotels, and activities"}
           </CardDescription>
         </CardHeader>
         <CardContent>

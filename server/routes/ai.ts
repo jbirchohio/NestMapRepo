@@ -692,4 +692,298 @@ router.post("/trip-assistant", async (req, res) => {
   }
 });
 
+// POST /api/ai/recommend-tours - Get AI tour recommendations
+router.post("/recommend-tours", async (req, res) => {
+  try {
+    const { destination, startDate, endDate, interests } = req.body;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    const prompt = `Recommend the top 5 must-do tours and activities for a trip to ${destination} from ${startDate} to ${endDate}.
+    ${interests?.length > 0 ? `The traveler is interested in: ${interests.join(', ')}` : ''}
+    
+    Focus on:
+    1. Most iconic and popular attractions
+    2. Unique local experiences
+    3. Best value for money
+    4. Activities suitable for the season
+    5. Mix of culture, food, and adventure
+    
+    Provide specific tour recommendations with brief descriptions.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+      temperature: 0.7,
+    });
+
+    const content = response.choices[0].message.content || "";
+    
+    // Parse recommendations into array
+    const recommendations = content
+      .split('\n')
+      .filter(line => line.trim().length > 0 && (line.includes('1.') || line.includes('2.') || line.includes('3.') || line.includes('4.') || line.includes('5.')))
+      .map(line => line.replace(/^\d+\.\s*/, '').trim());
+
+    res.json({
+      success: true,
+      recommendations,
+      destination,
+      period: `${startDate} to ${endDate}`
+    });
+  } catch (error) {
+    console.error("AI recommend-tours error:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to generate tour recommendations" 
+    });
+  }
+});
+
+// POST /api/ai/generate-trip - Generate complete AI trip itinerary
+router.post("/generate-trip", async (req, res) => {
+  try {
+    const { prompt, conversation, tripId } = req.body;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    // For now, generate trip inline since businessTripGenerator is for business trips
+    // We'll create a consumer-focused generation instead
+    
+    // Parse the prompt to extract trip requirements
+    const promptLower = prompt.toLowerCase();
+    
+    // Use AI to extract structured data from natural language prompt
+    const extractionPrompt = `Extract trip details from this request and return as JSON:
+"${prompt}"
+
+Return format:
+{
+  "destination": "city name",
+  "startDate": "YYYY-MM-DD",
+  "endDate": "YYYY-MM-DD", 
+  "budget": number,
+  "groupSize": number,
+  "tripPurpose": "business/leisure/mixed",
+  "preferences": {
+    "accommodationType": "luxury/business/budget",
+    "activityTypes": ["type1", "type2"],
+    "foodTypes": ["cuisine1", "cuisine2"]
+  }
+}
+
+If any information is missing, use reasonable defaults or mark as null.`;
+
+    const extractionResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: extractionPrompt }],
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+    });
+
+    const extractedData = JSON.parse(extractionResponse.choices[0].message.content || "{}");
+    
+    // Check if we need more information
+    const missingFields = [];
+    if (!extractedData.destination) missingFields.push("destination");
+    if (!extractedData.startDate) missingFields.push("travel dates");
+    if (!extractedData.budget) missingFields.push("budget");
+    
+    if (missingFields.length > 0) {
+      // Return questions to gather missing information
+      const questions = `I'd love to help plan your trip! To create the perfect itinerary, could you provide:
+
+${missingFields.map((field, i) => `${i + 1}. What's your ${field}?`).join('\n')}
+
+Any other preferences like:
+- Preferred hotel type (luxury, business, budget)?
+- Activities you enjoy?
+- Dietary restrictions?`;
+
+      return res.json({
+        type: "questions",
+        message: questions,
+        conversation: [
+          ...(conversation || []),
+          { role: "user", content: prompt },
+          { role: "assistant", content: questions }
+        ]
+      });
+    }
+
+    // Generate vacation itinerary using AI
+    const itineraryPrompt = `Create a detailed ${extractedData.tripPurpose || 'vacation'} itinerary for:
+Destination: ${extractedData.destination}
+Dates: ${extractedData.startDate} to ${extractedData.endDate}
+Budget: $${extractedData.budget || 3000} USD total
+Travelers: ${extractedData.groupSize || 2} people
+Accommodation preference: ${extractedData.preferences?.accommodationType || 'mid-range'}
+Activities: ${extractedData.preferences?.activityTypes?.join(', ') || 'sightseeing, culture, relaxation'}
+Food preferences: ${extractedData.preferences?.foodTypes?.join(', ') || 'local cuisine, popular restaurants'}
+
+Please provide a complete vacation itinerary with:
+1. Recommended flights (with realistic prices)
+2. Hotel suggestions (2-3 options with nightly rates)
+3. Daily activities schedule (morning, afternoon, evening)
+4. Restaurant recommendations for meals
+5. Transportation tips
+6. Total budget breakdown
+
+Format as JSON with this structure:
+{
+  "tripSummary": {
+    "title": "Trip title",
+    "description": "Brief description",
+    "duration": number_of_days,
+    "totalCost": estimated_total,
+    "highlights": ["highlight1", "highlight2"]
+  },
+  "flights": [
+    {
+      "airline": "Airline name",
+      "flightNumber": "XX123",
+      "route": "NYC to Paris",
+      "departure": "2024-03-15 10:00 AM",
+      "arrival": "2024-03-15 11:00 PM",
+      "price": 600,
+      "cabin": "Economy"
+    }
+  ],
+  "accommodation": [
+    {
+      "name": "Hotel name",
+      "address": "Address",
+      "stars": 4,
+      "pricePerNight": 150,
+      "checkIn": "2024-03-15",
+      "checkOut": "2024-03-18",
+      "amenities": ["WiFi", "Pool", "Breakfast"]
+    }
+  ],
+  "activities": [
+    {
+      "date": "2024-03-16",
+      "time": "09:00",
+      "title": "Activity name",
+      "description": "Description",
+      "duration": "2 hours",
+      "location": "Location",
+      "price": 50,
+      "category": "sightseeing",
+      "bookingRequired": true
+    }
+  ],
+  "meals": [
+    {
+      "date": "2024-03-16",
+      "time": "12:30",
+      "restaurant": "Restaurant name",
+      "cuisine": "French",
+      "location": "Address",
+      "estimatedCost": 40,
+      "type": "lunch",
+      "mustTry": "Dish name"
+    }
+  ],
+  "transportation": [
+    {
+      "type": "Airport Transfer",
+      "description": "Taxi from airport to hotel",
+      "cost": 45
+    }
+  ],
+  "budgetBreakdown": {
+    "flights": 1200,
+    "hotels": 450,
+    "meals": 300,
+    "activities": 400,
+    "transportation": 150,
+    "shopping": 200,
+    "contingency": 300
+  },
+  "recommendations": [
+    "Pack light layers for variable weather",
+    "Book popular restaurants in advance",
+    "Get city tourist pass for savings"
+  ],
+  "weatherConsiderations": {
+    "temperature": "15-22°C",
+    "conditions": "Partly cloudy with occasional rain",
+    "packingTips": ["Umbrella", "Light jacket"]
+  }
+}`;
+
+    const itineraryResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: itineraryPrompt }],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
+
+    const generatedTrip = JSON.parse(itineraryResponse.choices[0].message.content || "{}");
+    
+    // Format activities for frontend consumption
+    const formattedActivities = generatedTrip.activities.map((activity: any, index: number) => ({
+      id: `ai-${index}`,
+      title: activity.title || activity.name,
+      description: activity.description,
+      date: activity.date,
+      time: activity.time || activity.startTime,
+      duration: activity.duration,
+      location: activity.location,
+      category: activity.category || "activity",
+      price: activity.price || 0,
+      bookingUrl: activity.bookingUrl
+    }));
+
+    // If a tripId is provided, save the activities to the trip
+    if (tripId) {
+      for (const activity of formattedActivities) {
+        await db.insert(activities).values({
+          trip_id: parseInt(tripId),
+          title: activity.title,
+          description: activity.description,
+          date: new Date(activity.date),
+          time: activity.time,
+          duration: activity.duration,
+          location: activity.location,
+          category: activity.category,
+          price: activity.price,
+          booking_url: activity.bookingUrl,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+      }
+    }
+
+    res.json({
+      type: "itinerary",
+      success: true,
+      tripSummary: generatedTrip.tripSummary,
+      flights: generatedTrip.flights,
+      accommodation: generatedTrip.accommodation,
+      activities: formattedActivities,
+      meals: generatedTrip.meals,
+      groundTransportation: generatedTrip.transportation,
+      budgetBreakdown: generatedTrip.budgetBreakdown,
+      recommendations: generatedTrip.recommendations,
+      weatherConsiderations: generatedTrip.weatherConsiderations,
+      message: "Your personalized itinerary has been created!",
+      savedToTrip: !!tripId
+    });
+    
+  } catch (error) {
+    console.error("AI generate-trip error:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to generate trip itinerary" 
+    });
+  }
+});
+
 export default router;

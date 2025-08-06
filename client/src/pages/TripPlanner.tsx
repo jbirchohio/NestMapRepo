@@ -9,6 +9,7 @@ import ShareTripModal from "@/components/ShareTripModal";
 import ActivityModal from "@/components/ActivityModal";
 import ActivityModalConsumer from "@/components/ActivityModalConsumer";
 import AITripChat from "@/components/AITripChat";
+import SmartTourRecommendations from "@/components/SmartTourRecommendations";
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
 import { useAutoComplete } from "@/hooks/useAutoComplete";
@@ -16,7 +17,7 @@ import { useMapboxDirections } from "@/hooks/useMapboxDirections";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, Sparkles } from "lucide-react";
 
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
@@ -74,6 +75,9 @@ export default function TripPlanner() {
   
   // State for AI chat
   const [showAIChat, setShowAIChat] = useState(false);
+  
+  // State for tour recommendations
+  const [showTourRecommendations, setShowTourRecommendations] = useState(false);
   
   // Centralized activity modal handlers
   const handleOpenActivityModal = (activity: ClientActivity | null = null, day: Date | null = null) => {
@@ -505,18 +509,60 @@ export default function TripPlanner() {
         </div>
       )}
       
-      {/* Floating AI Chat Button */}
-      <button
-        onClick={() => setShowAIChat(!showAIChat)}
-        className="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-        aria-label="Toggle AI Assistant"
-      >
-        {showAIChat ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MessageCircle className="w-6 h-6" />
-        )}
-      </button>
+      {/* Tour Recommendations Panel */}
+      {showTourRecommendations && trip && (
+        <div className="fixed bottom-4 left-4 w-[500px] max-h-[80vh] overflow-y-auto z-50 shadow-2xl rounded-lg bg-white animate-in slide-in-from-left-5">
+          <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              Recommended Tours & Activities
+            </h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowTourRecommendations(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="p-4">
+            <SmartTourRecommendations
+              tripId={tripId}
+              destination={trip.city || trip.location || ''}
+              startDate={new Date(trip.startDate)}
+              endDate={new Date(trip.endDate)}
+              latitude={trip.latitude ? parseFloat(trip.latitude) : undefined}
+              longitude={trip.longitude ? parseFloat(trip.longitude) : undefined}
+              onTourAdded={() => refetchActivities()}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+        {/* Tour Recommendations Button */}
+        <button
+          onClick={() => setShowTourRecommendations(!showTourRecommendations)}
+          className="bg-gradient-to-br from-green-600 to-teal-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          aria-label="Toggle Tour Recommendations"
+        >
+          <Sparkles className="w-6 h-6" />
+        </button>
+        
+        {/* AI Chat Button */}
+        <button
+          onClick={() => setShowAIChat(!showAIChat)}
+          className="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          aria-label="Toggle AI Assistant"
+        >
+          {showAIChat ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <MessageCircle className="w-6 h-6" />
+          )}
+        </button>
+      </div>
     </AppShell>
   );
 }
