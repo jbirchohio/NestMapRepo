@@ -16,7 +16,7 @@ import consumerBookingsRouter from './bookings-consumer';
 import packageRoutes from './packages';
 import sitemapRoutes from './sitemap';
 import destinationRoutes from './destinations';
-import bookingTrackingRoutes from './bookings-tracking';
+import subscriptionRoutes from './subscription';
 
 const router = Router();
 
@@ -36,7 +36,7 @@ router.use('/viator', viatorRoutes);
 router.use('/consumer/bookings', consumerBookingsRouter);
 router.use('/packages', packageRoutes);
 router.use('/destinations', destinationRoutes);
-router.use('/bookings', bookingTrackingRoutes);
+router.use('/subscription', subscriptionRoutes);
 
 // Templates endpoint
 router.get('/templates', async (req, res) => {

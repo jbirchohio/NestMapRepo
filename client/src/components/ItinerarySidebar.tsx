@@ -115,7 +115,7 @@ export default function ItinerarySidebar({
     mutationFn: async (todo: Todo) => {
       const res = await apiRequest("PUT", `${API_ENDPOINTS.TODOS}/${todo.id}`, {
         ...todo,
-        completed: !todo.completed,
+        completed: !(todo as any).completed || !todo.is_completed,
       });
       return res;
     },
@@ -392,14 +392,14 @@ export default function ItinerarySidebar({
                     <div key={todo.id} className="flex items-center space-x-2 p-2 hover:bg-[hsl(var(--muted))] rounded-md">
                       <Checkbox 
                         id={`todo-${todo.id}`} 
-                        checked={todo.completed ?? false}
+                        checked={(todo as any).completed ?? todo.is_completed ?? false}
                         onCheckedChange={() => toggleTodo.mutate(todo)}
                       />
                       <label 
                         htmlFor={`todo-${todo.id}`}
-                        className={`flex-1 cursor-pointer ${todo.completed ? 'line-through text-[hsl(var(--muted-foreground))]' : ''}`}
+                        className={`flex-1 cursor-pointer ${(todo as any).completed || todo.is_completed ? 'line-through text-[hsl(var(--muted-foreground))]' : ''}`}
                       >
-                        {todo.task}
+                        {(todo as any).content || todo.content}
                       </label>
                     </div>
                   ))

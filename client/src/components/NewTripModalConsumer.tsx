@@ -10,6 +10,7 @@ import useMapbox from "@/hooks/useMapbox";
 import { Calendar, MapPin, Sparkles, X, ChevronRight } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import PremiumUpgrade from "./PremiumUpgrade";
 
 interface NewTripModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export default function NewTripModalConsumer({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   
   // Rotate examples
   useEffect(() => {
@@ -64,6 +66,28 @@ export default function NewTripModalConsumer({
     }, 3000);
     return () => clearInterval(interval);
   }, [isOpen]);
+
+  // Check if user can create trip when modal opens
+  useEffect(() => {
+    const checkTripLimit = async () => {
+      if (isOpen && user) {
+        try {
+          const response = await fetch('/api/subscription/can-use/create_trip', {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          const data = await response.json();
+          if (!data.canUse) {
+            setShowUpgrade(true);
+          }
+        } catch (error) {
+          console.error('Failed to check trip limit:', error);
+        }
+      }
+    };
+    checkTripLimit();
+  }, [isOpen, user]);
 
   const {
     register,
@@ -139,6 +163,31 @@ export default function NewTripModalConsumer({
     setIsLoading(true);
     
     try {
+      // Check trip limit before submission
+      const checkResponse = await fetch('/api/subscription/can-use/create_trip', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const canCreate = await checkResponse.json();
+      if (!canCreate.canUse) {
+        setShowUpgrade(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Track trip creation for usage limits
+      await fetch('/api/subscription/track-usage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          feature: 'trip_created',
+          count: 1
+        })
+      });
       // If no coordinates yet, try to geocode the city
       if (!data.cityLatitude || !data.cityLongitude) {
         try {
@@ -195,6 +244,19 @@ export default function NewTripModalConsumer({
   };
 
   if (!isOpen) return null;
+
+  // Show upgrade modal if limit reached
+  if (showUpgrade) {
+    return (
+      <PremiumUpgrade 
+        feature="create_trip" 
+        onClose={() => {
+          setShowUpgrade(false);
+          onClose();
+        }}
+      />
+    );
+  }
 
   return (
     <AnimatePresence>

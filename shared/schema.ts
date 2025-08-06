@@ -209,11 +209,39 @@ export const bookings = pgTable("bookings", {
   provider: text("provider"), // duffel, viator, etc
   external_booking_id: text("external_booking_id"),
   confirmation_code: text("confirmation_code"),
+  reference_number: text("reference_number"), // For tracking
+  confirmation_number: text("confirmation_number"), // Actual confirmation
   total_amount: decimal("total_amount", { precision: 10, scale: 2 }),
   currency: text("currency").default("USD"),
   booking_data: jsonb("booking_data"), // Full booking details
+  details: jsonb("details"), // Additional details
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Subscription management
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().unique(),
+  tier: text("tier").default("free"), // free, explorer, adventurer
+  status: text("status").default("active"), // active, cancelling, cancelled, past_due
+  stripe_customer_id: text("stripe_customer_id"),
+  stripe_subscription_id: text("stripe_subscription_id"),
+  current_period_start: timestamp("current_period_start"),
+  current_period_end: timestamp("current_period_end"),
+  cancel_at_period_end: boolean("cancel_at_period_end").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Track feature usage for limits
+export const usageTracking = pgTable("usage_tracking", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull(),
+  feature: text("feature").notNull(), // ai_suggestion, trip_created, etc
+  count: integer("count").default(1),
+  metadata: jsonb("metadata"),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 // Waitlist for early access
