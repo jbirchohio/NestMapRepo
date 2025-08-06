@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { 
   Twitter, Facebook, Instagram, Link, Mail, MessageCircle,
-  Copy, Check, Share2, QrCode, Download, X
+  Copy, Check, Share2, QrCode, Download, X, MessageSquare,
+  Send, Linkedin, Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,11 +99,21 @@ export default function ShareModalSimple({
       twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
       whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+      telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`,
+      pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedTitle}`,
       email: `mailto:?subject=${encodedTitle}&body=${encodedDescription}%0A%0A${encodedUrl}`,
+      sms: `sms:?body=${encodedTitle}%20${encodedUrl}`,
     };
 
     if (shareUrls[platform]) {
-      window.open(shareUrls[platform], '_blank');
+      if (platform === 'sms') {
+        // SMS links work differently on different platforms
+        window.location.href = shareUrls[platform];
+      } else {
+        window.open(shareUrls[platform], '_blank');
+      }
     }
   };
 
@@ -227,6 +238,38 @@ export default function ShareModalSimple({
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   WhatsApp
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleShare('sms')}
+                  className="justify-start"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  SMS
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleShare('telegram')}
+                  className="justify-start"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Telegram
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleShare('linkedin')}
+                  className="justify-start"
+                >
+                  <Linkedin className="h-4 w-4 mr-2" />
+                  LinkedIn
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleShare('reddit')}
+                  className="justify-start"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Reddit
                 </Button>
                 <Button
                   variant="outline"

@@ -306,7 +306,7 @@ export default function TemplateDetails() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Purchase Card */}
-            <Card className="sticky top-24">
+            <Card className="sticky top-24 z-10 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center mb-6">
                   <div className="text-4xl font-bold text-purple-600">
