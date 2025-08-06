@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -42,6 +42,30 @@ function HomePage() {
   return user ? <HomeConsumerRedesigned /> : <Explore />;
 }
 
+function LoginRedirect() {
+  const [, setLocation] = useLocation();
+  
+  useEffect(() => {
+    // Use history API to update URL without reload
+    window.history.pushState({}, '', '/?auth=login');
+    setLocation('/');
+  }, [setLocation]);
+  
+  return <Explore />;
+}
+
+function SignupRedirect() {
+  const [, setLocation] = useLocation();
+  
+  useEffect(() => {
+    // Use history API to update URL without reload
+    window.history.pushState({}, '', '/?auth=signup');
+    setLocation('/');
+  }, [setLocation]);
+  
+  return <Explore />;
+}
+
 function Router() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -50,18 +74,8 @@ function Router() {
         <Switch>
           {/* Core consumer routes */}
           <Route path="/" component={HomePage} />
-          <Route path="/login">
-            {() => {
-              window.location.href = '/?auth=login';
-              return <HomeConsumerRedesigned />;
-            }}
-          </Route>
-          <Route path="/signup">
-            {() => {
-              window.location.href = '/?auth=signup';
-              return <HomeConsumerRedesigned />;
-            }}
-          </Route>
+          <Route path="/login" component={LoginRedirect} />
+          <Route path="/signup" component={SignupRedirect} />
           <Route path="/explore" component={Explore} />
           <Route path="/trip/:id" component={TripPlanner} />
           <Route path="/trip-planner/:id" component={TripPlanner} />

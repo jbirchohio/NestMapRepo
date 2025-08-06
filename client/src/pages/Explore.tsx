@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/JWTAuthContext';
 import NewTripModalConsumer from '@/components/NewTripModalConsumer';
 import ViatorMarketplace from '@/components/ViatorMarketplace';
 import PopularDestinations from '@/components/PopularDestinations';
+import AuthModal from '@/components/auth/AuthModal';
 import { 
   Compass, Map, Calendar, Users, Brain, Sparkles,
   TrendingUp, Clock, Globe, Star, ChevronRight, Zap,
@@ -73,12 +74,30 @@ export default function Explore() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
+  const [selectedCity, setSelectedCity] = useState('New York');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authView, setAuthView] = useState<'login' | 'signup'>('signup');
+
+  // Check for auth query parameters
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authParam = params.get('auth');
+    
+    if (authParam === 'login' || authParam === 'signup') {
+      setAuthView(authParam as 'login' | 'signup');
+      setIsAuthModalOpen(true);
+      
+      // Clean up URL
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
 
   const handleGetStarted = () => {
     if (user) {
       setIsNewTripModalOpen(true);
     } else {
-      setLocation('/?auth=signup');
+      setAuthView('signup');
+      setIsAuthModalOpen(true);
     }
   };
 
@@ -121,16 +140,16 @@ export default function Explore() {
 
             <div className="flex items-center justify-center gap-8 text-sm text-gray-600">
               <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                <span>4.9/5 rating</span>
+                <Zap className="h-5 w-5 text-purple-600" />
+                <span>Plan trips faster</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-600" />
-                <span>10,000+ trips planned</span>
+                <Globe className="h-5 w-5 text-blue-600" />
+                <span>Any destination</span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-blue-600" />
-                <span>5 min average setup</span>
+                <Users className="h-5 w-5 text-green-600" />
+                <span>Share with friends</span>
               </div>
             </div>
           </motion.div>
@@ -208,10 +227,24 @@ export default function Explore() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-4">Book Amazing Experiences</h2>
-            <p className="text-gray-600">Powered by Viator - Instant confirmation on thousands of tours</p>
+            <p className="text-gray-600 mb-6">Powered by Viator - Instant confirmation on thousands of tours</p>
+            
+            {/* City Search */}
+            <div className="max-w-md mx-auto flex gap-2">
+              <input
+                type="text"
+                placeholder="Search any city..."
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                Search
+              </Button>
+            </div>
           </div>
           <ViatorMarketplace 
-            destination="New York"
+            destination={selectedCity}
             dates={{ start: new Date(), end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }}
           />
         </div>
@@ -312,7 +345,18 @@ export default function Explore() {
                     <span>No ads</span>
                   </li>
                 </ul>
-                <Button className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                <Button 
+                  className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  onClick={() => {
+                    if (!user) {
+                      setAuthView('signup');
+                      setIsAuthModalOpen(true);
+                    } else {
+                      // TODO: Handle upgrade for logged-in users
+                      setLocation('/profile');
+                    }
+                  }}
+                >
                   Upgrade to Pro
                 </Button>
               </CardContent>
@@ -347,6 +391,16 @@ export default function Explore() {
           setLocation(`/trip/${trip.id}`);
         }}
       />
+
+      {/* Auth Modal */}
+      {isAuthModalOpen && (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialView={authView}
+          redirectPath="/"
+        />
+      )}
     </div>
   );
 }

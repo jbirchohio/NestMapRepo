@@ -24,17 +24,7 @@ router.post('/search', jwtAuthMiddleware, async (req, res) => {
     
     logger.info('Hotel search request', { userId, destination: params.destination });
 
-    // For now, use mock data with real Expedia URLs
-    // In production, you'd use Amadeus or another API here
-    const hotels = await expediaService.searchHotels({
-      destination: params.destination,
-      checkIn: params.checkIn,
-      checkOut: params.checkOut,
-      adults: params.guests,
-      rooms: params.rooms
-    });
-
-    // Hotel search has been removed
+    // Hotel search has been removed - return empty array
     const hotelsWithTracking = [];
 
     res.json({ hotels: hotelsWithTracking });
