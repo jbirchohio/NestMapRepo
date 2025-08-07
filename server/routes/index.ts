@@ -16,6 +16,7 @@ import templateRoutes from './templates';
 import creatorRoutes from './creators';
 import adminRoutes from './admin';
 import checkoutRoutes from './checkout';
+import uploadRoutes from './upload';
 
 const router = Router();
 
@@ -36,6 +37,7 @@ router.use('/templates', templateRoutes);
 router.use('/creators', creatorRoutes);
 router.use('/admin', adminRoutes);
 router.use('/checkout', checkoutRoutes);
+router.use('/upload', uploadRoutes);
 
 // User permissions endpoint - simplified for consumer app
 router.get('/user/permissions', async (req, res) => {

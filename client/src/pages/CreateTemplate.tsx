@@ -24,9 +24,16 @@ import {
   DollarSign,
   Tag,
   Sparkles,
-  Info
+  Info,
+  Image as ImageIcon
 } from 'lucide-react';
 import PricingSuggestion from '@/components/PricingSuggestion';
+import { TEMPLATE_TAGS, getTagsByCategory, getTagLabel } from '@shared/templateTags';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface TripOption {
   id: number;
@@ -50,10 +57,13 @@ export default function CreateTemplate() {
   const [currency] = useState('USD');
   const [selectedTripId, setSelectedTripId] = useState<number | null>(null);
   const [tags, setTags] = useState<string[]>([]);
-  const [currentTag, setCurrentTag] = useState('');
   const [destinations, setDestinations] = useState<string[]>([]);
   const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showTagSelector, setShowTagSelector] = useState(false);
 
   // Fetch user's trips to convert
   const { data: trips, isLoading: tripsLoading } = useQuery({
@@ -89,7 +99,7 @@ export default function CreateTemplate() {
           description,
           price,
           tags,
-          coverImage: coverImageUrl || undefined
+          coverImage: uploadedImageUrl || coverImageUrl || undefined
         })
       });
 
@@ -144,10 +154,65 @@ export default function CreateTemplate() {
     ? Math.ceil((new Date(selectedTrip.endDate).getTime() - new Date(selectedTrip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
     : 0;
 
-  const handleAddTag = () => {
-    if (currentTag && !tags.includes(currentTag) && tags.length < 5) {
-      setTags([...tags, currentTag.toLowerCase()]);
-      setCurrentTag('');
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload/template-cover', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      setUploadedImageUrl(data.coverUrl);
+      setCoverImageUrl(data.coverUrl);
+      toast({
+        title: 'Image uploaded!',
+        description: 'Your cover image has been uploaded successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload image. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Please select an image under 10MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      setCoverImageFile(file);
+      handleImageUpload(file);
+    }
+  };
+
+  const handleAddTag = (tagValue: string) => {
+    if (!tags.includes(tagValue) && tags.length < 5) {
+      setTags([...tags, tagValue]);
+      setShowTagSelector(false);
     }
   };
 
@@ -261,15 +326,61 @@ export default function CreateTemplate() {
                 </div>
 
                 <div>
-                  <Label htmlFor="cover">Cover Image URL (Optional)</Label>
-                  <Input
-                    id="cover"
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    value={coverImageUrl}
-                    onChange={(e) => setCoverImageUrl(e.target.value)}
-                    className="mt-1"
-                  />
+                  <Label htmlFor="cover">Cover Image</Label>
+                  <div className="mt-1 space-y-2">
+                    {uploadedImageUrl ? (
+                      <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                        <img 
+                          src={uploadedImageUrl} 
+                          alt="Cover" 
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setUploadedImageUrl('');
+                            setCoverImageUrl('');
+                            setCoverImageFile(null);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          id="cover"
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="cover"
+                          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                        >
+                          {isUploading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                              <p className="mt-2 text-sm text-gray-600">Uploading...</p>
+                            </>
+                          ) : (
+                            <>
+                              <ImageIcon className="h-12 w-12 text-gray-400" />
+                              <p className="mt-2 text-sm text-gray-600">Click to upload cover image</p>
+                              <p className="text-xs text-gray-500">JPEG, PNG or WebP (max 10MB)</p>
+                            </>
+                          )}
+                        </label>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      A good cover image helps your template stand out in the marketplace
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -346,32 +457,16 @@ export default function CreateTemplate() {
               <CardHeader>
                 <CardTitle>Tags</CardTitle>
                 <CardDescription>
-                  Add up to 5 tags to help travelers find your template
+                  Select up to 5 tags to help travelers find your template
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add a tag..."
-                    value={currentTag}
-                    onChange={(e) => setCurrentTag(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAddTag}
-                    disabled={tags.length >= 5}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                
+                {/* Selected Tags */}
                 {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
                     {tags.map((tag) => (
                       <Badge key={tag} variant="secondary" className="pl-3 pr-1 py-1">
-                        {tag}
+                        {getTagLabel(tag)}
                         <button
                           type="button"
                           onClick={() => handleRemoveTag(tag)}
@@ -383,10 +478,54 @@ export default function CreateTemplate() {
                     ))}
                   </div>
                 )}
-
-                <div className="text-xs text-gray-500">
-                  Suggested tags: adventure, luxury, budget, family, romantic, foodie, culture, nature
-                </div>
+                
+                {/* Tag Selector */}
+                <Popover open={showTagSelector} onOpenChange={setShowTagSelector}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={tags.length >= 5}
+                      className="w-full justify-start"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {tags.length >= 5 ? 'Maximum 5 tags' : 'Add tags'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0" align="start">
+                    <div className="max-h-96 overflow-y-auto">
+                      {/* Group tags by category */}
+                      {['style', 'group', 'interest', 'duration', 'type', 'special'].map(category => (
+                        <div key={category} className="p-2">
+                          <div className="text-xs font-semibold text-gray-500 uppercase mb-1 px-2">
+                            {category}
+                          </div>
+                          <div className="grid grid-cols-2 gap-1">
+                            {getTagsByCategory(category).map(tag => (
+                              <button
+                                key={tag.value}
+                                type="button"
+                                onClick={() => handleAddTag(tag.value)}
+                                disabled={tags.includes(tag.value)}
+                                className={`text-left px-2 py-1 text-sm rounded hover:bg-gray-100 transition-colors ${
+                                  tags.includes(tag.value) 
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                    : 'hover:text-purple-600'
+                                }`}
+                              >
+                                {tag.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                
+                <p className="text-xs text-gray-500">
+                  Choose tags that best describe your itinerary style and target audience
+                </p>
               </CardContent>
             </Card>
           </div>

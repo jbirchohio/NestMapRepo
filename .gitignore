@@ -20,3 +20,16 @@ client_errors.txt
 
 # Corporate/Enterprise features (archived)
 /archive/corporate/
+
+# Uploads (keep directory structure)
+# Template images are committed, user uploads are ignored
+uploads/covers/user_*
+uploads/thumbnails/user_*
+!uploads/covers/.gitkeep
+!uploads/thumbnails/.gitkeep
+# Keep template images in git (any format)
+!uploads/covers/cover_template_*.webp
+!uploads/covers/cover_template_*.jpg
+!uploads/covers/cover_template_*.jpeg
+!uploads/covers/cover_template_*.png
+!uploads/thumbnails/thumb_template_*
