@@ -1,6 +1,7 @@
 import { storage } from '../storage';
 import { logger } from '../utils/logger';
 import { nanoid } from 'nanoid';
+import { geocodingService } from './geocodingService';
 
 /**
  * Service to copy a purchased template to user's trips
@@ -70,14 +71,33 @@ export class TemplateCopyService {
           for (const activity of day.activities) {
             if (!activity || !activity.title) continue;
             
+            const locationName = activity.location || activity.locationName || activity.location_name;
+            let latitude = activity.latitude?.toString() || null;
+            let longitude = activity.longitude?.toString() || null;
+            
+            // If coordinates are missing but we have a location name, geocode it
+            if (!latitude || !longitude) {
+              if (locationName) {
+                const geocoded = await geocodingService.geocodeWithFallback(
+                  locationName, 
+                  tripData.city || tripData.country
+                );
+                if (geocoded) {
+                  latitude = geocoded.latitude;
+                  longitude = geocoded.longitude;
+                  logger.info(`Geocoded activity location: ${locationName} -> ${latitude}, ${longitude}`);
+                }
+              }
+            }
+            
             await storage.createActivity({
               trip_id: newTrip.id,
               title: activity.title,
               date: activityDate,
               time: activity.time || null,
-              location_name: activity.location || activity.locationName || activity.location_name,
-              latitude: activity.latitude?.toString() || null,
-              longitude: activity.longitude?.toString() || null,
+              location_name: locationName,
+              latitude,
+              longitude,
               notes: activity.notes,
               tag: activity.tag,
               order: order++,
@@ -100,14 +120,33 @@ export class TemplateCopyService {
             activityDate.setDate(startDate.getDate() + (activity.day - 1));
           }
           
+          const locationName = activity.location || activity.locationName || activity.location_name;
+          let latitude = activity.latitude?.toString() || null;
+          let longitude = activity.longitude?.toString() || null;
+          
+          // If coordinates are missing but we have a location name, geocode it
+          if (!latitude || !longitude) {
+            if (locationName) {
+              const geocoded = await geocodingService.geocodeWithFallback(
+                locationName, 
+                tripData.city || tripData.country
+              );
+              if (geocoded) {
+                latitude = geocoded.latitude;
+                longitude = geocoded.longitude;
+                logger.info(`Geocoded activity location: ${locationName} -> ${latitude}, ${longitude}`);
+              }
+            }
+          }
+          
           await storage.createActivity({
             trip_id: newTrip.id,
             title: activity.title,
             date: activityDate,
             time: activity.time || null,
-            location_name: activity.location || activity.locationName || activity.location_name,
-            latitude: activity.latitude?.toString() || null,
-            longitude: activity.longitude?.toString() || null,
+            location_name: locationName,
+            latitude,
+            longitude,
             notes: activity.notes,
             tag: activity.tag,
             order: activity.order || 0,

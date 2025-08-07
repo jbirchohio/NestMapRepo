@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import BookableActivity from "@/components/BookableActivity";
+// import BookableActivity from "@/components/BookableActivity"; // Hidden for now
 
 interface ActivityItemProps {
   activity: ClientActivity;
@@ -234,8 +234,8 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
             )}
           </div>
 
-          {/* Bookable Activity Section */}
-          {activity.locationName && !activity.completed && (
+          {/* Bookable Activity Section - Hidden for now */}
+          {/* {activity.locationName && !activity.completed && (
             <div className="mt-3 pt-3 border-t">
               <BookableActivity
                 activityTitle={activity.title}
@@ -246,7 +246,7 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
                 }}
               />
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

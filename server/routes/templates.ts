@@ -297,6 +297,51 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/templates/suggest-price - Get AI-suggested pricing
+router.get('/suggest-price', requireAuth, async (req, res) => {
+  try {
+    const { 
+      duration, 
+      activityCount, 
+      destinations,
+      tags,
+      hasFlights,
+      hasHotels,
+      hasMeals
+    } = req.query;
+
+    const { pricingSuggestionService } = await import('../services/pricingSuggestionService');
+    
+    // Get user's creator score
+    const creator = await storage.getCreatorProfile(req.user!.id);
+    
+    // Get similar templates prices
+    const similarPrices = await pricingSuggestionService.getSimilarTemplatesPrices(
+      parseInt(String(duration || '7')),
+      String(destinations || '').split(',').filter(Boolean),
+      storage
+    );
+
+    const suggestion = pricingSuggestionService.calculateSuggestedPrice({
+      duration: parseInt(String(duration || '7')),
+      activityCount: parseInt(String(activityCount || '0')),
+      hasFlights: hasFlights === 'true',
+      hasHotels: hasHotels === 'true',
+      hasMeals: hasMeals === 'true',
+      hasTransportation: false,
+      destinations: String(destinations || '').split(',').filter(Boolean),
+      tags: String(tags || '').split(',').filter(Boolean),
+      creatorScore: creator?.creator_score,
+      similarTemplatesPrices: similarPrices
+    });
+
+    res.json(suggestion);
+  } catch (error) {
+    logger.error('Error suggesting price:', error);
+    res.status(500).json({ message: 'Failed to suggest price' });
+  }
+});
+
 // POST /api/templates/from-trip/:tripId - Create template from existing trip
 router.post('/from-trip/:tripId', requireAuth, async (req, res) => {
   try {
@@ -313,6 +358,9 @@ router.post('/from-trip/:tripId', requireAuth, async (req, res) => {
     // Get trip activities
     const activities = await storage.getActivitiesByTripId(parseInt(tripId));
     
+    // Import geocoding service if we need it
+    const { geocodingService } = await import('../services/geocodingService');
+    
     // Calculate duration
     const startDate = new Date(trip.start_date);
     const endDate = new Date(trip.end_date);
@@ -325,7 +373,39 @@ router.post('/from-trip/:tripId', requireAuth, async (req, res) => {
       destinations.push(trip.country);
     }
     
-    // Create trip data JSON
+    // Process activities and ensure they have coordinates
+    const processedActivities = await Promise.all(activities.map(async (a) => {
+      let latitude = a.latitude;
+      let longitude = a.longitude;
+      
+      // If activity is missing coordinates but has a location name, geocode it
+      if ((!latitude || !longitude) && a.location_name) {
+        const geocoded = await geocodingService.geocodeWithFallback(
+          a.location_name,
+          trip.city || trip.country // Use trip's city as context
+        );
+        if (geocoded) {
+          latitude = geocoded.latitude;
+          longitude = geocoded.longitude;
+          logger.info(`Geocoded template activity: ${a.location_name} in ${trip.city} -> ${latitude}, ${longitude}`);
+        }
+      }
+      
+      return {
+        title: a.title,
+        date: a.date,
+        time: a.time,
+        locationName: a.location_name,
+        latitude,
+        longitude,
+        notes: a.notes,
+        tag: a.tag,
+        order: a.order,
+        travelMode: a.travel_mode,
+      };
+    }));
+    
+    // Create trip data JSON with geocoded activities
     const tripData = {
       title: trip.title,
       duration,
@@ -337,18 +417,7 @@ router.post('/from-trip/:tripId', requireAuth, async (req, res) => {
       hotel: trip.hotel,
       hotelLatitude: trip.hotel_latitude,
       hotelLongitude: trip.hotel_longitude,
-      activities: activities.map(a => ({
-        title: a.title,
-        date: a.date,
-        time: a.time,
-        locationName: a.location_name,
-        latitude: a.latitude,
-        longitude: a.longitude,
-        notes: a.notes,
-        tag: a.tag,
-        order: a.order,
-        travelMode: a.travel_mode,
-      })),
+      activities: processedActivities,
     };
     
     // Create the template

@@ -20,6 +20,7 @@ import NotFound from "@/pages/not-found";
 import Explore from "@/pages/Explore";
 import TemplateMarketplace from "@/pages/TemplateMarketplace";
 import TemplateDetails from "@/pages/TemplateDetails";
+import CreateTemplate from "@/pages/CreateTemplate";
 import CreatorDashboard from "@/pages/CreatorDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 
@@ -87,6 +88,7 @@ function Router() {
           
           {/* Creator Economy */}
           <Route path="/marketplace" component={TemplateMarketplace} />
+          <Route path="/templates/create" component={CreateTemplate} />
           <Route path="/templates/:slug" component={TemplateDetails} />
           <Route path="/creator/dashboard" component={CreatorDashboard} />
           
