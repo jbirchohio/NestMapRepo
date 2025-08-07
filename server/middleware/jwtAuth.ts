@@ -48,6 +48,14 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     return next();
   }
   
+  // Destinations content is public (for SEO)
+  const isDestinationContent = relativePath.match(/^\/destinations\/[^\/]+\/content$/) && req.method === 'GET';
+  const isPopularDestinations = relativePath === '/destinations/popular' && req.method === 'GET';
+  const isDestinationSearch = relativePath === '/destinations/search' && req.method === 'GET';
+  if (isDestinationContent || isPopularDestinations || isDestinationSearch) {
+    return next();
+  }
+  
   // In test environment, log the paths for debugging
   if (process.env.NODE_ENV === 'test' && relativePath.includes('auth')) {
     logger.info('JWT middleware checking path:', { relativePath, fullPath, originalUrl: req.originalUrl });

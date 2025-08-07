@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { seoContentGenerator } from '../services/seoContentGenerator';
+import { optimizedContentGenerator } from '../services/optimizedContentGenerator';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
 import { db } from '../db-connection';
@@ -79,7 +80,8 @@ router.get('/:destination/content', async (req, res) => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
     
-    const content = await seoContentGenerator.generateDestinationContent(destinationName);
+    // Use optimized generator for faster response times
+    const content = await optimizedContentGenerator.generateDestinationContent(destinationName);
     
     // Save or update in database
     if (content.title && content.overview && content.overview.length > 100) {
