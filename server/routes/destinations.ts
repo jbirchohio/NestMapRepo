@@ -26,8 +26,14 @@ router.get('/:destination/content', async (req, res) => {
       forecast: 'Clear skies expected all week'
     };
     
-    // Add image URL
-    const imageUrl = `https://source.unsplash.com/1600x900/?${destinationName},travel,landscape`;
+    // Add optimized image URL (smaller size for faster loading)
+    const imageUrl = `https://source.unsplash.com/800x450/?${destinationName},travel,landscape`;
+    
+    // Set cache headers for browser caching
+    res.set({
+      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      'ETag': `"${destination}-${new Date().toISOString().split('T')[0]}"` // Daily ETag
+    });
     
     res.json({
       ...content,

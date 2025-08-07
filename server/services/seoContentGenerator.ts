@@ -46,6 +46,23 @@ export class SEOContentGenerator {
       return cached.content;
     }
     
+    // Return fallback content immediately and generate in background
+    const fallbackContent = this.getFallbackDestinationContent(destination);
+    
+    // Skip AI generation if no OpenAI key
+    if (!process.env.OPENAI_API_KEY) {
+      return fallbackContent;
+    }
+    
+    // Generate content in background for next request
+    this.generateAndCacheInBackground(destination, cacheKey);
+    
+    // If we have old cached content that's expired, return it while generating new
+    if (cached) {
+      return cached.content;
+    }
+    
+    // For first-time requests, try to generate quickly with timeout
     try {
       const prompt = `Generate comprehensive travel guide content for ${destination}. 
       
@@ -69,11 +86,17 @@ export class SEOContentGenerator {
       
       Make the content engaging, informative, and SEO-friendly. Include specific details and local insights.`;
       
-      const response = await callOpenAI(prompt, {
-        temperature: 0.7,
-        max_tokens: 2000,
-        response_format: { type: "json_object" }
-      });
+      // Use Promise.race for timeout
+      const response = await Promise.race([
+        callOpenAI(prompt, {
+          temperature: 0.7,
+          max_tokens: 1500, // Reduced for faster response
+          response_format: { type: "json_object" }
+        }),
+        new Promise<string>((_, reject) => 
+          setTimeout(() => reject(new Error('AI generation timeout')), 3000)
+        )
+      ]);
       
       const content = JSON.parse(response);
       
@@ -215,6 +238,53 @@ export class SEOContentGenerator {
   /**
    * Fallback content when AI generation fails
    */
+  /**
+   * Generate content in background for future requests
+   */
+  private async generateAndCacheInBackground(destination: string, cacheKey: string): Promise<void> {
+    // Don't await this - let it run in background
+    (async () => {
+      try {
+        const prompt = `Generate comprehensive travel guide content for ${destination}. 
+        
+        Return a JSON object with the following structure:
+        {
+          "title": "Engaging title for ${destination} travel guide",
+          "metaDescription": "155-character meta description optimized for search",
+          "heroDescription": "2-3 sentence overview that captures the essence of ${destination}",
+          "overview": "3-4 paragraph comprehensive overview of ${destination} as a travel destination",
+          "bestTimeToVisit": "Detailed information about weather, seasons, and best times to visit",
+          "topAttractions": ["Array of 8-10 must-see attractions with brief descriptions"],
+          "localTips": ["Array of 5-7 insider tips for travelers"],
+          "gettingAround": "Transportation options and tips for navigating ${destination}",
+          "whereToStay": "Overview of neighborhoods and accommodation options",
+          "foodAndDrink": "Local cuisine, must-try dishes, and dining recommendations",
+          "faqs": [
+            {"question": "Common question about ${destination}", "answer": "Helpful answer"}
+          ]
+        }`;
+        
+        const response = await callOpenAI(prompt, {
+          temperature: 0.7,
+          max_tokens: 2000,
+          response_format: { type: "json_object" }
+        });
+        
+        const content = JSON.parse(response);
+        
+        // Cache the content
+        contentCache.set(cacheKey, {
+          content,
+          timestamp: Date.now()
+        });
+        
+        logger.info(`Background generation completed for ${destination}`);
+      } catch (error) {
+        logger.error(`Background generation failed for ${destination}:`, error);
+      }
+    })();
+  }
+
   private getFallbackDestinationContent(destination: string): DestinationContent {
     return {
       title: `${destination} Travel Guide - Plan Your Perfect Trip`,

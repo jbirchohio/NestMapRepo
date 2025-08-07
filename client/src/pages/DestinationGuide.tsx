@@ -36,15 +36,32 @@ export default function DestinationGuide() {
   const { destination } = useParams();
   const [activeTab, setActiveTab] = useState<'overview' | 'hotels' | 'packages' | 'activities'>('overview');
   
-  // Fetch destination content
+  // Fetch destination content with optimizations
   const { data: destinationData, isLoading } = useQuery<DestinationData>({
     queryKey: ['destination', destination],
     queryFn: async () => {
-      const response = await fetch(`/api/destinations/${destination}/content`);
-      if (!response.ok) throw new Error('Failed to load destination');
-      return response.json();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      try {
+        const response = await fetch(`/api/destinations/${destination}/content`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error('Failed to load destination');
+        return response.json();
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - please refresh');
+        }
+        throw error;
+      }
     },
     staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
+    gcTime: 7 * 24 * 60 * 60 * 1000, // Keep in cache for 7 days
+    retry: 1, // Only retry once
   });
   
   // Generate SEO metadata
@@ -72,10 +89,37 @@ export default function DestinationGuide() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
-        <div className="text-center">
-          <MapPin className="w-12 h-12 text-purple-600 animate-pulse mx-auto mb-4" />
-          <p className="text-gray-600">Loading destination guide...</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+        {/* Skeleton Hero */}
+        <div className="h-[60vh] bg-gradient-to-br from-purple-200 to-pink-200 animate-pulse" />
+        
+        {/* Skeleton Content */}
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              {[1, 2, 3].map(i => (
+                <Card key={i}>
+                  <CardHeader>
+                    <div className="h-6 bg-gray-200 rounded animate-pulse w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6" />
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="h-40 bg-gray-200 rounded animate-pulse" />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     );
