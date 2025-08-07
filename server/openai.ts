@@ -870,12 +870,19 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
  */
 export async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
   try {
-    const response = await openai.chat.completions.create({
-      model: options.model || "gpt-4o",
+    const requestOptions: any = {
+      model: options.model || "gpt-4o-mini", // Use faster model for general calls
       messages: [{ role: "user", content: prompt }],
       temperature: options.temperature || 0.7,
       max_tokens: options.max_tokens || 150,
-    });
+    };
+
+    // Add response_format if specified
+    if (options.response_format) {
+      requestOptions.response_format = options.response_format;
+    }
+
+    const response = await openai.chat.completions.create(requestOptions);
 
     return response.choices[0].message.content || "";
   } catch (error) {

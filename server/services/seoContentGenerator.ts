@@ -53,46 +53,33 @@ export class SEOContentGenerator {
     
     // Try to generate AI content with a reasonable timeout
     try {
-      const prompt = `Generate a comprehensive and UNIQUE travel guide for ${destination}. Include real, specific information about this destination.
-      
-      Return a JSON object with:
+      const prompt = `Create a travel guide for ${destination}. Return ONLY a JSON object with these exact fields:
       {
-        "title": "Creative, engaging title specific to ${destination}",
-        "metaDescription": "155-character description highlighting what makes ${destination} unique",
-        "heroDescription": "2-3 sentences capturing the unique character and appeal of ${destination}",
-        "overview": "3-4 paragraphs about ${destination}'s history, culture, and what makes it special. Include specific neighborhoods, landmarks, and cultural aspects",
-        "bestTimeToVisit": "Specific months and seasons for ${destination}, with actual weather patterns and local events",
-        "topAttractions": [
-          "Array of 8-10 ACTUAL attractions in ${destination} with descriptions",
-          "Include real landmark names like 'Eiffel Tower' for Paris or 'Senso-ji Temple' for Tokyo",
-          "Each item should be a specific place with a brief description"
-        ],
-        "localTips": [
-          "5-7 specific tips for ${destination}",
-          "Include local customs, best areas to stay, money-saving tips specific to this city"
-        ],
-        "gettingAround": "Specific transportation in ${destination} - name the metro system, bus lines, or local transport options",
-        "whereToStay": "Name actual neighborhoods in ${destination} with their characteristics",
-        "foodAndDrink": "Specific local dishes and restaurants types found in ${destination}",
+        "title": "Catchy title for ${destination} travel guide",
+        "metaDescription": "155-char SEO description for ${destination}",
+        "heroDescription": "2 sentences about what makes ${destination} special",
+        "overview": "2 paragraphs about ${destination} - its character, main attractions, and culture",
+        "bestTimeToVisit": "Best months to visit ${destination} and why",
+        "topAttractions": ["List 6-8 real attractions in ${destination} like famous landmarks, museums, districts"],
+        "localTips": ["5 practical tips for visiting ${destination}"],
+        "gettingAround": "Main transport options in ${destination} (metro, bus, taxi)",
+        "whereToStay": "Best neighborhoods to stay in ${destination}",
+        "foodAndDrink": "Must-try local dishes and dining in ${destination}",
         "faqs": [
-          {"question": "Specific question about ${destination}", "answer": "Detailed, helpful answer"},
-          // 5-6 FAQs specific to this destination
+          {"question": "Is ${destination} expensive?", "answer": "Brief cost overview"},
+          {"question": "How many days for ${destination}?", "answer": "Recommended duration"},
+          {"question": "Is ${destination} safe?", "answer": "Safety info"}
         ]
-      }
+      }`;
       
-      IMPORTANT: Generate SPECIFIC, ACCURATE content for ${destination}. Do NOT use generic placeholder text.`;
+      // Give AI sufficient time to generate quality content
+      const response = await callOpenAI(prompt, {
+        temperature: 0.7,
+        max_tokens: 2000, // Balanced for content quality and speed
+        response_format: { type: "json_object" }
+      });
       
-      // Give AI more time to generate quality content
-      const response = await Promise.race([
-        callOpenAI(prompt, {
-          temperature: 0.7,
-          max_tokens: 2500, // Increased for better content
-          response_format: { type: "json_object" }
-        }),
-        new Promise<string>((_, reject) => 
-          setTimeout(() => reject(new Error('AI generation timeout')), 8000) // 8 seconds timeout
-        )
-      ]);
+      // No timeout - let OpenAI complete the request
       
       const content = JSON.parse(response);
       
