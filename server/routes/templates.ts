@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/jwtAuth';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
 import { templateQualityService } from '../services/templateQualityService';
+import { sanitizeResponseDates } from '../utils/dateSanitizer';
 
 const router = Router();
 
@@ -144,7 +145,7 @@ router.get('/', async (req, res) => {
         break;
     }
     
-    res.json(templates);
+    res.json(sanitizeResponseDates(templates));
   } catch (error) {
     logger.error('Error fetching templates:', error);
     res.status(500).json({ message: 'Failed to fetch templates' });
@@ -156,7 +157,7 @@ router.get('/my', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const templates = await storage.getTemplatesByUserId(userId);
-    res.json(templates);
+    res.json(sanitizeResponseDates(templates));
   } catch (error) {
     logger.error('Error fetching user templates:', error);
     res.status(500).json({ message: 'Failed to fetch your templates' });
@@ -181,7 +182,7 @@ router.get('/purchased', requireAuth, async (req, res) => {
       })
     );
     
-    res.json(templates.filter(t => t !== undefined));
+    res.json(sanitizeResponseDates(templates.filter(t => t !== undefined)));
   } catch (error) {
     logger.error('Error fetching purchased templates:', error);
     res.status(500).json({ message: 'Failed to fetch purchased templates' });
@@ -227,8 +228,13 @@ router.get('/:slug', async (req, res) => {
         if (day.activities && Array.isArray(day.activities)) {
           // Calculate the date for this day
           const dayDate = new Date(baseDate);
-          dayDate.setDate(dayDate.getDate() + (day.day - 1));
-          const dateStr = dayDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+          const dayNumber = parseInt(day.day) || 1;
+          dayDate.setDate(dayDate.getDate() + (dayNumber - 1));
+          
+          // Check if date is valid before converting
+          const dateStr = !isNaN(dayDate.getTime()) 
+            ? dayDate.toISOString().split('T')[0] 
+            : new Date().toISOString().split('T')[0]; // Fallback to today
           
           day.activities.forEach((activity: any) => {
             activities.push({
@@ -246,7 +252,7 @@ router.get('/:slug', async (req, res) => {
     // Add the activities array to tripData
     tripData.activities = activities;
     
-    res.json({
+    res.json(sanitizeResponseDates({
       ...template,
       tripData, // Frontend expects camelCase
       salesCount: template.sales_count || 0,
@@ -256,7 +262,7 @@ router.get('/:slug', async (req, res) => {
       hasPurchased,
       creator: creatorProfile,
       reviews,
-    });
+    }));
   } catch (error) {
     logger.error('Error fetching template:', error);
     res.status(500).json({ message: 'Failed to fetch template' });
