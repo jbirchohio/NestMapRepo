@@ -40,33 +40,41 @@ export default function DestinationGuide() {
   const { destination } = useParams();
   const [activeTab, setActiveTab] = useState<'overview' | 'hotels' | 'packages' | 'activities'>('overview');
   
-  // Fetch destination content with optimizations
-  const { data: destinationData, isLoading } = useQuery<DestinationData>({
+  // Fetch destination content with smart caching
+  const { data: destinationData, isLoading, error, refetch } = useQuery<DestinationData>({
     queryKey: ['destination', destination],
     queryFn: async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const response = await fetch(`/api/destinations/${destination}/content`);
+      if (!response.ok) throw new Error('Failed to load destination');
       
-      try {
-        const response = await fetch(`/api/destinations/${destination}/content`, {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) throw new Error('Failed to load destination');
-        return response.json();
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('Request timeout - please refresh');
-        }
-        throw error;
+      const data = await response.json();
+      
+      // Check if content looks generic (fallback content)
+      const isGeneric = data.overview?.includes('remarkable destination that attracts millions');
+      
+      // If generic, throw error to trigger refetch
+      if (isGeneric) {
+        throw new Error('Loading destination details...');
       }
+      
+      return data;
     },
-    staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
-    gcTime: 7 * 24 * 60 * 60 * 1000, // Keep in cache for 7 days
-    retry: 1, // Only retry once
+    staleTime: 5 * 60 * 1000, // Only cache for 5 minutes
+    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+    retry: 3, // Retry up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
+    refetchOnWindowFocus: false, // Don't refetch on tab focus
   });
+  
+  // Auto-refresh if we detect generic content
+  useEffect(() => {
+    if (destinationData?.overview?.includes('remarkable destination that attracts millions')) {
+      const timer = setTimeout(() => {
+        refetch();
+      }, 2000); // Refetch after 2 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [destinationData, refetch]);
   
   // Generate SEO metadata
   const seoMetadata = generateMetadata('destination', { 
@@ -91,11 +99,19 @@ export default function DestinationGuide() {
     ].filter(Boolean)
   };
   
-  if (isLoading) {
+  if (isLoading || (error && error.message === 'Loading destination details...')) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
         {/* Skeleton Hero */}
-        <div className="h-[60vh] bg-gradient-to-br from-purple-200 to-pink-200 animate-pulse" />
+        <div className="h-[60vh] bg-gradient-to-br from-purple-200 to-pink-200 animate-pulse relative">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white">
+              <MapPin className="w-12 h-12 mx-auto mb-4 animate-bounce" />
+              <p className="text-xl font-semibold">Generating unique content for {destination?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+              <p className="text-sm mt-2 opacity-90">This may take a few moments on first visit...</p>
+            </div>
+          </div>
+        </div>
         
         {/* Skeleton Content */}
         <div className="max-w-7xl mx-auto px-4 py-12">
