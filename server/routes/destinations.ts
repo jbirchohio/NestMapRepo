@@ -21,63 +21,92 @@ router.get('/:destination/content', async (req, res) => {
       .where(eq(destinations.slug, destination))
       .limit(1);
     
-    if (destinationData && destinationData.status === 'published') {
-      // Increment view count
-      await db
-        .update(destinations)
-        .set({ view_count: (destinationData.view_count || 0) + 1 })
-        .where(eq(destinations.id, destinationData.id));
+    if (destinationData) {
+      // Destination exists - check if it needs updating
+      if (destinationData.status === 'published' && destinationData.overview && destinationData.overview.length > 100) {
+        // Has good content - just increment view count and return
+        await db
+          .update(destinations)
+          .set({ view_count: (destinationData.view_count || 0) + 1 })
+          .where(eq(destinations.id, destinationData.id));
+        
+        // Get real weather data
+        const weatherData = await getCurrentWeather(destinationData.name);
+        
+        // Set cache headers for browser caching
+        res.set({
+          'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+          'ETag': `"${destination}-${destinationData.updated_at?.toISOString().split('T')[0]}"` // Based on last update
+        });
+        
+        // Return the stored content with real weather
+        return res.json({
+          title: destinationData.title,
+          metaDescription: destinationData.meta_description,
+          heroDescription: destinationData.hero_description,
+          overview: destinationData.overview,
+          bestTimeToVisit: destinationData.best_time_to_visit,
+          topAttractions: destinationData.top_attractions as string[],
+          localTips: destinationData.local_tips as string[],
+          gettingAround: destinationData.getting_around,
+          whereToStay: destinationData.where_to_stay,
+          foodAndDrink: destinationData.food_and_drink,
+          faqs: destinationData.faqs as Array<{question: string; answer: string}>,
+          image: destinationData.cover_image || `https://source.unsplash.com/800x450/?${destinationData.name},travel,landscape`,
+          weather: weatherData ? {
+            current: weatherData.description,
+            temperature: weatherData.temperature,
+            humidity: weatherData.humidity,
+            windSpeed: weatherData.windSpeed,
+            unit: weatherData.unit,
+            forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
+          } : {
+            current: 'Clear',
+            temperature: 72,
+            unit: 'F',
+            forecast: 'Pleasant weather expected'
+          },
+          lastUpdated: destinationData.updated_at?.toISOString()
+        });
+      }
       
-      // Get real weather data
-      const weatherData = await getCurrentWeather(destinationData.name);
-      
-      // Set cache headers for browser caching
-      res.set({
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-        'ETag': `"${destination}-${destinationData.updated_at?.toISOString().split('T')[0]}"` // Based on last update
-      });
-      
-      // Return the stored content with real weather
-      res.json({
-        title: destinationData.title,
-        metaDescription: destinationData.meta_description,
-        heroDescription: destinationData.hero_description,
-        overview: destinationData.overview,
-        bestTimeToVisit: destinationData.best_time_to_visit,
-        topAttractions: destinationData.top_attractions as string[],
-        localTips: destinationData.local_tips as string[],
-        gettingAround: destinationData.getting_around,
-        whereToStay: destinationData.where_to_stay,
-        foodAndDrink: destinationData.food_and_drink,
-        faqs: destinationData.faqs as Array<{question: string; answer: string}>,
-        image: destinationData.cover_image || `https://source.unsplash.com/800x450/?${destinationData.name},travel,landscape`,
-        weather: weatherData ? {
-          current: weatherData.description,
-          temperature: weatherData.temperature,
-          humidity: weatherData.humidity,
-          windSpeed: weatherData.windSpeed,
-          unit: weatherData.unit,
-          forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
-        } : {
-          current: 'Clear',
-          temperature: 72,
-          unit: 'F',
-          forecast: 'Pleasant weather expected'
-        },
-        lastUpdated: destinationData.updated_at?.toISOString()
-      });
-    } else {
-      // Fallback: Generate content on-the-fly for destinations not in database
-      const destinationName = destination
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      
-      const content = await seoContentGenerator.generateDestinationContent(destinationName);
-      
-      // Save to database for future use
-      if (!destinationData && content.title && content.overview) {
-        try {
+      // Destination exists but needs better content - regenerate
+    }
+    
+    // Generate fresh content (for new destinations or ones needing update)
+    const destinationName = destinationData?.name || destination
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    const content = await seoContentGenerator.generateDestinationContent(destinationName);
+    
+    // Save or update in database
+    if (content.title && content.overview && content.overview.length > 100) {
+      try {
+        if (destinationData) {
+          // UPDATE existing destination
+          await db.update(destinations)
+            .set({
+              title: content.title,
+              meta_description: content.metaDescription,
+              hero_description: content.heroDescription,
+              overview: content.overview,
+              best_time_to_visit: content.bestTimeToVisit,
+              top_attractions: content.topAttractions,
+              local_tips: content.localTips,
+              getting_around: content.gettingAround,
+              where_to_stay: content.whereToStay,
+              food_and_drink: content.foodAndDrink,
+              faqs: content.faqs,
+              status: 'published',
+              ai_generated: true,
+              updated_at: new Date()
+            })
+            .where(eq(destinations.id, destinationData.id));
+          logger.info(`Updated destination: ${destination}`);
+        } else {
+          // INSERT new destination
           await db.insert(destinations).values({
             slug: destination,
             name: destinationName,
@@ -93,39 +122,38 @@ router.get('/:destination/content', async (req, res) => {
             where_to_stay: content.whereToStay,
             food_and_drink: content.foodAndDrink,
             faqs: content.faqs,
-            status: 'published', // Auto-publish AI content
-            ai_generated: true,
-            created_at: new Date(),
-            updated_at: new Date()
+            status: 'published',
+            ai_generated: true
           });
-          logger.info(`Created and published destination: ${destination}`);
-        } catch (err) {
-          logger.error(`Failed to save destination ${destination}:`, err);
+          logger.info(`Created destination: ${destination}`);
         }
+      } catch (err) {
+        logger.error(`Failed to save/update destination ${destination}:`, err);
       }
-      
-      // Try to get real weather for the destination
-      const weatherData = await getCurrentWeather(destinationName);
-      
-      res.json({
-        ...content,
-        weather: weatherData ? {
-          current: weatherData.description,
-          temperature: weatherData.temperature,
-          humidity: weatherData.humidity,
-          windSpeed: weatherData.windSpeed,
-          unit: weatherData.unit,
-          forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
-        } : {
-          current: 'Clear',
-          temperature: 72,
-          unit: 'F',
-          forecast: 'Pleasant weather expected'
-        },
-        image: `https://source.unsplash.com/800x450/?${destinationName},travel,landscape`,
-        lastUpdated: new Date().toISOString()
-      });
     }
+    
+    // Try to get real weather for the destination
+    const weatherData = await getCurrentWeather(destinationName);
+    
+    // Return the generated content
+    res.json({
+      ...content,
+      weather: weatherData ? {
+        current: weatherData.description,
+        temperature: weatherData.temperature,
+        humidity: weatherData.humidity,
+        windSpeed: weatherData.windSpeed,
+        unit: weatherData.unit,
+        forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
+      } : {
+        current: 'Clear',
+        temperature: 72,
+        unit: 'F',
+        forecast: 'Pleasant weather expected'
+      },
+      image: `https://source.unsplash.com/800x450/?${destinationName},travel,landscape`,
+      lastUpdated: new Date().toISOString()
+    });
     
   } catch (error) {
     logger.error('Destination content error:', error);
