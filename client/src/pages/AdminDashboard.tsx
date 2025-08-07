@@ -269,7 +269,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {stats.templates.avgQuality?.toFixed(1) || '0'}
+                      {Number(stats.templates.avgQuality || 0).toFixed(1)}
                     </div>
                     <p className="text-xs text-muted-foreground">Average template quality</p>
                   </CardContent>
@@ -377,10 +377,10 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          ${financials?.revenue?.totalRevenue?.toFixed(2) || '0.00'}
+                          ${Number(financials?.revenue?.totalRevenue || 0).toFixed(2)}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          ${financials?.revenue?.last30DaysRevenue?.toFixed(2) || '0.00'} last 30 days
+                          ${Number(financials?.revenue?.last30DaysRevenue || 0).toFixed(2)} last 30 days
                         </p>
                       </CardContent>
                     </Card>
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          ${financials?.revenue?.totalPlatformFees?.toFixed(2) || '0.00'}
+                          ${Number(financials?.revenue?.totalPlatformFees || 0).toFixed(2)}
                         </div>
                         <p className="text-xs text-muted-foreground">30% of sales</p>
                       </CardContent>
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          ${financials?.pendingPayouts?.totalPending?.toFixed(2) || '0.00'}
+                          ${Number(financials?.pendingPayouts?.totalPending || 0).toFixed(2)}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {financials?.pendingPayouts?.countPending || 0} transactions
@@ -431,7 +431,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="font-semibold">${template.totalRevenue?.toFixed(2)}</p>
+                              <p className="font-semibold">${Number(template.totalRevenue || 0).toFixed(2)}</p>
                               <p className="text-sm text-gray-500">{template.totalSales} sales</p>
                             </div>
                           </div>
