@@ -43,8 +43,13 @@ router.get('/', async (req, res) => {
           if (day.activities && Array.isArray(day.activities)) {
             // Calculate the date for this day
             const dayDate = new Date(baseDate);
-            dayDate.setDate(dayDate.getDate() + (day.day - 1));
-            const dateStr = dayDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+            const dayNumber = parseInt(day.day) || 1;
+            dayDate.setDate(dayDate.getDate() + (dayNumber - 1));
+            
+            // Check if date is valid before converting
+            const dateStr = !isNaN(dayDate.getTime()) 
+              ? dayDate.toISOString().split('T')[0] 
+              : new Date().toISOString().split('T')[0]; // Fallback to today
             
             day.activities.forEach((activity: any) => {
               activities.push({

@@ -1226,6 +1226,8 @@ async function seedDatabase() {
             },
             tags: templateInfo.tags,
             status: 'published',
+            moderation_status: 'approved',
+            quality_score: 75 + Math.floor(Math.random() * 25), // 75-100 score
             featured: Math.random() > 0.7, // 30% chance of being featured
             view_count: Math.floor(Math.random() * 500),
             sales_count: Math.floor(Math.random() * 50),
