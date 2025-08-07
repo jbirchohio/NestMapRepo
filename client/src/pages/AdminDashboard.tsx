@@ -92,7 +92,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setIsAdmin(data.isAdmin);
         setIsSuperAdmin(data.isSuperAdmin);
-        loadAdminData();
+        // Pass isSuperAdmin directly since state won't be updated yet
+        loadAdminData(data.isSuperAdmin);
       } else {
         setLocation('/');
       }
@@ -104,7 +105,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const loadAdminData = async () => {
+  const loadAdminData = async (superAdmin?: boolean) => {
     try {
       // Load stats
       const statsResponse = await fetch('/api/admin/stats', {
@@ -126,8 +127,9 @@ export default function AdminDashboard() {
         setPendingTemplates(await templatesResponse.json());
       }
 
-      // Load financials if super admin
-      if (isSuperAdmin) {
+      // Load financials if super admin (use parameter or state)
+      const isSuper = superAdmin !== undefined ? superAdmin : isSuperAdmin;
+      if (isSuper) {
         const financialResponse = await fetch('/api/admin/financials/overview', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -155,7 +157,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         setPendingTemplates(prev => prev.filter(t => t.id !== templateId));
-        loadAdminData(); // Refresh stats
+        loadAdminData(isSuperAdmin); // Refresh stats
       }
     } catch (error) {
       console.error('Error approving template:', error);
@@ -175,7 +177,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         setPendingTemplates(prev => prev.filter(t => t.id !== templateId));
-        loadAdminData(); // Refresh stats
+        loadAdminData(isSuperAdmin); // Refresh stats
       }
     } catch (error) {
       console.error('Error rejecting template:', error);
