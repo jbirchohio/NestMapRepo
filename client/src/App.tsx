@@ -1,4 +1,4 @@
-import React, { useEffect, lazy } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -23,6 +23,9 @@ import TemplateDetails from "@/pages/TemplateDetails";
 import CreateTemplate from "@/pages/CreateTemplate";
 import CreatorDashboard from "@/pages/CreatorDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+
+// Lazy load the Destinations page
+const Destinations = lazy(() => import("@/pages/Destinations"));
 
 function NavigationWrapper() {
   const { user } = useAuth();
@@ -96,7 +99,13 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           
           {/* SEO Destination Pages */}
-          <Route path="/destinations" component={lazy(() => import('./pages/Destinations'))} />
+          <Route path="/destinations">
+            {() => (
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+                <Destinations />
+              </Suspense>
+            )}
+          </Route>
           <Route path="/destinations/:destination" component={DestinationGuide} />
           
           {/* User account */}
