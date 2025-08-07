@@ -145,10 +145,6 @@ router.get('/:destination/content', async (req, res) => {
 // Get popular destinations from database
 router.get('/popular', async (req, res) => {
   try {
-    // Import necessary tables
-    const { activities, trips, templates } = await import('@shared/schema');
-    const { sql } = await import('drizzle-orm');
-    
     // Get featured/popular destinations from database
     const dbDestinations = await db
       .select()
@@ -158,39 +154,17 @@ router.get('/popular', async (req, res) => {
       .limit(6);
     
     if (dbDestinations.length > 0) {
-      // Calculate actual activity counts for each destination
-      const destinationsWithCounts = await Promise.all(dbDestinations.map(async (dest) => {
-        // Count unique activities from trips to this destination
-        const activityCount = await db
-          .select({ count: sql<number>`COUNT(DISTINCT ${activities.title})` })
-          .from(activities)
-          .innerJoin(trips, eq(activities.trip_id, trips.id))
-          .where(
-            sql`LOWER(${trips.destination}) LIKE ${`%${dest.name.toLowerCase()}%`}`
-          )
-          .then(result => result[0]?.count || 0);
-        
-        // Count templates for this destination
-        const templateCount = await db
-          .select({ count: sql<number>`COUNT(*)` })
-          .from(templates)
-          .where(
-            sql`LOWER(${templates.destination}) LIKE ${`%${dest.name.toLowerCase()}%`}`
-          )
-          .then(result => result[0]?.count || 0);
-        
-        return {
-          slug: dest.slug,
-          name: dest.name,
-          country: dest.country,
-          image: dest.thumbnail_image || `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&q=80`,
-          description: dest.hero_description || dest.meta_description,
-          activities: activityCount || dest.activity_count || 0,
-          templateCount: templateCount || 0
-        };
+      const popularDestinations = dbDestinations.map(dest => ({
+        slug: dest.slug,
+        name: dest.name,
+        country: dest.country,
+        image: dest.thumbnail_image || `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&q=80`,
+        description: dest.hero_description || dest.meta_description,
+        activities: dest.activity_count || 0,
+        templateCount: dest.template_count || 0
       }));
       
-      res.json({ destinations: destinationsWithCounts });
+      res.json({ destinations: popularDestinations });
     } else {
       // Fallback to hardcoded list if no destinations in database
       const popularDestinations = [
