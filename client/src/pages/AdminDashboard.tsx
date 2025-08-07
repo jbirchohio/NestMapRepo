@@ -11,6 +11,18 @@ import { useLocation } from 'wouter';
 import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Shield, UserCheck, UserX, Search, Crown } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
+// Helper function to safely format dates
+const safeFormatDate = (date: any): string | null => {
+  if (!date) return null;
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) return null;
+  try {
+    return formatDistanceToNow(dateObj);
+  } catch {
+    return null;
+  }
+};
+
 interface PendingTemplate {
   id: number;
   title: string;
@@ -304,7 +316,9 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                           <span>By {template.user?.username || 'Unknown'}</span>
                           <span>${template.price}</span>
-                          <span>{formatDistanceToNow(new Date(template.created_at))} ago</span>
+                          {safeFormatDate(template.created_at) && (
+                            <span>{safeFormatDate(template.created_at)} ago</span>
+                          )}
                           {template.user?.creator_status === 'verified' && (
                             <Badge variant="outline" className="text-green-600 border-green-600">
                               Verified Creator
@@ -648,9 +662,11 @@ function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                       </div>
                       <p className="text-sm text-gray-600">{user.email}</p>
                       <div className="flex gap-4 text-xs text-gray-500 mt-2">
-                        <span>Joined {formatDistanceToNow(new Date(user.created_at))} ago</span>
-                        {user.last_login && (
-                          <span>Last seen {formatDistanceToNow(new Date(user.last_login))} ago</span>
+                        {safeFormatDate(user.created_at) && (
+                          <span>Joined {safeFormatDate(user.created_at)} ago</span>
+                        )}
+                        {safeFormatDate(user.last_login) && (
+                          <span>Last seen {safeFormatDate(user.last_login)} ago</span>
                         )}
                         {user.template_count > 0 && (
                           <span>{user.template_count} templates</span>
