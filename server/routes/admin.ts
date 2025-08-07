@@ -120,32 +120,8 @@ router.get('/users', async (req, res) => {
     const offset = (Number(page) - 1) * Number(limit);
     
     // Build query
-    let query = db.select({
-      id: users.id,
-      email: users.email,
-      username: users.username,
-      role: users.role,
-      creator_status: users.creator_status,
-      creator_tier: users.creator_tier,
-      creator_score: users.creator_score,
-      templates_published: users.templates_published,
-      total_template_sales: users.total_template_sales,
-      created_at: users.created_at,
-      last_login: users.last_login,
-      // Get template count
-      template_count: sql<number>`(
-        SELECT COUNT(*) FROM ${templates} 
-        WHERE ${templates.user_id} = ${users.id}
-      )`,
-      // Get total revenue
-      total_revenue: sql<number>`(
-        SELECT COALESCE(SUM(${templatePurchases.seller_earnings}), 0) 
-        FROM ${templatePurchases}
-        JOIN ${templates} ON ${templates.id} = ${templatePurchases.template_id}
-        WHERE ${templates.user_id} = ${users.id}
-      )`
-    })
-    .from(users);
+    let query = db.select()
+      .from(users);
     
     // Apply filters
     const conditions = [];
@@ -165,13 +141,39 @@ router.get('/users', async (req, res) => {
       .limit(Number(limit))
       .offset(offset);
     
+    // Get template counts and revenue for each user
+    const usersWithStats = await Promise.all(
+      allUsers.map(async (user) => {
+        // Get template count
+        const [templateCount] = await db.select({
+          count: sql<number>`count(*)`
+        })
+        .from(templates)
+        .where(eq(templates.user_id, user.id));
+        
+        // Get total revenue
+        const [revenue] = await db.select({
+          total: sql<number>`COALESCE(SUM(seller_earnings), 0)`
+        })
+        .from(templatePurchases)
+        .innerJoin(templates, eq(templates.id, templatePurchases.template_id))
+        .where(eq(templates.user_id, user.id));
+        
+        return {
+          ...user,
+          template_count: Number(templateCount?.count || 0),
+          total_revenue: Number(revenue?.total || 0)
+        };
+      })
+    );
+    
     // Get total count
     const [{ count }] = await db.select({
       count: sql<number>`count(*)`
     }).from(users);
     
     res.json({
-      users: allUsers,
+      users: usersWithStats,
       pagination: {
         page: Number(page),
         limit: Number(limit),
