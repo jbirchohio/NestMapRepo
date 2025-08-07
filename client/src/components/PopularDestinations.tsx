@@ -86,9 +86,11 @@ export default function PopularDestinations() {
                           {destination.country}
                         </p>
                       </div>
-                      <Badge variant="secondary">
-                        {destination.avgPrice}/night
-                      </Badge>
+                      {destination.templateCount && destination.templateCount > 0 && (
+                        <Badge variant="secondary">
+                          {destination.templateCount} templates
+                        </Badge>
+                      )}
                     </div>
                     
                     <p className="text-gray-600 mb-4 line-clamp-2">

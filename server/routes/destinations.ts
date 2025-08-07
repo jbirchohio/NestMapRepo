@@ -231,7 +231,7 @@ router.get('/popular', async (req, res) => {
   }
 });
 
-// Search destinations
+// Search destinations - supports database and dynamic search
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
@@ -240,23 +240,81 @@ router.get('/search', async (req, res) => {
       return res.status(400).json({ error: 'Search query required' });
     }
     
-    // Mock search results (in production, use a proper search service)
-    const allDestinations = [
-      'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix',
-      'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'Miami',
-      'London', 'Paris', 'Rome', 'Barcelona', 'Amsterdam',
-      'Tokyo', 'Bangkok', 'Singapore', 'Dubai', 'Sydney'
-    ];
+    // First, search in database
+    const dbResults = await db
+      .select()
+      .from(destinations)
+      .where(eq(destinations.status, 'published'))
+      .limit(10);
     
-    const results = allDestinations
-      .filter(dest => dest.toLowerCase().includes(q.toLowerCase()))
+    const dbMatches = dbResults
+      .filter(dest => 
+        dest.name.toLowerCase().includes(q.toLowerCase()) ||
+        dest.country?.toLowerCase().includes(q.toLowerCase()) ||
+        dest.region?.toLowerCase().includes(q.toLowerCase())
+      )
       .map(dest => ({
-        slug: dest.toLowerCase().replace(/\s+/g, '-'),
-        name: dest,
-        type: 'city'
+        slug: dest.slug,
+        name: dest.name,
+        country: dest.country,
+        type: 'city',
+        inDatabase: true,
+        description: dest.hero_description || dest.meta_description
       }));
     
-    res.json({ results });
+    // If we have enough database results, return them
+    if (dbMatches.length >= 5) {
+      return res.json({ results: dbMatches.slice(0, 10) });
+    }
+    
+    // Otherwise, include some popular worldwide destinations
+    const popularDestinations = [
+      { name: 'New York', country: 'USA', region: 'North America' },
+      { name: 'Los Angeles', country: 'USA', region: 'North America' },
+      { name: 'Chicago', country: 'USA', region: 'North America' },
+      { name: 'Miami', country: 'USA', region: 'North America' },
+      { name: 'San Francisco', country: 'USA', region: 'North America' },
+      { name: 'Las Vegas', country: 'USA', region: 'North America' },
+      { name: 'London', country: 'UK', region: 'Europe' },
+      { name: 'Paris', country: 'France', region: 'Europe' },
+      { name: 'Rome', country: 'Italy', region: 'Europe' },
+      { name: 'Barcelona', country: 'Spain', region: 'Europe' },
+      { name: 'Amsterdam', country: 'Netherlands', region: 'Europe' },
+      { name: 'Berlin', country: 'Germany', region: 'Europe' },
+      { name: 'Tokyo', country: 'Japan', region: 'Asia' },
+      { name: 'Bangkok', country: 'Thailand', region: 'Asia' },
+      { name: 'Singapore', country: 'Singapore', region: 'Asia' },
+      { name: 'Dubai', country: 'UAE', region: 'Middle East' },
+      { name: 'Sydney', country: 'Australia', region: 'Oceania' },
+      { name: 'Toronto', country: 'Canada', region: 'North America' },
+      { name: 'Mexico City', country: 'Mexico', region: 'North America' },
+      { name: 'Rio de Janeiro', country: 'Brazil', region: 'South America' },
+      { name: 'Buenos Aires', country: 'Argentina', region: 'South America' },
+      { name: 'Cape Town', country: 'South Africa', region: 'Africa' },
+      { name: 'Cairo', country: 'Egypt', region: 'Africa' },
+      { name: 'Istanbul', country: 'Turkey', region: 'Europe/Asia' }
+    ];
+    
+    const additionalResults = popularDestinations
+      .filter(dest => 
+        dest.name.toLowerCase().includes(q.toLowerCase()) ||
+        dest.country.toLowerCase().includes(q.toLowerCase()) ||
+        dest.region.toLowerCase().includes(q.toLowerCase())
+      )
+      .filter(dest => !dbMatches.some(db => db.name === dest.name)) // Avoid duplicates
+      .map(dest => ({
+        slug: dest.name.toLowerCase().replace(/\s+/g, '-'),
+        name: dest.name,
+        country: dest.country,
+        type: 'city',
+        inDatabase: false,
+        description: `Explore ${dest.name}, ${dest.country}`
+      }));
+    
+    // Combine results, prioritizing database results
+    const allResults = [...dbMatches, ...additionalResults].slice(0, 10);
+    
+    res.json({ results: allResults });
   } catch (error) {
     logger.error('Destination search error:', error);
     res.status(500).json({ error: 'Search failed' });

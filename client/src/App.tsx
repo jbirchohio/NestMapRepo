@@ -96,6 +96,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           
           {/* SEO Destination Pages */}
+          <Route path="/destinations" component={lazy(() => import('./pages/Destinations'))} />
           <Route path="/destinations/:destination" component={DestinationGuide} />
           
           {/* User account */}
