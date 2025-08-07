@@ -75,34 +75,33 @@ router.get('/:destination/content', async (req, res) => {
       
       const content = await seoContentGenerator.generateDestinationContent(destinationName);
       
-      // Optionally save to database for future use (in background)
-      if (!destinationData) {
-        // Create destination in background
-        (async () => {
-          try {
-            await db.insert(destinations).values({
-              slug: destination,
-              name: destinationName,
-              country: 'Unknown', // Would need geocoding to determine
-              title: content.title,
-              meta_description: content.metaDescription,
-              hero_description: content.heroDescription,
-              overview: content.overview,
-              best_time_to_visit: content.bestTimeToVisit,
-              top_attractions: content.topAttractions,
-              local_tips: content.localTips,
-              getting_around: content.gettingAround,
-              where_to_stay: content.whereToStay,
-              food_and_drink: content.foodAndDrink,
-              faqs: content.faqs,
-              status: 'draft', // Admin needs to review before publishing
-              ai_generated: true
-            });
-            logger.info(`Created draft destination: ${destination}`);
-          } catch (err) {
-            logger.error(`Failed to save destination ${destination}:`, err);
-          }
-        })();
+      // Save to database for future use
+      if (!destinationData && content.title && content.overview) {
+        try {
+          await db.insert(destinations).values({
+            slug: destination,
+            name: destinationName,
+            country: 'Unknown', // Would need geocoding to determine
+            title: content.title,
+            meta_description: content.metaDescription,
+            hero_description: content.heroDescription,
+            overview: content.overview,
+            best_time_to_visit: content.bestTimeToVisit,
+            top_attractions: content.topAttractions,
+            local_tips: content.localTips,
+            getting_around: content.gettingAround,
+            where_to_stay: content.whereToStay,
+            food_and_drink: content.foodAndDrink,
+            faqs: content.faqs,
+            status: 'published', // Auto-publish AI content
+            ai_generated: true,
+            created_at: new Date(),
+            updated_at: new Date()
+          });
+          logger.info(`Created and published destination: ${destination}`);
+        } catch (err) {
+          logger.error(`Failed to save destination ${destination}:`, err);
+        }
       }
       
       // Try to get real weather for the destination
