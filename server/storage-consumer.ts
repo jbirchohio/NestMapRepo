@@ -101,6 +101,7 @@ export interface IStorage {
   trackTemplateShare(shareData: any): Promise<TemplateShare>;
   incrementShareClicks(shareCode: string): Promise<void>;
   trackShareConversion(shareCode: string): Promise<void>;
+  getTemplateByShareCode(shareCode: string): Promise<Template | undefined>;
 }
 
 // Consumer-focused database storage implementation
@@ -677,6 +678,29 @@ export class ConsumerDatabaseStorage implements IStorage {
     await db.update(templateShares)
       .set({ conversions: sql`${templateShares.conversions} + 1` })
       .where(eq(templateShares.share_code, shareCode));
+  }
+  
+  async getTemplateByShareCode(shareCode: string): Promise<Template | undefined> {
+    // First get the share record to track clicks
+    const [share] = await db.select()
+      .from(templateShares)
+      .where(eq(templateShares.share_code, shareCode))
+      .limit(1);
+    
+    if (!share) {
+      return undefined;
+    }
+    
+    // Increment click count
+    await this.incrementShareClicks(shareCode);
+    
+    // Get the template
+    const [template] = await db.select()
+      .from(templates)
+      .where(eq(templates.id, share.template_id))
+      .limit(1);
+    
+    return template;
   }
   
   // Helper methods

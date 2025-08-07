@@ -43,8 +43,24 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
   ];
   
   // Templates need special handling - GET is public, but POST/PUT need auth
-  const isTemplateRead = relativePath.match(/^\/templates($|\/\d+$|\/[^\/]+$)/) && req.method === 'GET';
-  if (isTemplateRead) {
+  // Template share links are always public (check this first)
+  const isTemplateShare = (relativePath.includes('/templates/share/') || fullPath.includes('/templates/share/')) && req.method === 'GET';
+  // Regular template reads are also public for GET
+  const isTemplateRead = relativePath.match(/^\/templates($|\/\d+$|\/[^\/]+$)/) && req.method === 'GET' && !isTemplateShare;
+  
+  // Debug logging for template share requests
+  if (relativePath.includes('/templates/share/') || fullPath.includes('/templates/share/')) {
+    logger.info('Template share path detected:', { 
+      relativePath, 
+      fullPath,
+      originalUrl: req.originalUrl,
+      method: req.method, 
+      isTemplateShare, 
+      isTemplateRead 
+    });
+  }
+  
+  if (isTemplateRead || isTemplateShare) {
     return next();
   }
   

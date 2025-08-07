@@ -719,6 +719,68 @@ router.get('/:id/analytics', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/templates/share/:shareCode - Get template by share code
+router.get('/share/:shareCode', async (req, res) => {
+  try {
+    const { shareCode } = req.params;
+    
+    // Get template by share code (this also tracks the click)
+    const template = await storage.getTemplateByShareCode(shareCode);
+    
+    if (!template) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+    
+    // Get creator info
+    const creator = template.user_id ? await storage.getUser(template.user_id) : null;
+    
+    // Transform the template data for frontend
+    const tripData = template.trip_data as any || {};
+    let activities: any[] = [];
+    
+    // Calculate a base date for the template (30 days from now)
+    const baseDate = new Date();
+    baseDate.setDate(baseDate.getDate() + 30);
+    
+    // Extract activities from the days structure
+    if (tripData.days && Array.isArray(tripData.days)) {
+      tripData.days.forEach((day: any) => {
+        if (day.activities && Array.isArray(day.activities)) {
+          // Calculate the date for this day
+          const dayDate = new Date(baseDate);
+          const dayNumber = parseInt(day.day) || 1;
+          dayDate.setDate(dayDate.getDate() + (dayNumber - 1));
+          
+          day.activities.forEach((activity: any) => {
+            activities.push({
+              ...activity,
+              date: dayDate.toISOString(),
+              day: dayNumber
+            });
+          });
+        }
+      });
+    }
+    
+    const transformedTemplate = {
+      ...template,
+      activities: activities,
+      tripData: tripData,
+      creator: creator ? {
+        id: creator.id,
+        username: creator.username,
+        displayName: creator.display_name,
+        verified: false
+      } : null
+    };
+    
+    res.json(sanitizeResponseDates(transformedTemplate));
+  } catch (error) {
+    logger.error('Error fetching template by share code:', error);
+    res.status(500).json({ message: 'Failed to fetch template' });
+  }
+});
+
 // POST /api/templates/:id/share - Track social share
 router.post('/:id/share', async (req, res) => {
   try {

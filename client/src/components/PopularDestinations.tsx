@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'wouter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, TrendingUp, Plane } from 'lucide-react';
+import { MapPin, TrendingUp, Plane, Star, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 interface Destination {
@@ -66,48 +66,71 @@ export default function PopularDestinations() {
               transition={{ delay: index * 0.1 }}
             >
               <Link href={`/destinations/${destination.slug}`}>
-                <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img
-                      src={destination.image}
-                      alt={`${destination.name} travel guide`}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
-                          {destination.name}
-                        </h3>
-                        <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                          <MapPin className="w-3 h-3" />
-                          {destination.country}
-                        </p>
-                      </div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
+                    {/* Cover Image - matching template card style */}
+                    <div className="relative h-48 bg-gradient-to-br from-purple-400 to-pink-400">
+                      {destination.image ? (
+                        <img
+                          src={destination.image}
+                          alt={`${destination.name} travel guide`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white">
+                          <MapPin className="h-12 w-12" />
+                        </div>
+                      )}
                       {destination.templateCount && destination.templateCount > 0 && (
-                        <Badge variant="secondary">
+                        <Badge className="absolute top-2 right-2 bg-yellow-500">
                           {destination.templateCount} templates
                         </Badge>
                       )}
+                      <div className="absolute bottom-2 left-2">
+                        <Badge variant="secondary" className="bg-white/90">
+                          {destination.activities}+ activities
+                        </Badge>
+                      </div>
                     </div>
-                    
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {destination.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        {destination.activities}+ activities
-                      </span>
-                      <span className="text-sm font-medium text-purple-600 group-hover:text-purple-700 flex items-center gap-1">
-                        Explore
-                        <Plane className="w-3 h-3" />
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+
+                    {/* Content - matching template card layout */}
+                    <CardContent className="pt-4">
+                      <h3 className="font-semibold text-lg mb-1 line-clamp-1">
+                        {destination.name}
+                      </h3>
+                      
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        {destination.description}
+                      </p>
+
+                      {/* Location Badge */}
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        <Badge variant="outline" className="text-xs">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {destination.country}
+                        </Badge>
+                      </div>
+
+                      {/* Bottom Stats */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            Popular
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-purple-600 flex items-center gap-1">
+                          Explore
+                          <Plane className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Link>
             </motion.div>
           ))}

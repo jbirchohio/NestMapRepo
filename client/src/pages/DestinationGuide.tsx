@@ -167,7 +167,10 @@ export default function DestinationGuide() {
               backgroundImage: destinationData?.image ? `url(${destinationData.image})` : 'linear-gradient(to bottom right, #9333ea, #ec4899)',
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-black/30" />
+            {/* Enhanced gradient overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
+            {/* Additional scrim at the bottom for text area */}
+            <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/95 to-transparent" />
           </div>
           
           <div className="relative h-full flex items-end">
@@ -181,15 +184,15 @@ export default function DestinationGuide() {
                   <TrendingUp className="w-3 h-3 mr-1" />
                   Trending Destination
                 </Badge>
-                <h1 className="text-5xl md:text-6xl font-bold mb-4">
+                <h1 className="text-5xl md:text-6xl font-bold mb-4" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.5)' }}>
                   {destinationData?.title || `${destinationName} Travel Guide`}
                 </h1>
-                <p className="text-xl md:text-2xl max-w-3xl text-gray-100">
+                <p className="text-xl md:text-2xl max-w-3xl text-gray-100" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 2px 6px rgba(0,0,0,0.5)' }}>
                   {destinationData?.heroDescription || `Discover the best of ${destinationName} with our comprehensive guide`}
                 </p>
                 
                 {destinationData?.seasonalWeather && (
-                  <div className="flex items-center gap-4 mt-6">
+                  <div className="flex items-center gap-4 mt-6" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
                     <div className="flex items-center gap-2">
                       <Sun className="w-5 h-5" />
                       <span className="text-lg">
@@ -203,7 +206,7 @@ export default function DestinationGuide() {
                 )}
                 
                 {destinationData?.imageAttribution && (
-                  <div className="mt-4 text-sm text-white/80">
+                  <div className="mt-4 text-sm text-white/90" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
                     Photo by{' '}
                     <a 
                       href={destinationData.imageAttribution.photographerUrl}
