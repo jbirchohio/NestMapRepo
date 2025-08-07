@@ -85,21 +85,29 @@ export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) 
     }
     
     if (window.google) {
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed()) {
-          // If One Tap is not displayed, fall back to button flow
-          const tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'email profile',
-            callback: (response: any) => {
-              // For OAuth2 flow, we get an access token
-              // Convert to credential format for our backend
-              handleGoogleResponse({ credential: response.access_token });
-            },
-          });
-          tokenClient.requestAccessToken();
-        }
+      // Use the Sign-In button flow directly instead of One Tap
+      // This ensures we get an ID token, not an access token
+      const buttonDiv = document.createElement('div');
+      buttonDiv.style.display = 'none';
+      document.body.appendChild(buttonDiv);
+      
+      window.google.accounts.id.renderButton(buttonDiv, {
+        theme: 'outline',
+        size: 'large',
       });
+      
+      // Trigger the button click programmatically
+      const button = buttonDiv.querySelector('[role="button"]') as HTMLElement;
+      if (button) {
+        button.click();
+      }
+      
+      // Clean up
+      setTimeout(() => {
+        if (buttonDiv.parentNode) {
+          document.body.removeChild(buttonDiv);
+        }
+      }, 100);
     }
   };
 

@@ -218,7 +218,7 @@ export default function TemplateDetails() {
               </CardHeader>
               <CardContent>
                 <Tabs value={`day-${selectedDay}`} onValueChange={(v) => setSelectedDay(parseInt(v.split('-')[1]))}>
-                  <TabsList className="grid grid-cols-7 mb-6">
+                  <TabsList className="flex flex-wrap gap-2 mb-6">
                     {dayGroups.map((_, index) => (
                       <TabsTrigger key={index} value={`day-${index}`}>
                         Day {index + 1}
@@ -606,10 +606,6 @@ function groupActivitiesByDay(activities: any[]): any[][] {
     days.push(currentDay);
   }
 
-  // Ensure we have at least 7 days
-  while (days.length < 7) {
-    days.push([]);
-  }
-
-  return days.slice(0, 7);
+  // Return the actual number of days in the template
+  return days;
 }
