@@ -354,6 +354,62 @@ export const approvals = pgTable("approvals", {
 });
 
 // ======================================
+// DESTINATION CONTENT TABLES
+// ======================================
+
+// Destination guides with pre-generated content
+export const destinations = pgTable("destinations", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").unique().notNull(), // URL-friendly name: "new-york", "paris"
+  name: text("name").notNull(), // Display name: "New York", "Paris"
+  country: text("country").notNull(),
+  region: text("region"), // "North America", "Europe", etc.
+  
+  // SEO & Content
+  title: text("title").notNull(),
+  meta_description: text("meta_description").notNull(),
+  hero_description: text("hero_description"),
+  overview: text("overview").notNull(),
+  
+  // Travel Information
+  best_time_to_visit: text("best_time_to_visit"),
+  getting_around: text("getting_around"),
+  where_to_stay: text("where_to_stay"),
+  food_and_drink: text("food_and_drink"),
+  
+  // Structured Data
+  top_attractions: jsonb("top_attractions").$type<string[]>().default([]),
+  local_tips: jsonb("local_tips").$type<string[]>().default([]),
+  faqs: jsonb("faqs").$type<Array<{question: string; answer: string}>>().default([]),
+  
+  // Media & Visual
+  cover_image: text("cover_image"), // Main hero image URL
+  thumbnail_image: text("thumbnail_image"), // List/card image URL
+  gallery_images: jsonb("gallery_images").$type<string[]>().default([]),
+  
+  // Statistics & Popularity
+  view_count: integer("view_count").default(0),
+  template_count: integer("template_count").default(0), // Number of templates for this destination
+  activity_count: integer("activity_count").default(0), // Number of activities available
+  avg_daily_cost: decimal("avg_daily_cost", { precision: 10, scale: 2 }),
+  popularity_score: integer("popularity_score").default(0), // For sorting/featuring
+  
+  // Geographic Data
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  timezone: text("timezone"),
+  
+  // Status & Management
+  status: text("status").default("draft"), // draft, published, archived
+  featured: boolean("featured").default(false),
+  ai_generated: boolean("ai_generated").default(false), // Track if content was AI-generated
+  last_regenerated: timestamp("last_regenerated"),
+  
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// ======================================
 // CREATOR ECONOMY TABLES
 // ======================================
 

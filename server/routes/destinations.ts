@@ -2,45 +2,131 @@ import { Router } from 'express';
 import { seoContentGenerator } from '../services/seoContentGenerator';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
+import { db } from '../db-connection';
+import { destinations } from '@shared/schema';
+import { eq } from 'drizzle-orm';
+import { getCurrentWeather } from '../weather';
 
 const router = Router();
 
-// Get destination content (with AI generation fallback)
+// Get destination content from database
 router.get('/:destination/content', async (req, res) => {
   try {
     const { destination } = req.params;
     
-    // Convert slug to proper destination name
-    const destinationName = destination
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    // First, try to get from database
+    const [destinationData] = await db
+      .select()
+      .from(destinations)
+      .where(eq(destinations.slug, destination))
+      .limit(1);
     
-    // Generate or retrieve content
-    const content = await seoContentGenerator.generateDestinationContent(destinationName);
-    
-    // Add weather data (mock for now, could integrate weather API)
-    const weatherData = {
-      current: 'Sunny',
-      temperature: 75,
-      forecast: 'Clear skies expected all week'
-    };
-    
-    // Add optimized image URL (smaller size for faster loading)
-    const imageUrl = `https://source.unsplash.com/800x450/?${destinationName},travel,landscape`;
-    
-    // Set cache headers for browser caching
-    res.set({
-      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      'ETag': `"${destination}-${new Date().toISOString().split('T')[0]}"` // Daily ETag
-    });
-    
-    res.json({
-      ...content,
-      weather: weatherData,
-      image: imageUrl,
-      lastUpdated: new Date().toISOString()
-    });
+    if (destinationData && destinationData.status === 'published') {
+      // Increment view count
+      await db
+        .update(destinations)
+        .set({ view_count: (destinationData.view_count || 0) + 1 })
+        .where(eq(destinations.id, destinationData.id));
+      
+      // Get real weather data
+      const weatherData = await getCurrentWeather(destinationData.name);
+      
+      // Set cache headers for browser caching
+      res.set({
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'ETag': `"${destination}-${destinationData.updated_at?.toISOString().split('T')[0]}"` // Based on last update
+      });
+      
+      // Return the stored content with real weather
+      res.json({
+        title: destinationData.title,
+        metaDescription: destinationData.meta_description,
+        heroDescription: destinationData.hero_description,
+        overview: destinationData.overview,
+        bestTimeToVisit: destinationData.best_time_to_visit,
+        topAttractions: destinationData.top_attractions as string[],
+        localTips: destinationData.local_tips as string[],
+        gettingAround: destinationData.getting_around,
+        whereToStay: destinationData.where_to_stay,
+        foodAndDrink: destinationData.food_and_drink,
+        faqs: destinationData.faqs as Array<{question: string; answer: string}>,
+        image: destinationData.cover_image || `https://source.unsplash.com/800x450/?${destinationData.name},travel,landscape`,
+        weather: weatherData ? {
+          current: weatherData.description,
+          temperature: weatherData.temperature,
+          humidity: weatherData.humidity,
+          windSpeed: weatherData.windSpeed,
+          unit: weatherData.unit,
+          forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
+        } : {
+          current: 'Clear',
+          temperature: 72,
+          unit: 'F',
+          forecast: 'Pleasant weather expected'
+        },
+        lastUpdated: destinationData.updated_at?.toISOString()
+      });
+    } else {
+      // Fallback: Generate content on-the-fly for destinations not in database
+      const destinationName = destination
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      const content = await seoContentGenerator.generateDestinationContent(destinationName);
+      
+      // Optionally save to database for future use (in background)
+      if (!destinationData) {
+        // Create destination in background
+        (async () => {
+          try {
+            await db.insert(destinations).values({
+              slug: destination,
+              name: destinationName,
+              country: 'Unknown', // Would need geocoding to determine
+              title: content.title,
+              meta_description: content.metaDescription,
+              hero_description: content.heroDescription,
+              overview: content.overview,
+              best_time_to_visit: content.bestTimeToVisit,
+              top_attractions: content.topAttractions,
+              local_tips: content.localTips,
+              getting_around: content.gettingAround,
+              where_to_stay: content.whereToStay,
+              food_and_drink: content.foodAndDrink,
+              faqs: content.faqs,
+              status: 'draft', // Admin needs to review before publishing
+              ai_generated: true
+            });
+            logger.info(`Created draft destination: ${destination}`);
+          } catch (err) {
+            logger.error(`Failed to save destination ${destination}:`, err);
+          }
+        })();
+      }
+      
+      // Try to get real weather for the destination
+      const weatherData = await getCurrentWeather(destinationName);
+      
+      res.json({
+        ...content,
+        weather: weatherData ? {
+          current: weatherData.description,
+          temperature: weatherData.temperature,
+          humidity: weatherData.humidity,
+          windSpeed: weatherData.windSpeed,
+          unit: weatherData.unit,
+          forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
+        } : {
+          current: 'Clear',
+          temperature: 72,
+          unit: 'F',
+          forecast: 'Pleasant weather expected'
+        },
+        image: `https://source.unsplash.com/800x450/?${destinationName},travel,landscape`,
+        lastUpdated: new Date().toISOString()
+      });
+    }
     
   } catch (error) {
     logger.error('Destination content error:', error);
@@ -48,67 +134,97 @@ router.get('/:destination/content', async (req, res) => {
   }
 });
 
-// Get popular destinations
+// Get popular destinations from database
 router.get('/popular', async (req, res) => {
   try {
-    const popularDestinations = [
-      { 
-        slug: 'new-york',
-        name: 'New York',
-        country: 'USA',
-        image: 'https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=300&fit=crop',
-        description: 'The city that never sleeps',
-        activities: 1250,
-        avgPrice: '$150'
-      },
-      {
-        slug: 'paris',
-        name: 'Paris',
-        country: 'France',
-        image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop',
-        description: 'City of lights and romance',
-        activities: 980,
-        avgPrice: '$120'
-      },
-      {
-        slug: 'tokyo',
-        name: 'Tokyo',
-        country: 'Japan',
-        image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=300&fit=crop',
-        description: 'Where tradition meets future',
-        activities: 1100,
-        avgPrice: '$130'
-      },
-      {
-        slug: 'london',
-        name: 'London',
-        country: 'UK',
-        image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&h=300&fit=crop',
-        description: 'History and modernity combined',
-        activities: 890,
-        avgPrice: '$140'
-      },
-      {
-        slug: 'dubai',
-        name: 'Dubai',
-        country: 'UAE',
-        image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=300&fit=crop',
-        description: 'Luxury in the desert',
-        activities: 650,
-        avgPrice: '$180'
-      },
-      {
-        slug: 'barcelona',
-        name: 'Barcelona',
-        country: 'Spain',
-        image: 'https://images.unsplash.com/photo-1562883676-8c7feb83f09b?w=400&h=300&fit=crop',
-        description: 'Art, architecture, and beaches',
-        activities: 720,
-        avgPrice: '$100'
-      }
-    ];
+    // Get featured/popular destinations from database
+    const dbDestinations = await db
+      .select()
+      .from(destinations)
+      .where(eq(destinations.status, 'published'))
+      .orderBy(destinations.popularity_score)
+      .limit(6);
     
-    res.json({ destinations: popularDestinations });
+    if (dbDestinations.length > 0) {
+      const popularDestinations = dbDestinations.map(dest => ({
+        slug: dest.slug,
+        name: dest.name,
+        country: dest.country,
+        image: dest.thumbnail_image || `https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=300&fit=crop`,
+        description: dest.hero_description || dest.meta_description,
+        activities: dest.activity_count || 0,
+        avgPrice: dest.avg_daily_cost ? `$${dest.avg_daily_cost}` : '$100',
+        templateCount: dest.template_count || 0
+      }));
+      
+      res.json({ destinations: popularDestinations });
+    } else {
+      // Fallback to hardcoded list if no destinations in database
+      const popularDestinations = [
+        { 
+          slug: 'new-york',
+          name: 'New York',
+          country: 'USA',
+          image: 'https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=300&fit=crop',
+          description: 'The city that never sleeps',
+          activities: 1250,
+          avgPrice: '$150',
+          templateCount: 0
+        },
+        {
+          slug: 'paris',
+          name: 'Paris',
+          country: 'France',
+          image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop',
+          description: 'City of lights and romance',
+          activities: 980,
+          avgPrice: '$120',
+          templateCount: 0
+        },
+        {
+          slug: 'tokyo',
+          name: 'Tokyo',
+          country: 'Japan',
+          image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=300&fit=crop',
+          description: 'Where tradition meets future',
+          activities: 1100,
+          avgPrice: '$130',
+          templateCount: 0
+        },
+        {
+          slug: 'london',
+          name: 'London',
+          country: 'UK',
+          image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&h=300&fit=crop',
+          description: 'History and modernity combined',
+          activities: 890,
+          avgPrice: '$140',
+          templateCount: 0
+        },
+        {
+          slug: 'dubai',
+          name: 'Dubai',
+          country: 'UAE',
+          image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=300&fit=crop',
+          description: 'Luxury in the desert',
+          activities: 650,
+          avgPrice: '$180',
+          templateCount: 0
+        },
+        {
+          slug: 'barcelona',
+          name: 'Barcelona',
+          country: 'Spain',
+          image: 'https://images.unsplash.com/photo-1562883676-8c7feb83f09b?w=400&h=300&fit=crop',
+          description: 'Art, architecture, and beaches',
+          activities: 720,
+          avgPrice: '$100',
+          templateCount: 0
+        }
+      ];
+      
+      res.json({ destinations: popularDestinations });
+    }
   } catch (error) {
     logger.error('Popular destinations error:', error);
     res.status(500).json({ error: 'Failed to load popular destinations' });

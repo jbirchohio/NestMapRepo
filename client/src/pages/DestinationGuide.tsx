@@ -29,6 +29,10 @@ interface DestinationData {
   weather?: {
     current: string;
     temperature: number;
+    humidity?: number;
+    windSpeed?: number;
+    unit?: string;
+    forecast?: string;
   };
 }
 
@@ -165,11 +169,26 @@ export default function DestinationGuide() {
                 </p>
                 
                 {destinationData?.weather && (
-                  <div className="flex items-center gap-2 mt-6">
-                    <Sun className="w-5 h-5" />
-                    <span className="text-lg">
-                      Currently {destinationData.weather.temperature}°F and {destinationData.weather.current}
+                  <div className="flex items-center gap-4 mt-6">
+                    <div className="flex items-center gap-2">
+                      <Sun className="w-5 h-5" />
+                      <span className="text-lg">
+                        {destinationData.weather.temperature}°{destinationData.weather.unit || 'F'}
+                      </span>
+                    </div>
+                    <span className="text-lg capitalize">
+                      {destinationData.weather.current}
                     </span>
+                    {destinationData.weather.humidity && (
+                      <span className="text-lg">
+                        {destinationData.weather.humidity}% humidity
+                      </span>
+                    )}
+                    {destinationData.weather.windSpeed && (
+                      <span className="text-lg">
+                        {Math.round(destinationData.weather.windSpeed)} mph wind
+                      </span>
+                    )}
                   </div>
                 )}
               </motion.div>
