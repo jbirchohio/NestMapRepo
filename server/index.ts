@@ -331,7 +331,13 @@ app.use((req, res, next) => {
 
     if (fs.existsSync(staticPath)) {
       app.use(express.static(staticPath));
-      app.get("*", (_req, res) => {
+      // Catch-all route for SPA - but exclude /api and /uploads routes
+      app.get("*", (req, res) => {
+        // Don't catch API or upload routes
+        if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+          res.status(404).json({ message: 'Not found' });
+          return;
+        }
         res.sendFile(path.join(staticPath, "index.html"));
       });
     } else {
