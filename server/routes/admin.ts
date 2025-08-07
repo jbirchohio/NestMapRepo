@@ -113,6 +113,78 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// GET /api/admin/users - Get all users with stats
+router.get('/users', async (req, res) => {
+  try {
+    const { page = 1, limit = 20, role, creator_status: creatorStatus } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+    
+    // Build query
+    let query = db.select({
+      id: users.id,
+      email: users.email,
+      username: users.username,
+      role: users.role,
+      creator_status: users.creator_status,
+      creator_tier: users.creator_tier,
+      creator_score: users.creator_score,
+      templates_published: users.templates_published,
+      total_template_sales: users.total_template_sales,
+      created_at: users.created_at,
+      last_login: users.last_login,
+      // Get template count
+      template_count: sql<number>`(
+        SELECT COUNT(*) FROM ${templates} 
+        WHERE ${templates.user_id} = ${users.id}
+      )`,
+      // Get total revenue
+      total_revenue: sql<number>`(
+        SELECT COALESCE(SUM(${templatePurchases.seller_earnings}), 0) 
+        FROM ${templatePurchases}
+        JOIN ${templates} ON ${templates.id} = ${templatePurchases.template_id}
+        WHERE ${templates.user_id} = ${users.id}
+      )`
+    })
+    .from(users);
+    
+    // Apply filters
+    const conditions = [];
+    if (role) {
+      conditions.push(eq(users.role, role as string));
+    }
+    if (creatorStatus) {
+      conditions.push(eq(users.creator_status, creatorStatus as string));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    const allUsers = await query
+      .orderBy(desc(users.created_at))
+      .limit(Number(limit))
+      .offset(offset);
+    
+    // Get total count
+    const [{ count }] = await db.select({
+      count: sql<number>`count(*)`
+    }).from(users);
+    
+    res.json({
+      users: allUsers,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: count,
+        pages: Math.ceil(count / Number(limit))
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
 // POST /api/admin/users/:id/verify - Verify a creator
 router.post('/users/:id/verify', async (req, res) => {
   try {
@@ -156,6 +228,45 @@ router.post('/users/:id/suspend', async (req, res) => {
   } catch (error) {
     logger.error('Error suspending creator:', error);
     res.status(500).json({ message: 'Failed to suspend creator' });
+  }
+});
+
+// POST /api/admin/users/:id/make-admin - Make a user an admin
+router.post('/users/:id/make-admin', requireSuperAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    await db.update(users)
+      .set({ role: 'admin' })
+      .where(eq(users.id, userId));
+    
+    logger.info(`Super admin granted admin privileges to user ${userId}`);
+    res.json({ message: 'User granted admin privileges' });
+  } catch (error) {
+    logger.error('Error making user admin:', error);
+    res.status(500).json({ message: 'Failed to grant admin privileges' });
+  }
+});
+
+// POST /api/admin/users/:id/remove-admin - Remove admin privileges
+router.post('/users/:id/remove-admin', requireSuperAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    // Don't allow removing your own admin status
+    if (userId === req.user!.id) {
+      return res.status(400).json({ message: 'Cannot remove your own admin privileges' });
+    }
+    
+    await db.update(users)
+      .set({ role: 'user' })
+      .where(eq(users.id, userId));
+    
+    logger.info(`Super admin removed admin privileges from user ${userId}`);
+    res.json({ message: 'Admin privileges removed' });
+  } catch (error) {
+    logger.error('Error removing admin privileges:', error);
+    res.status(500).json({ message: 'Failed to remove admin privileges' });
   }
 });
 

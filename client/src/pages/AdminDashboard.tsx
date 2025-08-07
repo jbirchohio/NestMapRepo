@@ -4,10 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useLocation } from 'wouter';
-import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Shield, UserCheck, UserX, Search, Crown } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
 
 interface PendingTemplate {
   id: number;
@@ -351,18 +353,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage creators and user accounts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="h-12 w-12 mx-auto mb-4" />
-                  <p>User management features coming soon</p>
-                </div>
-              </CardContent>
-            </Card>
+            <UserManagementTab isSuperAdmin={isSuperAdmin} />
           </TabsContent>
 
           {isSuperAdmin && (
@@ -446,5 +437,291 @@ export default function AdminDashboard() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+// User Management Tab Component
+function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterCreatorStatus, setFilterCreatorStatus] = useState('all');
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filterRole !== 'all') params.append('role', filterRole);
+      if (filterCreatorStatus !== 'all') params.append('creator_status', filterCreatorStatus);
+      
+      const response = await fetch(`/api/admin/users?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCreator = async (userId: number) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        loadUsers();
+      }
+    } catch (error) {
+      console.error('Error verifying creator:', error);
+    }
+  };
+
+  const handleSuspendUser = async (userId: number) => {
+    if (!confirm('Are you sure you want to suspend this user?')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: 'Admin suspension' })
+      });
+      
+      if (response.ok) {
+        loadUsers();
+      }
+    } catch (error) {
+      console.error('Error suspending user:', error);
+    }
+  };
+
+  const handleMakeAdmin = async (userId: number) => {
+    if (!confirm('Grant admin privileges to this user?')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/make-admin`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        loadUsers();
+      }
+    } catch (error) {
+      console.error('Error making user admin:', error);
+    }
+  };
+
+  const handleRemoveAdmin = async (userId: number) => {
+    if (!confirm('Remove admin privileges from this user?')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/remove-admin`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        loadUsers();
+      }
+    } catch (error) {
+      console.error('Error removing admin:', error);
+    }
+  };
+
+  const filteredUsers = users.filter(user => 
+    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getCreatorBadge = (status: string) => {
+    switch(status) {
+      case 'verified':
+        return <Badge className="bg-green-500 text-white">Verified</Badge>;
+      case 'approved':
+        return <Badge className="bg-blue-500 text-white">Creator</Badge>;
+      case 'suspended':
+        return <Badge className="bg-red-500 text-white">Suspended</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const getRoleBadge = (role: string) => {
+    if (role === 'admin') {
+      return <Badge className="bg-purple-500 text-white"><Shield className="h-3 w-3 mr-1" />Admin</Badge>;
+    }
+    return null;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>User Management</CardTitle>
+        <CardDescription>Manage users, creators, and admin privileges</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/* Filters */}
+        <div className="flex gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={filterRole} onValueChange={(value) => { setFilterRole(value); loadUsers(); }}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="user">Users</SelectItem>
+              <SelectItem value="admin">Admins</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterCreatorStatus} onValueChange={(value) => { setFilterCreatorStatus(value); loadUsers(); }}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Creator status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="none">Not Creator</SelectItem>
+              <SelectItem value="approved">Creator</SelectItem>
+              <SelectItem value="verified">Verified</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Users List */}
+        <ScrollArea className="h-[600px]">
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-4" />
+                <p>No users found</p>
+              </div>
+            ) : (
+              filteredUsers.map((user) => (
+                <Card key={user.id} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-lg">{user.username || 'No username'}</h3>
+                        {getRoleBadge(user.role)}
+                        {getCreatorBadge(user.creator_status)}
+                        {user.creator_score > 0 && (
+                          <Badge variant="outline">Score: {user.creator_score}</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">{user.email}</p>
+                      <div className="flex gap-4 text-xs text-gray-500 mt-2">
+                        <span>Joined {formatDistanceToNow(new Date(user.created_at))} ago</span>
+                        {user.last_login && (
+                          <span>Last seen {formatDistanceToNow(new Date(user.last_login))} ago</span>
+                        )}
+                        {user.template_count > 0 && (
+                          <span>{user.template_count} templates</span>
+                        )}
+                        {user.total_revenue > 0 && (
+                          <span>${Number(user.total_revenue).toFixed(2)} earned</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      {/* Creator Actions */}
+                      {user.creator_status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVerifyCreator(user.id)}
+                          className="text-green-600 border-green-600 hover:bg-green-50"
+                        >
+                          <UserCheck className="h-4 w-4 mr-1" />
+                          Verify
+                        </Button>
+                      )}
+                      
+                      {user.creator_status !== 'suspended' && user.creator_status !== 'none' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSuspendUser(user.id)}
+                          className="text-red-600 border-red-600 hover:bg-red-50"
+                        >
+                          <UserX className="h-4 w-4 mr-1" />
+                          Suspend
+                        </Button>
+                      )}
+
+                      {/* Admin Actions (Super Admin Only) */}
+                      {isSuperAdmin && (
+                        <>
+                          {user.role !== 'admin' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleMakeAdmin(user.id)}
+                              className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                            >
+                              <Crown className="h-4 w-4 mr-1" />
+                              Make Admin
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRemoveAdmin(user.id)}
+                              className="text-gray-600 border-gray-600 hover:bg-gray-50"
+                            >
+                              <Shield className="h-4 w-4 mr-1" />
+                              Remove Admin
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }
