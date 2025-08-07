@@ -392,6 +392,12 @@ export const destinations = pgTable("destinations", {
   cover_image: text("cover_image"), // Main hero image URL
   thumbnail_image: text("thumbnail_image"), // List/card image URL
   gallery_images: jsonb("gallery_images").$type<string[]>().default([]),
+  image_attribution: jsonb("image_attribution").$type<{
+    photographerName: string;
+    photographerUsername: string;
+    photographerUrl: string;
+    photoUrl: string;
+  }>(), // Unsplash attribution
   
   // Statistics & Popularity
   view_count: integer("view_count").default(0),

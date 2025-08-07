@@ -4,6 +4,7 @@
 
 import { callOpenAI } from '../openai';
 import { logger } from '../utils/logger';
+import { unsplashService } from './unsplashService';
 
 interface DestinationSection {
   overview?: string;
@@ -128,49 +129,32 @@ export class OptimizedContentGenerator {
   }
 
   /**
-   * Generate image URLs using AI to find specific Unsplash photos
+   * Generate image URLs using Unsplash API
    */
   private async generateImageUrls(destination: string): Promise<any> {
-    const prompt = `Search Unsplash for "${destination}" and find the best photo ID. 
-    
-    Look for photos that show:
-    - The city skyline or iconic landmarks
-    - Tourist attractions or famous views
-    - The actual destination (not generic travel photos)
-    
-    Return JSON with a real Unsplash photo ID:
-    {
-      "photoId": "the photo ID part from an Unsplash URL (e.g., '1538970272646-f61fabb3a8a2' from photo-1538970272646-f61fabb3a8a2)",
-      "description": "what the photo shows"
-    }
-    
-    IMPORTANT: Return an actual Unsplash photo ID that exists. The format is typically numbers and letters separated by a dash.`;
-
     try {
-      const response = await callOpenAI(prompt, {
-        temperature: 0.2,
-        max_tokens: 150,
-        model: 'gpt-4-turbo-preview',
-        response_format: { type: "json_object" }
-      });
-      const result = JSON.parse(response);
-      
-      // Use the AI-found photo ID
-      const photoId = result.photoId || '1488646953014-85cb44e25828'; // fallback to generic travel
+      // Use Unsplash API to search for destination photos
+      const imageResult = await unsplashService.searchDestinationPhotos(destination);
       
       return {
-        coverImage: `https://images.unsplash.com/photo-${photoId}?w=1200&h=630&fit=crop&q=80`,
-        thumbnailImage: `https://images.unsplash.com/photo-${photoId}?w=400&h=300&fit=crop&q=80`,
-        contentImage: `https://images.unsplash.com/photo-${photoId}?w=800&h=450&fit=crop&q=80`
+        coverImage: imageResult.coverImage,
+        thumbnailImage: imageResult.thumbnailImage,
+        contentImage: imageResult.contentImage,
+        imageAttribution: {
+          photographerName: imageResult.photographer.name,
+          photographerUsername: imageResult.photographer.username,
+          photographerUrl: imageResult.photographer.profileUrl,
+          photoUrl: imageResult.photoUrl
+        }
       };
     } catch (error) {
-      logger.error('Image URL generation failed:', error);
-      // Fallback to a nice travel image
-      const fallbackId = '1488646953014-85cb44e25828';
+      logger.error('Image generation failed:', error);
+      // Return gradient fallback
       return {
-        coverImage: `https://images.unsplash.com/photo-${fallbackId}?w=1200&h=630&fit=crop&q=80`,
-        thumbnailImage: `https://images.unsplash.com/photo-${fallbackId}?w=400&h=300&fit=crop&q=80`,
-        contentImage: `https://images.unsplash.com/photo-${fallbackId}?w=800&h=450&fit=crop&q=80`
+        coverImage: null,
+        thumbnailImage: null,
+        contentImage: null,
+        imageAttribution: null
       };
     }
   }
@@ -179,30 +163,68 @@ export class OptimizedContentGenerator {
    * Generate FAQs
    */
   private async generateFAQs(destination: string): Promise<any[]> {
-    const prompt = `Create 3 FAQs for ${destination} travel. Return JSON array:
-    [
-      {"question": "Budget question", "answer": "Cost info"},
-      {"question": "Duration question", "answer": "Days needed"},
-      {"question": "Safety question", "answer": "Safety tips"}
-    ]`;
+    const prompt = `Create 5 detailed FAQs for travelers visiting ${destination}. Return a JSON object with an array:
+    {
+      "faqs": [
+        {
+          "question": "What is the best time of year to visit ${destination}?",
+          "answer": "Provide specific months and explain weather patterns, tourist seasons, and any special events"
+        },
+        {
+          "question": "How much should I budget for a trip to ${destination}?",
+          "answer": "Give specific daily budget ranges for budget/mid-range/luxury travelers, including accommodation, food, and activities"
+        },
+        {
+          "question": "How many days do I need to explore ${destination}?",
+          "answer": "Suggest ideal trip duration with reasoning, what can be seen in that time"
+        },
+        {
+          "question": "Is ${destination} safe for tourists?",
+          "answer": "Provide honest safety assessment with specific tips for staying safe"
+        },
+        {
+          "question": "What are the must-try local foods in ${destination}?",
+          "answer": "List 3-4 specific dishes or foods unique to this destination with brief descriptions"
+        }
+      ]
+    }
+    
+    Provide detailed, helpful answers that are specific to ${destination}. Each answer should be 2-3 sentences long.`;
 
     try {
       const response = await callOpenAI(prompt, {
-        temperature: 0.6,
-        max_tokens: 300,
+        temperature: 0.7,
+        max_tokens: 800,
         model: 'gpt-3.5-turbo',
         response_format: { type: "json_object" }
       });
       
-      // Parse and ensure it's wrapped in an object if needed
       const parsed = JSON.parse(response);
-      return Array.isArray(parsed) ? parsed : (parsed.faqs || []);
+      return parsed.faqs || [];
     } catch (error) {
       logger.error('FAQs generation failed:', error);
+      // Return detailed fallback FAQs
       return [
-        { question: `Is ${destination} expensive?`, answer: 'Costs vary by season and area' },
-        { question: `How many days for ${destination}?`, answer: '3-4 days for main attractions' },
-        { question: `Is ${destination} safe?`, answer: 'Generally safe with normal precautions' }
+        { 
+          question: `What is the best time of year to visit ${destination}?`,
+          answer: `Spring (March-May) and fall (September-November) typically offer the most pleasant weather in ${destination}, with mild temperatures and fewer crowds. Summer can be peak tourist season with higher prices, while winter may offer unique seasonal activities.`
+        },
+        { 
+          question: `How much should I budget for a trip to ${destination}?`,
+          answer: `Budget travelers can expect to spend $50-80 per day in ${destination}, mid-range travelers $100-200 per day, and luxury travelers $250+ per day. This includes accommodation, meals, local transportation, and some activities.`
+        },
+        { 
+          question: `How many days do I need to explore ${destination}?`,
+          answer: `A minimum of 3-4 days is recommended to see the main highlights of ${destination}. For a more relaxed pace and to explore beyond the tourist areas, 5-7 days would be ideal.`
+        },
+        {
+          question: `Is ${destination} safe for tourists?`,
+          answer: `${destination} is generally safe for tourists who take normal precautions. Stay aware of your surroundings, keep valuables secure, use official taxis or ride-sharing apps, and avoid walking alone in unfamiliar areas at night.`
+        },
+        {
+          question: `What are the must-try local foods in ${destination}?`,
+          answer: `${destination} offers a rich culinary experience with local specialties worth trying. Visit local markets and restaurants to sample authentic dishes, and don't miss trying the street food if it's popular in the area.`
+        }
       ];
     }
   }
@@ -240,7 +262,8 @@ export class OptimizedContentGenerator {
         faqs: faqs,
         coverImage: images.coverImage,
         thumbnailImage: images.thumbnailImage,
-        contentImage: images.contentImage
+        contentImage: images.contentImage,
+        imageAttribution: images.imageAttribution
       };
 
       const duration = Date.now() - startTime;

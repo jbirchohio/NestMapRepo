@@ -32,6 +32,12 @@ interface DestinationData {
     avgLowTemp: number;
     rainyMonths?: string;
   };
+  imageAttribution?: {
+    photographerName: string;
+    photographerUsername: string;
+    photographerUrl: string;
+    photoUrl: string;
+  };
 }
 
 export default function DestinationGuide() {
@@ -193,6 +199,29 @@ export default function DestinationGuide() {
                     <span className="text-lg">
                       {destinationData.seasonalWeather.description}
                     </span>
+                  </div>
+                )}
+                
+                {destinationData?.imageAttribution && (
+                  <div className="mt-4 text-sm text-white/80">
+                    Photo by{' '}
+                    <a 
+                      href={destinationData.imageAttribution.photographerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-white"
+                    >
+                      {destinationData.imageAttribution.photographerName}
+                    </a>
+                    {' '}on{' '}
+                    <a 
+                      href={destinationData.imageAttribution.photoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-white"
+                    >
+                      Unsplash
+                    </a>
                   </div>
                 )}
               </motion.div>

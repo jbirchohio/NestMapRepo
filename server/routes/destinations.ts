@@ -52,6 +52,7 @@ router.get('/:destination/content', async (req, res) => {
           faqs: destinationData.faqs as Array<{question: string; answer: string}>,
           image: destinationData.cover_image,
           seasonalWeather: destinationData.seasonal_weather,
+          imageAttribution: destinationData.image_attribution,
           lastUpdated: destinationData.updated_at?.toISOString()
         });
       }
@@ -89,6 +90,7 @@ router.get('/:destination/content', async (req, res) => {
               seasonal_weather: content.seasonalWeather,
               cover_image: destinationData.cover_image || content.coverImage,
               thumbnail_image: destinationData.thumbnail_image || content.thumbnailImage,
+              image_attribution: content.imageAttribution,
               status: 'published',
               ai_generated: true,
               updated_at: new Date()
@@ -115,6 +117,7 @@ router.get('/:destination/content', async (req, res) => {
             seasonal_weather: content.seasonalWeather,
             cover_image: content.coverImage,
             thumbnail_image: content.thumbnailImage,
+            image_attribution: content.imageAttribution,
             status: 'published',
             ai_generated: true
           });
