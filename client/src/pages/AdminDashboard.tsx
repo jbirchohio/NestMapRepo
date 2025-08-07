@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useLocation } from 'wouter';
-import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Shield, UserCheck, UserX, Search, Crown } from 'lucide-react';
+import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Shield, UserCheck, UserX, Search, Crown, MapPin } from 'lucide-react';
+import DestinationManagement from '@/components/admin/DestinationManagement';
 import { formatDistanceToNow, format } from 'date-fns';
 
 // Helper function to safely format dates
@@ -240,10 +241,11 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-4' : 'grid-cols-3'} w-full max-w-2xl`}>
+          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-5' : 'grid-cols-4'} w-full max-w-3xl`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="destinations">Destinations</TabsTrigger>
             {isSuperAdmin && <TabsTrigger value="financials">Financials</TabsTrigger>}
           </TabsList>
 
@@ -368,6 +370,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="users" className="space-y-4">
             <UserManagementTab isSuperAdmin={isSuperAdmin} />
+          </TabsContent>
+
+          <TabsContent value="destinations" className="space-y-4">
+            <DestinationManagement />
           </TabsContent>
 
           {isSuperAdmin && (

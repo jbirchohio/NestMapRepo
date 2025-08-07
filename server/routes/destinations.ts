@@ -102,7 +102,8 @@ router.get('/:destination/content', async (req, res) => {
           await db.insert(destinations).values({
             slug: destination,
             name: destinationName,
-            country: 'Unknown', // Would need geocoding to determine
+            country: content.country || 'World', // Use AI-inferred country
+            activity_count: content.estimatedActivities || 100,
             title: content.title,
             meta_description: content.metaDescription,
             hero_description: content.heroDescription,
@@ -144,6 +145,10 @@ router.get('/:destination/content', async (req, res) => {
 // Get popular destinations from database
 router.get('/popular', async (req, res) => {
   try {
+    // Import necessary tables
+    const { activities, trips, templates } = await import('@shared/schema');
+    const { sql } = await import('drizzle-orm');
+    
     // Get featured/popular destinations from database
     const dbDestinations = await db
       .select()
@@ -153,18 +158,39 @@ router.get('/popular', async (req, res) => {
       .limit(6);
     
     if (dbDestinations.length > 0) {
-      const popularDestinations = dbDestinations.map(dest => ({
-        slug: dest.slug,
-        name: dest.name,
-        country: dest.country,
-        image: dest.thumbnail_image || `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&q=80`,
-        description: dest.hero_description || dest.meta_description,
-        activities: dest.activity_count || 0,
-        avgPrice: dest.avg_daily_cost ? `$${dest.avg_daily_cost}` : '$100',
-        templateCount: dest.template_count || 0
+      // Calculate actual activity counts for each destination
+      const destinationsWithCounts = await Promise.all(dbDestinations.map(async (dest) => {
+        // Count unique activities from trips to this destination
+        const activityCount = await db
+          .select({ count: sql<number>`COUNT(DISTINCT ${activities.title})` })
+          .from(activities)
+          .innerJoin(trips, eq(activities.trip_id, trips.id))
+          .where(
+            sql`LOWER(${trips.destination}) LIKE ${`%${dest.name.toLowerCase()}%`}`
+          )
+          .then(result => result[0]?.count || 0);
+        
+        // Count templates for this destination
+        const templateCount = await db
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(templates)
+          .where(
+            sql`LOWER(${templates.destination}) LIKE ${`%${dest.name.toLowerCase()}%`}`
+          )
+          .then(result => result[0]?.count || 0);
+        
+        return {
+          slug: dest.slug,
+          name: dest.name,
+          country: dest.country,
+          image: dest.thumbnail_image || `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&q=80`,
+          description: dest.hero_description || dest.meta_description,
+          activities: activityCount || dest.activity_count || 0,
+          templateCount: templateCount || 0
+        };
       }));
       
-      res.json({ destinations: popularDestinations });
+      res.json({ destinations: destinationsWithCounts });
     } else {
       // Fallback to hardcoded list if no destinations in database
       const popularDestinations = [
@@ -325,6 +351,61 @@ router.get('/search', async (req, res) => {
   } catch (error) {
     logger.error('Destination search error:', error);
     res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// Admin: Regenerate destination content
+router.post('/:destination/regenerate', async (req, res) => {
+  try {
+    const { destination } = req.params;
+    
+    // Get existing destination to preserve some data
+    const [existingDest] = await db
+      .select()
+      .from(destinations)
+      .where(eq(destinations.slug, destination))
+      .limit(1);
+    
+    if (!existingDest) {
+      return res.status(404).json({ error: 'Destination not found' });
+    }
+    
+    // Generate fresh content
+    const content = await optimizedContentGenerator.generateDestinationContent(existingDest.name);
+    
+    // Update the destination with new content
+    await db.update(destinations)
+      .set({
+        country: content.country || existingDest.country,
+        activity_count: content.estimatedActivities || 100,
+        title: content.title,
+        meta_description: content.metaDescription,
+        hero_description: content.heroDescription,
+        overview: content.overview,
+        best_time_to_visit: content.bestTimeToVisit,
+        top_attractions: content.topAttractions,
+        local_tips: content.localTips,
+        getting_around: content.gettingAround,
+        where_to_stay: content.whereToStay,
+        food_and_drink: content.foodAndDrink,
+        faqs: content.faqs,
+        seasonal_weather: content.seasonalWeather,
+        cover_image: content.coverImage,
+        thumbnail_image: content.thumbnailImage,
+        image_attribution: content.imageAttribution,
+        last_regenerated: new Date(),
+        updated_at: new Date()
+      })
+      .where(eq(destinations.id, existingDest.id));
+    
+    logger.info(`Regenerated destination: ${destination}`);
+    res.json({ 
+      success: true, 
+      message: `Successfully regenerated content for ${existingDest.name}` 
+    });
+  } catch (error) {
+    logger.error('Destination regeneration error:', error);
+    res.status(500).json({ error: 'Failed to regenerate destination' });
   }
 });
 

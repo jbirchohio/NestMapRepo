@@ -26,6 +26,8 @@ export class OptimizedContentGenerator {
       "metaDescription": "155-char SEO description",
       "heroDescription": "2 sentences about what makes it special",
       "bestTimeToVisit": "Best months and weather",
+      "country": "Country name (e.g., 'USA', 'France', 'Japan')",
+      "estimatedActivities": "Approximate number of tourist activities available (number only, e.g., 250)",
       "seasonalWeather": {
         "description": "Typical weather pattern (e.g., 'Mediterranean climate with hot summers')",
         "avgHighTemp": "Average high temperature in peak season (number only)",
@@ -49,6 +51,8 @@ export class OptimizedContentGenerator {
         metaDescription: `Discover ${destination} with our comprehensive guide`,
         heroDescription: `${destination} offers unique experiences for every traveler.`,
         bestTimeToVisit: 'Spring and fall offer pleasant weather',
+        country: 'World',
+        estimatedActivities: 100,
         seasonalWeather: {
           description: 'Temperate climate with four distinct seasons',
           avgHighTemp: 75,
@@ -253,6 +257,8 @@ export class OptimizedContentGenerator {
         heroDescription: meta.heroDescription,
         overview: overview,
         bestTimeToVisit: meta.bestTimeToVisit,
+        country: meta.country,
+        estimatedActivities: meta.estimatedActivities || 100,
         seasonalWeather: meta.seasonalWeather,
         topAttractions: attractions,
         localTips: practicalInfo.localTips || [],

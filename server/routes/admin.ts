@@ -4,7 +4,7 @@ import { requireAdmin } from '../middleware/adminAuth';
 import { requireSuperAdmin } from '../middleware/superAdminAuth';
 import { templateQualityService } from '../services/templateQualityService';
 import { db } from '../db-connection';
-import { templates, users, templatePurchases } from '@shared/schema';
+import { templates, users, templatePurchases, destinations } from '@shared/schema';
 import { eq, desc, sql, gte, and } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 
@@ -515,6 +515,50 @@ router.post('/financials/mark-paid', requireSuperAdmin, async (req, res) => {
   } catch (error) {
     logger.error('Error marking payouts as paid:', error);
     res.status(500).json({ message: 'Failed to mark payouts as completed' });
+  }
+});
+
+// GET /api/admin/destinations - Get all destinations for management
+router.get('/destinations', async (req, res) => {
+  try {
+    const allDestinations = await db
+      .select({
+        id: destinations.id,
+        slug: destinations.slug,
+        name: destinations.name,
+        country: destinations.country,
+        status: destinations.status,
+        viewCount: destinations.view_count,
+        activityCount: destinations.activity_count,
+        templateCount: destinations.template_count,
+        coverImage: destinations.cover_image,
+        updatedAt: destinations.updated_at,
+        lastRegenerated: destinations.last_regenerated,
+        aiGenerated: destinations.ai_generated
+      })
+      .from(destinations)
+      .orderBy(destinations.name);
+    
+    // Convert snake_case to camelCase for frontend
+    const formattedDestinations = allDestinations.map(dest => ({
+      id: dest.id,
+      slug: dest.slug,
+      name: dest.name,
+      country: dest.country,
+      status: dest.status,
+      viewCount: dest.viewCount,
+      activityCount: dest.activityCount,
+      templateCount: dest.templateCount,
+      coverImage: dest.coverImage,
+      updatedAt: dest.updatedAt,
+      lastRegenerated: dest.lastRegenerated,
+      aiGenerated: dest.aiGenerated
+    }));
+    
+    res.json({ destinations: formattedDestinations });
+  } catch (error) {
+    logger.error('Error fetching destinations:', error);
+    res.status(500).json({ message: 'Failed to fetch destinations' });
   }
 });
 
