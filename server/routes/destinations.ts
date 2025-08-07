@@ -31,16 +31,13 @@ router.get('/:destination/content', async (req, res) => {
           .set({ view_count: (destinationData.view_count || 0) + 1 })
           .where(eq(destinations.id, destinationData.id));
         
-        // Get real weather data
-        const weatherData = await getCurrentWeather(destinationData.name);
-        
         // Set cache headers for browser caching
         res.set({
           'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
           'ETag': `"${destination}-${destinationData.updated_at?.toISOString().split('T')[0]}"` // Based on last update
         });
         
-        // Return the stored content with real weather
+        // Return the stored content
         return res.json({
           title: destinationData.title,
           metaDescription: destinationData.meta_description,
@@ -53,20 +50,8 @@ router.get('/:destination/content', async (req, res) => {
           whereToStay: destinationData.where_to_stay,
           foodAndDrink: destinationData.food_and_drink,
           faqs: destinationData.faqs as Array<{question: string; answer: string}>,
-          image: destinationData.cover_image || `https://source.unsplash.com/800x450/?${destinationData.name},travel,landscape`,
-          weather: weatherData ? {
-            current: weatherData.description,
-            temperature: weatherData.temperature,
-            humidity: weatherData.humidity,
-            windSpeed: weatherData.windSpeed,
-            unit: weatherData.unit,
-            forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
-          } : {
-            current: 'Clear',
-            temperature: 72,
-            unit: 'F',
-            forecast: 'Pleasant weather expected'
-          },
+          image: destinationData.cover_image,
+          seasonalWeather: destinationData.seasonal_weather,
           lastUpdated: destinationData.updated_at?.toISOString()
         });
       }
@@ -101,8 +86,9 @@ router.get('/:destination/content', async (req, res) => {
               where_to_stay: content.whereToStay,
               food_and_drink: content.foodAndDrink,
               faqs: content.faqs,
-              cover_image: destinationData.cover_image || `https://source.unsplash.com/1200x630/?${encodeURIComponent(destinationName)},cityscape,landmark`,
-              thumbnail_image: destinationData.thumbnail_image || `https://source.unsplash.com/400x300/?${encodeURIComponent(destinationName)},cityscape,travel`,
+              seasonal_weather: content.seasonalWeather,
+              cover_image: destinationData.cover_image || content.coverImage,
+              thumbnail_image: destinationData.thumbnail_image || content.thumbnailImage,
               status: 'published',
               ai_generated: true,
               updated_at: new Date()
@@ -126,8 +112,9 @@ router.get('/:destination/content', async (req, res) => {
             where_to_stay: content.whereToStay,
             food_and_drink: content.foodAndDrink,
             faqs: content.faqs,
-            cover_image: `https://source.unsplash.com/1200x630/?${encodeURIComponent(destinationName)},cityscape,landmark`,
-            thumbnail_image: `https://source.unsplash.com/400x300/?${encodeURIComponent(destinationName)},cityscape,travel`,
+            seasonal_weather: content.seasonalWeather,
+            cover_image: content.coverImage,
+            thumbnail_image: content.thumbnailImage,
             status: 'published',
             ai_generated: true
           });
@@ -138,26 +125,10 @@ router.get('/:destination/content', async (req, res) => {
       }
     }
     
-    // Try to get real weather for the destination
-    const weatherData = await getCurrentWeather(destinationName);
-    
-    // Return the generated content
+    // Return the generated content with seasonal weather
     res.json({
       ...content,
-      weather: weatherData ? {
-        current: weatherData.description,
-        temperature: weatherData.temperature,
-        humidity: weatherData.humidity,
-        windSpeed: weatherData.windSpeed,
-        unit: weatherData.unit,
-        forecast: `${weatherData.condition} with ${weatherData.temperature}°${weatherData.unit}`
-      } : {
-        current: 'Clear',
-        temperature: 72,
-        unit: 'F',
-        forecast: 'Pleasant weather expected'
-      },
-      image: `https://source.unsplash.com/800x450/?${destinationName},travel,landscape`,
+      image: content.contentImage,
       lastUpdated: new Date().toISOString()
     });
     
@@ -183,7 +154,7 @@ router.get('/popular', async (req, res) => {
         slug: dest.slug,
         name: dest.name,
         country: dest.country,
-        image: dest.thumbnail_image || `https://source.unsplash.com/400x300/?${encodeURIComponent(dest.name)},cityscape,travel`,
+        image: dest.thumbnail_image || `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&q=80`,
         description: dest.hero_description || dest.meta_description,
         activities: dest.activity_count || 0,
         avgPrice: dest.avg_daily_cost ? `$${dest.avg_daily_cost}` : '$100',

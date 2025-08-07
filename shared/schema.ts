@@ -376,6 +376,12 @@ export const destinations = pgTable("destinations", {
   getting_around: text("getting_around"),
   where_to_stay: text("where_to_stay"),
   food_and_drink: text("food_and_drink"),
+  seasonal_weather: jsonb("seasonal_weather").$type<{
+    description: string;
+    avgHighTemp: number;
+    avgLowTemp: number;
+    rainyMonths?: string;
+  }>(),
   
   // Structured Data
   top_attractions: jsonb("top_attractions").$type<string[]>().default([]),

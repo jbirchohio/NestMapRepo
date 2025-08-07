@@ -26,13 +26,11 @@ interface DestinationData {
   foodAndDrink: string;
   faqs: Array<{question: string; answer: string}>;
   image?: string;
-  weather?: {
-    current: string;
-    temperature: number;
-    humidity?: number;
-    windSpeed?: number;
-    unit?: string;
-    forecast?: string;
+  seasonalWeather?: {
+    description: string;
+    avgHighTemp: number;
+    avgLowTemp: number;
+    rainyMonths?: string;
   };
 }
 
@@ -160,7 +158,7 @@ export default function DestinationGuide() {
           <div 
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url(${destinationData?.image || `https://source.unsplash.com/1600x900/?${destination},travel`})`,
+              backgroundImage: destinationData?.image ? `url(${destinationData.image})` : 'linear-gradient(to bottom right, #9333ea, #ec4899)',
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-black/30" />
@@ -184,27 +182,17 @@ export default function DestinationGuide() {
                   {destinationData?.heroDescription || `Discover the best of ${destinationName} with our comprehensive guide`}
                 </p>
                 
-                {destinationData?.weather && (
+                {destinationData?.seasonalWeather && (
                   <div className="flex items-center gap-4 mt-6">
                     <div className="flex items-center gap-2">
                       <Sun className="w-5 h-5" />
                       <span className="text-lg">
-                        {destinationData.weather.temperature}°{destinationData.weather.unit || 'F'}
+                        {destinationData.seasonalWeather.avgLowTemp}°-{destinationData.seasonalWeather.avgHighTemp}°F
                       </span>
                     </div>
-                    <span className="text-lg capitalize">
-                      {destinationData.weather.current}
+                    <span className="text-lg">
+                      {destinationData.seasonalWeather.description}
                     </span>
-                    {destinationData.weather.humidity && (
-                      <span className="text-lg">
-                        {destinationData.weather.humidity}% humidity
-                      </span>
-                    )}
-                    {destinationData.weather.windSpeed && (
-                      <span className="text-lg">
-                        {Math.round(destinationData.weather.windSpeed)} mph wind
-                      </span>
-                    )}
                   </div>
                 )}
               </motion.div>
