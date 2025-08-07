@@ -424,7 +424,7 @@ export default function HomeConsumerRedesigned() {
                   >
                     <div className="relative h-48 overflow-hidden">
                       <img 
-                        src={template.image || template.imageUrl} 
+                        src={template.coverImage || template.image || template.imageUrl || '/api/placeholder/400/300'} 
                         alt={template.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />

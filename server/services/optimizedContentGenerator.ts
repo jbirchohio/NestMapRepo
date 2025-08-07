@@ -167,33 +167,37 @@ export class OptimizedContentGenerator {
    * Generate FAQs
    */
   private async generateFAQs(destination: string): Promise<any[]> {
-    const prompt = `Create 5 detailed FAQs for travelers visiting ${destination}. Return a JSON object with an array:
+    const prompt = `Create 5 detailed FAQs for travelers visiting ${destination}. 
+    
+    For each FAQ, provide ACTUAL answers with real information about ${destination}, not placeholder text.
+    
+    Return a JSON object:
     {
       "faqs": [
         {
           "question": "What is the best time of year to visit ${destination}?",
-          "answer": "Provide specific months and explain weather patterns, tourist seasons, and any special events"
+          "answer": "[ACTUAL ANSWER: Include specific months, real weather info, and actual events for ${destination}]"
         },
         {
           "question": "How much should I budget for a trip to ${destination}?",
-          "answer": "Give specific daily budget ranges for budget/mid-range/luxury travelers, including accommodation, food, and activities"
+          "answer": "[ACTUAL ANSWER: Real budget amounts in USD for ${destination}]"
         },
         {
           "question": "How many days do I need to explore ${destination}?",
-          "answer": "Suggest ideal trip duration with reasoning, what can be seen in that time"
+          "answer": "[ACTUAL ANSWER: Specific number of days and what can be seen]"
         },
         {
           "question": "Is ${destination} safe for tourists?",
-          "answer": "Provide honest safety assessment with specific tips for staying safe"
+          "answer": "[ACTUAL ANSWER: Real safety information about ${destination}]"
         },
         {
           "question": "What are the must-try local foods in ${destination}?",
-          "answer": "List 3-4 specific dishes or foods unique to this destination with brief descriptions"
+          "answer": "[ACTUAL ANSWER: Real local dishes from ${destination}]"
         }
       ]
     }
     
-    Provide detailed, helpful answers that are specific to ${destination}. Each answer should be 2-3 sentences long.`;
+    IMPORTANT: Replace all text in square brackets with REAL, SPECIFIC information about ${destination}. Do NOT return placeholder text or instructions as the answer.`;
 
     try {
       const response = await callOpenAI(prompt, {

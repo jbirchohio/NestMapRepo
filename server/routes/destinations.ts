@@ -132,7 +132,7 @@ router.get('/:destination/content', async (req, res) => {
     // Return the generated content with seasonal weather
     res.json({
       ...content,
-      image: content.contentImage,
+      image: content.coverImage || content.contentImage,
       lastUpdated: new Date().toISOString()
     });
     
