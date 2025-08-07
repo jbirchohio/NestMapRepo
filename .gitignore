@@ -21,6 +21,14 @@ client_errors.txt
 # Corporate/Enterprise features (archived)
 /archive/corporate/
 
+# Scripts (local development only)
+scripts/
+*.script.ts
+*.script.js
+
+# Conversation assets (Claude artifacts)
+attached_assets/
+
 # Uploads (keep directory structure)
 # Template images are committed, user uploads are ignored
 uploads/covers/user_*
