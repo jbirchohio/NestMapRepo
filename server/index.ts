@@ -115,8 +115,19 @@ app.use((req, res, next) => {
 // Rate limiting for JSON parsing
 app.use(express.json({ limit: '10mb' }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve uploaded files statically - use process.cwd() for correct path in production
+const uploadsPath = path.join(process.cwd(), 'uploads');
+console.log('📂 Uploads directory path:', uploadsPath);
+console.log('📂 Uploads directory exists:', fs.existsSync(uploadsPath));
+if (fs.existsSync(uploadsPath)) {
+  const files = fs.readdirSync(path.join(uploadsPath, 'covers')).slice(0, 5);
+  console.log('📂 Sample files in uploads/covers:', files);
+}
+app.use('/uploads', express.static(uploadsPath, {
+  dotfiles: 'allow',
+  index: false,
+  redirect: false
+}));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Apply CORS configuration
