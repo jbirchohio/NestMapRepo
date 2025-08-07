@@ -101,6 +101,8 @@ router.get('/:destination/content', async (req, res) => {
               where_to_stay: content.whereToStay,
               food_and_drink: content.foodAndDrink,
               faqs: content.faqs,
+              cover_image: destinationData.cover_image || `https://source.unsplash.com/1200x630/?${encodeURIComponent(destinationName)},cityscape,landmark`,
+              thumbnail_image: destinationData.thumbnail_image || `https://source.unsplash.com/400x300/?${encodeURIComponent(destinationName)},cityscape,travel`,
               status: 'published',
               ai_generated: true,
               updated_at: new Date()
@@ -124,6 +126,8 @@ router.get('/:destination/content', async (req, res) => {
             where_to_stay: content.whereToStay,
             food_and_drink: content.foodAndDrink,
             faqs: content.faqs,
+            cover_image: `https://source.unsplash.com/1200x630/?${encodeURIComponent(destinationName)},cityscape,landmark`,
+            thumbnail_image: `https://source.unsplash.com/400x300/?${encodeURIComponent(destinationName)},cityscape,travel`,
             status: 'published',
             ai_generated: true
           });
@@ -179,7 +183,7 @@ router.get('/popular', async (req, res) => {
         slug: dest.slug,
         name: dest.name,
         country: dest.country,
-        image: dest.thumbnail_image || `https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=300&fit=crop`,
+        image: dest.thumbnail_image || `https://source.unsplash.com/400x300/?${encodeURIComponent(dest.name)},cityscape,travel`,
         description: dest.hero_description || dest.meta_description,
         activities: dest.activity_count || 0,
         avgPrice: dest.avg_daily_cost ? `$${dest.avg_daily_cost}` : '$100',
