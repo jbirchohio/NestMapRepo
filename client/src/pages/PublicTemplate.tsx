@@ -104,6 +104,16 @@ export default function PublicTemplate() {
               src={template.coverImage}
               alt={template.title}
               className="w-full h-full object-cover opacity-80"
+              loading="eager"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (!img.dataset.retried) {
+                  img.dataset.retried = 'true';
+                  setTimeout(() => {
+                    img.src = img.src + '?t=' + Date.now();
+                  }, 100);
+                }
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

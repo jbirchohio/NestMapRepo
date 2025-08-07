@@ -397,6 +397,17 @@ function TemplateCard({
                 src={template.coverImage}
                 alt={template.title}
                 className="w-full h-full object-cover"
+                loading="eager"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  // Retry loading the image once after a short delay
+                  if (!img.dataset.retried) {
+                    img.dataset.retried = 'true';
+                    setTimeout(() => {
+                      img.src = img.src + '?t=' + Date.now();
+                    }, 100);
+                  }
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-white">
