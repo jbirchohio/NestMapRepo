@@ -18,6 +18,16 @@ export const users = pgTable("users", {
   job_title: text("job_title"), // Kept for compatibility, unused
   team_size: text("team_size"), // Kept for compatibility, unused
   use_case: text("use_case"), // Kept for compatibility, unused
+  
+  // Creator fields
+  creator_status: text("creator_status").default("none"), // none, pending, approved, verified, suspended
+  creator_tier: text("creator_tier").default("new"), // new, trusted, verified, partner
+  creator_score: integer("creator_score").default(0), // Overall creator quality score
+  templates_published: integer("templates_published").default(0),
+  total_template_sales: integer("total_template_sales").default(0),
+  creator_verified_at: timestamp("creator_verified_at"),
+  creator_bio: text("creator_bio"),
+  
   last_login: timestamp("last_login"),
   created_at: timestamp("created_at").defaultNow(),
 });
@@ -367,6 +377,15 @@ export const templates = pgTable("templates", {
   status: text("status").default("draft"), // draft, published, archived
   featured: boolean("featured").default(false),
   view_count: integer("view_count").default(0),
+  
+  // Quality & Moderation fields
+  quality_score: integer("quality_score").default(0), // 0-100
+  moderation_status: text("moderation_status").default("pending"), // pending, approved, rejected, flagged
+  moderation_notes: text("moderation_notes"),
+  auto_checks_passed: boolean("auto_checks_passed").default(false),
+  rejection_reason: text("rejection_reason"),
+  verified_at: timestamp("verified_at"),
+  
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow()
 });

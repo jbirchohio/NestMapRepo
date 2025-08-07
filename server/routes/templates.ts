@@ -3,6 +3,7 @@ import { storage } from '../storage';
 import { requireAuth } from '../middleware/jwtAuth';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
+import { templateQualityService } from '../services/templateQualityService';
 
 const router = Router();
 
@@ -381,7 +382,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/templates/:id/publish - Publish template
+// POST /api/templates/:id/publish - Publish template with quality checks
 router.post('/:id/publish', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
@@ -393,15 +394,58 @@ router.post('/:id/publish', requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Template not found or access denied' });
     }
     
-    // Validate template is ready for publishing
-    if (!template.title || !template.description || parseFloat(template.price || '0') < 0) {
+    // Run quality checks
+    const qualityResult = await templateQualityService.checkTemplateQuality({
+      title: template.title,
+      description: template.description || '',
+      price: parseFloat(template.price || '0'),
+      tripData: template.trip_data as any,
+      tags: template.tags as string[] || [],
+      destinations: template.destinations as string[] || [],
+      duration: template.duration || 0,
+      userId: userId
+    });
+    
+    // Update quality score in database
+    await templateQualityService.updateTemplateQuality(templateId, qualityResult);
+    
+    // Check if template passes quality threshold
+    if (!qualityResult.passed) {
       return res.status(400).json({ 
-        message: 'Template must have title, description, and valid price' 
+        message: 'Template does not meet quality standards',
+        qualityScore: qualityResult.score,
+        issues: qualityResult.issues,
+        minimumScore: 40
       });
     }
     
-    const updated = await storage.updateTemplate(templateId, { status: 'published' });
-    res.json(updated);
+    // If quality score is high enough, auto-approve
+    let status = 'published';
+    let moderationStatus = 'pending';
+    
+    if (qualityResult.score >= 70) {
+      // High quality - auto-approve
+      moderationStatus = 'approved';
+    } else {
+      // Medium quality - needs review
+      status = 'draft'; // Keep as draft until reviewed
+      logger.info(`Template ${templateId} needs manual review. Score: ${qualityResult.score}`);
+    }
+    
+    const updated = await storage.updateTemplate(templateId, { 
+      status,
+      moderation_status: moderationStatus,
+      quality_score: qualityResult.score
+    });
+    
+    res.json({
+      ...updated,
+      qualityScore: qualityResult.score,
+      moderationStatus,
+      message: qualityResult.score >= 70 
+        ? 'Template published successfully!' 
+        : 'Template submitted for review. You will be notified once approved.'
+    });
   } catch (error) {
     logger.error('Error publishing template:', error);
     res.status(500).json({ message: 'Failed to publish template' });
