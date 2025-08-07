@@ -226,7 +226,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-4' : 'grid-cols-3'} w-full max-w-2xl`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
@@ -300,10 +300,10 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                          <span>By {template.user.username}</span>
+                          <span>By {template.user?.username || 'Unknown'}</span>
                           <span>${template.price}</span>
                           <span>{formatDistanceToNow(new Date(template.created_at))} ago</span>
-                          {template.user.creator_status === 'verified' && (
+                          {template.user?.creator_status === 'verified' && (
                             <Badge variant="outline" className="text-green-600 border-green-600">
                               Verified Creator
                             </Badge>
@@ -377,10 +377,10 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          ${financials.revenue.totalRevenue?.toFixed(2) || '0.00'}
+                          ${financials?.revenue?.totalRevenue?.toFixed(2) || '0.00'}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          ${financials.revenue.last30DaysRevenue?.toFixed(2) || '0.00'} last 30 days
+                          ${financials?.revenue?.last30DaysRevenue?.toFixed(2) || '0.00'} last 30 days
                         </p>
                       </CardContent>
                     </Card>
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          ${financials.revenue.totalPlatformFees?.toFixed(2) || '0.00'}
+                          ${financials?.revenue?.totalPlatformFees?.toFixed(2) || '0.00'}
                         </div>
                         <p className="text-xs text-muted-foreground">30% of sales</p>
                       </CardContent>
@@ -405,10 +405,10 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          ${financials.pendingPayouts.totalPending?.toFixed(2) || '0.00'}
+                          ${financials?.pendingPayouts?.totalPending?.toFixed(2) || '0.00'}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {financials.pendingPayouts.countPending} transactions
+                          {financials?.pendingPayouts?.countPending || 0} transactions
                         </p>
                       </CardContent>
                     </Card>
@@ -421,7 +421,7 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {financials.topTemplates?.map((template, index) => (
+                        {financials?.topTemplates?.map((template, index) => (
                           <div key={template.template_id} className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="text-lg font-semibold text-gray-400">#{index + 1}</span>
