@@ -21,6 +21,7 @@ import Explore from "@/pages/Explore";
 import TemplateMarketplace from "@/pages/TemplateMarketplace";
 import TemplateDetails from "@/pages/TemplateDetails";
 import CreatorDashboard from "@/pages/CreatorDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function NavigationWrapper() {
   const { user } = useAuth();
@@ -88,6 +89,9 @@ function Router() {
           <Route path="/marketplace" component={TemplateMarketplace} />
           <Route path="/templates/:slug" component={TemplateDetails} />
           <Route path="/creator/dashboard" component={CreatorDashboard} />
+          
+          {/* Admin */}
+          <Route path="/admin" component={AdminDashboard} />
           
           {/* SEO Destination Pages */}
           <Route path="/destinations/:destination" component={DestinationGuide} />

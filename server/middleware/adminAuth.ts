@@ -4,13 +4,11 @@ import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 
-// Admin emails - add your email here
-const ADMIN_EMAILS = [
-  'jbirch33@gmail.com', // Jonas - founder
-  'jonas@remvana.com',
-  'admin@remvana.com',
-  // Add other trusted admin emails as needed
-];
+// Super admin (founder) - has full access including financials
+const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || 'jbirch33@gmail.com';
+
+// Additional admin emails - can be added via database
+const ADDITIONAL_ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || [];
 
 // Middleware to check if user is admin
 export const requireAdmin = async (
@@ -35,13 +33,20 @@ export const requireAdmin = async (
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Check if user is admin by role or email
-    const isAdmin = user.role === 'admin' || ADMIN_EMAILS.includes(user.email);
+    // Check admin status
+    const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
+    const isAdmin = isSuperAdmin || 
+                   user.role === 'admin' || 
+                   ADDITIONAL_ADMIN_EMAILS.includes(user.email);
     
     if (!isAdmin) {
       logger.warn(`Non-admin user ${user.email} attempted to access admin route`);
       return res.status(403).json({ message: 'Admin access required' });
     }
+
+    // Add admin info to request
+    (req as any).isAdmin = true;
+    (req as any).isSuperAdmin = isSuperAdmin;
 
     // User is admin, proceed
     next();
@@ -60,6 +65,7 @@ export const isUserAdmin = async (userId: number): Promise<boolean> => {
 
     if (!user) return false;
     
+    const ADMIN_EMAILS = [SUPER_ADMIN_EMAIL, ...ADDITIONAL_ADMIN_EMAILS];
     return user.role === 'admin' || ADMIN_EMAILS.includes(user.email);
   } catch (error) {
     logger.error('Error checking admin status:', error);

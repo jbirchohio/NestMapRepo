@@ -292,6 +292,135 @@ export class TemplateQualityService {
       .limit(limit);
   }
   
+  // Auto-moderation for trusted creators
+  async autoModerateTemplate(templateId: number, userId: number): Promise<{
+    autoApproved: boolean;
+    reason?: string;
+  }> {
+    try {
+      // Get creator info
+      const [creator] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!creator) {
+        return { autoApproved: false, reason: 'Creator not found' };
+      }
+      
+      // Get template info
+      const [template] = await db.select()
+        .from(templates)
+        .where(eq(templates.id, templateId));
+      
+      if (!template) {
+        return { autoApproved: false, reason: 'Template not found' };
+      }
+      
+      // Auto-approve criteria for verified creators
+      if (creator.creator_status === 'verified') {
+        // Check if template meets minimum quality for auto-approval
+        if (template.quality_score && template.quality_score >= 70) {
+          // Auto-approve high-quality templates from verified creators
+          await this.approveTemplate(templateId, 'Auto-approved: Verified creator with high quality score');
+          
+          logger.info(`Template ${templateId} auto-approved for verified creator ${userId}`);
+          return { autoApproved: true, reason: 'Verified creator with high quality score' };
+        }
+        
+        // For verified creators with moderate quality, still auto-approve but flag for review
+        if (template.quality_score && template.quality_score >= 50) {
+          await db.update(templates)
+            .set({
+              moderation_status: 'approved',
+              status: 'published',
+              moderation_notes: 'Auto-approved: Verified creator (flagged for quality review)',
+              verified_at: new Date(),
+              updated_at: new Date()
+            })
+            .where(eq(templates.id, templateId));
+          
+          logger.info(`Template ${templateId} auto-approved with review flag for verified creator ${userId}`);
+          return { autoApproved: true, reason: 'Verified creator (moderate quality)' };
+        }
+      }
+      
+      // Auto-approve for creators with strong track record
+      if (creator.creator_score && creator.creator_score >= 80) {
+        // Get their previous template performance
+        const previousTemplates = await db.select({
+          avgQuality: sql<number>`avg(quality_score)`,
+          count: sql<number>`count(*)`
+        })
+        .from(templates)
+        .where(
+          and(
+            eq(templates.user_id, userId),
+            eq(templates.status, 'published')
+          )
+        );
+        
+        const avgQuality = previousTemplates[0]?.avgQuality || 0;
+        const count = previousTemplates[0]?.count || 0;
+        
+        // If they have 5+ templates with average quality > 75, auto-approve
+        if (count >= 5 && avgQuality >= 75 && template.quality_score && template.quality_score >= 60) {
+          await this.approveTemplate(templateId, 'Auto-approved: Trusted creator with consistent quality');
+          
+          logger.info(`Template ${templateId} auto-approved for trusted creator ${userId}`);
+          return { autoApproved: true, reason: 'Trusted creator with consistent quality' };
+        }
+      }
+      
+      // Update creator score based on submission
+      await this.updateCreatorScore(userId);
+      
+      return { autoApproved: false, reason: 'Requires manual review' };
+    } catch (error) {
+      logger.error('Auto-moderation error:', error);
+      return { autoApproved: false, reason: 'Auto-moderation failed' };
+    }
+  }
+  
+  // Update creator score based on their templates
+  private async updateCreatorScore(userId: number): Promise<void> {
+    const stats = await db.select({
+      avgQuality: sql<number>`avg(quality_score)`,
+      count: sql<number>`count(*)`,
+      published: sql<number>`count(*) filter (where status = 'published')`,
+      rejected: sql<number>`count(*) filter (where moderation_status = 'rejected')`
+    })
+    .from(templates)
+    .where(eq(templates.user_id, userId));
+    
+    const stat = stats[0];
+    if (!stat) return;
+    
+    // Calculate creator score (0-100)
+    let score = 0;
+    
+    // Average quality contributes 50%
+    score += (stat.avgQuality || 0) * 0.5;
+    
+    // Published ratio contributes 30%
+    if (stat.count > 0) {
+      const publishRatio = stat.published / stat.count;
+      score += publishRatio * 30;
+    }
+    
+    // Quantity bonus (up to 20 points)
+    score += Math.min(stat.published * 2, 20);
+    
+    // Penalty for rejections
+    score -= stat.rejected * 5;
+    
+    // Ensure score is between 0 and 100
+    score = Math.max(0, Math.min(100, Math.round(score)));
+    
+    await db.update(users)
+      .set({ creator_score: score })
+      .where(eq(users.id, userId));
+  }
+
   // Approve template
   async approveTemplate(templateId: number, notes?: string): Promise<void> {
     await db.update(templates)

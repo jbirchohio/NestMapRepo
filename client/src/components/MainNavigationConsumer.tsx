@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { 
@@ -20,7 +20,8 @@ import {
   Plus,
   Home,
   ShoppingBag,
-  LayoutDashboard
+  LayoutDashboard,
+  Shield
 } from 'lucide-react';
 
 export default function MainNavigationConsumer() {
@@ -30,6 +31,33 @@ export default function MainNavigationConsumer() {
   const [showNewTripModal, setShowNewTripModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check admin status when user changes
+    if (user) {
+      checkAdminStatus();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/check', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIsAdmin(data.isAdmin);
+      }
+    } catch (error) {
+      console.error('Admin check failed:', error);
+      setIsAdmin(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -158,6 +186,17 @@ export default function MainNavigationConsumer() {
                           Help
                         </DropdownMenuItem>
                       </Link>
+                      {isAdmin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <Link href="/admin">
+                            <DropdownMenuItem>
+                              <Shield className="h-4 w-4 mr-2" />
+                              Admin Dashboard
+                            </DropdownMenuItem>
+                          </Link>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                         <LogOut className="h-4 w-4 mr-2" />

@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/jwtAuth';
 import { requireAdmin } from '../middleware/adminAuth';
+import { requireSuperAdmin } from '../middleware/superAdminAuth';
 import { templateQualityService } from '../services/templateQualityService';
 import { db } from '../db-connection';
 import { templates, users, templatePurchases } from '@shared/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, gte, and } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -163,11 +164,245 @@ router.get('/check', async (req, res) => {
   // If we got here, user is admin (middleware checked)
   res.json({ 
     isAdmin: true,
+    isSuperAdmin: (req as any).isSuperAdmin || false,
     user: {
       id: req.user!.id,
       email: req.user!.email
     }
   });
+});
+
+// ===== FINANCIAL ROUTES - SUPER ADMIN ONLY =====
+
+// GET /api/admin/financials/overview - Get financial overview
+router.get('/financials/overview', requireSuperAdmin, async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get revenue data
+    const [revenue] = await db.select({
+      totalRevenue: sql<number>`sum(price)`,
+      totalPlatformFees: sql<number>`sum(platform_fee)`,
+      totalCreatorPayouts: sql<number>`sum(seller_earnings)`,
+      totalSales: sql<number>`count(*)`,
+      last30DaysRevenue: sql<number>`sum(price) filter (where purchased_at >= ${thirtyDaysAgo})`,
+      last30DaysSales: sql<number>`count(*) filter (where purchased_at >= ${thirtyDaysAgo})`
+    }).from(templatePurchases);
+
+    // Get pending payouts
+    const [pendingPayouts] = await db.select({
+      totalPending: sql<number>`sum(seller_earnings) filter (where payout_status = 'pending')`,
+      countPending: sql<number>`count(*) filter (where payout_status = 'pending')`
+    }).from(templatePurchases);
+
+    // Get top earning templates
+    const topTemplates = await db.select({
+      template_id: templatePurchases.template_id,
+      title: templates.title,
+      totalRevenue: sql<number>`sum(${templatePurchases.price})`,
+      totalSales: sql<number>`count(*)`,
+      creatorUsername: users.username
+    })
+    .from(templatePurchases)
+    .leftJoin(templates, eq(templatePurchases.template_id, templates.id))
+    .leftJoin(users, eq(templates.user_id, users.id))
+    .groupBy(templatePurchases.template_id, templates.title, users.username)
+    .orderBy(desc(sql`sum(${templatePurchases.price})`))
+    .limit(10);
+
+    res.json({
+      revenue,
+      pendingPayouts,
+      topTemplates,
+      platformFeePercentage: 30 // 30% platform fee
+    });
+  } catch (error) {
+    logger.error('Error fetching financial overview:', error);
+    res.status(500).json({ message: 'Failed to fetch financial data' });
+  }
+});
+
+// GET /api/admin/financials/transactions - Get detailed transaction history
+router.get('/financials/transactions', requireSuperAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, status, startDate, endDate } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    let query = db.select({
+      id: templatePurchases.id,
+      template_id: templatePurchases.template_id,
+      template_title: templates.title,
+      buyer_id: templatePurchases.buyer_id,
+      buyer_username: users.username,
+      creator_id: templates.user_id,
+      price: templatePurchases.price,
+      platform_fee: templatePurchases.platform_fee,
+      creator_payout: templatePurchases.seller_earnings,
+      payout_status: templatePurchases.payout_status,
+      purchased_at: templatePurchases.purchased_at
+    })
+    .from(templatePurchases)
+    .leftJoin(templates, eq(templatePurchases.template_id, templates.id))
+    .leftJoin(users, eq(templatePurchases.buyer_id, users.id));
+
+    // Apply filters
+    const conditions = [];
+    if (status) {
+      conditions.push(eq(templatePurchases.payout_status, status as string));
+    }
+    if (startDate) {
+      conditions.push(gte(templatePurchases.purchased_at, new Date(startDate as string)));
+    }
+    if (endDate) {
+      const endDateTime = new Date(endDate as string);
+      endDateTime.setHours(23, 59, 59, 999);
+      conditions.push(sql`${templatePurchases.purchased_at} <= ${endDateTime}`);
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const transactions = await query
+      .orderBy(desc(templatePurchases.purchased_at))
+      .limit(Number(limit))
+      .offset(offset);
+
+    // Get total count for pagination
+    const countQuery = db.select({
+      count: sql<number>`count(*)`
+    }).from(templatePurchases);
+    
+    if (conditions.length > 0) {
+      countQuery.where(and(...conditions));
+    }
+    
+    const [{ count }] = await countQuery;
+
+    res.json({
+      transactions,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: count,
+        pages: Math.ceil(count / Number(limit))
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Failed to fetch transactions' });
+  }
+});
+
+// POST /api/admin/financials/process-payouts - Process pending creator payouts
+router.post('/financials/process-payouts', requireSuperAdmin, async (req, res) => {
+  try {
+    const { creatorId, purchaseIds } = req.body;
+
+    let updateQuery = db.update(templatePurchases)
+      .set({
+        payout_status: 'processing',
+        payout_initiated_at: new Date()
+      });
+
+    if (purchaseIds && Array.isArray(purchaseIds)) {
+      // Process specific purchases
+      updateQuery = updateQuery.where(
+        and(
+          sql`${templatePurchases.id} = ANY(${purchaseIds})`,
+          eq(templatePurchases.payout_status, 'pending')
+        )
+      );
+    } else if (creatorId) {
+      // Process all pending for a creator
+      updateQuery = updateQuery.where(
+        and(
+          eq(templatePurchases.payout_status, 'pending'),
+          sql`${templatePurchases.template_id} IN (
+            SELECT id FROM ${templates} WHERE user_id = ${creatorId}
+          )`
+        )
+      );
+    } else {
+      return res.status(400).json({ message: 'Either creatorId or purchaseIds required' });
+    }
+
+    const result = await updateQuery.returning();
+
+    logger.info(`Super admin initiated payout processing for ${result.length} purchases`);
+    res.json({
+      message: `Processing ${result.length} payouts`,
+      purchases: result
+    });
+  } catch (error) {
+    logger.error('Error processing payouts:', error);
+    res.status(500).json({ message: 'Failed to process payouts' });
+  }
+});
+
+// GET /api/admin/financials/creators - Get creator financial summary
+router.get('/financials/creators', requireSuperAdmin, async (req, res) => {
+  try {
+    const creatorFinancials = await db.select({
+      creator_id: users.id,
+      username: users.username,
+      email: users.email,
+      creator_status: users.creator_status,
+      totalTemplates: sql<number>`count(distinct ${templates.id})`,
+      totalSales: sql<number>`count(distinct ${templatePurchases.id})`,
+      totalRevenue: sql<number>`coalesce(sum(${templatePurchases.seller_earnings}), 0)`,
+      pendingPayout: sql<number>`coalesce(sum(${templatePurchases.seller_earnings}) filter (where ${templatePurchases.payout_status} = 'pending'), 0)`,
+      lastPayout: sql<Date>`max(${templatePurchases.payout_completed_at})`
+    })
+    .from(users)
+    .leftJoin(templates, eq(users.id, templates.user_id))
+    .leftJoin(templatePurchases, eq(templates.id, templatePurchases.template_id))
+    .where(sql`${users.creator_status} != 'none'`)
+    .groupBy(users.id, users.username, users.email, users.creator_status)
+    .orderBy(desc(sql`sum(${templatePurchases.seller_earnings})`));
+
+    res.json(creatorFinancials);
+  } catch (error) {
+    logger.error('Error fetching creator financials:', error);
+    res.status(500).json({ message: 'Failed to fetch creator financial data' });
+  }
+});
+
+// POST /api/admin/financials/mark-paid - Mark payouts as completed
+router.post('/financials/mark-paid', requireSuperAdmin, async (req, res) => {
+  try {
+    const { purchaseIds, paymentMethod, transactionId, notes } = req.body;
+
+    if (!purchaseIds || !Array.isArray(purchaseIds)) {
+      return res.status(400).json({ message: 'Purchase IDs required' });
+    }
+
+    const result = await db.update(templatePurchases)
+      .set({
+        payout_status: 'completed',
+        payout_completed_at: new Date(),
+        payout_method: paymentMethod,
+        payout_transaction_id: transactionId,
+        payout_notes: notes
+      })
+      .where(
+        and(
+          sql`${templatePurchases.id} = ANY(${purchaseIds})`,
+          eq(templatePurchases.payout_status, 'processing')
+        )
+      )
+      .returning();
+
+    logger.info(`Super admin marked ${result.length} payouts as completed`);
+    res.json({
+      message: `Marked ${result.length} payouts as completed`,
+      purchases: result
+    });
+  } catch (error) {
+    logger.error('Error marking payouts as paid:', error);
+    res.status(500).json({ message: 'Failed to mark payouts as completed' });
+  }
 });
 
 export default router;

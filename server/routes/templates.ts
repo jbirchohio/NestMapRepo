@@ -419,6 +419,22 @@ router.post('/:id/publish', requireAuth, async (req, res) => {
       });
     }
     
+    // Run auto-moderation for trusted creators
+    const autoModResult = await templateQualityService.autoModerateTemplate(templateId, userId);
+    
+    if (autoModResult.autoApproved) {
+      logger.info(`Template ${templateId} auto-approved: ${autoModResult.reason}`);
+      
+      return res.json({ 
+        message: 'Template submitted and automatically approved!',
+        templateId,
+        status: 'published',
+        qualityScore: qualityResult.score,
+        autoApproved: true,
+        approvalReason: autoModResult.reason
+      });
+    }
+    
     // If quality score is high enough, auto-approve
     let status = 'published';
     let moderationStatus = 'pending';

@@ -394,14 +394,22 @@ export const templates = pgTable("templates", {
 export const templatePurchases = pgTable("template_purchases", {
   id: serial("id").primaryKey(),
   template_id: integer("template_id").references(() => templates.id).notNull(),
-  buyer_id: integer("buyer_id").references(() => users.id).notNull(),
+  buyer_id: integer("buyer_id").references(() => users.id).notNull(), // keep buyer_id for now
+  user_id: integer("user_id").references(() => users.id), // alias for buyer_id
   seller_id: integer("seller_id").references(() => users.id).notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   platform_fee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
   seller_earnings: decimal("seller_earnings", { precision: 10, scale: 2 }).notNull(),
+  creator_payout: decimal("creator_payout", { precision: 10, scale: 2 }), // alias for seller_earnings
   stripe_payment_id: text("stripe_payment_id"),
   stripe_payment_intent_id: text("stripe_payment_intent_id"),
   status: text("status").default("pending"), // pending, completed, refunded
+  payout_status: text("payout_status").default("pending"), // pending, processing, completed
+  payout_initiated_at: timestamp("payout_initiated_at"),
+  payout_completed_at: timestamp("payout_completed_at"),
+  payout_method: text("payout_method"), // paypal, stripe, manual
+  payout_transaction_id: text("payout_transaction_id"),
+  payout_notes: text("payout_notes"),
   refunded_at: timestamp("refunded_at"),
   purchased_at: timestamp("purchased_at").defaultNow()
 });
