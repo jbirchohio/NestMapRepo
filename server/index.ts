@@ -5,6 +5,12 @@ import express, { type Request, Response, NextFunction } from "express";
 // Session-based auth removed - using JWT only
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import apiRoutes from "./routes/index";
 import sitemapRoutes from "./routes/sitemap";
 import { setupVite, serveStatic, log } from "./vite";
