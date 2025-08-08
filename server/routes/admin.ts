@@ -1,7 +1,24 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/jwtAuth';
-import { requireAdmin } from '../middleware/adminAuth';
-import { requireSuperAdmin } from '../middleware/superAdminAuth';
+// Admin check inline
+const requireAdmin = (req: any, res: any, next: any) => {
+  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+  const allAdminEmails = [...adminEmails, superAdminEmail].filter(Boolean);
+  
+  if (!req.user || !allAdminEmails.includes(req.user.email)) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};
+// Super admin check inline
+const requireSuperAdmin = (req: any, res: any, next: any) => {
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+  if (!req.user || req.user.email !== superAdminEmail) {
+    return res.status(403).json({ message: 'Super admin access required' });
+  }
+  next();
+};
 import { templateQualityService } from '../services/templateQualityService';
 import { db } from '../db-connection';
 import { templates, users, templatePurchases, destinations } from '@shared/schema';
