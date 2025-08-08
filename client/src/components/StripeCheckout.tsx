@@ -52,7 +52,7 @@ function CheckoutForm({ templateId, templateTitle, price, currency, onSuccess, o
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ templateId }),
+        body: JSON.stringify({ template_id: templateId }),
       });
 
       if (!response.ok) {
@@ -86,8 +86,8 @@ function CheckoutForm({ templateId, templateTitle, price, currency, onSuccess, o
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
-          paymentIntentId: paymentIntent?.id,
-          templateId,
+          payment_intent_id: paymentIntent?.id,
+          template_id: templateId,
         }),
       });
 
@@ -97,6 +97,7 @@ function CheckoutForm({ templateId, templateTitle, price, currency, onSuccess, o
       }
 
       const purchaseData = await confirmResponse.json();
+      console.log('Purchase confirmation response:', purchaseData);
 
       // Success!
       toast({
@@ -104,6 +105,7 @@ function CheckoutForm({ templateId, templateTitle, price, currency, onSuccess, o
         description: `You've purchased "${templateTitle}"`,
       });
 
+      console.log('Calling onSuccess with:', purchaseData);
       onSuccess(purchaseData);
     } catch (err: any) {
       setError(err.message || 'An error occurred during payment');

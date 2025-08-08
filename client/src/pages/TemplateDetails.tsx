@@ -63,6 +63,10 @@ export default function TemplateDetails() {
 
   // Handle successful payment
   const handlePaymentSuccess = (data: any) => {
+    console.log('Payment success data received:', data);
+    console.log('Data type:', typeof data);
+    console.log('Data.tripId:', data.tripId, 'type:', typeof data.tripId);
+    
     setShowPaymentDialog(false);
     toast({
       title: 'Purchase successful!',
@@ -71,9 +75,14 @@ export default function TemplateDetails() {
     refetch();
     
     // Navigate to the new trip
-    if (data.tripId) {
-      navigate(`/trip/${data.tripId}`);
+    // The backend returns tripId in the response
+    const tripId = data.tripId || data.trip_id;
+    console.log('Final tripId for navigation:', tripId);
+    
+    if (tripId) {
+      navigate(`/trip/${tripId}`);
     } else {
+      console.warn('No tripId found in response, navigating to trips list');
       navigate('/trips');
     }
   };
