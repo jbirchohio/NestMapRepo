@@ -21,6 +21,7 @@ import Explore from "@/pages/Explore";
 import TemplateMarketplace from "@/pages/TemplateMarketplace";
 import TemplateDetails from "@/pages/TemplateDetails";
 import CreateTemplate from "@/pages/CreateTemplate";
+import PublicTemplate from "@/pages/PublicTemplate";
 import CreatorDashboard from "@/pages/CreatorDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 
@@ -93,6 +94,7 @@ function Router() {
           <Route path="/marketplace" component={TemplateMarketplace} />
           <Route path="/templates/create" component={CreateTemplate} />
           <Route path="/templates/:slug" component={TemplateDetails} />
+          <Route path="/t/:shareCode" component={PublicTemplate} />
           <Route path="/creator/dashboard" component={CreatorDashboard} />
           
           {/* Admin */}

@@ -681,17 +681,19 @@ export class ConsumerDatabaseStorage implements IStorage {
   }
   
   async getTemplateByShareCode(shareCode: string): Promise<Template | undefined> {
-    // First get the share record to track clicks
+    // First try to get the share record
     const [share] = await db.select()
       .from(templateShares)
       .where(eq(templateShares.share_code, shareCode))
       .limit(1);
     
     if (!share) {
+      // No share record found - this might be a direct link
+      // Don't track clicks for non-existent shares
       return undefined;
     }
     
-    // Increment click count
+    // Increment click count for valid shares
     await this.incrementShareClicks(shareCode);
     
     // Get the template

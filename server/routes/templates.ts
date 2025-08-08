@@ -719,13 +719,18 @@ router.get('/:id/analytics', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/templates/share/:shareCode - Get template by share code
+// GET /api/templates/share/:shareCode - Get template by share code or slug
 router.get('/share/:shareCode', async (req, res) => {
   try {
     const { shareCode } = req.params;
     
-    // Get template by share code (this also tracks the click)
-    const template = await storage.getTemplateByShareCode(shareCode);
+    // First try to get by share code
+    let template = await storage.getTemplateByShareCode(shareCode);
+    
+    // If not found, try treating it as a slug (for backward compatibility)
+    if (!template) {
+      template = await storage.getTemplateBySlug(shareCode);
+    }
     
     if (!template) {
       return res.status(404).json({ message: 'Template not found' });
