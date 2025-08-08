@@ -35,6 +35,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     '/users/auth',
     '/health',
     '/share',
+    '/templates/share',  // Add this as a public path
     '/amadeus',
     '/stripe',
     '/webhooks',
@@ -44,7 +45,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
   
   // Templates need special handling - GET is public, but POST/PUT need auth
   // Template share links are always public (check this first)
-  const isTemplateShare = (relativePath.includes('/templates/share/') || fullPath.includes('/templates/share/')) && req.method === 'GET';
+  const isTemplateShare = relativePath.startsWith('/templates/share/') && req.method === 'GET';
   // Regular template reads are also public for GET
   const isTemplateRead = relativePath.match(/^\/templates($|\/\d+$|\/[^\/]+$)/) && req.method === 'GET' && !isTemplateShare;
   
@@ -84,7 +85,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
            fullPath.includes(`/api${path}`);
   });
   
-  if (isPublicPath) {
+  if (isPublicPath || isTemplateShare) {
     return next();
   }
 
