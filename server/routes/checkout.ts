@@ -7,14 +7,24 @@ import Stripe from 'stripe';
 const router = Router();
 
 // Initialize Stripe
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' })
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeKey) {
+  logger.error('STRIPE_SECRET_KEY is not configured in environment variables');
+}
+const stripe = stripeKey 
+  ? new Stripe(stripeKey, { apiVersion: '2023-10-16' })
   : null;
 
 // POST /api/checkout/create-payment-intent - Create a payment intent for template purchase
 router.post('/create-payment-intent', requireAuth, async (req, res) => {
   try {
+    logger.info('Payment intent creation requested', { 
+      hasStripe: !!stripe,
+      hasKey: !!process.env.STRIPE_SECRET_KEY 
+    });
+    
     if (!stripe) {
+      logger.error('Stripe not initialized - missing STRIPE_SECRET_KEY');
       return res.status(503).json({ 
         message: 'Payment processing is not configured. Please contact support.' 
       });

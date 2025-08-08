@@ -226,7 +226,7 @@ function CheckoutForm({ templateId, templateTitle, price, currency, onSuccess, o
 
 // Main component with Stripe Elements provider
 export default function StripeCheckout(props: StripeCheckoutProps) {
-  if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+  if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
