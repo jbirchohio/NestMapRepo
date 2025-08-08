@@ -29,11 +29,17 @@ export class TemplateCopyService {
         throw new Error('Template has no trip data');
       }
 
-      // Create the new trip
+      // Create the new trip with placeholder dates
+      // User will need to update these to their actual travel dates
+      const today = new Date();
+      const defaultDuration = template.duration || 7;
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() + defaultDuration - 1);
+      
       const newTrip = await storage.createTrip({
         title: tripData.title || template.title,
-        start_date: new Date(), // Start from today
-        end_date: new Date(Date.now() + (template.duration || 7) * 24 * 60 * 60 * 1000),
+        start_date: today,
+        end_date: endDate,
         user_id: userId,
         city: tripData.city,
         country: tripData.country,
@@ -59,13 +65,21 @@ export class TemplateCopyService {
       // Handle both formats: new format (days array) and old format (flat activities array)
       if (tripData.days && Array.isArray(tripData.days)) {
         // New format: structured by days
-        const startDate = new Date();
+        const startDate = new Date(newTrip.start_date);
         
         for (const day of tripData.days) {
           if (!day.activities || !Array.isArray(day.activities)) continue;
           
+          // Validate day number
+          const dayNumber = parseInt(day.day) || 1;
           const activityDate = new Date(startDate);
-          activityDate.setDate(startDate.getDate() + (day.day - 1));
+          activityDate.setDate(startDate.getDate() + (dayNumber - 1));
+          
+          // Validate the date is valid
+          if (isNaN(activityDate.getTime())) {
+            logger.error(`Invalid date calculated for day ${day.day}:`, { startDate, dayNumber });
+            continue;
+          }
           
           let order = 0;
           for (const activity of day.activities) {
@@ -90,10 +104,11 @@ export class TemplateCopyService {
               }
             }
             
-            await storage.createActivity({
-              trip_id: newTrip.id,
-              title: activity.title,
-              date: activityDate.toISOString().split('T')[0],
+            try {
+              await storage.createActivity({
+                trip_id: newTrip.id,
+                title: activity.title,
+                date: activityDate.toISOString().split('T')[0],
               time: activity.time || null,
               location_name: locationName,
               latitude,
@@ -103,11 +118,15 @@ export class TemplateCopyService {
               order: order++,
               travel_mode: activity.travelMode || activity.travel_mode,
             });
+            } catch (activityError) {
+              logger.error(`Failed to create activity "${activity.title}":`, activityError);
+              // Continue with other activities
+            }
           }
         }
       } else if (tripData.activities && Array.isArray(tripData.activities)) {
         // Old format: flat activities array (for backwards compatibility)
-        const startDate = new Date();
+        const startDate = new Date(newTrip.start_date);
         
         for (const activity of tripData.activities) {
           if (!activity || !activity.title) continue;
@@ -117,7 +136,14 @@ export class TemplateCopyService {
           if (activity.date) {
             activityDate = new Date(activity.date);
           } else if (activity.day) {
-            activityDate.setDate(startDate.getDate() + (activity.day - 1));
+            const dayNumber = parseInt(activity.day) || 1;
+            activityDate.setDate(startDate.getDate() + (dayNumber - 1));
+          }
+          
+          // Validate the date is valid
+          if (isNaN(activityDate.getTime())) {
+            logger.error(`Invalid date for activity "${activity.title}"`);
+            continue;
           }
           
           const locationName = activity.location || activity.locationName || activity.location_name;
@@ -139,10 +165,11 @@ export class TemplateCopyService {
             }
           }
           
-          await storage.createActivity({
-            trip_id: newTrip.id,
-            title: activity.title,
-            date: activityDate.toISOString().split('T')[0],
+          try {
+            await storage.createActivity({
+              trip_id: newTrip.id,
+              title: activity.title,
+              date: activityDate.toISOString().split('T')[0],
             time: activity.time || null,
             location_name: locationName,
             latitude,
@@ -152,6 +179,10 @@ export class TemplateCopyService {
             order: activity.order || 0,
             travel_mode: activity.travelMode || activity.travel_mode,
           });
+          } catch (activityError) {
+            logger.error(`Failed to create activity "${activity.title}":`, activityError);
+            // Continue with other activities
+          }
         }
       }
 
@@ -186,6 +217,12 @@ export class TemplateCopyService {
     for (const [dayNumber, dayActivities] of activitiesByDay) {
       const activityDate = new Date(startDate);
       activityDate.setDate(startDate.getDate() + dayNumber);
+      
+      // Validate the date is valid
+      if (isNaN(activityDate.getTime())) {
+        logger.error(`Invalid date calculated for day ${dayNumber}:`, { startDate, dayNumber });
+        continue;
+      }
       
       let order = 0;
       for (const activity of dayActivities) {
