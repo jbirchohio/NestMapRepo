@@ -15,6 +15,10 @@ import TripOptimizer from "@/pages/TripOptimizer";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
+import { ContactPage } from "@/pages/Contact";
+import { PrivacyPage } from "@/pages/Privacy";
+import { TermsPage } from "@/pages/Terms";
+import { HelpPage } from "@/pages/Help";
 import DestinationGuide from "@/pages/DestinationGuide";
 import NotFound from "@/pages/not-found";
 import Explore from "@/pages/Explore";
@@ -112,7 +116,12 @@ function Router() {
           
           {/* User account */}
           <Route path="/profile" component={ProfileSettings} />
-          <Route path="/help" component={HelpCenter} />
+          <Route path="/help" component={HelpPage} />
+          
+          {/* Static Pages */}
+          <Route path="/contact" component={ContactPage} />
+          <Route path="/privacy" component={PrivacyPage} />
+          <Route path="/terms" component={TermsPage} />
           
           {/* 404 */}
           <Route component={NotFound} />

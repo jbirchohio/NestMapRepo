@@ -1,22 +1,10 @@
 import { Router } from 'express';
 import { db } from '../db-connection';
-import { trips, activities } from '@shared/schema';
-import { sql } from 'drizzle-orm';
+import { trips, activities, destinations } from '@shared/schema';
+import { sql, eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 
 const router = Router();
-
-// Popular destinations for programmatic SEO
-const POPULAR_DESTINATIONS = [
-  'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix',
-  'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'Miami',
-  'Orlando', 'Las Vegas', 'Boston', 'Seattle', 'San Francisco',
-  'Denver', 'Nashville', 'Portland', 'Austin', 'Atlanta',
-  // International
-  'London', 'Paris', 'Rome', 'Barcelona', 'Amsterdam',
-  'Tokyo', 'Bangkok', 'Singapore', 'Dubai', 'Sydney',
-  'Toronto', 'Vancouver', 'Mexico City', 'Cancun', 'Rio de Janeiro'
-];
 
 // Activity types for programmatic pages
 const ACTIVITY_TYPES = [
@@ -27,7 +15,7 @@ const ACTIVITY_TYPES = [
 // Generate XML sitemap
 router.get('/sitemap.xml', async (req, res) => {
   try {
-    const baseUrl = process.env.BASE_URL || `https://${req.hostname}`;
+    const baseUrl = process.env.BASE_URL || 'https://remvana.com';
     
     // Start XML
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -52,41 +40,53 @@ router.get('/sitemap.xml', async (req, res) => {
       xml += `  </url>\n`;
     });
     
-    // Destination pages (programmatic SEO)
-    POPULAR_DESTINATIONS.forEach(destination => {
-      const slug = destination.toLowerCase().replace(/\s+/g, '-');
+    // Destination pages (dynamically from database)
+    try {
+      const allDestinations = await db.select({
+        slug: destinations.slug,
+        updated_at: destinations.updated_at
+      }).from(destinations)
+      .where(eq(destinations.status, 'published'));
       
-      // Main destination page
-      xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/destinations/${slug}</loc>\n`;
-      xml += `    <changefreq>weekly</changefreq>\n`;
-      xml += `    <priority>0.9</priority>\n`;
-      xml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
-      xml += `  </url>\n`;
-      
-      // Hotels page
-      xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/hotels/${slug}</loc>\n`;
-      xml += `    <changefreq>daily</changefreq>\n`;
-      xml += `    <priority>0.8</priority>\n`;
-      xml += `  </url>\n`;
-      
-      // Packages page
-      xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/packages/${slug}</loc>\n`;
-      xml += `    <changefreq>daily</changefreq>\n`;
-      xml += `    <priority>0.9</priority>\n`;
-      xml += `  </url>\n`;
-      
-      // Activity type pages
-      ACTIVITY_TYPES.forEach(activityType => {
+      allDestinations.forEach(destination => {
+        // Main destination page
         xml += `  <url>\n`;
-        xml += `    <loc>${baseUrl}/destinations/${slug}/${activityType}</loc>\n`;
+        xml += `    <loc>${baseUrl}/destinations/${destination.slug}</loc>\n`;
         xml += `    <changefreq>weekly</changefreq>\n`;
-        xml += `    <priority>0.7</priority>\n`;
+        xml += `    <priority>0.9</priority>\n`;
+        if (destination.updated_at) {
+          xml += `    <lastmod>${destination.updated_at.toISOString().split('T')[0]}</lastmod>\n`;
+        } else {
+          xml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
+        }
         xml += `  </url>\n`;
+        
+        // Hotels page
+        xml += `  <url>\n`;
+        xml += `    <loc>${baseUrl}/hotels/${destination.slug}</loc>\n`;
+        xml += `    <changefreq>daily</changefreq>\n`;
+        xml += `    <priority>0.8</priority>\n`;
+        xml += `  </url>\n`;
+        
+        // Packages page
+        xml += `  <url>\n`;
+        xml += `    <loc>${baseUrl}/packages/${destination.slug}</loc>\n`;
+        xml += `    <changefreq>daily</changefreq>\n`;
+        xml += `    <priority>0.9</priority>\n`;
+        xml += `  </url>\n`;
+        
+        // Activity type pages
+        ACTIVITY_TYPES.forEach(activityType => {
+          xml += `  <url>\n`;
+          xml += `    <loc>${baseUrl}/destinations/${destination.slug}/${activityType}</loc>\n`;
+          xml += `    <changefreq>weekly</changefreq>\n`;
+          xml += `    <priority>0.7</priority>\n`;
+          xml += `  </url>\n`;
+        });
       });
-    });
+    } catch (error) {
+      logger.error('Error fetching destinations for sitemap:', error);
+    }
     
     // Comparison pages (vs competitors)
     const competitors = ['tripadvisor', 'expedia', 'booking-com', 'kayak', 'tripit', 'wanderlog'];
@@ -138,7 +138,7 @@ router.get('/sitemap.xml', async (req, res) => {
 
 // Generate robots.txt
 router.get('/robots.txt', (req, res) => {
-  const baseUrl = process.env.BASE_URL || `https://${req.hostname}`;
+  const baseUrl = process.env.BASE_URL || 'https://remvana.com';
   
   let robots = '# Remvana Robots.txt\n';
   robots += 'User-agent: *\n';
@@ -164,35 +164,34 @@ router.get('/robots.txt', (req, res) => {
 // Destination-specific sitemap (split for large sites)
 router.get('/sitemap-destinations.xml', async (req, res) => {
   try {
-    const baseUrl = process.env.BASE_URL || `https://${req.hostname}`;
+    const baseUrl = process.env.BASE_URL || 'https://remvana.com';
     
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
     
-    // Extended destination list for long-tail SEO
-    const allDestinations = [
-      ...POPULAR_DESTINATIONS,
-      // Add state capitals
-      'Sacramento', 'Albany', 'Richmond', 'Columbus', 'Madison',
-      // Add tourist destinations
-      'Honolulu', 'Key West', 'Napa Valley', 'Yellowstone', 'Grand Canyon',
-      // European cities
-      'Vienna', 'Prague', 'Budapest', 'Lisbon', 'Copenhagen',
-      // Asian destinations  
-      'Seoul', 'Shanghai', 'Hong Kong', 'Bali', 'Phuket'
-    ];
+    // Get all destinations from database
+    const allDestinations = await db.select({
+      slug: destinations.slug,
+      name: destinations.name,
+      cover_image: destinations.cover_image,
+      updated_at: destinations.updated_at
+    }).from(destinations)
+    .where(eq(destinations.status, 'published'));
     
     allDestinations.forEach(destination => {
-      const slug = destination.toLowerCase().replace(/\s+/g, '-');
-      
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/destinations/${slug}</loc>\n`;
-      xml += `    <image:image>\n`;
-      xml += `      <image:loc>${baseUrl}/images/destinations/${slug}.jpg</image:loc>\n`;
-      xml += `      <image:title>${destination} Travel Guide</image:title>\n`;
-      xml += `    </image:image>\n`;
+      xml += `    <loc>${baseUrl}/destinations/${destination.slug}</loc>\n`;
+      if (destination.cover_image) {
+        xml += `    <image:image>\n`;
+        xml += `      <image:loc>${destination.cover_image}</image:loc>\n`;
+        xml += `      <image:title>${destination.name} Travel Guide</image:title>\n`;
+        xml += `    </image:image>\n`;
+      }
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.9</priority>\n`;
+      if (destination.updated_at) {
+        xml += `    <lastmod>${destination.updated_at.toISOString().split('T')[0]}</lastmod>\n`;
+      }
       xml += `  </url>\n`;
     });
     

@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'wouter';
 
-export default function SimpleFooter() {
+export function FooterConsumer() {
   return (
     <footer className="bg-gradient-to-r from-purple-50 to-pink-50 border-t border-purple-100">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
             <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Remvana</span>
-            <span className="ml-2 text-sm text-gray-600">© 2024. Travel made simple.</span>
+            <span className="ml-2 text-sm text-gray-600">© 2025. Travel made simple.</span>
           </div>
           
           <div className="flex space-x-6">
@@ -30,3 +30,5 @@ export default function SimpleFooter() {
     </footer>
   );
 }
+
+export default FooterConsumer;
