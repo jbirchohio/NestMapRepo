@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ClientTemplate, ClientTemplateReview } from '@/lib/types';
 import { useAuth } from '@/contexts/JWTAuthContext';
@@ -20,6 +21,7 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import AuthModalSimple from '@/components/auth/AuthModalSimple';
 import ShareModalSimple from '@/components/ShareModalSimple';
+import StripeCheckout from '@/components/StripeCheckout';
 
 export default function TemplateDetails() {
   const { slug } = useParams();
@@ -28,6 +30,7 @@ export default function TemplateDetails() {
   const { toast } = useToast();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
 
   // Fetch template details
@@ -45,56 +48,35 @@ export default function TemplateDetails() {
     enabled: !!slug,
   });
 
-  // Purchase mutation
-  const purchaseMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) {
-        setShowAuthModal(true);
-        throw new Error('Authentication required');
-      }
+  // Handle purchase button click
+  const handlePurchaseClick = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    if (!template) return;
+    
+    // Open Stripe payment dialog
+    setShowPaymentDialog(true);
+  };
 
-      // TODO: Integrate Stripe payment
-      const response = await fetch(`/api/templates/${template?.id}/purchase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          paymentIntentId: 'test_payment_' + Date.now() // Placeholder
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Purchase failed');
-      }
-
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Purchase successful!',
-        description: 'The template has been added to your trips.',
-      });
-      refetch();
-      // Navigate to the new trip
-      if (data.tripId) {
-        navigate(`/trip/${data.tripId}`);
-      } else {
-        navigate('/trips');
-      }
-    },
-    onError: (error: Error) => {
-      if (error.message !== 'Authentication required') {
-        toast({
-          title: 'Purchase failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
-    },
-  });
+  // Handle successful payment
+  const handlePaymentSuccess = (data: any) => {
+    setShowPaymentDialog(false);
+    toast({
+      title: 'Purchase successful!',
+      description: 'The template has been added to your trips.',
+    });
+    refetch();
+    
+    // Navigate to the new trip
+    if (data.tripId) {
+      navigate(`/trip/${data.tripId}`);
+    } else {
+      navigate('/trips');
+    }
+  };
 
   // Track share
   const trackShare = async (platform: string) => {
@@ -338,11 +320,10 @@ export default function TemplateDetails() {
                   <Button 
                     className="w-full mb-4" 
                     size="lg"
-                    onClick={() => purchaseMutation.mutate()}
-                    disabled={purchaseMutation.isPending}
+                    onClick={handlePurchaseClick}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
-                    {purchaseMutation.isPending ? 'Processing...' : 'Purchase Template'}
+                    Purchase Template
                   </Button>
                 )}
 
@@ -506,6 +487,22 @@ export default function TemplateDetails() {
           onClose={() => setShowShareModal(false)}
           template={template}
         />
+      )}
+
+      {/* Stripe Payment Dialog */}
+      {showPaymentDialog && template && (
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="sm:max-w-[500px] p-0">
+            <StripeCheckout
+              templateId={template.id}
+              templateTitle={template.title}
+              price={parseFloat(template.price || '0')}
+              currency={template.currency || 'USD'}
+              onSuccess={handlePaymentSuccess}
+              onCancel={() => setShowPaymentDialog(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
