@@ -80,9 +80,13 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
       const cityContext = trip?.city || "current location";
       
       // Call AI to find places
+      const token = localStorage.getItem("token");
       const response = await fetch("/api/ai/find-location", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ 
           searchQuery: searchQuery,
           cityContext: cityContext,
@@ -90,7 +94,10 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
         })
       });
       
-      if (!response.ok) throw new Error("Search failed");
+      if (!response.ok) {
+        console.error("Search API error:", response.status, response.statusText);
+        throw new Error(`Search failed: ${response.status}`);
+      }
       
       const data = await response.json();
       
@@ -127,10 +134,24 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
       }
     } catch (error) {
       console.error("Error searching places:", error);
-      // Fallback suggestions
-      setSuggestedPlaces([
-        { name: "Find on map", address: "Search nearby", latitude: 0, longitude: 0 },
-      ]);
+      // Fallback suggestions based on category
+      const fallbackPlaces = [];
+      
+      if (selectedCategory) {
+        // Provide generic suggestions based on category
+        fallbackPlaces.push({
+          name: `Local ${selectedCategory.text} spot`,
+          address: "Search for a specific place",
+          latitude: trip?.cityLatitude ? parseFloat(trip.cityLatitude) : 0,
+          longitude: trip?.cityLongitude ? parseFloat(trip.cityLongitude) : 0
+        });
+      }
+      
+      fallbackPlaces.push(
+        { name: "Custom location", address: "Enter your own", latitude: 0, longitude: 0 }
+      );
+      
+      setSuggestedPlaces(fallbackPlaces);
     } finally {
       setLoading(false);
     }
@@ -235,7 +256,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
     const updatedActivity = {
       ...editFormData,
       date: date || new Date(activity.date),
-      tripId
+      tripId: typeof tripId === 'string' ? parseInt(tripId) : tripId
     };
     onSave(updatedActivity);
   };

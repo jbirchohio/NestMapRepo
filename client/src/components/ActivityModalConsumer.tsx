@@ -50,7 +50,7 @@ export default function ActivityModalConsumer({
       const activityData = {
         ...data,
         ...locationData,
-        tripId,
+        tripId: typeof tripId === 'string' ? parseInt(tripId) : tripId,
         order: 0,  // New activities don't have an order yet
       };
       
@@ -119,7 +119,7 @@ export default function ActivityModalConsumer({
         locationName: data.locationName,
         notes: data.notes,
         date: data.date,
-        tripId,
+        tripId: typeof tripId === 'string' ? parseInt(tripId) : tripId,
         order: activity.order,
       };
       
