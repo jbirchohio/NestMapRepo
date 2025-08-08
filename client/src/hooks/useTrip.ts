@@ -5,6 +5,8 @@ import { ClientTrip } from "@/lib/types";
 import { Todo, Note } from "@shared/schema";
 
 export default function useTrip(tripId: string | number) {
+  console.log('useTrip - Received tripId:', tripId, 'type:', typeof tripId);
+  
   // Ensure tripId is a string or number, not an object
   const validTripId = typeof tripId === 'object' ? (tripId as any)?.id || String(tripId) : tripId;
   
@@ -15,6 +17,8 @@ export default function useTrip(tripId: string | number) {
   
   // Use validTripId for all operations
   tripId = validTripId;
+  
+  console.log('useTrip - Using tripId:', tripId, 'type:', typeof tripId);
   
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
@@ -74,7 +78,10 @@ export default function useTrip(tripId: string | number) {
         return [];
       }
       
-      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/todos`, undefined);
+      console.log('useTrip - Fetching todos for tripId:', tripId, 'type:', typeof tripId);
+      const todosUrl = `${API_ENDPOINTS.TRIPS}/${tripId}/todos`;
+      console.log('useTrip - Todos URL:', todosUrl);
+      const res = await apiRequest("GET", todosUrl, undefined);
       return res; // apiRequest already parses JSON
     },
     enabled: !!tripId,

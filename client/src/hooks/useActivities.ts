@@ -5,6 +5,8 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientActivity, ClientTrip } from "@/lib/types";
 
 export default function useActivities(tripId: string | number) {
+  console.log('useActivities - Received tripId:', tripId, 'type:', typeof tripId);
+  
   // Ensure tripId is a string or number, not an object
   const validTripId = typeof tripId === 'object' ? (tripId as any)?.id || String(tripId) : tripId;
   
@@ -14,6 +16,8 @@ export default function useActivities(tripId: string | number) {
   
   // Use validTripId for all operations
   tripId = validTripId;
+  
+  console.log('useActivities - Using tripId:', tripId, 'type:', typeof tripId);
   
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
@@ -54,7 +58,10 @@ export default function useActivities(tripId: string | number) {
         return [];
       }
       
-      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/activities`);
+      console.log('useActivities - Fetching activities for tripId:', tripId, 'type:', typeof tripId);
+      const activitiesUrl = `${API_ENDPOINTS.TRIPS}/${tripId}/activities`;
+      console.log('useActivities - Activities URL:', activitiesUrl);
+      const res = await apiRequest("GET", activitiesUrl);
       const activitiesData = res; // apiRequest already parses JSON
       
       // Process activities to add travel time information

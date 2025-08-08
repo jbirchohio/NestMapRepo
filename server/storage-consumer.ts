@@ -523,7 +523,8 @@ export class ConsumerDatabaseStorage implements IStorage {
   }
   
   async hasUserPurchasedTemplate(userId: number, templateId: number): Promise<boolean> {
-    const [purchase] = await db.select()
+    console.log(`Checking if user ${userId} purchased template ${templateId}`);
+    const purchases = await db.select()
       .from(templatePurchases)
       .where(and(
         eq(templatePurchases.buyer_id, userId),
@@ -531,7 +532,13 @@ export class ConsumerDatabaseStorage implements IStorage {
         eq(templatePurchases.status, 'completed')
       ))
       .limit(1);
-    return !!purchase;
+    
+    console.log(`Purchase check - User: ${userId}, Template: ${templateId}, Found: ${purchases.length > 0}`);
+    if (purchases.length > 0) {
+      console.log('Found existing purchase:', purchases[0]);
+    }
+    
+    return purchases.length > 0;
   }
   
   // Creator profiles

@@ -4,7 +4,7 @@ import { logger } from '../utils/logger';
 import { storage } from '../storage';
 import { db } from '../db-connection';
 import { users, templatePurchases, templates } from '@shared/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import Stripe from 'stripe';
 
 const router = Router();
@@ -36,6 +36,9 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
     const { template_id } = req.body;
     const userId = req.user!.id;
 
+    console.log('Create payment intent - template_id from request:', template_id, 'type:', typeof template_id);
+    console.log('User ID:', userId);
+
     if (!template_id) {
       return res.status(400).json({ message: 'Template ID is required' });
     }
@@ -48,9 +51,23 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
 
     // Check if already purchased
     const alreadyPurchased = await storage.hasUserPurchasedTemplate(userId, template_id);
+    
+    // Also check what templates this user has purchased
+    const userPurchases = await db.select({
+      template_id: templatePurchases.template_id,
+      status: templatePurchases.status
+    })
+    .from(templatePurchases)
+    .where(eq(templatePurchases.buyer_id, userId));
+    
+    console.log(`User ${userId} has purchased these templates:`, userPurchases);
+    console.log(`Currently trying to purchase template ${template_id}`);
+    
     if (alreadyPurchased) {
+      console.log(`User ${userId} already purchased template ${template_id}`);
       return res.status(400).json({ message: 'You have already purchased this template' });
     }
+    console.log(`User ${userId} has not purchased template ${template_id} - proceeding with payment`);
 
     // Get user details for receipt
     const [user] = await db.select()
@@ -101,6 +118,8 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
 
     const { payment_intent_id, template_id } = req.body;
     const userId = req.user!.id;
+    
+    console.log('Confirm purchase - template_id:', template_id, 'payment_intent_id:', payment_intent_id, 'userId:', userId);
 
     if (!payment_intent_id || !template_id) {
       return res.status(400).json({ message: 'Payment intent ID and template ID are required' });

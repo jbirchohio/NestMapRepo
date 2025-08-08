@@ -42,7 +42,8 @@ function CheckoutForm({ templateId, templateTitle, price, currency, onSuccess, o
     setError(null);
 
     try {
-      console.log('Creating payment intent for template:', templateId);
+      console.log('Creating payment intent for template:', templateId, 'type:', typeof templateId);
+      console.log('Template title:', templateTitle);
       
       // Step 1: Create payment intent on backend
       const response = await fetch('/api/checkout/create-payment-intent', {

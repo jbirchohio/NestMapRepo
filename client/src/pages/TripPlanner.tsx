@@ -23,7 +23,18 @@ import CreateTemplateModal from "@/components/CreateTemplateModal";
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
   const [location, setLocation] = useLocation();
+  
+  // Debug logging
+  console.log('TripPlanner - Raw params:', params);
+  console.log('TripPlanner - params?.id:', params?.id);
+  console.log('TripPlanner - typeof params:', typeof params);
+  console.log('TripPlanner - typeof params?.id:', typeof params?.id);
+  
   const tripId = params?.id || "";
+  
+  console.log('TripPlanner - Final tripId:', tripId);
+  console.log('TripPlanner - typeof tripId:', typeof tripId);
+  
   const { toast } = useToast();
   const { fetchRouteDirections } = useMapboxDirections();
   
