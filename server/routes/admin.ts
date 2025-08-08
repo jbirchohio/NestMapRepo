@@ -1,5 +1,10 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/jwtAuth';
+import { db } from '../db-connection';
+import { templates, templatePurchases } from '@shared/schema';
+import { eq, and, sql } from 'drizzle-orm';
+import { logger } from '../utils/logger';
+import { storage } from '../storage';
 // Admin check inline
 const requireAdmin = (req: any, res: any, next: any) => {
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
@@ -576,6 +581,85 @@ router.get('/destinations', async (req, res) => {
   } catch (error) {
     logger.error('Error fetching destinations:', error);
     res.status(500).json({ message: 'Failed to fetch destinations' });
+  }
+});
+
+// Manual purchase recording for failed transactions
+router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { templateId, userId: targetUserId } = req.body;
+    
+    // Use provided userId or the current user
+    const buyerId = targetUserId || req.user!.id;
+    
+    // Get template
+    const template = await storage.getTemplate(templateId);
+    if (!template) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+    
+    // Check if already recorded
+    const existing = await db.select()
+      .from(templatePurchases)
+      .where(
+        and(
+          eq(templatePurchases.template_id, templateId),
+          eq(templatePurchases.buyer_id, buyerId)
+        )
+      )
+      .limit(1);
+      
+    if (existing.length > 0) {
+      // If purchase exists but user doesn't have the trip, just copy it
+      const { templateCopyService } = await import('../services/templateCopyService');
+      const newTripId = await templateCopyService.copyTemplateToTrip(templateId, buyerId);
+      
+      return res.json({
+        message: 'Purchase already recorded, created new trip copy',
+        purchaseId: existing[0].id,
+        tripId: newTripId
+      });
+    }
+    
+    // Record purchase
+    const price = parseFloat(template.price || '0');
+    const platformFee = price * 0.30;
+    const sellerEarnings = price - platformFee;
+    
+    const [purchase] = await db.insert(templatePurchases)
+      .values({
+        template_id: templateId,
+        buyer_id: buyerId,
+        seller_id: template.user_id,
+        price: price.toFixed(2),
+        platform_fee: platformFee.toFixed(2),
+        seller_earnings: sellerEarnings.toFixed(2),
+        stripe_payment_intent_id: 'manual_recovery_' + Date.now(),
+        stripe_payment_id: 'manual_recovery_' + Date.now(),
+        status: 'completed',
+        payout_status: 'pending',
+      })
+      .returning();
+      
+    // Update template sales
+    await db.update(templates)
+      .set({ sales_count: sql`COALESCE(sales_count, 0) + 1` })
+      .where(eq(templates.id, templateId));
+      
+    // Copy template to trips
+    const { templateCopyService } = await import('../services/templateCopyService');
+    const newTripId = await templateCopyService.copyTemplateToTrip(templateId, buyerId);
+    
+    logger.info(`Manual purchase recorded for template ${templateId} by user ${buyerId}`);
+    
+    res.json({
+      message: 'Purchase recorded successfully',
+      purchaseId: purchase.id,
+      tripId: newTripId
+    });
+  } catch (error) {
+    logger.error('Error recording manual purchase:', error);
+    res.status(500).json({ message: 'Failed to record purchase' });
   }
 });
 

@@ -230,8 +230,15 @@ export default function HomeConsumerRedesigned() {
 
   const handleTripCreated = (trip: any) => {
     console.log('HomeConsumer - Trip created:', trip);
+    console.log('HomeConsumer - Navigating to trip ID:', trip.id, 'type:', typeof trip.id);
     setIsNewTripModalOpen(false);
-    setLocation(`/trip/${trip.id}`);
+    
+    // Make sure we have a valid ID before navigating
+    if (trip && trip.id) {
+      setLocation(`/trip/${trip.id}`);
+    } else {
+      console.error('HomeConsumer - Invalid trip object for navigation:', trip);
+    }
   };
 
   return (

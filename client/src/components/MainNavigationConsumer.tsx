@@ -250,8 +250,15 @@ export default function MainNavigationConsumer() {
           onClose={() => setShowNewTripModal(false)}
           onTripCreated={(trip) => {
             console.log('MainNav - Trip created:', trip);
+            console.log('MainNav - Trip ID for navigation:', trip.id, 'type:', typeof trip.id);
             setShowNewTripModal(false);
-            setLocation(`/trip/${trip.id}`);
+            
+            // Make sure we have a valid ID before navigating
+            if (trip && trip.id) {
+              setLocation(`/trip/${trip.id}`);
+            } else {
+              console.error('MainNav - Invalid trip object for navigation:', trip);
+            }
           }}
         />
       )}

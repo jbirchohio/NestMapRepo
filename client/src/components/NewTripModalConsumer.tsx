@@ -184,11 +184,23 @@ export default function NewTripModalConsumer({
       console.log('Trip ID:', newTrip.id);
       console.log('Trip ID type:', typeof newTrip.id);
       
+      // Ensure we're passing the trip object correctly
+      if (!newTrip.id) {
+        console.error('ERROR: Trip created but no ID returned!', newTrip);
+        toast({
+          title: "Error",
+          description: "Trip created but ID missing. Please refresh.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       toast({
         title: "Trip created! ✈️",
         description: "Let's start planning your adventure!",
       });
 
+      console.log('Calling onTripCreated with:', newTrip);
       onTripCreated(newTrip);
       reset();
       onClose();

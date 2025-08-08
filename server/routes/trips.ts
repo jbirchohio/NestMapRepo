@@ -82,8 +82,10 @@ router.get('/corporate', async (req: Request, res: Response) => {
 // Get todos for a specific trip
 router.get("/:id/todos", async (req: Request, res: Response) => {
   try {
+    console.log('GET todos - params.id:', req.params.id, 'type:', typeof req.params.id);
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
+      console.error('Invalid trip ID for todos:', req.params.id);
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
