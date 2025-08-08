@@ -15,7 +15,7 @@ const ACTIVITY_TYPES = [
 // Generate XML sitemap
 router.get('/sitemap.xml', async (req, res) => {
   try {
-    const baseUrl = process.env.BASE_URL || 'https://remvana.com';
+    const baseUrl = process.env.SITEMAP_BASE_URL || process.env.BASE_URL || 'https://remvana.com';
     
     // Start XML
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -138,7 +138,7 @@ router.get('/sitemap.xml', async (req, res) => {
 
 // Generate robots.txt
 router.get('/robots.txt', (req, res) => {
-  const baseUrl = process.env.BASE_URL || 'https://remvana.com';
+  const baseUrl = process.env.SITEMAP_BASE_URL || process.env.BASE_URL || 'https://remvana.com';
   
   let robots = '# Remvana Robots.txt\n';
   robots += 'User-agent: *\n';
@@ -164,7 +164,7 @@ router.get('/robots.txt', (req, res) => {
 // Destination-specific sitemap (split for large sites)
 router.get('/sitemap-destinations.xml', async (req, res) => {
   try {
-    const baseUrl = process.env.BASE_URL || 'https://remvana.com';
+    const baseUrl = process.env.SITEMAP_BASE_URL || process.env.BASE_URL || 'https://remvana.com';
     
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
