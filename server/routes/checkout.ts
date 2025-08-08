@@ -3,7 +3,7 @@ import { requireAuth } from '../middleware/jwtAuth';
 import { logger } from '../utils/logger';
 import { storage } from '../storage';
 import { db } from '../db-connection';
-import { users, templatePurchases } from '@shared/schema';
+import { users, templatePurchases, templates } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
 
@@ -165,7 +165,9 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       .returning();
 
     // Update template sales count
-    await storage.incrementTemplateSales(template_id);
+    await db.update(templates)
+      .set({ sales_count: sql`COALESCE(sales_count, 0) + 1` })
+      .where(eq(templates.id, template_id));
 
     // Update creator's total sales
     await db.update(users)

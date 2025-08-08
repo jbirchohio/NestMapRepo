@@ -92,6 +92,13 @@ export function convertResponseToCamelCase(req: Request, res: Response, next: Ne
     if (body && typeof body === 'object') {
       // Convert to camelCase for frontend
       const convertedBody = snakeToCamel(body);
+      
+      // Log transformation for debugging trip creation
+      if (req.method === 'POST' && req.path === '/api/trips') {
+        console.log('Case conversion - Original trip:', body);
+        console.log('Case conversion - Converted trip:', convertedBody);
+      }
+      
       return originalJson.call(this, convertedBody);
     }
     return originalJson.call(this, body);

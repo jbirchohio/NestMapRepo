@@ -9,6 +9,7 @@ export default function useTrip(tripId: string | number) {
   const validTripId = typeof tripId === 'object' ? (tripId as any)?.id || String(tripId) : tripId;
   
   if (tripId !== validTripId) {
+    console.error('useTrip: tripId was an object! Stack trace:', new Error().stack);
     console.warn('useTrip: tripId was an object, extracted ID:', validTripId, 'from:', tripId);
   }
   
