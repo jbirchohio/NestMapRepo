@@ -393,6 +393,18 @@ router.post("/find-location", async (req, res) => {
       });
     }
 
+    // Import cache service
+    const { aiCache } = await import('../services/aiCacheService');
+    
+    // Check cache first
+    const cacheKey = aiCache.generateKey('location', search_query, city_context);
+    const cachedResult = aiCache.get(cacheKey);
+    
+    if (cachedResult) {
+      console.log(`Returning cached location search for: ${search_query}`);
+      return res.json(cachedResult);
+    }
+
     const prompt = `Find places matching "${search_query}" in or near ${city_context || 'the specified location'}.
 
 Search for ANY type of location including:
@@ -437,12 +449,17 @@ Format as JSON:
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
 
-    res.json({
+    const responseData = {
       success: true,
       searchQuery: search_query,
       cityContext: city_context,
       ...result
-    });
+    };
+    
+    // Cache the result for 7 days (location searches are relatively stable)
+    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
+    
+    res.json(responseData);
   } catch (error) {
     console.error("AI find-location error:", error);
     res.status(500).json({ 

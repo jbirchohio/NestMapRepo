@@ -190,8 +190,8 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    // For consumer app, just verify user owns the trip
+    if (trip.user_id !== req.user?.id) {
       return res.status(403).json({ message: "Access denied: Cannot delete this activity" });
     }
 

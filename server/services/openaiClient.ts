@@ -17,5 +17,5 @@ export function getOpenAIClient(): OpenAI {
   return openaiClient;
 }
 
-// Helper function to ensure we use the latest model
-export const OPENAI_MODEL = "gpt-4o"; // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// Helper function to ensure we use a cost-effective model
+export const OPENAI_MODEL = "gpt-3.5-turbo"; // Using GPT-3.5 for 95% cost savings vs GPT-4o!

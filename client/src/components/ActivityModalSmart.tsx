@@ -147,8 +147,9 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
         });
       }
       
+      // Don't add coordinates for custom location - let geocoding handle it
       fallbackPlaces.push(
-        { name: "Custom location", address: "Enter your own", latitude: 0, longitude: 0 }
+        { name: "Custom location", address: "Enter your own", latitude: null as any, longitude: null as any }
       );
       
       setSuggestedPlaces(fallbackPlaces);
@@ -167,11 +168,15 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
     const activityTime = customSearch ? "12:00" : 
       convertTo24Hour(selectedCategory?.time || "12:00 PM");
     
+    // Only send coordinates if they're valid (not null, not 0,0)
+    const hasValidCoords = selectedPlace.latitude && selectedPlace.longitude && 
+      (selectedPlace.latitude !== 0 || selectedPlace.longitude !== 0);
+    
     onSave({
       title: customSearch || selectedCategory?.text || "Activity",
       locationName: selectedPlace.name,
-      latitude: selectedPlace.latitude.toString(),
-      longitude: selectedPlace.longitude.toString(),
+      latitude: hasValidCoords ? selectedPlace.latitude.toString() : "",
+      longitude: hasValidCoords ? selectedPlace.longitude.toString() : "",
       time: activityTime,
       date: date || new Date(),
       notes: selectedPlace.address || ""

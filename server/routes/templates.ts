@@ -646,19 +646,25 @@ router.post('/:id/purchase', requireAuth, async (req, res) => {
       return res.status(400).json({ message: 'Template already purchased' });
     }
     
-    // Calculate fees (30% platform fee)
-    const price = parseFloat(template.price || '0');
-    const platformFee = price * 0.30;
-    const sellerEarnings = price - platformFee;
+    // Calculate fees - Industry standard: deduct Stripe fees first
+    const grossPrice = parseFloat(template.price || '0');
+    // Stripe fees: 2.9% + $0.30 per transaction
+    const stripeFee = (grossPrice * 0.029) + 0.30;
+    const netRevenue = grossPrice - stripeFee;
+    
+    // Split net revenue: 70% to creator, 30% to platform
+    const sellerEarnings = netRevenue * 0.70;
+    const platformFee = netRevenue * 0.30;
     
     // Create purchase record
     const purchase = await storage.createTemplatePurchase({
       template_id: templateId,
       buyer_id: buyerId,
       seller_id: template.user_id,
-      price: price.toFixed(2),
+      price: grossPrice.toFixed(2),
       platform_fee: platformFee.toFixed(2),
       seller_earnings: sellerEarnings.toFixed(2),
+      stripe_fee: stripeFee.toFixed(2),
       stripe_payment_intent_id: paymentIntentId,
       status: 'completed',
     });

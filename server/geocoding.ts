@@ -27,7 +27,16 @@ export async function geocodeLocation(
     let cleanLocationName = locationName
       .replace(/^(visit|experience|explore|see|tour|go to|check out)\s+/i, '')
       .replace(/^the\s+/i, '')
+      .replace(/^local\s+/i, '')  // Remove "Local" prefix
+      .replace(/\s+spot$/i, '')   // Remove "spot" suffix
       .trim();
+    
+    // Don't geocode if it's a generic placeholder
+    if (cleanLocationName.toLowerCase() === 'custom location' || 
+        cleanLocationName.toLowerCase() === 'enter your own') {
+      console.log(`Skipping geocoding for placeholder: "${locationName}"`);
+      return null;
+    }
     
     // Build search query with city context if provided
     let searchQuery = cleanLocationName;

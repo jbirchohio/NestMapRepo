@@ -258,7 +258,7 @@ export default function CreatorDashboard() {
                             +${sale.sellerEarnings}
                           </p>
                           <p className="text-xs text-gray-500">
-                            (${sale.price} - fees)
+                            70% of net
                           </p>
                         </div>
                       </div>
@@ -366,9 +366,15 @@ export default function CreatorDashboard() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-gray-500">Revenue</p>
+                            <p className="text-gray-500">Your Earnings</p>
                             <p className="font-semibold text-green-600">
-                              ${(template.salesCount * parseFloat(template.price) * 0.7).toFixed(2)}
+                              ${(() => {
+                                const grossPrice = parseFloat(template.price);
+                                const stripeFee = (grossPrice * 0.029) + 0.30;
+                                const netRevenue = grossPrice - stripeFee;
+                                const creatorEarnings = netRevenue * 0.70;
+                                return (template.salesCount * creatorEarnings).toFixed(2);
+                              })()}
                             </p>
                           </div>
                         </div>
@@ -499,6 +505,7 @@ export default function CreatorDashboard() {
                         <th className="text-left py-2">Date</th>
                         <th className="text-left py-2">Template</th>
                         <th className="text-right py-2">Sale Price</th>
+                        <th className="text-right py-2">Stripe Fee</th>
                         <th className="text-right py-2">Platform Fee</th>
                         <th className="text-right py-2">Your Earnings</th>
                         <th className="text-right py-2">Status</th>
@@ -512,6 +519,9 @@ export default function CreatorDashboard() {
                           </td>
                           <td className="py-2">{sale.templateTitle}</td>
                           <td className="text-right py-2">${sale.price}</td>
+                          <td className="text-right py-2 text-gray-500">
+                            -${sale.stripeFee || ((parseFloat(sale.price) * 0.029) + 0.30).toFixed(2)}
+                          </td>
                           <td className="text-right py-2 text-red-600">
                             -${sale.platformFee}
                           </td>

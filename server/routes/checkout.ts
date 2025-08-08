@@ -164,10 +164,15 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       });
     }
 
-    // Calculate fees
-    const price = parseFloat(template.price || '0');
-    const platformFee = price * 0.30; // 30% platform fee
-    const sellerEarnings = price - platformFee;
+    // Calculate fees - Industry standard: deduct Stripe fees first
+    const grossPrice = parseFloat(template.price || '0');
+    // Stripe fees: 2.9% + $0.30 per transaction
+    const stripeFee = (grossPrice * 0.029) + 0.30;
+    const netRevenue = grossPrice - stripeFee;
+    
+    // Split net revenue: 70% to creator, 30% to platform
+    const sellerEarnings = netRevenue * 0.70;
+    const platformFee = netRevenue * 0.30;
 
     // Create purchase record
     const [purchase] = await db.insert(templatePurchases)
@@ -175,9 +180,10 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
         template_id: template_id,
         buyer_id: userId,
         seller_id: template.user_id,
-        price: price.toFixed(2),
+        price: grossPrice.toFixed(2),
         platform_fee: platformFee.toFixed(2),
         seller_earnings: sellerEarnings.toFixed(2),
+        stripe_fee: stripeFee.toFixed(2),
         stripe_payment_intent_id: payment_intent_id,
         stripe_payment_id: paymentIntent.id,
         status: 'completed',

@@ -469,6 +469,7 @@ export const templatePurchases = pgTable("template_purchases", {
   platform_fee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
   seller_earnings: decimal("seller_earnings", { precision: 10, scale: 2 }).notNull(),
   creator_payout: decimal("creator_payout", { precision: 10, scale: 2 }), // alias for seller_earnings
+  stripe_fee: decimal("stripe_fee", { precision: 10, scale: 2 }), // Stripe processing fee
   stripe_payment_id: text("stripe_payment_id"),
   stripe_payment_intent_id: text("stripe_payment_intent_id"),
   status: text("status").default("pending"), // pending, completed, refunded

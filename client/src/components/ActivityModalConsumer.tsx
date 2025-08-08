@@ -29,13 +29,14 @@ export default function ActivityModalConsumer({
   // Create/Update mutation
   const createActivity = useMutation({
     mutationFn: async (data: any) => {
-      // Geocode the location if it's a name
+      // Only geocode if coordinates are not already provided
       let locationData = {
-        latitude: "",
-        longitude: "",
+        latitude: data.latitude || "",
+        longitude: data.longitude || "",
       };
 
-      if (data.locationName && data.locationName !== "Find a spot nearby") {
+      // If no coordinates provided and we have a location name, geocode it
+      if (!data.latitude && !data.longitude && data.locationName && data.locationName !== "Find a spot nearby") {
         try {
           const result = await geocodeLocation(data.locationName);
           if (result) {

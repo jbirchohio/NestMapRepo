@@ -72,6 +72,7 @@ export default function ActivityTimeline({
             activity={activity} 
             onClick={handleEditActivity} 
             onToggleComplete={handleToggleComplete}
+            onDelete={onActivityUpdated}
           />
         ))
       )}

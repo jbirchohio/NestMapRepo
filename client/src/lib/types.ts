@@ -43,6 +43,7 @@ export interface ClientTemplatePurchase {
   price: string;
   platformFee: string;
   sellerEarnings: string;
+  stripeFee?: string; // Stripe processing fee
   status: 'pending' | 'completed' | 'refunded';
   purchasedAt: Date;
   // Additional fields
