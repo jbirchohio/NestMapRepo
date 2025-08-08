@@ -159,76 +159,72 @@ export default function DestinationGuide() {
       />
       
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-        {/* Hero Section */}
-        <section className="relative h-[60vh] overflow-hidden">
+        {/* Hero Image */}
+        <section className="relative h-[50vh] overflow-hidden">
           <div 
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: destinationData?.image ? `url(${destinationData.image})` : 'linear-gradient(to bottom right, #9333ea, #ec4899)',
             }}
-          >
-            {/* Enhanced gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
-            {/* Additional scrim at the bottom for text area */}
-            <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/95 to-transparent" />
-          </div>
-          
-          <div className="relative h-full flex items-end">
-            <div className="max-w-7xl mx-auto px-4 pb-12 text-white w-full">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <Badge className="mb-4 bg-purple-600 text-white">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  Trending Destination
-                </Badge>
-                <h1 className="text-5xl md:text-6xl font-bold mb-4" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.5)' }}>
-                  {destinationData?.title || `${destinationName} Travel Guide`}
-                </h1>
-                <p className="text-xl md:text-2xl max-w-3xl text-gray-100" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 2px 6px rgba(0,0,0,0.5)' }}>
-                  {destinationData?.heroDescription || `Discover the best of ${destinationName} with our comprehensive guide`}
-                </p>
-                
-                {destinationData?.seasonalWeather && (
-                  <div className="flex items-center gap-4 mt-6" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                    <div className="flex items-center gap-2">
-                      <Sun className="w-5 h-5" />
-                      <span className="text-lg">
-                        {destinationData.seasonalWeather.avgLowTemp}°-{destinationData.seasonalWeather.avgHighTemp}°F
-                      </span>
-                    </div>
+          />
+        </section>
+        
+        {/* Hero Content - Below Image */}
+        <section className="bg-white py-8 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Badge className="mb-4 bg-purple-600 text-white">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                Trending Destination
+              </Badge>
+              <h1 className="text-5xl md:text-6xl font-bold mb-4 text-gray-900">
+                {destinationData?.title || `${destinationName} Travel Guide`}
+              </h1>
+              <p className="text-xl md:text-2xl max-w-3xl text-gray-600">
+                {destinationData?.heroDescription || `Discover the best of ${destinationName} with our comprehensive guide`}
+              </p>
+              
+              {destinationData?.seasonalWeather && (
+                <div className="flex items-center gap-4 mt-6 text-gray-700">
+                  <div className="flex items-center gap-2">
+                    <Sun className="w-5 h-5 text-yellow-500" />
                     <span className="text-lg">
-                      {destinationData.seasonalWeather.description}
+                      {destinationData.seasonalWeather.avgLowTemp}°-{destinationData.seasonalWeather.avgHighTemp}°F
                     </span>
                   </div>
-                )}
-                
-                {destinationData?.imageAttribution && (
-                  <div className="mt-4 text-sm text-white/90" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                    Photo by{' '}
-                    <a 
-                      href={destinationData.imageAttribution.photographerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-white"
-                    >
-                      {destinationData.imageAttribution.photographerName}
-                    </a>
-                    {' '}on{' '}
-                    <a 
-                      href={destinationData.imageAttribution.photoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-white"
-                    >
-                      Unsplash
-                    </a>
-                  </div>
-                )}
-              </motion.div>
-            </div>
+                  <span className="text-lg">
+                    {destinationData.seasonalWeather.description}
+                  </span>
+                </div>
+              )}
+              
+              {destinationData?.imageAttribution && (
+                <div className="mt-4 text-sm text-gray-500">
+                  Photo by{' '}
+                  <a 
+                    href={destinationData.imageAttribution.photographerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-gray-700"
+                  >
+                    {destinationData.imageAttribution.photographerName}
+                  </a>
+                  {' '}on{' '}
+                  <a 
+                    href={destinationData.imageAttribution.photoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-gray-700"
+                  >
+                    Unsplash
+                  </a>
+                </div>
+              )}
+            </motion.div>
           </div>
         </section>
         

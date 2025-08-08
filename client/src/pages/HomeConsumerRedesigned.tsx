@@ -412,7 +412,7 @@ export default function HomeConsumerRedesigned() {
                   whileHover={{ y: -5 }}
                 >
                   <Card 
-                    className="group cursor-pointer overflow-hidden border-0 shadow-md hover:shadow-xl transition-all"
+                    className="group cursor-pointer overflow-hidden hover:shadow-xl transition-shadow"
                     onClick={() => {
                       if (realTemplates && realTemplates.length > 0) {
                         // For real templates, navigate to the template details
@@ -422,32 +422,77 @@ export default function HomeConsumerRedesigned() {
                       }
                     }}
                   >
-                    <div className="relative h-48 overflow-hidden">
-                      <img 
-                        src={template.coverImage || template.image || template.imageUrl || '/api/placeholder/400/300'} 
-                        alt={template.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                      {template.emoji && <div className="absolute top-4 left-4 text-3xl">{template.emoji}</div>}
-                      <div className="absolute bottom-4 left-4 text-white">
-                        <h3 className="font-bold text-lg">{template.title}</h3>
-                        <p className="text-sm opacity-90">
+                    {/* Cover Image - matching marketplace style */}
+                    <div className="relative h-48 bg-gradient-to-br from-purple-400 to-pink-400">
+                      {(template.coverImage || template.image || template.imageUrl) ? (
+                        <img 
+                          src={template.coverImage || template.image || template.imageUrl} 
+                          alt={template.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white">
+                          <MapPin className="h-12 w-12" />
+                        </div>
+                      )}
+                      {template.featured && (
+                        <Badge className="absolute top-2 right-2 bg-yellow-500">
+                          Featured
+                        </Badge>
+                      )}
+                      <div className="absolute bottom-2 left-2">
+                        <Badge variant="secondary" className="bg-white/90">
                           {template.duration || `${template.tripLength || 5} days`}
-                        </p>
+                        </Badge>
                       </div>
                     </div>
-                    <CardContent className="p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {/* Display tags for real templates, highlights for hardcoded */}
-                        {(template.tags || template.highlights || []).slice(0, 3).map((item: string, i: number) => (
-                          <span 
-                            key={i}
-                            className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
-                          >
+
+                    {/* Content - matching marketplace layout */}
+                    <CardContent className="pt-4">
+                      <h3 className="font-semibold text-lg mb-1 line-clamp-1">
+                        {template.title}
+                      </h3>
+                      
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        {template.description || `Explore amazing destinations over ${template.duration || template.tripLength || 5} days`}
+                      </p>
+
+                      {/* Destinations or tags */}
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {(template.destinations || template.tags || template.highlights || []).slice(0, 3).map((item: string, i: number) => (
+                          <Badge key={i} variant="outline" className="text-xs">
                             {item}
-                          </span>
+                          </Badge>
                         ))}
+                        {(template.destinations || template.tags || template.highlights || []).length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{(template.destinations || template.tags || template.highlights || []).length - 3}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Stats and Price */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3 text-gray-600">
+                          {template.rating && (
+                            <span className="flex items-center gap-1">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              {template.rating}
+                            </span>
+                          )}
+                          {template.salesCount && (
+                            <span className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {template.salesCount}
+                            </span>
+                          )}
+                        </div>
+                        {template.price && (
+                          <div className="font-bold text-lg text-purple-600">
+                            ${template.price}
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
