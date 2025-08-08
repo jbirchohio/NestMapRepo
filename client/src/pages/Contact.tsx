@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, MessageSquare, HelpCircle } from 'lucide-react';
-import { MainNavigationConsumer } from '@/components/MainNavigationConsumer';
-import { FooterConsumer } from '@/components/FooterConsumer';
+import MainNavigationConsumer from '@/components/MainNavigationConsumer';
+import FooterConsumer from '@/components/FooterConsumer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

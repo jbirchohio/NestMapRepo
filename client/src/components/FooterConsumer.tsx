@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'wouter';
 
-export function FooterConsumer() {
+export default function FooterConsumer() {
   return (
     <footer className="bg-gradient-to-r from-purple-50 to-pink-50 border-t border-purple-100">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -31,4 +31,3 @@ export function FooterConsumer() {
   );
 }
 
-export default FooterConsumer;

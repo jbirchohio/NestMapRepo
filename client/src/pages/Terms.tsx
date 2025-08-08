@@ -1,6 +1,6 @@
 import React from 'react';
-import { MainNavigationConsumer } from '@/components/MainNavigationConsumer';
-import { FooterConsumer } from '@/components/FooterConsumer';
+import MainNavigationConsumer from '@/components/MainNavigationConsumer';
+import FooterConsumer from '@/components/FooterConsumer';
 import { ScrollText, Scale, AlertTriangle, Ban, CreditCard, Users, Globe, Mail } from 'lucide-react';
 
 export function TermsPage() {

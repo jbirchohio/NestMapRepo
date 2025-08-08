@@ -1,6 +1,6 @@
 import React from 'react';
-import { MainNavigationConsumer } from '@/components/MainNavigationConsumer';
-import { FooterConsumer } from '@/components/FooterConsumer';
+import MainNavigationConsumer from '@/components/MainNavigationConsumer';
+import FooterConsumer from '@/components/FooterConsumer';
 import { Shield, Lock, Eye, UserCheck, Globe, Database, Mail, AlertCircle } from 'lucide-react';
 
 export function PrivacyPage() {

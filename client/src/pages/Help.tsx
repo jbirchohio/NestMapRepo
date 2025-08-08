@@ -1,6 +1,6 @@
 import React from 'react';
-import { MainNavigationConsumer } from '@/components/MainNavigationConsumer';
-import { FooterConsumer } from '@/components/FooterConsumer';
+import MainNavigationConsumer from '@/components/MainNavigationConsumer';
+import FooterConsumer from '@/components/FooterConsumer';
 import { 
   HelpCircle, Search, BookOpen, Users, CreditCard, Map, 
   Share2, ShoppingBag, Settings, Shield, ChevronDown, ChevronRight,
