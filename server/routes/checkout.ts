@@ -30,10 +30,10 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
       });
     }
 
-    const { templateId } = req.body;
+    const { template_id } = req.body;
     const userId = req.user!.id;
 
-    if (!templateId) {
+    if (!template_id) {
       return res.status(400).json({ message: 'Template ID is required' });
     }
 
@@ -44,7 +44,7 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
     }
 
     // Check if already purchased
-    const alreadyPurchased = await storage.hasUserPurchasedTemplate(userId, templateId);
+    const alreadyPurchased = await storage.hasUserPurchasedTemplate(userId, template_id);
     if (alreadyPurchased) {
       return res.status(400).json({ message: 'You have already purchased this template' });
     }
@@ -64,7 +64,7 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
         enabled: true,
       },
       metadata: {
-        templateId: templateId.toString(),
+        templateId: template_id.toString(),
         templateTitle: template.title,
         buyerId: userId.toString(),
         buyerEmail: user.email,
@@ -73,7 +73,7 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
       description: `Purchase of template: ${template.title}`,
     });
 
-    logger.info(`Payment intent created for template ${templateId} by user ${userId}`);
+    logger.info(`Payment intent created for template ${template_id} by user ${userId}`);
 
     res.json({
       clientSecret: paymentIntent.client_secret,
@@ -96,28 +96,28 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       });
     }
 
-    const { paymentIntentId, templateId } = req.body;
+    const { payment_intent_id, template_id } = req.body;
     const userId = req.user!.id;
 
-    if (!paymentIntentId || !templateId) {
+    if (!payment_intent_id || !template_id) {
       return res.status(400).json({ message: 'Payment intent ID and template ID are required' });
     }
 
     // Verify payment intent
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent_id);
     
     if (paymentIntent.status !== 'succeeded') {
       return res.status(400).json({ message: 'Payment not completed' });
     }
 
     // Verify the payment is for this template and user
-    if (paymentIntent.metadata.templateId !== templateId.toString() ||
+    if (paymentIntent.metadata.templateId !== template_id.toString() ||
         paymentIntent.metadata.buyerId !== userId.toString()) {
       return res.status(403).json({ message: 'Payment verification failed' });
     }
 
     // Get template details
-    const template = await storage.getTemplate(templateId);
+    const template = await storage.getTemplate(template_id);
     if (!template) {
       return res.status(404).json({ message: 'Template not found' });
     }
@@ -127,7 +127,7 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       .from(storage.templatePurchases)
       .where(
         storage.and(
-          storage.eq(storage.templatePurchases.stripe_payment_intent_id, paymentIntentId),
+          storage.eq(storage.templatePurchases.stripe_payment_intent_id, payment_intent_id),
           storage.eq(storage.templatePurchases.status, 'completed')
         )
       )
@@ -148,13 +148,13 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
     // Create purchase record
     const [purchase] = await storage.db.insert(storage.templatePurchases)
       .values({
-        template_id: templateId,
+        template_id: template_id,
         buyer_id: userId,
         seller_id: template.user_id,
         price: price.toFixed(2),
         platform_fee: platformFee.toFixed(2),
         seller_earnings: sellerEarnings.toFixed(2),
-        stripe_payment_intent_id: paymentIntentId,
+        stripe_payment_intent_id: payment_intent_id,
         stripe_payment_id: paymentIntent.id,
         status: 'completed',
         payout_status: 'pending',
@@ -162,7 +162,7 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       .returning();
 
     // Update template sales count
-    await storage.incrementTemplateSales(templateId);
+    await storage.incrementTemplateSales(template_id);
 
     // Update creator's total sales
     await storage.db.update(storage.users)
@@ -173,9 +173,9 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
 
     // Copy template to user's trips
     const { templateCopyService } = await import('../services/templateCopyService');
-    const newTripId = await templateCopyService.copyTemplateToTrip(templateId, userId);
+    const newTripId = await templateCopyService.copyTemplateToTrip(template_id, userId);
 
-    logger.info(`Template ${templateId} purchased by user ${userId}, copied to trip ${newTripId}`);
+    logger.info(`Template ${template_id} purchased by user ${userId}, copied to trip ${newTripId}`);
 
     res.json({
       message: 'Purchase completed successfully',

@@ -71,7 +71,7 @@ router.get('/corporate', async (req: Request, res: Response) => {
       })
     );
 
-    logger.info(`Found ${trips.length} trips for organization ${orgId}`);
+    logger.info(`Found ${trips.length} trips for user ${userId}`);
     res.json(tripsWithUserDetails);
   } catch (error) {
     logger.error('Error fetching corporate trips:', error);
@@ -384,8 +384,8 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    // Verify user owns this trip
+    if (trip.user_id !== req.user?.id) {
       return res.status(403).json({ message: "Access denied: Cannot export this trip" });
     }
 
@@ -430,8 +430,8 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    // Verify user owns this trip
+    if (trip.user_id !== req.user?.id) {
       return res.status(403).json({ message: "Access denied: Cannot generate proposal for this trip" });
     }
 
@@ -510,8 +510,8 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    // Verify user owns this trip
+    if (trip.user_id !== req.user?.id) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
 
