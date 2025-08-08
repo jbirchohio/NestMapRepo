@@ -69,24 +69,7 @@ export default function NewTripModalConsumer({
 
   // Check if user can create trip when modal opens
   useEffect(() => {
-    const checkTripLimit = async () => {
-      if (isOpen && user) {
-        try {
-          const response = await fetch('/api/subscription/can-use/create_trip', {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
-          const data = await response.json();
-          if (!data.canUse) {
-            setShowUpgrade(true);
-          }
-        } catch (error) {
-          console.error('Failed to check trip limit:', error);
-        }
-      }
-    };
-    checkTripLimit();
+    // Subscription checks removed - all users can create unlimited trips
   }, [isOpen, user]);
 
   const {
@@ -163,31 +146,6 @@ export default function NewTripModalConsumer({
     setIsLoading(true);
     
     try {
-      // Check trip limit before submission
-      const checkResponse = await fetch('/api/subscription/can-use/create_trip', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      const canCreate = await checkResponse.json();
-      if (!canCreate.canUse) {
-        setShowUpgrade(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // Track trip creation for usage limits
-      await fetch('/api/subscription/track-usage', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          feature: 'trip_created',
-          count: 1
-        })
-      });
       // If no coordinates yet, try to geocode the city
       if (!data.cityLatitude || !data.cityLongitude) {
         try {
@@ -245,18 +203,6 @@ export default function NewTripModalConsumer({
 
   if (!isOpen) return null;
 
-  // Show upgrade modal if limit reached
-  if (showUpgrade) {
-    return (
-      <PremiumUpgrade 
-        feature="create_trip" 
-        onClose={() => {
-          setShowUpgrade(false);
-          onClose();
-        }}
-      />
-    );
-  }
 
   return (
     <AnimatePresence>
