@@ -180,6 +180,9 @@ export default function NewTripModalConsumer({
       }
 
       const newTrip = await response.json();
+      console.log('New trip created - full response:', newTrip);
+      console.log('Trip ID:', newTrip.id);
+      console.log('Trip ID type:', typeof newTrip.id);
       
       toast({
         title: "Trip created! ✈️",

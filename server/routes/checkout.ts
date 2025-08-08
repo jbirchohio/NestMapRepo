@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/jwtAuth';
 import { logger } from '../utils/logger';
 import { storage } from '../storage';
+import { db } from '../db-connection';
+import { users, templatePurchases } from '@shared/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
 
 const router = Router();
@@ -50,9 +53,9 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
     }
 
     // Get user details for receipt
-    const [user] = await storage.db.select()
-      .from(storage.users)
-      .where(storage.eq(storage.users.id, userId));
+    const [user] = await db.select()
+      .from(users)
+      .where(eq(users.id, userId));
 
     // Create payment intent
     const amount = Math.round(parseFloat(template.price || '0') * 100); // Convert to cents
@@ -123,12 +126,12 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
     }
 
     // Check if already processed
-    const existingPurchase = await storage.db.select()
-      .from(storage.templatePurchases)
+    const existingPurchase = await db.select()
+      .from(templatePurchases)
       .where(
-        storage.and(
-          storage.eq(storage.templatePurchases.stripe_payment_intent_id, payment_intent_id),
-          storage.eq(storage.templatePurchases.status, 'completed')
+        and(
+          eq(templatePurchases.stripe_payment_intent_id, payment_intent_id),
+          eq(templatePurchases.status, 'completed')
         )
       )
       .limit(1);
@@ -146,7 +149,7 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
     const sellerEarnings = price - platformFee;
 
     // Create purchase record
-    const [purchase] = await storage.db.insert(storage.templatePurchases)
+    const [purchase] = await db.insert(templatePurchases)
       .values({
         template_id: template_id,
         buyer_id: userId,
@@ -165,11 +168,11 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
     await storage.incrementTemplateSales(template_id);
 
     // Update creator's total sales
-    await storage.db.update(storage.users)
+    await db.update(users)
       .set({
-        total_template_sales: storage.sql`COALESCE(total_template_sales, 0) + 1`,
+        total_template_sales: sql`COALESCE(total_template_sales, 0) + 1`,
       })
-      .where(storage.eq(storage.users.id, template.user_id));
+      .where(eq(users.id, template.user_id));
 
     // Copy template to user's trips
     const { templateCopyService } = await import('../services/templateCopyService');

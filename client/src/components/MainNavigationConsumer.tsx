@@ -249,8 +249,9 @@ export default function MainNavigationConsumer() {
           isOpen={showNewTripModal}
           onClose={() => setShowNewTripModal(false)}
           onTripCreated={(trip) => {
+            console.log('MainNav - Trip created:', trip);
             setShowNewTripModal(false);
-            setLocation(`/trip/${trip.id || trip}`);
+            setLocation(`/trip/${trip.id}`);
           }}
         />
       )}

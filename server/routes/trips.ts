@@ -296,6 +296,7 @@ router.post("/", async (req: Request, res: Response) => {
       cityLat: trip.city_latitude,
       cityLng: trip.city_longitude
     });
+    console.log('Returning trip object:', trip);
     res.status(201).json(trip);
   } catch (error) {
     if (error instanceof z.ZodError) {

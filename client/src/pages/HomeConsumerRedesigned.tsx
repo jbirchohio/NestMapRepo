@@ -229,6 +229,7 @@ export default function HomeConsumerRedesigned() {
   };
 
   const handleTripCreated = (trip: any) => {
+    console.log('HomeConsumer - Trip created:', trip);
     setIsNewTripModalOpen(false);
     setLocation(`/trip/${trip.id}`);
   };

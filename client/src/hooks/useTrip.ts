@@ -5,6 +5,16 @@ import { ClientTrip } from "@/lib/types";
 import { Todo, Note } from "@shared/schema";
 
 export default function useTrip(tripId: string | number) {
+  // Ensure tripId is a string or number, not an object
+  const validTripId = typeof tripId === 'object' ? (tripId as any)?.id || String(tripId) : tripId;
+  
+  if (tripId !== validTripId) {
+    console.warn('useTrip: tripId was an object, extracted ID:', validTripId, 'from:', tripId);
+  }
+  
+  // Use validTripId for all operations
+  tripId = validTripId;
+  
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
     if (typeof window === "undefined") return null;
