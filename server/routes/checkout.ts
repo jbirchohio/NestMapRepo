@@ -38,7 +38,7 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
     }
 
     // Get template details
-    const template = await storage.getTemplate(templateId);
+    const template = await storage.getTemplate(template_id);
     if (!template || template.status !== 'published') {
       return res.status(404).json({ message: 'Template not found or not available' });
     }
