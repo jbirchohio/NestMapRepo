@@ -13,7 +13,7 @@ import { Loader2, CreditCard, Lock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Initialize Stripe with public key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
 interface StripeCheckoutProps {
   templateId: number;
