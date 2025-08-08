@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 import AuthModalSimple from '@/components/auth/AuthModalSimple';
 import ShareModalSimple from '@/components/ShareModalSimple';
 import StripeCheckout from '@/components/StripeCheckout';
+import ReuseTemplateDialog from '@/components/ReuseTemplateDialog';
 
 export default function TemplateDetails() {
   const { slug } = useParams();
@@ -31,6 +32,7 @@ export default function TemplateDetails() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showReuseDialog, setShowReuseDialog] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
 
   // Fetch template details
@@ -57,8 +59,15 @@ export default function TemplateDetails() {
     
     if (!template) return;
     
-    // Open Stripe payment dialog
-    setShowPaymentDialog(true);
+    // If user already owns this template, show reuse dialog
+    // Otherwise show Stripe payment dialog
+    if (template.hasPurchased) {
+      // For owned templates, show the reuse dialog with date selection
+      setShowReuseDialog(true);
+    } else {
+      // New purchase - show full payment dialog
+      setShowPaymentDialog(true);
+    }
   };
 
   // Handle successful payment
@@ -317,14 +326,29 @@ export default function TemplateDetails() {
                 </div>
 
                 {template.hasPurchased ? (
-                  <Button 
-                    className="w-full mb-4" 
-                    size="lg"
-                    onClick={() => navigate('/trips')}
-                  >
-                    <Check className="h-5 w-5 mr-2" />
-                    View in My Trips
-                  </Button>
+                  <div className="space-y-3">
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={handlePurchaseClick}
+                      variant="default"
+                    >
+                      <RefreshCw className="h-5 w-5 mr-2" />
+                      Use Template Again
+                    </Button>
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => navigate('/trips')}
+                      variant="outline"
+                    >
+                      <Check className="h-5 w-5 mr-2" />
+                      View My Trips
+                    </Button>
+                    <p className="text-sm text-center text-gray-600">
+                      You own this template and can use it unlimited times
+                    </p>
+                  </div>
                 ) : (
                   <Button 
                     className="w-full mb-4" 
@@ -505,6 +529,7 @@ export default function TemplateDetails() {
             <StripeCheckout
               templateId={template.id}
               templateTitle={template.title}
+              templateDuration={template.duration || 7}
               price={parseFloat(template.price || '0')}
               currency={template.currency || 'USD'}
               onSuccess={handlePaymentSuccess}
@@ -512,6 +537,16 @@ export default function TemplateDetails() {
             />
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Reuse Template Dialog (for already purchased templates) */}
+      {showReuseDialog && template && (
+        <ReuseTemplateDialog
+          template={template}
+          isOpen={showReuseDialog}
+          onClose={() => setShowReuseDialog(false)}
+          onSuccess={handlePaymentSuccess}
+        />
       )}
     </div>
   );

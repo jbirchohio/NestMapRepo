@@ -34,7 +34,7 @@ const quickOptions: QuickOption[] = [
   { emoji: "🎭", text: "Fun", search: "entertainment activities", time: "7:30 PM" },
 ];
 
-export default function ActivityModalSmart({ onClose, onSave, date, tripId }: any) {
+export default function ActivityModalSmart({ onClose, onSave, date, tripId, activity }: any) {
   const [selectedCategory, setSelectedCategory] = useState<QuickOption | null>(null);
   const [suggestedPlaces, setSuggestedPlaces] = useState<SuggestedPlace[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,6 +44,27 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId }: an
   const [showBooking, setShowBooking] = useState(false);
   const [bookableItems, setBookableItems] = useState<any[]>([]);
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
+  
+  // Edit mode state
+  const isEditMode = !!activity;
+  const [editFormData, setEditFormData] = useState(() => ({
+    title: activity?.title || '',
+    time: activity?.time || '',
+    locationName: activity?.locationName || '',
+    notes: activity?.notes || ''
+  }));
+  
+  // Update form data when activity changes
+  useEffect(() => {
+    if (activity) {
+      setEditFormData({
+        title: activity.title || '',
+        time: activity.time || '',
+        locationName: activity.locationName || '',
+        notes: activity.notes || ''
+      });
+    }
+  }, [activity]);
 
   // Search for places when category is selected
   useEffect(() => {
@@ -195,12 +216,36 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId }: an
     }
   };
 
+  // Handle edit form submission
+  const handleEditSubmit = () => {
+    // Validate required fields
+    if (!editFormData.title.trim()) {
+      alert('Please enter an activity title');
+      return;
+    }
+    if (!editFormData.time) {
+      alert('Please enter a time');
+      return;
+    }
+    if (!editFormData.locationName.trim()) {
+      alert('Please enter a location');
+      return;
+    }
+    
+    const updatedActivity = {
+      ...editFormData,
+      date: date || new Date(activity.date),
+      tripId
+    };
+    onSave(updatedActivity);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
       <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg animate-slide-up max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-          <h2 className="text-lg font-semibold">What's next?</h2>
+          <h2 className="text-lg font-semibold">{isEditMode ? 'Edit Activity' : 'What\'s next?'}</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full"
@@ -211,8 +256,72 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId }: an
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Step 1: Choose activity type */}
-          {!selectedCategory && !customSearch && (
+          {/* Edit Mode Form */}
+          {isEditMode ? (
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Title</label>
+                <input
+                  type="text"
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Activity name"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Time</label>
+                <input
+                  type="time"
+                  value={editFormData.time}
+                  onChange={(e) => setEditFormData({...editFormData, time: e.target.value})}
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Location</label>
+                <input
+                  type="text"
+                  value={editFormData.locationName}
+                  onChange={(e) => setEditFormData({...editFormData, locationName: e.target.value})}
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Where is this activity?"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Notes (optional)</label>
+                <textarea
+                  value={editFormData.notes}
+                  onChange={(e) => setEditFormData({...editFormData, notes: e.target.value})}
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="Any additional details..."
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={handleEditSubmit}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                >
+                  Save Changes
+                </Button>
+                <Button
+                  onClick={onClose}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Step 1: Choose activity type */}
+              {!selectedCategory && !customSearch && (
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
@@ -338,10 +447,12 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId }: an
               )}
             </div>
           )}
+            </>
+          )}
         </div>
 
-        {/* Footer */}
-        {selectedPlace && (
+        {/* Footer - only show for new activities */}
+        {!isEditMode && selectedPlace && (
           <div className="p-4 border-t bg-gray-50 flex-shrink-0">
             <Button
               onClick={handleSave}

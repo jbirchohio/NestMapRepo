@@ -587,13 +587,13 @@ router.get('/destinations', async (req, res) => {
 // Manual purchase recording for failed transactions
 router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { templateId, userId: targetUserId } = req.body;
+    const { template_id, user_id: targetUserId } = req.body;
     
     // Use provided userId or the current user
     const buyerId = targetUserId || req.user!.id;
     
     // Get template
-    const template = await storage.getTemplate(templateId);
+    const template = await storage.getTemplate(template_id);
     if (!template) {
       return res.status(404).json({ message: 'Template not found' });
     }
@@ -603,7 +603,7 @@ router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
       .from(templatePurchases)
       .where(
         and(
-          eq(templatePurchases.template_id, templateId),
+          eq(templatePurchases.template_id, template_id),
           eq(templatePurchases.buyer_id, buyerId)
         )
       )
@@ -612,7 +612,7 @@ router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
     if (existing.length > 0) {
       // If purchase exists but user doesn't have the trip, just copy it
       const { templateCopyService } = await import('../services/templateCopyService');
-      const newTripId = await templateCopyService.copyTemplateToTrip(templateId, buyerId);
+      const newTripId = await templateCopyService.copyTemplateToTrip(template_id, buyerId);
       
       return res.json({
         message: 'Purchase already recorded, created new trip copy',
@@ -628,7 +628,7 @@ router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
     
     const [purchase] = await db.insert(templatePurchases)
       .values({
-        template_id: templateId,
+        template_id: template_id,
         buyer_id: buyerId,
         seller_id: template.user_id,
         price: price.toFixed(2),
@@ -644,13 +644,13 @@ router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
     // Update template sales
     await db.update(templates)
       .set({ sales_count: sql`COALESCE(sales_count, 0) + 1` })
-      .where(eq(templates.id, templateId));
+      .where(eq(templates.id, template_id));
       
     // Copy template to trips
     const { templateCopyService } = await import('../services/templateCopyService');
-    const newTripId = await templateCopyService.copyTemplateToTrip(templateId, buyerId);
+    const newTripId = await templateCopyService.copyTemplateToTrip(template_id, buyerId);
     
-    logger.info(`Manual purchase recorded for template ${templateId} by user ${buyerId}`);
+    logger.info(`Manual purchase recorded for template ${template_id} by user ${buyerId}`);
     
     res.json({
       message: 'Purchase recorded successfully',

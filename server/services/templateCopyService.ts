@@ -2,6 +2,7 @@ import { storage } from '../storage';
 import { logger } from '../utils/logger';
 import { nanoid } from 'nanoid';
 import { geocodingService } from './geocodingService';
+import crypto from 'crypto';
 
 /**
  * Service to copy a purchased template to user's trips
@@ -9,8 +10,17 @@ import { geocodingService } from './geocodingService';
 export class TemplateCopyService {
   /**
    * Copy a template to create a new trip for the user
+   * @param templateId - The template to copy
+   * @param userId - The user who will own the new trip
+   * @param startDate - Optional custom start date (defaults to today)
+   * @param endDate - Optional custom end date (defaults to startDate + template duration)
    */
-  async copyTemplateToTrip(templateId: number, userId: number): Promise<number> {
+  async copyTemplateToTrip(
+    templateId: number, 
+    userId: number,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<number> {
     try {
       // Get the template
       const template = await storage.getTemplate(templateId);
@@ -29,17 +39,21 @@ export class TemplateCopyService {
         throw new Error('Template has no trip data');
       }
 
-      // Create the new trip with placeholder dates
-      // User will need to update these to their actual travel dates
-      const today = new Date();
+      // Use provided dates or create default dates
+      const tripStartDate = startDate || new Date();
       const defaultDuration = template.duration || 7;
-      const endDate = new Date(today);
-      endDate.setDate(today.getDate() + defaultDuration - 1);
+      
+      // Calculate end date if not provided
+      let tripEndDate = endDate;
+      if (!tripEndDate) {
+        tripEndDate = new Date(tripStartDate);
+        tripEndDate.setDate(tripStartDate.getDate() + defaultDuration - 1);
+      }
       
       const newTrip = await storage.createTrip({
         title: tripData.title || template.title,
-        start_date: today,
-        end_date: endDate,
+        start_date: tripStartDate,
+        end_date: tripEndDate,
         user_id: userId,
         city: tripData.city,
         country: tripData.country,
@@ -52,12 +66,18 @@ export class TemplateCopyService {
         is_public: false,
         sharing_enabled: false,
         trip_type: 'personal',
-        // Add metadata about source template
+        // Add metadata about source template (for anti-piracy tracking)
         collaborators: [{
           source: 'template',
           templateId: templateId,
           templateTitle: template.title,
-          copiedAt: new Date().toISOString()
+          templateSellerId: template.user_id,
+          purchaserId: userId,
+          copiedAt: new Date().toISOString(),
+          // Add a unique watermark for tracking
+          watermark: `${templateId}-${userId}-${Date.now()}`,
+          // Hash of the original template content for verification
+          contentHash: this.generateContentHash(template)
         }]
       });
 
@@ -65,19 +85,19 @@ export class TemplateCopyService {
       // Handle both formats: new format (days array) and old format (flat activities array)
       if (tripData.days && Array.isArray(tripData.days)) {
         // New format: structured by days
-        const startDate = new Date(newTrip.start_date);
+        const actualStartDate = new Date(newTrip.start_date);
         
         for (const day of tripData.days) {
           if (!day.activities || !Array.isArray(day.activities)) continue;
           
           // Validate day number
           const dayNumber = parseInt(day.day) || 1;
-          const activityDate = new Date(startDate);
-          activityDate.setDate(startDate.getDate() + (dayNumber - 1));
+          const activityDate = new Date(actualStartDate);
+          activityDate.setDate(actualStartDate.getDate() + (dayNumber - 1));
           
           // Validate the date is valid
           if (isNaN(activityDate.getTime())) {
-            logger.error(`Invalid date calculated for day ${day.day}:`, { startDate, dayNumber });
+            logger.error(`Invalid date calculated for day ${day.day}:`, { actualStartDate, dayNumber });
             continue;
           }
           
@@ -126,18 +146,18 @@ export class TemplateCopyService {
         }
       } else if (tripData.activities && Array.isArray(tripData.activities)) {
         // Old format: flat activities array (for backwards compatibility)
-        const startDate = new Date(newTrip.start_date);
+        const actualStartDate = new Date(newTrip.start_date);
         
         for (const activity of tripData.activities) {
           if (!activity || !activity.title) continue;
           
           // Use the activity's date if available, otherwise calculate from day number
-          let activityDate = new Date(startDate);
+          let activityDate = new Date(actualStartDate);
           if (activity.date) {
             activityDate = new Date(activity.date);
           } else if (activity.day) {
             const dayNumber = parseInt(activity.day) || 1;
-            activityDate.setDate(startDate.getDate() + (dayNumber - 1));
+            activityDate.setDate(actualStartDate.getDate() + (dayNumber - 1));
           }
           
           // Validate the date is valid
@@ -192,6 +212,21 @@ export class TemplateCopyService {
       logger.error('Error copying template to trip:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate a content hash for anti-piracy tracking
+   */
+  private generateContentHash(template: any): string {
+    const content = {
+      title: template.title,
+      duration: template.duration,
+      tripData: template.trip_data
+    };
+    
+    const hash = crypto.createHash('sha256');
+    hash.update(JSON.stringify(content));
+    return hash.digest('hex').substring(0, 16); // Use first 16 chars for brevity
   }
 
   /**

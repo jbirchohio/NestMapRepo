@@ -33,11 +33,12 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
       });
     }
 
-    const { template_id } = req.body;
+    const { template_id, start_date, end_date } = req.body;
     const userId = req.user!.id;
 
     console.log('Create payment intent - template_id from request:', template_id, 'type:', typeof template_id);
     console.log('User ID:', userId);
+    console.log('Travel dates:', start_date, 'to', end_date);
 
     if (!template_id) {
       return res.status(400).json({ message: 'Template ID is required' });
@@ -116,10 +117,11 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       });
     }
 
-    const { payment_intent_id, template_id } = req.body;
+    const { payment_intent_id, template_id, start_date, end_date } = req.body;
     const userId = req.user!.id;
     
     console.log('Confirm purchase - template_id:', template_id, 'payment_intent_id:', payment_intent_id, 'userId:', userId);
+    console.log('Travel dates:', start_date, 'to', end_date);
 
     if (!payment_intent_id || !template_id) {
       return res.status(400).json({ message: 'Payment intent ID and template ID are required' });
@@ -195,9 +197,14 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       })
       .where(eq(users.id, template.user_id));
 
-    // Copy template to user's trips
+    // Copy template to user's trips with the selected dates
     const { templateCopyService } = await import('../services/templateCopyService');
-    const newTripId = await templateCopyService.copyTemplateToTrip(template_id, userId);
+    const newTripId = await templateCopyService.copyTemplateToTrip(
+      template_id, 
+      userId,
+      start_date ? new Date(start_date) : undefined,
+      end_date ? new Date(end_date) : undefined
+    );
 
     logger.info(`Template ${template_id} purchased by user ${userId}, copied to trip ${newTripId}`);
 

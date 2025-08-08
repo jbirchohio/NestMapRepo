@@ -51,7 +51,7 @@ export default function ActivityModalConsumer({
         ...data,
         ...locationData,
         tripId,
-        order: activity?.order || 0,
+        order: 0,  // New activities don't have an order yet
       };
       
       const guestTripsData = localStorage.getItem("remvana_guest_trips");
@@ -101,7 +101,7 @@ export default function ActivityModalConsumer({
         const updatedActivity = {
           ...activity,
           ...data,
-          date: data.date.toISOString(),
+          date: typeof data.date === 'string' ? data.date : data.date.toISOString(),
         };
         
         const existingActivities: ClientActivity[] = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
@@ -112,11 +112,18 @@ export default function ActivityModalConsumer({
         return updatedActivity;
       }
       
-      return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
-        ...data,
+      // Ensure we send the proper data structure for update
+      const updateData = {
+        title: data.title,
+        time: data.time,
+        locationName: data.locationName,
+        notes: data.notes,
+        date: data.date,
         tripId,
         order: activity.order,
-      });
+      };
+      
+      return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
@@ -144,32 +151,14 @@ export default function ActivityModalConsumer({
     }
   };
 
-  // For editing, we'll need to add edit support to ActivityModalEasy
-  // For now, just use the simple modal for new activities
-  if (activity) {
-    // TODO: Add edit mode to ActivityModalEasy
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="bg-white rounded-lg p-6 max-w-md w-full">
-          <h2 className="text-xl font-bold mb-4">Edit Activity</h2>
-          <p className="text-gray-600">Edit mode coming soon!</p>
-          <button
-            onClick={onClose}
-            className="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // Pass activity to ActivityModalSmart for both create and edit modes
   return (
     <ActivityModalSmart
       onClose={onClose}
       onSave={handleSave}
       date={date}
       tripId={tripId}
+      activity={activity}  // Pass the activity for edit mode
     />
   );
 }

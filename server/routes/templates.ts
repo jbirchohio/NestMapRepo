@@ -355,6 +355,38 @@ router.post('/from-trip/:tripId', requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Trip not found or access denied' });
     }
     
+    // Enhanced anti-piracy check using multiple detection methods
+    const { antiPiracyService } = await import('../services/antiPiracyService');
+    const piracyCheck = await antiPiracyService.detectPiratedContent(parseInt(tripId), userId);
+    
+    if (piracyCheck.isPirated) {
+      logger.warn(`Anti-piracy blocked: User ${userId} attempted to create template from trip ${tripId}. Reason: ${piracyCheck.reason}. Confidence: ${piracyCheck.confidence}%`);
+      
+      // Different messages based on confidence level
+      if (piracyCheck.confidence >= 90) {
+        return res.status(403).json({ 
+          message: 'This trip contains content from a purchased template and cannot be resold. Please create original content for your templates.' 
+        });
+      } else if (piracyCheck.confidence >= 70) {
+        return res.status(403).json({ 
+          message: 'This trip appears to be based on purchased content. Templates must contain original itineraries.' 
+        });
+      } else {
+        return res.status(403).json({ 
+          message: 'This trip may contain copyrighted content. Please ensure your templates are original creations.' 
+        });
+      }
+    }
+    
+    // Also check for duplicate content against ALL published templates
+    const duplicateCheck = await antiPiracyService.checkForDuplicateContent(parseInt(tripId), userId);
+    if (duplicateCheck.isDuplicate) {
+      logger.warn(`Duplicate content: User ${userId} trip ${tripId} is ${(duplicateCheck.similarity! * 100).toFixed(1)}% similar to template ${duplicateCheck.similarTemplateId}`);
+      return res.status(403).json({ 
+        message: 'This itinerary is too similar to an existing template. Please create unique content to differentiate your offering.' 
+      });
+    }
+    
     // Get trip activities
     const activities = await storage.getActivitiesByTripId(parseInt(tripId));
     
@@ -811,6 +843,74 @@ router.post('/:id/share', async (req, res) => {
   } catch (error) {
     logger.error('Error tracking share:', error);
     res.status(500).json({ message: 'Failed to track share' });
+  }
+});
+
+// POST /api/templates/reuse - Create a new trip from an owned template
+router.post('/reuse', requireAuth, async (req, res) => {
+  try {
+    const { template_id, start_date, end_date } = req.body;
+    const userId = req.user!.id;
+
+    logger.info(`User ${userId} attempting to reuse template ${template_id}`);
+
+    if (!template_id || !start_date || !end_date) {
+      return res.status(400).json({ 
+        message: 'Template ID and travel dates are required' 
+      });
+    }
+    
+    // Validate dates
+    const startDateObj = new Date(start_date);
+    const endDateObj = new Date(end_date);
+    
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return res.status(400).json({ 
+        message: 'Invalid date format provided' 
+      });
+    }
+    
+    if (startDateObj >= endDateObj) {
+      return res.status(400).json({ 
+        message: 'End date must be after start date' 
+      });
+    }
+
+    // Verify user has purchased the template
+    const hasPurchased = await storage.hasUserPurchasedTemplate(userId, template_id);
+    
+    // Get template details
+    const template = await storage.getTemplate(template_id);
+    if (!template) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+
+    // Check if user owns the template (either purchased or it's free)
+    if (!hasPurchased && template.price !== '0') {
+      logger.warn(`User ${userId} attempted to reuse unpurchased template ${template_id}`);
+      return res.status(403).json({ 
+        message: 'You must purchase this template before using it' 
+      });
+    }
+
+    // Copy template to user's trips with the selected dates
+    const { templateCopyService } = await import('../services/templateCopyService');
+    const newTripId = await templateCopyService.copyTemplateToTrip(
+      template_id, 
+      userId,
+      startDateObj,
+      endDateObj
+    );
+
+    logger.info(`Template ${template_id} reused by user ${userId}, created trip ${newTripId}`);
+
+    res.json({
+      message: 'Trip created successfully from template',
+      tripId: newTripId,
+    });
+  } catch (error) {
+    logger.error('Error reusing template:', error);
+    res.status(500).json({ message: 'Failed to create trip from template' });
   }
 });
 
