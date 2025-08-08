@@ -1,6 +1,6 @@
 import { db } from "../db-connection";
 import { templates, users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { logger } from "../utils/logger";
 
 interface QualityCheckResult {

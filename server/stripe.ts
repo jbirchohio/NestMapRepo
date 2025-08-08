@@ -92,6 +92,7 @@ export async function createRefund(paymentIntentId: string, amount?: number, rea
 }
 
 export async function getCustomerInvoices(customerId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   return await stripe.invoices.list({
     customer: customerId,
     limit: 10,
@@ -99,6 +100,7 @@ export async function getCustomerInvoices(customerId: string) {
 }
 
 export async function getSubscriptionDetails(subscriptionId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   return await stripe.subscriptions.retrieve(subscriptionId, {
     expand: ['latest_invoice.payment_intent'],
   });
@@ -119,6 +121,7 @@ export async function createCardholder(params: {
     };
   };
 }) {
+  if (!stripe) throw new Error('Stripe is not configured');
   try {
     return await stripe.issuing.cardholders.create({
       type: 'individual',
@@ -147,6 +150,7 @@ export async function createCorporateCard(params: {
   };
   metadata?: Record<string, string>;
 }) {
+  if (!stripe) throw new Error('Stripe is not configured');
   try {
     return await stripe.issuing.cards.create({
       cardholder: params.cardholder,
@@ -224,6 +228,7 @@ export async function createTransaction(params: {
 }
 
 export async function getCardBalance(cardId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   try {
     const card = await stripe.issuing.cards.retrieve(cardId);
     return {
@@ -238,6 +243,7 @@ export async function getCardBalance(cardId: string) {
 }
 
 export async function addFundsToCard(cardId: string, amount: number) {
+  if (!stripe) throw new Error('Stripe is not configured');
   try {
     // Update card spending limits to add funds
     const card = await stripe.issuing.cards.retrieve(cardId);
@@ -261,6 +267,7 @@ export async function addFundsToCard(cardId: string, amount: number) {
 }
 
 export async function freezeCard(cardId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   try {
     return await stripe.issuing.cards.update(cardId, {
       status: 'inactive',
@@ -272,6 +279,7 @@ export async function freezeCard(cardId: string) {
 }
 
 export async function unfreezeCard(cardId: string) {
+  if (!stripe) throw new Error('Stripe is not configured');
   try {
     return await stripe.issuing.cards.update(cardId, {
       status: 'active',
