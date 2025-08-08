@@ -14,6 +14,14 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<any> {
   try {
+    // Check for bad URLs containing [object Object]
+    if (url.includes('[object Object]')) {
+      console.error('ERROR: Attempting to make request with [object Object] in URL!');
+      console.error('URL:', url);
+      console.error('Stack trace:', new Error().stack);
+      throw new Error('Invalid URL: contains [object Object]');
+    }
+    
     // Get JWT token
     const token = jwtAuth.getToken();
 

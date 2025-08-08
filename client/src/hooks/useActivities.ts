@@ -5,19 +5,28 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientActivity, ClientTrip } from "@/lib/types";
 
 export default function useActivities(tripId: string | number) {
-  console.log('useActivities - Received tripId:', tripId, 'type:', typeof tripId);
-  
-  // Ensure tripId is a string or number, not an object
-  const validTripId = typeof tripId === 'object' ? (tripId as any)?.id || String(tripId) : tripId;
-  
-  if (tripId !== validTripId) {
-    console.warn('useActivities: tripId was an object, extracted ID:', validTripId, 'from:', tripId);
+  // Safeguard against objects being passed as tripId
+  if (typeof tripId === 'object') {
+    console.error('useActivities: tripId is an object! This should never happen.', tripId);
+    console.error('Stack trace:', new Error().stack);
+    // Try to extract the ID if possible
+    const extractedId = (tripId as any)?.id;
+    if (extractedId && (typeof extractedId === 'string' || typeof extractedId === 'number')) {
+      tripId = extractedId;
+      console.warn('useActivities: Extracted ID from object:', tripId);
+    } else {
+      // If we can't extract a valid ID, return early to avoid making bad API calls
+      console.error('useActivities: Could not extract valid ID from object, using empty string');
+      tripId = '';
+    }
   }
   
-  // Use validTripId for all operations
-  tripId = validTripId;
-  
-  console.log('useActivities - Using tripId:', tripId, 'type:', typeof tripId);
+  // Additional check for '[object Object]' string
+  if (tripId === '[object Object]') {
+    console.error('useActivities: tripId is the string "[object Object]"! This indicates an object was stringified.');
+    console.error('Stack trace:', new Error().stack);
+    tripId = '';
+  }
   
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
@@ -58,10 +67,7 @@ export default function useActivities(tripId: string | number) {
         return [];
       }
       
-      console.log('useActivities - Fetching activities for tripId:', tripId, 'type:', typeof tripId);
-      const activitiesUrl = `${API_ENDPOINTS.TRIPS}/${tripId}/activities`;
-      console.log('useActivities - Activities URL:', activitiesUrl);
-      const res = await apiRequest("GET", activitiesUrl);
+      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/activities`);
       const activitiesData = res; // apiRequest already parses JSON
       
       // Process activities to add travel time information

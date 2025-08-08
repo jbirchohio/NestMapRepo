@@ -5,20 +5,28 @@ import { ClientTrip } from "@/lib/types";
 import { Todo, Note } from "@shared/schema";
 
 export default function useTrip(tripId: string | number) {
-  console.log('useTrip - Received tripId:', tripId, 'type:', typeof tripId);
-  
-  // Ensure tripId is a string or number, not an object
-  const validTripId = typeof tripId === 'object' ? (tripId as any)?.id || String(tripId) : tripId;
-  
-  if (tripId !== validTripId) {
-    console.error('useTrip: tripId was an object! Stack trace:', new Error().stack);
-    console.warn('useTrip: tripId was an object, extracted ID:', validTripId, 'from:', tripId);
+  // Safeguard against objects being passed as tripId
+  if (typeof tripId === 'object') {
+    console.error('useTrip: tripId is an object! This should never happen.', tripId);
+    console.error('Stack trace:', new Error().stack);
+    // Try to extract the ID if possible
+    const extractedId = (tripId as any)?.id;
+    if (extractedId && (typeof extractedId === 'string' || typeof extractedId === 'number')) {
+      tripId = extractedId;
+      console.warn('useTrip: Extracted ID from object:', tripId);
+    } else {
+      // If we can't extract a valid ID, return early to avoid making bad API calls
+      console.error('useTrip: Could not extract valid ID from object, using empty string');
+      tripId = '';
+    }
   }
   
-  // Use validTripId for all operations
-  tripId = validTripId;
-  
-  console.log('useTrip - Using tripId:', tripId, 'type:', typeof tripId);
+  // Additional check for '[object Object]' string
+  if (tripId === '[object Object]') {
+    console.error('useTrip: tripId is the string "[object Object]"! This indicates an object was stringified.');
+    console.error('Stack trace:', new Error().stack);
+    tripId = '';
+  }
   
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
@@ -78,10 +86,7 @@ export default function useTrip(tripId: string | number) {
         return [];
       }
       
-      console.log('useTrip - Fetching todos for tripId:', tripId, 'type:', typeof tripId);
-      const todosUrl = `${API_ENDPOINTS.TRIPS}/${tripId}/todos`;
-      console.log('useTrip - Todos URL:', todosUrl);
-      const res = await apiRequest("GET", todosUrl, undefined);
+      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/todos`, undefined);
       return res; // apiRequest already parses JSON
     },
     enabled: !!tripId,
