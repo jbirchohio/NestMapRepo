@@ -4,7 +4,6 @@ import { insertTripSchema } from '@shared/schema';
 import { jwtAuthMiddleware } from '../middleware/jwtAuth';
 // Organization scoping removed for consumer app
 import { fieldTransformMiddleware } from '../middleware/fieldTransform';
-import { enforceTripLimit } from '../middleware/subscription-limits';
 import { storage } from '../storage';
 import { generatePdfBuffer } from '../utils/pdfHelper';
 import { db } from '../db-connection';
@@ -263,7 +262,7 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Create new trip with organization context and subscription limits
-router.post("/", enforceTripLimit(), async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   try {
     console.log('Trip POST request:', {
       body: req.body,
@@ -279,8 +278,7 @@ router.post("/", enforceTripLimit(), async (req: Request, res: Response) => {
     try {
       tripData = insertTripSchema.parse({
         ...req.body,
-        user_id: req.user?.id,
-        organization_id: req.user?.organization_id
+        user_id: req.user?.id
       });
       
       console.log('Parsed trip data to save:', {

@@ -93,7 +93,7 @@ export class TemplateCopyService {
             await storage.createActivity({
               trip_id: newTrip.id,
               title: activity.title,
-              date: activityDate,
+              date: activityDate.toISOString().split('T')[0],
               time: activity.time || null,
               location_name: locationName,
               latitude,
@@ -142,7 +142,7 @@ export class TemplateCopyService {
           await storage.createActivity({
             trip_id: newTrip.id,
             title: activity.title,
-            date: activityDate,
+            date: activityDate.toISOString().split('T')[0],
             time: activity.time || null,
             location_name: locationName,
             latitude,
@@ -192,7 +192,7 @@ export class TemplateCopyService {
         await storage.createActivity({
           trip_id: tripId,
           title: activity.title,
-          date: activityDate,
+          date: activityDate.toISOString().split('T')[0],
           time: activity.time,
           location_name: activity.locationName || activity.location_name,
           latitude: activity.latitude,
