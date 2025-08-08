@@ -279,10 +279,6 @@ app.use((req, res, next) => {
 
     // Admin analytics removed for consumer app
 
-    // Register performance monitoring routes with full Express app instance
-    const { registerPerformanceRoutes } = await import('./routes/performance');
-    registerPerformanceRoutes(app);
-
     console.log('✅ API routes mounted successfully');
   } catch (error) {
     logger.error('❌ Failed to mount API routes:', error);

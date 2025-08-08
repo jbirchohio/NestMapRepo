@@ -73,8 +73,34 @@ export const BRANDING_CONFIG = {
   defaultPrimaryColor: process.env.PRIMARY_COLOR || '#3B82F6',
   defaultSecondaryColor: process.env.SECONDARY_COLOR || '#64748B',
   defaultAccentColor: process.env.ACCENT_COLOR || '#10B981',
-  companyUrl: process.env.COMPANY_URL || (process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'remvana.app'),
-  supportEmail: process.env.SUPPORT_EMAIL || `support@${process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'remvana.app'}`,
+  companyUrl: process.env.COMPANY_URL || (() => {
+    if (process.env.BASE_URL) {
+      try {
+        // Add protocol if missing
+        const url = process.env.BASE_URL.startsWith('http') 
+          ? process.env.BASE_URL 
+          : `https://${process.env.BASE_URL}`;
+        return new URL(url).hostname;
+      } catch {
+        return 'remvana.app';
+      }
+    }
+    return 'remvana.app';
+  })(),
+  supportEmail: process.env.SUPPORT_EMAIL || (() => {
+    if (process.env.BASE_URL) {
+      try {
+        // Add protocol if missing
+        const url = process.env.BASE_URL.startsWith('http') 
+          ? process.env.BASE_URL 
+          : `https://${process.env.BASE_URL}`;
+        return `support@${new URL(url).hostname}`;
+      } catch {
+        return 'support@remvana.app';
+      }
+    }
+    return 'support@remvana.app';
+  })(),
   logoUrl: process.env.LOGO_URL || null,
   privacyUrl: process.env.PRIVACY_URL,
   termsUrl: process.env.TERMS_URL,
