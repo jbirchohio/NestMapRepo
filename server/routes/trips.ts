@@ -22,14 +22,13 @@ router.use(fieldTransformMiddleware);
 router.get("/", async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
     }
 
-    // Use secure storage method that enforces organization isolation
-    const trips = await storage.getTripsByUserId(userId, orgId);
+    // Get trips for the user (no organization filtering)
+    const trips = await storage.getTripsByUserId(userId);
     res.json(trips);
   } catch (error) {
     logger.error("Error fetching trips:", error);
@@ -41,14 +40,13 @@ router.get("/", async (req: Request, res: Response) => {
 router.get('/corporate', async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
     
-    if (!userId || !orgId) {
-      return res.status(400).json({ message: "User and organization context required" });
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
     }
 
-    // Get all trips for the organization, not just the current user
-    const trips = await storage.getTripsByOrganizationId(orgId);
+    // Corporate endpoint removed - just return user's trips
+    const trips = await storage.getTripsByUserId(userId);
     
     // Transform database field names to match frontend expectations and add user details
     const tripsWithUserDetails = await Promise.all(
@@ -90,7 +88,6 @@ router.get("/:id/todos", async (req: Request, res: Response) => {
     }
 
     const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
@@ -102,9 +99,10 @@ router.get("/:id/todos", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    // Check if user owns the trip or is a collaborator
+    if (trip.user_id !== userId) {
+      // Could add collaborator check here if needed
+      return res.status(403).json({ message: "Access denied: You don't have permission to access this trip" });
     }
 
     const todos = await storage.getTodosByTripId(tripId);
@@ -124,7 +122,6 @@ router.get("/:id/notes", async (req: Request, res: Response) => {
     }
 
     const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
@@ -136,9 +133,10 @@ router.get("/:id/notes", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    // Check if user owns the trip or is a collaborator
+    if (trip.user_id !== userId) {
+      // Could add collaborator check here if needed
+      return res.status(403).json({ message: "Access denied: You don't have permission to access this trip" });
     }
 
     const notes = await storage.getNotesByTripId(tripId);
@@ -158,7 +156,6 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
     }
 
     const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
@@ -170,9 +167,10 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    // Check if user owns the trip or is a collaborator
+    if (trip.user_id !== userId) {
+      // Could add collaborator check here if needed
+      return res.status(403).json({ message: "Access denied: You don't have permission to access this trip" });
     }
 
     const activities = await storage.getActivitiesByTripId(tripId);
@@ -210,10 +208,9 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    const userOrgId = req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    // Check if user owns the trip
+    if (trip.user_id !== req.user?.id) {
+      return res.status(403).json({ message: "Access denied: You don't have permission to access this trip" });
     }
     
     console.log('Trip from database:', {
@@ -323,8 +320,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
+    if (existingTrip.user_id !== req.user?.id) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
 
@@ -359,8 +355,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
+    if (existingTrip.user_id !== req.user?.id) {
       return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
     }
 
@@ -390,7 +385,6 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot export this trip" });
     }
@@ -437,7 +431,6 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot generate proposal for this trip" });
     }
@@ -489,10 +482,9 @@ router.get("/:tripId/share", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // Verify organization access
-    const userOrgId = req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    // Check if user owns the trip
+    if (trip.user_id !== req.user?.id) {
+      return res.status(403).json({ message: "Access denied: You don't have permission to access this trip" });
     }
 
     res.json({
@@ -519,7 +511,6 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
