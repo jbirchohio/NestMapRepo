@@ -322,6 +322,88 @@ Provide specific time optimizations in JSON format:
   }
 });
 
+// POST /api/ai/chat - Conversational AI assistant for trip planning
+router.post("/chat", async (req, res) => {
+  try {
+    const { messages } = req.body;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({
+        success: false,
+        error: "Messages array is required"
+      });
+    }
+    
+    // Add system prompt for trip planning context
+    const systemMessage = {
+      role: "system",
+      content: `You are a helpful AI travel assistant. Help users plan their trips by:
+1. Understanding their preferences and requirements
+2. Suggesting destinations, activities, and itineraries
+3. Providing practical travel advice
+4. Creating trip plans they can save
+
+When the user is ready to create a trip, format your response to include a tripSuggestion object with:
+- title: Trip title
+- description: Brief description
+- startDate: Start date (YYYY-MM-DD)
+- endDate: End date (YYYY-MM-DD)
+- city: Main destination city
+- country: Country
+- activities: Array of activities with title, date, time, and locationName
+
+Keep responses concise and friendly.`
+    };
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [systemMessage, ...messages],
+      temperature: 0.7,
+      max_tokens: 800
+    });
+    
+    const aiResponse = response.choices[0].message.content || "";
+    
+    // Check if the response contains trip creation instructions
+    let tripSuggestion = null;
+    if (aiResponse.toLowerCase().includes("create") && aiResponse.toLowerCase().includes("trip")) {
+      // Try to extract trip details from the response
+      // This is a simple implementation - could be enhanced with structured output
+      const titleMatch = aiResponse.match(/Title:\s*(.+)/i);
+      const cityMatch = aiResponse.match(/City:\s*(.+)/i);
+      const datesMatch = aiResponse.match(/Dates:\s*(.+)\s*to\s*(.+)/i);
+      
+      if (titleMatch && cityMatch) {
+        tripSuggestion = {
+          title: titleMatch[1].trim(),
+          city: cityMatch[1].trim(),
+          startDate: datesMatch ? datesMatch[1].trim() : new Date().toISOString().split('T')[0],
+          endDate: datesMatch ? datesMatch[2].trim() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          description: "AI-planned trip",
+          activities: []
+        };
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: aiResponse,
+      tripSuggestion
+    });
+  } catch (error) {
+    console.error("AI chat error:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to process chat message",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
+
 // POST /api/ai/suggest-activities - Get AI activity suggestions
 router.post("/suggest-activities", async (req, res) => {
   try {
