@@ -41,3 +41,5 @@ uploads/thumbnails/user_*
 !uploads/covers/cover_template_*.jpeg
 !uploads/covers/cover_template_*.png
 !uploads/thumbnails/thumb_template_*
+run-migration.ts
+run-full-migration.ts

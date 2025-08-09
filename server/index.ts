@@ -43,7 +43,8 @@ const HOST = process.env.HOST || "0.0.0.0";
 export { app };
 
 // Trust proxy headers when running behind Railway's load balancer
-app.set('trust proxy', true);
+// Use specific number to avoid rate limit bypass vulnerability
+app.set('trust proxy', 1); // Trust first proxy only
 
 // Session store removed - using JWT-only authentication
 
