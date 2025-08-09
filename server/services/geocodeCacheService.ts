@@ -1,4 +1,5 @@
-import LRUCache from 'lru-cache';
+import pkg from 'lru-cache';
+const LRUCache = pkg.LRUCache || pkg.default || pkg;
 import { logger } from '../utils/logger';
 
 interface GeocodedLocation {

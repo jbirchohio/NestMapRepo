@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { LRUCache } from 'lru-cache';
+import pkg from 'lru-cache';
+const { LRUCache } = pkg;
 import crypto from 'crypto';
 import { logger } from '../utils/logger';
 
