@@ -66,7 +66,7 @@ export async function predictFlightPrices(
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -117,7 +117,7 @@ export async function predictCrowdLevels(
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", 
+      model: "gpt-3.5-turbo", 
       messages: [
         {
           role: "system",
@@ -169,7 +169,7 @@ export async function generateWeatherAdaptiveItinerary(
     const weatherForecast = await getWeatherForecast(destination, dates);
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -222,7 +222,7 @@ export async function optimizeItinerary(
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system", 

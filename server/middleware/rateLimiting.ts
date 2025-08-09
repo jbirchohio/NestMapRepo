@@ -1,258 +1,144 @@
-import { Request, Response, NextFunction } from 'express';
-import { SecurityAuditLogger } from './securityAuditLogger';
+import rateLimit from 'express-rate-limit';
+import { logger } from '../utils/logger';
+import { Request, Response } from 'express';
 
-interface RateLimitEntry {
-  count: number;
-  firstAttempt: number;
-  lastAttempt: number;
-}
-
-interface RateLimitConfig {
-  windowMs: number;
-  maxAttempts: number;
-  blockDurationMs: number;
-}
-
-/**
- * In-memory rate limiting for authentication endpoints
- * Production should use Redis for distributed rate limiting
- */
-class RateLimiter {
-  private attempts: Map<string, RateLimitEntry> = new Map();
-  private blockedIPs: Map<string, number> = new Map();
-
-  private authConfig: RateLimitConfig = {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxAttempts: 5,
-    blockDurationMs: 60 * 60 * 1000 // 1 hour
-  };
-
-  private generalConfig: RateLimitConfig = {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxAttempts: 100,
-    blockDurationMs: 15 * 60 * 1000 // 15 minutes
-  };
-
-  /**
-   * Get client identifier (IP + User-Agent hash for better tracking)
-   */
-  private getClientId(req: Request): string {
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
-    const userAgent = req.get('User-Agent') || 'unknown';
-    return `${ip}_${this.simpleHash(userAgent)}`;
-  }
-
-  /**
-   * Simple hash function for User-Agent
-   */
-  private simpleHash(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash).toString(36);
-  }
-
-  /**
-   * Check if client is currently blocked
-   */
-  private isBlocked(clientId: string): boolean {
-    const blockUntil = this.blockedIPs.get(clientId);
-    if (blockUntil && Date.now() < blockUntil) {
-      return true;
-    }
-    if (blockUntil && Date.now() >= blockUntil) {
-      this.blockedIPs.delete(clientId);
-    }
-    return false;
-  }
-
-  /**
-   * Clean old entries to prevent memory leaks
-   */
-  private cleanup(): void {
-    const now = Date.now();
-    
-    // Clean old attempts
-    for (const [clientId, entry] of this.attempts.entries()) {
-      if (now - entry.lastAttempt > this.authConfig.windowMs * 2) {
-        this.attempts.delete(clientId);
-      }
-    }
-
-    // Clean expired blocks
-    for (const [clientId, blockUntil] of this.blockedIPs.entries()) {
-      if (now >= blockUntil) {
-        this.blockedIPs.delete(clientId);
-      }
-    }
-  }
-
-  /**
-   * Record an attempt and check if limit exceeded
-   */
-  private recordAttempt(clientId: string, config: RateLimitConfig): boolean {
-    const now = Date.now();
-    const entry = this.attempts.get(clientId);
-
-    if (!entry) {
-      this.attempts.set(clientId, {
-        count: 1,
-        firstAttempt: now,
-        lastAttempt: now
-      });
-      return false; // Not exceeded
-    }
-
-    // Reset if outside window
-    if (now - entry.firstAttempt > config.windowMs) {
-      this.attempts.set(clientId, {
-        count: 1,
-        firstAttempt: now,
-        lastAttempt: now
-      });
-      return false;
-    }
-
-    // Increment counter
-    entry.count++;
-    entry.lastAttempt = now;
-
-    // Check if exceeded
-    if (entry.count > config.maxAttempts) {
-      this.blockedIPs.set(clientId, now + config.blockDurationMs);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Authentication rate limiting middleware
-   */
-  authRateLimit = (req: Request, res: Response, next: NextFunction) => {
-    const clientId = this.getClientId(req);
-
-    // Check if already blocked
-    if (this.isBlocked(clientId)) {
-      SecurityAuditLogger.logAction({
-        user_id: 0,
-        action: 'RATE_LIMIT_BLOCKED',
-        resource: 'authentication',
-        ipAddress: req.ip || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown',
-        success: false,
-        details: {
-          endpoint: req.path,
-          clientId: clientId.substring(0, 20) // Partial for privacy
-        }
-      }).catch(() => {}); // Silent fail
-
-      return res.status(429).json({
-        error: 'Too Many Requests',
-        message: 'Too many authentication attempts. Please try again later.',
-        retryAfter: 3600
-      });
-    }
-
-    // Record attempt
-    const exceeded = this.recordAttempt(clientId, this.authConfig);
-    
-    if (exceeded) {
-      SecurityAuditLogger.logAction({
-        user_id: 0,
-        action: 'RATE_LIMIT_EXCEEDED',
-        resource: 'authentication',
-        ipAddress: req.ip || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown',
-        success: false,
-        details: {
-          endpoint: req.path,
-          attempts: this.authConfig.maxAttempts
-        }
-      }).catch(() => {});
-
-      return res.status(429).json({
-        error: 'Too Many Requests',
-        message: 'Too many authentication attempts. Account temporarily locked.',
-        retryAfter: 3600
-      });
-    }
-
-    // Cleanup periodically
-    if (Math.random() < 0.01) { // 1% chance
-      this.cleanup();
-    }
-
-    next();
-  };
-
-  /**
-   * General API rate limiting middleware
-   */
-  generalRateLimit = (req: Request, res: Response, next: NextFunction) => {
-    const clientId = this.getClientId(req);
-
-    if (this.isBlocked(clientId)) {
-      return res.status(429).json({
-        error: 'Too Many Requests',
-        message: 'API rate limit exceeded. Please slow down.',
-        retryAfter: 900
-      });
-    }
-
-    const exceeded = this.recordAttempt(clientId, this.generalConfig);
-    
-    if (exceeded) {
-      return res.status(429).json({
-        error: 'Too Many Requests',
-        message: 'API rate limit exceeded. Please slow down.',
-        retryAfter: 900
-      });
-    }
-
-    next();
-  };
-
-  /**
-   * Get current rate limit status for client
-   */
-  getStatus(req: Request): {
-    remaining: number;
-    resetTime: number;
-    blocked: boolean;
-  } {
-    const clientId = this.getClientId(req);
-    const entry = this.attempts.get(clientId);
-    const blocked = this.isBlocked(clientId);
-
-    if (!entry) {
-      return {
-        remaining: this.authConfig.maxAttempts,
-        resetTime: Date.now() + this.authConfig.windowMs,
-        blocked
-      };
-    }
-
-    const remaining = Math.max(0, this.authConfig.maxAttempts - entry.count);
-    const resetTime = entry.firstAttempt + this.authConfig.windowMs;
-
-    return {
-      remaining,
-      resetTime,
-      blocked
+// Type declaration for rate limit info
+declare module 'express' {
+  interface Request {
+    rateLimit?: {
+      limit: number;
+      current: number;
+      remaining: number;
+      resetTime: Date;
     };
   }
 }
 
-// Create singleton instance
-const rateLimiter = new RateLimiter();
+// General API rate limit - 500 requests per 15 minutes (more generous)
+export const generalRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Increased from 100
+  message: 'Too many requests from this IP, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req: Request, res: Response) => {
+    logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many requests',
+      message: 'Rate limit exceeded. Please try again in a few minutes.',
+      retryAfter: req.rateLimit?.resetTime
+    });
+  }
+});
 
-// Export middleware functions
-export const authRateLimit = rateLimiter.authRateLimit;
-export const generalRateLimit = rateLimiter.generalRateLimit;
-export const getRateLimitStatus = (req: Request) => rateLimiter.getStatus(req);
+// Strict rate limit for auth endpoints - 10 attempts per 15 minutes (reasonable for forgot password)
+export const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 10, // Increased from 5
+  message: 'Too many authentication attempts, please try again later',
+  skipSuccessfulRequests: true, // Don't count successful logins
+  handler: (req: Request, res: Response) => {
+    logger.warn(`Auth rate limit exceeded for IP: ${req.ip}, endpoint: ${req.path}`);
+    res.status(429).json({
+      error: 'Too many attempts',
+      message: 'Too many authentication attempts. Please try again in 15 minutes.',
+      retryAfter: req.rateLimit?.resetTime
+    });
+  }
+});
 
-export default rateLimiter;
+// Payment endpoints - 20 requests per hour (allows retries)
+export const paymentRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // Increased to allow retries
+  message: 'Too many payment attempts, please try again later',
+  handler: (req: Request, res: Response) => {
+    logger.warn(`Payment rate limit exceeded for IP: ${req.ip}, user: ${(req as any).user?.id}`);
+    res.status(429).json({
+      error: 'Too many payment attempts',
+      message: 'Too many payment attempts. Please try again in an hour.',
+      retryAfter: req.rateLimit?.resetTime
+    });
+  }
+});
+
+// AI endpoints - 100 requests per hour per user (generous for planning)
+export const aiRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100, // Increased significantly
+  message: 'Too many AI requests, please try again later',
+  keyGenerator: (req: Request) => {
+    // Rate limit by user ID if authenticated, otherwise by IP
+    return (req as any).user?.id?.toString() || req.ip || 'unknown';
+  },
+  handler: (req: Request, res: Response) => {
+    logger.warn(`AI rate limit exceeded for IP: ${req.ip}, user: ${(req as any).user?.id}`);
+    res.status(429).json({
+      error: 'Too many AI requests',
+      message: 'AI request limit reached. Please try again in an hour.',
+      retryAfter: req.rateLimit?.resetTime
+    });
+  }
+});
+
+// Template creation - 25 per day (allows active creators)
+export const templateCreationRateLimit = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 25, // Increased for active creators
+  message: 'Template creation limit reached for today',
+  keyGenerator: (req: Request) => {
+    // Rate limit by user ID
+    return (req as any).user?.id?.toString() || 'anonymous';
+  },
+  handler: (req: Request, res: Response) => {
+    logger.warn(`Template creation limit exceeded for user: ${(req as any).user?.id}`);
+    res.status(429).json({
+      error: 'Daily limit reached',
+      message: 'You can only create 10 templates per day. Please try again tomorrow.',
+      retryAfter: req.rateLimit?.resetTime
+    });
+  }
+});
+
+// Search endpoints - 60 requests per minute
+export const searchRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  message: 'Too many search requests, please slow down',
+  handler: (req: Request, res: Response) => {
+    logger.warn(`Search rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many searches',
+      message: 'Please slow down your search requests.',
+      retryAfter: req.rateLimit?.resetTime
+    });
+  }
+});
+
+// Webhook endpoints - no rate limit but log attempts
+export const webhookRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // Very high limit - webhooks need to work
+  skip: (req: Request) => {
+    // Skip rate limiting if it's from Stripe's IP ranges
+    const stripeIPs = ['54.187.174.169', '54.187.205.235', '54.187.216.72'];
+    return stripeIPs.includes(req.ip || '');
+  },
+  handler: (req: Request, res: Response) => {
+    logger.error(`Webhook rate limit exceeded - potential abuse from IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many webhook attempts',
+      message: 'Webhook rate limit exceeded.',
+    });
+  }
+});
+
+export default {
+  generalRateLimit,
+  authRateLimit,
+  paymentRateLimit,
+  aiRateLimit,
+  templateCreationRateLimit,
+  searchRateLimit,
+  webhookRateLimit
+};

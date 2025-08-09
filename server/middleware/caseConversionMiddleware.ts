@@ -32,8 +32,13 @@ function snakeToCamel(obj: any): any {
     return obj.map(snakeToCamel);
   }
 
-  // Handle Date objects - convert to ISO string
+  // Handle Date objects - convert to ISO string safely
   if (obj instanceof Date) {
+    // Check if date is valid before converting
+    if (isNaN(obj.getTime())) {
+      console.warn('Invalid date encountered in case conversion:', obj);
+      return null;
+    }
     return obj.toISOString().split('T')[0];
   }
 
@@ -43,7 +48,13 @@ function snakeToCamel(obj: any): any {
     
     // Special handling for date fields - convert Date objects to ISO date strings
     if (value instanceof Date) {
-      converted[camelKey] = value.toISOString().split('T')[0];
+      // Check if date is valid before converting
+      if (isNaN(value.getTime())) {
+        console.warn('Invalid date encountered in case conversion for key:', camelKey);
+        converted[camelKey] = null;
+      } else {
+        converted[camelKey] = value.toISOString().split('T')[0];
+      }
     } else {
       converted[camelKey] = snakeToCamel(value);
     }

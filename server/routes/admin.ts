@@ -5,6 +5,8 @@ import { templates, templatePurchases } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import { storage } from '../storage';
+import { geocodeCacheService } from '../services/geocodeCacheService';
+import { aiCache } from '../services/aiCacheService';
 // Admin check inline
 const requireAdmin = (req: any, res: any, next: any) => {
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
@@ -660,6 +662,53 @@ router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
   } catch (error) {
     logger.error('Error recording manual purchase:', error);
     res.status(500).json({ message: 'Failed to record purchase' });
+  }
+});
+
+// GET /api/admin/cache/stats - Get cache statistics
+router.get('/cache/stats', async (req, res) => {
+  try {
+    const geocodeStats = geocodeCacheService.getStats();
+    const aiStats = aiCache.getStats();
+    
+    res.json({
+      geocode: geocodeStats,
+      ai: aiStats,
+      summary: {
+        totalCacheEntries: geocodeStats.entries + aiStats.entries,
+        totalCacheSizeMB: geocodeStats.sizeMB + aiStats.sizeMB,
+        geocodeHitRate: geocodeStats.hitRate,
+        aiHitRate: aiStats.hitRate
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching cache stats:', error);
+    res.status(500).json({ message: 'Failed to fetch cache statistics' });
+  }
+});
+
+// POST /api/admin/cache/clear - Clear cache (super admin only)
+router.post('/cache/clear', requireSuperAdmin, async (req, res) => {
+  try {
+    const { type } = req.body; // 'geocode', 'ai', or 'all'
+    
+    if (type === 'geocode' || type === 'all') {
+      geocodeCacheService.clear();
+      logger.info('Geocode cache cleared by admin');
+    }
+    
+    if (type === 'ai' || type === 'all') {
+      aiCache.clear();
+      logger.info('AI cache cleared by admin');
+    }
+    
+    res.json({ 
+      message: `Cache cleared successfully: ${type}`,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error clearing cache:', error);
+    res.status(500).json({ message: 'Failed to clear cache' });
   }
 });
 

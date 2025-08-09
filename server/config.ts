@@ -111,7 +111,7 @@ export const BRANDING_CONFIG = {
 export const SERVICES_CONFIG = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
-    model: process.env.OPENAI_MODEL || 'gpt-4o'
+    model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
   },
   mapbox: {
     // Unified Mapbox token - use VITE_MAPBOX_TOKEN for both client and server

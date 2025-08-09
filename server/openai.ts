@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { findLocation } from "./aiLocations";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
 /**
@@ -22,7 +21,7 @@ export async function summarizeDay(activities: any[]): Promise<string> {
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -54,7 +53,7 @@ export async function suggestNearbyFood(location: string, foodType: string = "fo
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });
@@ -99,7 +98,7 @@ export async function detectTimeConflicts(activities: any[]): Promise<any> {
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });
@@ -141,7 +140,7 @@ export async function generateThemedItinerary(
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });
@@ -231,7 +230,7 @@ ${activities.map(a => `    {
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" }
     });
@@ -383,7 +382,7 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });
@@ -494,7 +493,7 @@ export async function suggestWeatherBasedActivities(
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });
@@ -550,7 +549,7 @@ export async function suggestBudgetOptions(
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });
@@ -638,7 +637,7 @@ export async function tripAssistant(question: string, tripContext: any): Promise
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -745,9 +744,9 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
       }
     };
     
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    // Using GPT-3.5 for 80% cost savings
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         { 
           role: "system", 
@@ -871,7 +870,7 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
 export async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
   try {
     const requestOptions: any = {
-      model: options.model || "gpt-4o-mini", // Use faster model for general calls
+      model: options.model || "gpt-3.5-turbo", // Use GPT-3.5 for cost efficiency
       messages: [{ role: "user", content: prompt }],
       temperature: options.temperature || 0.7,
       max_tokens: options.max_tokens || 150,

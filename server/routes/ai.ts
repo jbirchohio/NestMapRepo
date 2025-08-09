@@ -2,6 +2,7 @@ import { Router } from "express";
 import { jwtAuthMiddleware } from "../middleware/jwtAuth";
 import { z } from "zod";
 import OpenAI from "openai";
+import { aiRateLimit } from "../middleware/rateLimiting";
 import { db } from "../db-connection";
 import { trips, activities } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,6 +17,7 @@ const openai = new OpenAI({
 
 const router = Router();
 router.use(jwtAuthMiddleware);
+router.use(aiRateLimit); // Apply AI rate limiting to all AI endpoints
 
 // Validation schemas
 const summarizeDaySchema = z.object({
@@ -91,7 +93,7 @@ ${activitiesText}
 Provide a brief, engaging summary that highlights the key experiences and flow of the day. Keep it under 150 words.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
       messages: [{ role: "user", content: prompt }],
       max_tokens: 200,
       temperature: 0.7,
@@ -122,6 +124,18 @@ router.post("/suggest-food", async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
+    
+    // Import cache service
+    const { aiCache } = await import('../services/aiCacheService');
+    
+    // Check cache first
+    const cacheKey = aiCache.generateKey('food', city, { cuisine_type, budget_range });
+    const cachedResult = aiCache.get(cacheKey);
+    
+    if (cachedResult) {
+      console.log(`Returning cached food suggestions for: ${city}`);
+      return res.json(cachedResult);
+    }
 
     const budgetText = budget_range === 'budget' ? 'affordable, budget-friendly' :
                      budget_range === 'mid-range' ? 'mid-range pricing' :
@@ -150,7 +164,7 @@ Format as JSON with this structure:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -165,13 +179,18 @@ Format as JSON with this structure:
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
 
-    res.json({
+    const responseData = {
       success: true,
       city,
       cuisine_type,
       budget_range,
       ...result
-    });
+    };
+    
+    // Cache for 3 days (restaurant data is relatively stable)
+    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
+    
+    res.json(responseData);
   } catch (error) {
     console.error("AI suggest-food error:", error);
     res.status(500).json({ 
@@ -265,7 +284,7 @@ Provide specific time optimizations in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -318,6 +337,18 @@ router.post("/suggest-activities", async (req, res) => {
         error: "City is required"
       });
     }
+    
+    // Import cache service
+    const { aiCache } = await import('../services/aiCacheService');
+    
+    // Check cache first
+    const cacheKey = aiCache.generateKey('activities', city, { interests, duration });
+    const cachedResult = aiCache.get(cacheKey);
+    
+    if (cachedResult) {
+      console.log(`Returning cached activity suggestions for: ${city}`);
+      return res.json(cachedResult);
+    }
 
     const interestsText = Array.isArray(interests) ? interests.join(', ') : (interests || 'general sightseeing');
     const durationText = duration ? `${duration} days` : 'a few days';
@@ -346,7 +377,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -361,13 +392,18 @@ Format as JSON:
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
 
-    res.json({
+    const responseData = {
       success: true,
       city,
       interests: interestsText,
       duration,
       ...result
-    });
+    };
+    
+    // Cache for 3 days (activity data is relatively stable)
+    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
+    
+    res.json(responseData);
   } catch (error) {
     console.error("AI suggest-activities error:", error);
     res.status(500).json({ 
@@ -434,7 +470,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -500,7 +536,7 @@ Provide the translation in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -546,6 +582,18 @@ router.post("/weather-activities", async (req, res) => {
         error: "Location and weather condition are required"
       });
     }
+    
+    // Import cache service
+    const { aiCache } = await import('../services/aiCacheService');
+    
+    // Check cache first (shorter TTL for weather-based suggestions)
+    const cacheKey = aiCache.generateKey('weather-activities', location, { weatherCondition, date });
+    const cachedResult = aiCache.get(cacheKey);
+    
+    if (cachedResult) {
+      console.log(`Returning cached weather activities for: ${location}, ${weatherCondition}`);
+      return res.json(cachedResult);
+    }
 
     const prompt = `Suggest 5 activities in ${location} that are perfect for ${weatherCondition} weather.
     ${date ? `Date: ${date}` : ''}
@@ -565,7 +613,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -580,10 +628,15 @@ Format as JSON:
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
 
-    res.json({
+    const responseData = {
       success: true,
       ...result
-    });
+    };
+    
+    // Cache for 1 day only (weather changes daily)
+    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.DAILY_SUMMARY);
+    
+    res.json(responseData);
   } catch (error) {
     console.error("AI weather-activities error:", error);
     res.status(500).json({ 
@@ -611,6 +664,18 @@ router.post("/budget-options", async (req, res) => {
         error: "Location and budget level are required"
       });
     }
+    
+    // Import cache service
+    const { aiCache } = await import('../services/aiCacheService');
+    
+    // Check cache first
+    const cacheKey = aiCache.generateKey('budget', location, { budgetLevel, activityType });
+    const cachedResult = aiCache.get(cacheKey);
+    
+    if (cachedResult) {
+      console.log(`Returning cached budget options for: ${location}, ${budgetLevel}`);
+      return res.json(cachedResult);
+    }
 
     const prompt = `Suggest budget-friendly options in ${location} for a ${budgetLevel} budget.
     ${activityType ? `Focus on: ${activityType}` : 'Include various categories'}
@@ -631,7 +696,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -646,10 +711,15 @@ Format as JSON:
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
 
-    res.json({
+    const responseData = {
       success: true,
       ...result
-    });
+    };
+    
+    // Cache for 7 days (budget data is relatively stable)
+    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
+    
+    res.json(responseData);
   } catch (error) {
     console.error("AI budget-options error:", error);
     res.status(500).json({ 
@@ -731,7 +801,7 @@ router.post("/recommend-tours", async (req, res) => {
     Provide specific tour recommendations with brief descriptions.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 500,
       temperature: 0.7,
@@ -797,7 +867,7 @@ Return format:
 If any information is missing, use reasonable defaults or mark as null.`;
 
     const extractionResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: extractionPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.3,
@@ -936,7 +1006,7 @@ Format as JSON with this structure:
 }`;
 
     const itineraryResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: itineraryPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.7,

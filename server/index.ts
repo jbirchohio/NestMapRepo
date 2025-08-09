@@ -84,9 +84,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// Correlation ID middleware (must be early in stack)
+import { correlationIdMiddleware } from './middleware/correlationId';
+app.use(correlationIdMiddleware);
+
+// HTTP caching middleware (early in stack for best performance)
+import { smartCache, contentTypeCache } from './middleware/httpCache';
+app.use(smartCache());
+app.use(contentTypeCache());
+
 // Performance optimization middleware (early in stack)
 app.use(performanceOptimizer.viteAssetOptimizer());
 app.use(performanceOptimizer.memoryReliefMiddleware());
+
+// Start interval cleanup monitoring
+import { intervalCleanup } from './services/intervalCleanup';
+intervalCleanup.startMonitoring();
 
 // Input validation and sanitization middleware
 app.use((req, res, next) => {
@@ -112,8 +125,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiting for JSON parsing
-app.use(express.json({ limit: '10mb' }));
+// Capture raw body for Stripe webhook signature verification
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
+
+// Rate limiting for JSON parsing (for all other routes)
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req: any, res, buf) => {
+    // Store raw body for webhook signature verification if needed
+    req.rawBody = buf.toString('utf8');
+  }
+}));
 
 // Serve uploaded files statically - use process.cwd() for correct path in production
 const uploadsPath = path.join(process.cwd(), 'uploads');
@@ -132,6 +154,10 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Apply CORS configuration
 app.use(configureCORS);
+
+// Apply general rate limiting to all API routes
+import { generalRateLimit } from './middleware/rateLimiting';
+app.use('/api', generalRateLimit);
 
 // Apply unified monitoring (replaces performance, memory, database, and endpoint monitoring)
 import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";

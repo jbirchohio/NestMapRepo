@@ -5,6 +5,7 @@ import { users, organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import socialAuthRoutes from './auth-social';
+import { authRateLimit } from '../middleware/rateLimiting';
 
 const router = express.Router();
 
@@ -27,8 +28,8 @@ function createJWT(payload: any): string {
   return `${headerB64}.${payloadB64}.${signature}`;
 }
 
-// Register endpoint
-router.post('/register', async (req: Request, res: Response) => {
+// Register endpoint with rate limiting
+router.post('/register', authRateLimit, async (req: Request, res: Response) => {
   try {
     // Check if signups are enabled
     const { getSetting } = await import('../services/systemSettingsService');
@@ -103,7 +104,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // Login endpoint
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', authRateLimit, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 

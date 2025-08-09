@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./db-connection-optimized";
 import {
   users,
   trips,
@@ -644,9 +644,17 @@ export class ConsumerDatabaseStorage implements IStorage {
     duration?: number;
     destination?: string;
     sort?: string;
-  }): Promise<Template[]> {
-    const { search, tag, minPrice, maxPrice, duration, destination, sort } =
-      params;
+    page?: number;
+    limit?: number;
+  }): Promise<{ templates: Template[]; total: number; page: number; totalPages: number }> {
+    // No sanitization needed - Drizzle ORM handles parameterization
+    const { search, tag, destination, sort } = params;
+    const { minPrice, maxPrice, duration } = params;
+    
+    // Pagination parameters with defaults
+    const page = Math.max(1, params.page || 1);
+    const limit = Math.min(100, Math.max(1, params.limit || 20)); // Cap at 100 items
+    const offset = (page - 1) * limit;
 
     const conditions: SQL[] = [eq(templates.status, "published")];
 
@@ -661,11 +669,13 @@ export class ConsumerDatabaseStorage implements IStorage {
     }
 
     if (tag) {
-      conditions.push(sql`${templates.tags} ? ${tag}`);
+      // Use parameterized query to prevent SQL injection
+      conditions.push(sql`${templates.tags} @> ARRAY[${tag}]::text[]`);
     }
 
     if (destination) {
-      conditions.push(sql`${templates.destinations} ? ${destination}`);
+      // Use parameterized query to prevent SQL injection
+      conditions.push(sql`${templates.destinations} @> ARRAY[${destination}]::text[]`);
     }
 
     if (minPrice !== undefined) {
@@ -699,7 +709,28 @@ export class ConsumerDatabaseStorage implements IStorage {
 
     const where = and(...conditions);
 
-    return await db.select().from(templates).where(where!).orderBy(orderBy);
+    // Get total count for pagination
+    const [countResult] = await db.select({ count: sql`count(*)::integer` })
+      .from(templates)
+      .where(where!);
+    
+    const total = countResult?.count || 0;
+    const totalPages = Math.ceil(total / limit);
+    
+    // Get paginated results
+    const templateResults = await db.select()
+      .from(templates)
+      .where(where!)
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      templates: templateResults,
+      total,
+      page,
+      totalPages
+    };
   }
 
   async updateTemplate(
@@ -781,6 +812,8 @@ export class ConsumerDatabaseStorage implements IStorage {
           eq(templatePurchases.buyer_id, userId),
           eq(templatePurchases.template_id, templateId),
           eq(templatePurchases.status, "completed"),
+          // Ensure not refunded or disputed
+          sql`(refunded_at IS NULL AND disputed_at IS NULL)`
         ),
       )
       .limit(1);
@@ -790,6 +823,12 @@ export class ConsumerDatabaseStorage implements IStorage {
     );
     if (purchases.length > 0) {
       console.log("Found existing purchase:", purchases[0]);
+      // Double-check status for security
+      const purchase = purchases[0];
+      if (purchase.status !== 'completed' || purchase.refunded_at || purchase.disputed_at) {
+        logger.warn(`Access denied: Purchase ${purchase.id} is ${purchase.status} or has been refunded/disputed`);
+        return false;
+      }
     }
 
     return purchases.length > 0;

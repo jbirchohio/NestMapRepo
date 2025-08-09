@@ -5,6 +5,12 @@ import { logger } from "../utils/logger";
 import { z } from "zod";
 import { templateQualityService } from "../services/templateQualityService";
 import { sanitizeResponseDates } from "../utils/dateSanitizer";
+import { db } from "../db-connection";
+import { templatePurchases } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
+import { searchRateLimit, templateCreationRateLimit, paymentRateLimit } from "../middleware/rateLimiting";
+import { optimizedQueries } from "../storage-consumer-optimized";
+import { auditService } from "../services/auditService";
 
 const router = Router();
 
@@ -22,7 +28,7 @@ const createTemplateSchema = z.object({
 });
 
 // GET /api/templates - Browse marketplace templates
-router.get("/", async (req, res) => {
+router.get("/", searchRateLimit, async (req, res) => {
   try {
     const {
       search,
@@ -32,10 +38,12 @@ router.get("/", async (req, res) => {
       duration,
       destination,
       sort = "popular",
+      page = "1",
+      limit = "20",
     } = req.query;
 
-    // Get published templates with SQL filtering
-    let templates = await storage.searchTemplates({
+    // Get published templates with SQL filtering and pagination
+    const result = await storage.searchTemplates({
       search: search as string | undefined,
       tag: tag as string | undefined,
       minPrice: minPrice ? parseFloat(String(minPrice)) : undefined,
@@ -43,7 +51,24 @@ router.get("/", async (req, res) => {
       duration: duration ? parseInt(String(duration)) : undefined,
       destination: destination as string | undefined,
       sort: sort as string,
+      page: parseInt(String(page)),
+      limit: parseInt(String(limit)),
     });
+    
+    let templates = result.templates;
+    
+    // Batch fetch creator profiles to avoid N+1 queries
+    if (templates.length > 0) {
+      const templateIds = templates.map(t => t.id);
+      const templatesWithCreators = await optimizedQueries.getTemplatesWithCreators(templateIds);
+      
+      // Map creator data back to templates
+      const creatorMap = new Map(templatesWithCreators.map(t => [t.id, t.creator]));
+      templates = templates.map(template => ({
+        ...template,
+        creator: creatorMap.get(template.id)
+      }));
+    }
 
     // Transform templates to include activities array for frontend
     templates = templates.map((template) => {
@@ -94,7 +119,15 @@ router.get("/", async (req, res) => {
       };
     });
 
-    res.json(sanitizeResponseDates(templates));
+    res.json({
+      templates: sanitizeResponseDates(templates),
+      pagination: {
+        page: result.page,
+        limit: parseInt(String(limit)),
+        total: result.total,
+        totalPages: result.totalPages
+      }
+    });
   } catch (error) {
     logger.error("Error fetching templates:", error);
     res.status(500).json({ message: "Failed to fetch templates" });
@@ -119,19 +152,30 @@ router.get("/purchased", requireAuth, async (req, res) => {
     const userId = req.user!.id;
     const purchases = await storage.getUserPurchases(userId);
 
-    // Get full template details for each purchase
-    const templates = await Promise.all(
-      purchases.map(async (purchase) => {
-        const template = await storage.getTemplate(purchase.template_id);
-        return {
-          ...template,
-          purchaseDate: purchase.purchased_at,
-          purchaseId: purchase.id,
-        };
-      }),
-    );
+    if (purchases.length === 0) {
+      return res.json([]);
+    }
 
-    res.json(sanitizeResponseDates(templates.filter((t) => t !== undefined)));
+    // Batch fetch all templates at once to avoid N+1 queries
+    const templateIds = purchases.map(p => p.template_id);
+    const templatesWithCreators = await optimizedQueries.getTemplatesWithCreators(templateIds);
+    
+    // Create a map for quick lookup
+    const templateMap = new Map(templatesWithCreators.map(t => [t.id, t]));
+    
+    // Combine purchase data with template data
+    const templates = purchases.map(purchase => {
+      const template = templateMap.get(purchase.template_id);
+      if (!template) return null;
+      
+      return {
+        ...template,
+        purchaseDate: purchase.purchased_at,
+        purchaseId: purchase.id,
+      };
+    }).filter(t => t !== null);
+
+    res.json(sanitizeResponseDates(templates));
   } catch (error) {
     logger.error("Error fetching purchased templates:", error);
     res.status(500).json({ message: "Failed to fetch purchased templates" });
@@ -153,11 +197,22 @@ router.get("/:slug", async (req, res) => {
 
     // Check if user has purchased (if requireAuthd)
     let hasPurchased = false;
+    let purchaseStatus = null;
     if (req.user) {
-      hasPurchased = await storage.hasUserPurchasedTemplate(
-        req.user.id,
-        template.id,
-      );
+      // Check not just if purchased, but if purchase is still valid
+      const purchases = await db.select()
+        .from(templatePurchases)
+        .where(and(
+          eq(templatePurchases.buyer_id, req.user.id),
+          eq(templatePurchases.template_id, template.id)
+        ))
+        .limit(1);
+      
+      if (purchases.length > 0) {
+        purchaseStatus = purchases[0].status;
+        // Only consider it purchased if status is completed (not refunded/disputed)
+        hasPurchased = purchases[0].status === 'completed';
+      }
     }
 
     // Get creator profile
@@ -224,7 +279,7 @@ router.get("/:slug", async (req, res) => {
 });
 
 // POST /api/templates - Create new template
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", requireAuth, templateCreationRateLimit, async (req, res) => {
   try {
     const userId = req.user!.id;
     const validatedData = createTemplateSchema.parse(req.body);
@@ -238,6 +293,13 @@ router.post("/", requireAuth, async (req, res) => {
       status: "draft",
     });
 
+    // Audit log template creation
+    await auditService.logTemplateEvent('template.created', template.id, userId, {
+      title: template.title,
+      price: template.price,
+      status: template.status
+    });
+    
     res.status(201).json(template);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -322,6 +384,18 @@ router.post("/from-trip/:tripId", requireAuth, async (req, res) => {
 
     // Enhanced anti-piracy check using multiple detection methods
     const { antiPiracyService } = await import("../services/antiPiracyService");
+    const { antiPiracyServiceV2 } = await import("../services/antiPiracyServiceV2");
+    
+    // First check user behavior patterns
+    const behaviorAnalysis = await antiPiracyServiceV2.trackUserBehavior(userId);
+    if (behaviorAnalysis.riskScore >= 70) {
+      logger.warn(`High risk user ${userId} blocked from creating template. Risk score: ${behaviorAnalysis.riskScore}`, behaviorAnalysis.flags);
+      return res.status(403).json({
+        message: "Your account has been flagged for suspicious activity. Please contact support if you believe this is an error.",
+        flags: behaviorAnalysis.flags
+      });
+    }
+    
     const piracyCheck = await antiPiracyService.detectPiratedContent(
       parseInt(tripId),
       userId,
@@ -638,7 +712,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
 });
 
 // POST /api/templates/:id/purchase - Purchase template
-router.post("/:id/purchase", requireAuth, async (req, res) => {
+router.post("/:id/purchase", requireAuth, paymentRateLimit, async (req, res) => {
   try {
     const buyerId = req.user!.id;
     const templateId = parseInt(req.params.id);
@@ -939,7 +1013,7 @@ router.post("/reuse", requireAuth, async (req, res) => {
     }
 
     // Check if user owns the template (either purchased or it's free)
-    if (!hasPurchased && template.price !== "0") {
+    if (!hasPurchased && parseFloat(template.price || "0") > 0) {
       logger.warn(
         `User ${userId} attempted to reuse unpurchased template ${template_id}`,
       );

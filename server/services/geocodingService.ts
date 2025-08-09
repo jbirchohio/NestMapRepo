@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger';
 import fetch from 'node-fetch';
+import { geocodeCacheService } from './geocodeCacheService';
 
 interface GeocodedLocation {
   latitude: string;
@@ -21,12 +22,19 @@ export class GeocodingService {
    * Geocode a location name to coordinates using Mapbox
    */
   async geocodeLocation(locationName: string, cityContext?: string): Promise<GeocodedLocation | null> {
-    if (!this.mapboxToken) {
-      logger.warn('Cannot geocode - no Mapbox token');
+    if (!locationName) {
       return null;
     }
 
-    if (!locationName) {
+    // Check cache first
+    const cached = geocodeCacheService.get(locationName, cityContext);
+    if (cached !== undefined) {
+      // Cache hit (could be null if location wasn't found previously)
+      return cached;
+    }
+
+    if (!this.mapboxToken) {
+      logger.warn('Cannot geocode - no Mapbox token');
       return null;
     }
 
@@ -42,6 +50,8 @@ export class GeocodingService {
       const response = await fetch(url);
       if (!response.ok) {
         logger.error(`Mapbox geocoding failed: ${response.statusText}`);
+        // Cache the failure to avoid repeated failed requests
+        geocodeCacheService.set(locationName, null, cityContext);
         return null;
       }
 
@@ -51,33 +61,69 @@ export class GeocodingService {
         const feature = data.features[0];
         const [longitude, latitude] = feature.center;
         
-        return {
+        const result = {
           latitude: latitude.toString(),
           longitude: longitude.toString(),
           formattedAddress: feature.place_name
         };
+
+        // Cache successful result
+        geocodeCacheService.set(locationName, result, cityContext);
+        return result;
       }
 
       logger.warn(`No geocoding results found for: ${locationName}`);
+      // Cache the "not found" result to avoid repeated lookups
+      geocodeCacheService.set(locationName, null, cityContext);
       return null;
     } catch (error) {
       logger.error('Geocoding error:', error);
+      // Don't cache errors - they might be temporary
       return null;
     }
   }
 
   /**
-   * Geocode multiple locations in batch
+   * Geocode multiple locations in batch with deduplication
    */
   async geocodeMultiple(
     locations: Array<{ name: string; cityContext?: string }>
   ): Promise<Map<string, GeocodedLocation | null>> {
     const results = new Map<string, GeocodedLocation | null>();
     
-    // Process in batches to avoid rate limiting
+    // Deduplicate locations first
+    const uniqueLocations = new Map<string, { name: string; cityContext?: string }>();
+    for (const loc of locations) {
+      const key = `${loc.name}:${loc.cityContext || ''}`;
+      if (!uniqueLocations.has(key)) {
+        uniqueLocations.set(key, loc);
+      }
+    }
+    
+    logger.info(`Batch geocoding: ${locations.length} locations, ${uniqueLocations.size} unique`);
+    
+    // Check cache for all locations first
+    const toGeocode: Array<{ name: string; cityContext?: string }> = [];
+    for (const loc of uniqueLocations.values()) {
+      const cached = geocodeCacheService.get(loc.name, loc.cityContext);
+      if (cached !== undefined) {
+        results.set(loc.name, cached);
+      } else {
+        toGeocode.push(loc);
+      }
+    }
+    
+    if (toGeocode.length === 0) {
+      logger.info('All locations found in cache');
+      return results;
+    }
+    
+    logger.info(`${results.size} locations from cache, ${toGeocode.length} need geocoding`);
+    
+    // Process uncached locations in batches to avoid rate limiting
     const batchSize = 5;
-    for (let i = 0; i < locations.length; i += batchSize) {
-      const batch = locations.slice(i, i + batchSize);
+    for (let i = 0; i < toGeocode.length; i += batchSize) {
+      const batch = toGeocode.slice(i, i + batchSize);
       
       const promises = batch.map(async (loc) => {
         const result = await this.geocodeLocation(loc.name, loc.cityContext);
@@ -97,7 +143,13 @@ export class GeocodingService {
    * Try to geocode using AI as fallback if Mapbox fails
    */
   async geocodeWithFallback(locationName: string, cityContext?: string): Promise<GeocodedLocation | null> {
-    // First try Mapbox
+    // Check cache first (includes both Mapbox and AI results)
+    const cached = geocodeCacheService.get(locationName, cityContext);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    // Try Mapbox first (will also check cache internally)
     const mapboxResult = await this.geocodeLocation(locationName, cityContext);
     if (mapboxResult) {
       return mapboxResult;
@@ -130,10 +182,14 @@ If you cannot find the location, return:
         try {
           const coords = JSON.parse(response);
           if (coords.latitude && coords.longitude) {
-            return {
+            const result = {
               latitude: coords.latitude.toString(),
               longitude: coords.longitude.toString()
             };
+            // Cache AI result
+            geocodeCacheService.set(locationName, result, cityContext);
+            logger.info(`AI geocoded and cached: ${locationName}`);
+            return result;
           }
         } catch (parseError) {
           logger.error('Failed to parse AI geocoding response:', parseError);
@@ -143,6 +199,8 @@ If you cannot find the location, return:
       }
     }
 
+    // Cache the failure to avoid repeated attempts
+    geocodeCacheService.set(locationName, null, cityContext);
     return null;
   }
 }

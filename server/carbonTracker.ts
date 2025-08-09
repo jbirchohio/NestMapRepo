@@ -73,9 +73,9 @@ export async function calculateCarbonFootprint(
   destination: string
 ): Promise<CarbonFootprint> {
   try {
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    // Using GPT-3.5 for 80% cost savings
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -128,7 +128,7 @@ export async function generateExpenseReport(
 ): Promise<ExpenseReport> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -178,7 +178,7 @@ export async function suggestCarbonOffsets(
 ): Promise<any[]> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",

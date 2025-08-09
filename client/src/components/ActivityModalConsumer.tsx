@@ -95,6 +95,32 @@ export default function ActivityModalConsumer({
     mutationFn: async (data: any) => {
       if (!activity) return null;
       
+      // Geocode if location changed but no new coordinates provided
+      let locationData = {
+        latitude: data.latitude || activity.latitude || "",
+        longitude: data.longitude || activity.longitude || "",
+      };
+      
+      // Check if location name changed and needs geocoding
+      const locationChanged = data.locationName && data.locationName !== activity.locationName;
+      const needsGeocoding = locationChanged && !data.latitude && !data.longitude && 
+                             data.locationName !== "Find a spot nearby";
+      
+      if (needsGeocoding) {
+        try {
+          const result = await geocodeLocation(data.locationName);
+          if (result) {
+            locationData.latitude = result.latitude.toString();
+            locationData.longitude = result.longitude.toString();
+            console.log(`Geocoded updated location: ${data.locationName}`, result);
+          } else {
+            console.log(`Could not geocode updated location: ${data.locationName}`);
+          }
+        } catch (error) {
+          console.log("Geocoding error during update:", error);
+        }
+      }
+      
       const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
       
@@ -102,6 +128,7 @@ export default function ActivityModalConsumer({
         const updatedActivity = {
           ...activity,
           ...data,
+          ...locationData,
           date: typeof data.date === 'string' ? data.date : data.date.toISOString(),
         };
         
@@ -120,6 +147,7 @@ export default function ActivityModalConsumer({
         locationName: data.locationName,
         notes: data.notes,
         date: data.date,
+        ...locationData,
         tripId: typeof tripId === 'string' ? parseInt(tripId) : tripId,
         order: activity.order,
       };

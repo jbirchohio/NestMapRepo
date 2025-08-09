@@ -115,7 +115,7 @@ export class AntiPiracyService {
     // Check if trip was created shortly after any purchase
     for (const purchase of purchases) {
       const template = await storage.getTemplate(purchase.templateId);
-      if (!template || template.price === '0') continue;
+      if (!template || parseFloat(template.price || '0') === 0) continue;
 
       // Check if trip was created within 24 hours of purchase
       const purchaseTime = new Date(purchase.purchasedAt).getTime();
@@ -164,7 +164,7 @@ export class AntiPiracyService {
 
     for (const purchase of purchases) {
       const template = await storage.getTemplate(purchase.templateId);
-      if (!template || template.price === '0') continue;
+      if (!template || parseFloat(template.price || '0') === 0) continue;
 
       const templateData = template.trip_data as any;
       if (!templateData) continue;
@@ -175,7 +175,7 @@ export class AntiPiracyService {
 
       // Compare fingerprints
       const similarity = this.compareFingerprints(tripFingerprint, templateFingerprint);
-      if (similarity > 0.85) {
+      if (similarity > 0.40) {  // Lowered from 0.85 to 0.40 for better detection
         logger.warn(`Fingerprint check: Trip ${tripId} matches template ${purchase.templateId} with ${similarity * 100}% similarity`);
         return {
           isPirated: true,
@@ -213,7 +213,7 @@ export class AntiPiracyService {
 
     for (const purchase of purchases) {
       const template = await storage.getTemplate(purchase.templateId);
-      if (!template || template.price === '0') continue;
+      if (!template || parseFloat(template.price || '0') === 0) continue;
 
       const templateData = template.trip_data as any;
       if (!templateData) continue;
@@ -225,7 +225,7 @@ export class AntiPiracyService {
       const matchingSequences = this.findMatchingSequences(tripSequences, templateSequences);
       const matchRatio = matchingSequences / Math.min(tripSequences.length, templateSequences.length);
 
-      if (matchRatio > 0.7) {
+      if (matchRatio > 0.40) {  // Lowered from 0.7 to 0.40 for better detection
         logger.warn(`Sequence check: Trip ${tripId} has ${matchRatio * 100}% matching sequences with template ${purchase.templateId}`);
         return {
           isPirated: true,
@@ -391,8 +391,8 @@ export class AntiPiracyService {
       const matchingSequences = this.findMatchingSequences(tripSequences, templateSequences);
       const matchRatio = matchingSequences / Math.min(tripSequences.length, templateSequences.length);
 
-      // Higher threshold for duplicate detection (90% similarity)
-      if (matchRatio > 0.9) {
+      // Threshold for duplicate detection
+      if (matchRatio > 0.60) {  // Lowered from 0.9 to 0.60 for better duplicate detection
         logger.warn(`Duplicate content detected: Trip ${tripId} is ${matchRatio * 100}% similar to template ${template.id}`);
         return {
           isDuplicate: true,

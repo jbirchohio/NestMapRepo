@@ -6,6 +6,9 @@ import { db } from '../db-connection';
 import { users, templatePurchases, templates } from '@shared/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import Stripe from 'stripe';
+import { paymentRateLimit } from '../middleware/rateLimiting';
+import { auditService } from '../services/auditService';
+import { paymentIdempotency } from '../middleware/idempotency';
 
 const router = Router();
 
@@ -19,7 +22,7 @@ const stripe = stripeKey
   : null;
 
 // POST /api/checkout/create-payment-intent - Create a payment intent for template purchase
-router.post('/create-payment-intent', requireAuth, async (req, res) => {
+router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdempotency, async (req, res) => {
   try {
     logger.info('Payment intent creation requested', { 
       hasStripe: !!stripe,
@@ -109,7 +112,7 @@ router.post('/create-payment-intent', requireAuth, async (req, res) => {
 });
 
 // POST /api/checkout/confirm-purchase - Confirm the purchase after payment
-router.post('/confirm-purchase', requireAuth, async (req, res) => {
+router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempotency, async (req, res) => {
   try {
     if (!stripe) {
       return res.status(503).json({ 
@@ -137,6 +140,10 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
     // Verify the payment is for this template and user
     if (paymentIntent.metadata.templateId !== template_id.toString() ||
         paymentIntent.metadata.buyerId !== userId.toString()) {
+      logger.warn('Payment metadata mismatch', {
+        expected: { templateId: template_id.toString(), buyerId: userId.toString() },
+        received: { templateId: paymentIntent.metadata.templateId, buyerId: paymentIntent.metadata.buyerId }
+      });
       return res.status(403).json({ message: 'Payment verification failed' });
     }
 
@@ -158,9 +165,30 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       .limit(1);
 
     if (existingPurchase.length > 0) {
+      logger.info(`Purchase already exists for payment intent ${payment_intent_id}`);
+      
+      // If trip wasn't created yet, try to create it now
+      const { templateCopyService } = await import('../services/templateCopyService');
+      let tripId = existingPurchase[0].trip_id;
+      
+      if (!tripId) {
+        try {
+          tripId = await templateCopyService.copyTemplateToTrip(
+            template_id, 
+            userId,
+            start_date ? new Date(start_date) : undefined,
+            end_date ? new Date(end_date) : undefined
+          );
+          logger.info(`Created missing trip ${tripId} for existing purchase ${existingPurchase[0].id}`);
+        } catch (error) {
+          logger.error('Failed to create trip for existing purchase:', error);
+        }
+      }
+      
       return res.json({
         message: 'Purchase already processed',
         purchaseId: existingPurchase[0].id,
+        tripId
       });
     }
 
@@ -203,9 +231,9 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
       })
       .where(eq(users.id, template.user_id));
 
-    // Copy template to user's trips with the selected dates
-    const { templateCopyService } = await import('../services/templateCopyService');
-    const newTripId = await templateCopyService.copyTemplateToTrip(
+    // Copy template to user's trips with the selected dates (using transactional version)
+    const { templateCopyServiceV2 } = await import('../services/templateCopyServiceV2');
+    const newTripId = await templateCopyServiceV2.copyTemplateToTrip(
       template_id, 
       userId,
       start_date ? new Date(start_date) : undefined,
@@ -213,6 +241,14 @@ router.post('/confirm-purchase', requireAuth, async (req, res) => {
     );
 
     logger.info(`Template ${template_id} purchased by user ${userId}, copied to trip ${newTripId}`);
+    
+    // Audit log the purchase
+    await auditService.logTemplateEvent('template.purchased', template_id, userId, {
+      price: grossPrice,
+      sellerId: template.user_id,
+      purchaseId: purchase.id,
+      tripId: newTripId
+    });
 
     res.json({
       message: 'Purchase completed successfully',

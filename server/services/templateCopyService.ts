@@ -3,6 +3,8 @@ import { logger } from '../utils/logger';
 import { nanoid } from 'nanoid';
 import { geocodingService } from './geocodingService';
 import crypto from 'crypto';
+import { db } from '../db-connection';
+import { trips, activities } from '@shared/schema';
 
 /**
  * Service to copy a purchased template to user's trips
@@ -30,7 +32,7 @@ export class TemplateCopyService {
 
       // Verify user has purchased the template
       const hasPurchased = await storage.hasUserPurchasedTemplate(userId, templateId);
-      if (!hasPurchased && template.price !== '0') {
+      if (!hasPurchased && parseFloat(template.price || '0') > 0) {
         throw new Error('Template not purchased');
       }
 

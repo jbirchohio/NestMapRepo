@@ -10,7 +10,6 @@ import useMapbox from "@/hooks/useMapbox";
 import { Calendar, MapPin, Sparkles, X, ChevronRight } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import PremiumUpgrade from "./PremiumUpgrade";
 
 interface NewTripModalProps {
   isOpen: boolean;
@@ -56,7 +55,6 @@ export default function NewTripModalConsumer({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [showUpgrade, setShowUpgrade] = useState(false);
   
   // Rotate examples
   useEffect(() => {
