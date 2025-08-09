@@ -42,6 +42,9 @@ const HOST = process.env.HOST || "0.0.0.0";
 // Export app for testing
 export { app };
 
+// Trust proxy headers when running behind Railway's load balancer
+app.set('trust proxy', true);
+
 // Session store removed - using JWT-only authentication
 
 // Sentry request tracking middleware (must be first)
