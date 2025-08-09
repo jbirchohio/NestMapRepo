@@ -25,6 +25,19 @@ export default function ActivityModalConsumer({
 }: ActivityModalProps) {
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
+  
+  // Get trip context from localStorage for geocoding proximity
+  const getTripContext = () => {
+    try {
+      const tripData = localStorage.getItem(`trip_${tripId}`);
+      if (tripData) {
+        return JSON.parse(tripData);
+      }
+    } catch (e) {
+      console.error('Error getting trip context:', e);
+    }
+    return null;
+  };
 
   // Create/Update mutation
   const createActivity = useMutation({
@@ -38,10 +51,12 @@ export default function ActivityModalConsumer({
       // If no coordinates provided and we have a location name, geocode it
       if (!data.latitude && !data.longitude && data.locationName && data.locationName !== "Find a spot nearby") {
         try {
-          const result = await geocodeLocation(data.locationName);
+          const tripContext = getTripContext();
+          const result = await geocodeLocation(data.locationName, { tripContext });
           if (result) {
             locationData.latitude = result.latitude.toString();
             locationData.longitude = result.longitude.toString();
+            console.log(`Geocoded with trip context: ${data.locationName}`, result);
           }
         } catch (error) {
           console.log("Could not geocode location");
@@ -108,11 +123,12 @@ export default function ActivityModalConsumer({
       
       if (needsGeocoding) {
         try {
-          const result = await geocodeLocation(data.locationName);
+          const tripContext = getTripContext();
+          const result = await geocodeLocation(data.locationName, { tripContext });
           if (result) {
             locationData.latitude = result.latitude.toString();
             locationData.longitude = result.longitude.toString();
-            console.log(`Geocoded updated location: ${data.locationName}`, result);
+            console.log(`Geocoded updated location with context: ${data.locationName}`, result);
           } else {
             console.log(`Could not geocode updated location: ${data.locationName}`);
           }

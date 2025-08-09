@@ -1,118 +1,165 @@
-# Remvana - Simple Travel Planning Made Easy
+# Remvana - Trip Planning & Template Marketplace
 
-🌍 **Plan trips like you text a friend**
+A consumer-focused travel planning application with itinerary builder and shareable templates.
 
-Remvana is a consumer-friendly travel planning app that makes organizing your adventures as easy as having a conversation. With smart suggestions, bookable experiences, and a beautiful interface, travel planning has never been this simple.
-
-## ✨ Features
+## Features
 
 ### Trip Planning
-- **Conversational Interface**: Create trips with natural, friendly prompts
-- **Smart Suggestions**: AI-powered recommendations for activities and destinations
-- **Visual Timeline**: See your entire trip at a glance
-- **Flexible Dates**: Easy date picking with calendar integration
+- **Visual Itinerary Builder**: Create day-by-day travel plans with activities
+- **Map Integration**: View all activities on an interactive map with Mapbox
+- **Collaborative Planning**: Share trips with friends and plan together
+- **Activity Management**: Add, edit, and organize activities with drag-and-drop
 
-### Bookable Experiences
-- **Viator Activities**: Browse and book thousands of activities worldwide
-- **Flight Search**: Find the best flights with real-time pricing (via Duffel)
-- **Affiliate Links**: Direct booking through trusted partners
-- **Price Tracking**: See all costs in one place
+### Template Marketplace
+- **Discover Templates**: Browse pre-made itineraries from experienced travelers
+- **Purchase & Customize**: Buy templates and customize them for your dates
+- **Creator Economy**: Sell your own travel itineraries as templates
+- **Reviews & Ratings**: Community-driven quality assurance
 
-### Collaboration
-- **Share Trips**: Send your itinerary to friends and family
-- **Real-time Updates**: Changes sync instantly
-- **Notes & Todos**: Keep track of important details
+### Booking Integration
+- **Affiliate Links**: Book hotels, flights, and activities through partners
+- **Price Tracking**: Monitor prices for your planned activities
+- **Booking Management**: Keep all confirmations in one place
 
-## 🚀 Getting Started
+## Tech Stack
+
+- **Frontend**: React, TypeScript, Vite, TailwindCSS
+- **Backend**: Node.js, Express, PostgreSQL, Drizzle ORM
+- **Authentication**: JWT-based auth with social login support
+- **Payments**: Stripe for template purchases and creator payouts
+- **Maps**: Mapbox for geocoding and map visualization
+- **AI**: OpenAI for trip suggestions and itinerary optimization
+
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
-- PostgreSQL database
-- npm or yarn
+- Node.js 18+
+- PostgreSQL 14+
+- Stripe account (for payments)
+- Mapbox account (for maps)
+
+### Environment Variables
+
+Create a `.env` file with:
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/remvana
+
+# Authentication
+JWT_SECRET=your-jwt-secret
+
+# Stripe (for template marketplace)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRO_PRICE_ID=price_...
+STRIPE_PREMIUM_PRICE_ID=price_...
+
+# External APIs
+MAPBOX_TOKEN=pk_...
+OPENAI_API_KEY=sk-...
+
+# Optional integrations
+VIATOR_API_KEY=...  # Activity search
+DUFFEL_API_KEY=...  # Flight search
+SENDGRID_API_KEY=... # Email notifications
+```
 
 ### Installation
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/remvana.git
-cd remvana
-```
-
-2. Install dependencies:
-```bash
+# Install dependencies
 npm install
-```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret key for authentication
-- `DUFFEL_API_KEY` - For flight search (optional)
-- `OPENAI_API_KEY` - For AI suggestions (optional)
-- `VIATOR_API_KEY` - For activity search (optional)
-
-4. Set up the database:
-```bash
+# Run database migrations
 npm run db:push
-```
 
-5. Start the development server:
-```bash
+# Seed sample templates (optional)
+npm run seed
+
+# Start development server
 npm run dev
 ```
 
-Visit `http://localhost:5000` to see your app!
+The app will be available at `http://localhost:5000`
 
-## 🎨 Tech Stack
+## Key Routes
 
-- **Frontend**: React + TypeScript + Vite
-- **Styling**: Tailwind CSS with purple/pink gradient design
-- **Backend**: Express.js + Node.js
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: JWT-based auth
-- **APIs**: Viator (activities), Duffel (flights), OpenAI (AI suggestions)
+- `/` - Homepage with featured templates
+- `/templates` - Browse template marketplace
+- `/itinerary` - Create and edit trips
+- `/trip/:id` - View/edit specific trip
+- `/map` - Map view of current trip
+- `/account` - User profile and settings
+- `/creator` - Creator dashboard for template sellers
 
-## 📱 Design Philosophy
+## Development
 
-Remvana follows a "5th grade reading level" design philosophy:
-- Simple, conversational language
-- Clear visual hierarchy
-- Minimal cognitive load
-- Delightful interactions
+### Commands
 
-## 🚢 Deployment
-
-### Railway (Recommended)
-1. Connect your GitHub repository
-2. Add environment variables in Railway dashboard
-3. Deploy with one click!
-
-### Manual Deployment
 ```bash
-npm run build
-npm start
+npm run dev        # Start dev server
+npm run build      # Build for production
+npm run preview    # Preview production build
+npm run db:push    # Apply database schema
+npm run db:studio  # Open database GUI
 ```
 
-## 🤝 Contributing
+### Project Structure
 
-We welcome contributions! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+```
+├── client/          # React frontend
+│   ├── src/
+│   │   ├── components/  # React components
+│   │   ├── pages/       # Page components
+│   │   ├── hooks/       # Custom hooks
+│   │   └── lib/         # Utilities
+├── server/          # Express backend
+│   ├── routes/      # API endpoints
+│   ├── services/    # Business logic
+│   └── middleware/  # Express middleware
+├── shared/          # Shared types/schemas
+└── migrations/      # Database migrations
+```
 
-## 📄 License
+## API Documentation
 
-MIT License - feel free to use this for your own projects!
+### Core Endpoints
 
-## 🙏 Acknowledgments
+#### Trips
+- `GET /api/trips` - List user's trips
+- `POST /api/trips` - Create new trip
+- `GET /api/trips/:id` - Get trip details
+- `PUT /api/trips/:id` - Update trip
+- `DELETE /api/trips/:id` - Delete trip
 
-Built with love for travelers who just want to plan amazing trips without the hassle.
+#### Activities
+- `GET /api/activities/trip/:tripId` - List trip activities
+- `POST /api/activities` - Add activity
+- `PUT /api/activities/:id` - Update activity
+- `DELETE /api/activities/:id` - Remove activity
 
----
+#### Templates
+- `GET /api/templates` - Browse templates
+- `GET /api/templates/:id` - Template details
+- `POST /api/templates` - Create template (creators)
+- `POST /api/checkout/create-payment-intent` - Purchase template
 
-**Questions?** Open an issue or reach out at support@remvana.app
+#### AI Features
+- `POST /api/ai/suggest-activities` - Get AI activity suggestions
+- `POST /api/ai/optimize-itinerary` - Optimize trip routing
+- `POST /api/ai/conversational-assistant` - Chat with AI planner
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+## Support
+
+- Documentation: [https://docs.remvana.com](https://docs.remvana.com)
+- Support Email: support@remvana.com
+- GitHub Issues: [Report bugs here](https://github.com/remvana/app/issues)

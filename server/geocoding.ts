@@ -54,7 +54,8 @@ export async function geocodeLocation(
     }
     
     // Use types parameter to prefer POIs over regions
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${mapboxToken}&limit=5&types=poi,address${proximityParam}`;
+    // Include 'place' for neighborhoods but prioritize poi and address
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${mapboxToken}&limit=5&types=poi,address,place${proximityParam}&language=en`;
 
     const response = await fetch(url);
     
@@ -68,13 +69,38 @@ export async function geocodeLocation(
     if (data.features && data.features.length > 0) {
       // If city context is provided, prefer results that include the city
       let bestFeature = data.features[0];
+      let bestScore = 0;
       
       if (cityContext) {
         const cityLower = cityContext.toLowerCase();
+        
+        // Score each feature based on relevance
         for (const feature of data.features) {
+          let score = 0;
+          
+          // Higher score if place name includes the city
           if (feature.place_name && feature.place_name.toLowerCase().includes(cityLower)) {
+            score += 10;
+          }
+          
+          // Higher score for POIs (most specific)
+          if (feature.place_type && feature.place_type.includes('poi')) {
+            score += 5;
+          }
+          
+          // Higher score for addresses
+          if (feature.place_type && feature.place_type.includes('address')) {
+            score += 3;
+          }
+          
+          // Higher relevance score from Mapbox
+          if (feature.relevance) {
+            score += feature.relevance * 2;
+          }
+          
+          if (score > bestScore) {
+            bestScore = score;
             bestFeature = feature;
-            break;
           }
         }
       }

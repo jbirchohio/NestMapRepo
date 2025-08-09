@@ -12,6 +12,10 @@ if (MAPBOX_TOKEN === 'pk.your_mapbox_token' || !MAPBOX_TOKEN) {
   console.warn('Mapbox token not configured. Please set VITE_MAPBOX_TOKEN in your .env file.');
 }
 
+// Simple in-memory cache for geocoding results
+const geocodeCache = new Map<string, { result: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export default function useMapbox() {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -273,7 +277,12 @@ export default function useMapbox() {
     }
   }, []);
 
-  const geocodeLocation = useCallback(async (searchQuery: string, isCity?: boolean): Promise<{
+  const geocodeLocation = useCallback(async (searchQuery: string, options?: {
+    isCity?: boolean;
+    proximityLat?: number;
+    proximityLng?: number;
+    tripContext?: { city?: string; latitude?: number; longitude?: number };
+  }): Promise<{
     latitude: number;
     longitude: number;
     fullAddress: string;
@@ -283,10 +292,44 @@ export default function useMapbox() {
       return null;
     }
     
+    // Check cache first
+    const cacheKey = `${searchQuery}:${options?.tripContext?.city || ''}`.toLowerCase();
+    const cached = geocodeCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log('Geocoding cache hit:', cacheKey);
+      return cached.result;
+    }
+    
     try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&limit=1`
-      );
+      // Clean up search query - remove common prefixes that confuse geocoding
+      let cleanQuery = searchQuery
+        .replace(/^(visit|experience|explore|see|tour|go to|check out)\s+/i, '')
+        .replace(/^the\s+/i, '')
+        .replace(/^local\s+/i, '')
+        .trim();
+      
+      // Add city context if provided and not already in query
+      if (options?.tripContext?.city && 
+          !cleanQuery.toLowerCase().includes(options.tripContext.city.toLowerCase())) {
+        cleanQuery = `${cleanQuery}, ${options.tripContext.city}`;
+      }
+      
+      // Build URL with proximity bias if available
+      let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cleanQuery)}.json?access_token=${MAPBOX_TOKEN}&limit=5`;
+      
+      // Add proximity bias from trip context or explicit coordinates
+      if (options?.proximityLng && options?.proximityLat) {
+        url += `&proximity=${options.proximityLng},${options.proximityLat}`;
+      } else if (options?.tripContext?.longitude && options?.tripContext?.latitude) {
+        url += `&proximity=${options.tripContext.longitude},${options.tripContext.latitude}`;
+      }
+      
+      // Prefer POIs and addresses over regions for activity locations
+      if (!options?.isCity) {
+        url += '&types=poi,address,place';
+      }
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -295,14 +338,44 @@ export default function useMapbox() {
       const data = await response.json();
       
       if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        const [longitude, latitude] = feature.center;
+        // If we have trip context, prefer results near the trip location
+        let bestFeature = data.features[0];
         
-        return {
+        if (options?.tripContext?.city) {
+          const cityLower = options.tripContext.city.toLowerCase();
+          // Find best match that includes the city name
+          for (const feature of data.features) {
+            if (feature.place_name && feature.place_name.toLowerCase().includes(cityLower)) {
+              bestFeature = feature;
+              break;
+            }
+          }
+        }
+        
+        const [longitude, latitude] = bestFeature.center;
+        
+        // Validate result is reasonable (within ~50km of trip location if provided)
+        if (options?.tripContext?.latitude && options?.tripContext?.longitude) {
+          const distance = Math.sqrt(
+            Math.pow(latitude - options.tripContext.latitude, 2) + 
+            Math.pow(longitude - options.tripContext.longitude, 2)
+          );
+          // Roughly 0.5 degrees = ~50km
+          if (distance > 0.5) {
+            console.warn(`Geocoded result seems far from trip location (${distance} degrees)`);
+          }
+        }
+        
+        const result = {
           latitude,
           longitude,
-          fullAddress: feature.place_name
+          fullAddress: bestFeature.place_name
         };
+        
+        // Cache the result
+        geocodeCache.set(cacheKey, { result, timestamp: Date.now() });
+        
+        return result;
       }
       
       return null;

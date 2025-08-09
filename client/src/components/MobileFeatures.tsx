@@ -10,32 +10,22 @@ import {
   Download,
   Upload,
   CheckCircle,
-  AlertTriangle,
-  Plane,
-  Hotel,
-  Car,
-  Receipt
+  Map,
+  Calendar,
+  Share2
 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
 interface OfflineData {
   trips: any[];
-  expenses: any[];
-  receipts: any[];
-  pendingSync: {
-    expenses: any[];
-    receipts: any[];
-    checkIns: any[];
-  };
+  templates: any[];
+  activities: any[];
 }
 
 export function MobileFeatures() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineMode, setOfflineMode] = useState(false);
   const [offlineData, setOfflineData] = useState<OfflineData | null>(null);
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  const queryClient = useQueryClient();
 
   // Monitor online/offline status
   useEffect(() => {
@@ -51,10 +41,10 @@ export function MobileFeatures() {
     };
   }, []);
 
-  // Enable offline mode
+  // Enable offline mode for trip viewing
   const enableOfflineMode = async () => {
     try {
-      // Download essential data
+      // Download trip and template data
       const response = await fetch('/api/mobile/download-offline-data', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -63,28 +53,7 @@ export function MobileFeatures() {
       
       const data = await response.json();
       
-      // Store in IndexedDB
-      if ('indexedDB' in window) {
-        const db = await openOfflineDB();
-        const tx = db.transaction(['trips', 'expenses', 'receipts'], 'readwrite');
-        
-        // Store trips
-        for (const trip of data.trips) {
-          await tx.objectStore('trips').put(trip);
-        }
-        
-        // Store expenses
-        for (const expense of data.expenses) {
-          await tx.objectStore('expenses').put(expense);
-        }
-        
-        await new Promise((resolve, reject) => {
-          tx.oncomplete = () => resolve(undefined);
-          tx.onerror = () => reject(tx.error);
-        });
-      }
-      
-      // Store in localStorage as backup
+      // Store in localStorage for offline access
       localStorage.setItem('offlineData', JSON.stringify(data));
       setOfflineData(data);
       setOfflineMode(true);
@@ -93,150 +62,33 @@ export function MobileFeatures() {
     }
   };
 
-  // Sync offline data when back online
+  // Sync changes when back online
   const syncOfflineData = async () => {
-    if (!offlineData?.pendingSync) return;
+    if (!offlineData) return;
 
     try {
-      // Sync expenses
-      for (const expense of offlineData.pendingSync.expenses) {
-        await fetch('/api/enterprise-expenses', {
-          method: 'POST',
+      // Sync any locally created activities or notes
+      const pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+      
+      for (const change of pendingChanges) {
+        await fetch(`/api/${change.type}`, {
+          method: change.method,
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`
           },
-          body: JSON.stringify(expense)
+          body: JSON.stringify(change.data)
         });
       }
 
-      // Sync receipts
-      for (const receipt of offlineData.pendingSync.receipts) {
-        const formData = new FormData();
-        formData.append('receipt', receipt.file);
-        
-        await fetch(`/api/enterprise-expenses/${receipt.expenseId}/receipt`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          },
-          body: formData
-        });
-      }
-
-      // Check-ins removed - duty of care API not available
-
-      // Clear pending sync
-      setOfflineData({
-        ...offlineData,
-        pendingSync: {
-          expenses: [],
-          receipts: [],
-          checkIns: []
-        }
-      });
-
-      localStorage.removeItem('pendingSync');
-      queryClient.invalidateQueries();
+      // Clear pending changes
+      localStorage.removeItem('pendingChanges');
     } catch (error) {
       console.error('Sync failed:', error);
     }
   };
 
-  // Quick expense capture with camera
-  const captureReceipt = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      setCameraStream(stream);
-    } catch (error) {
-      console.error('Camera access failed:', error);
-    }
-  };
-
-  const takePhoto = () => {
-    if (!cameraStream) return;
-
-    const video = document.querySelector('video') as HTMLVideoElement;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx?.drawImage(video, 0, 0);
-    
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-
-      // Create expense with receipt
-      const expense = {
-        merchant_name: 'Quick Capture',
-        amount: 0, // To be extracted by OCR
-        transaction_date: new Date(),
-        expense_category: 'other',
-        receipt_blob: blob
-      };
-
-      if (isOnline) {
-        // Upload immediately
-        const formData = new FormData();
-        formData.append('receipt', blob, 'receipt.jpg');
-        formData.append('quickCapture', 'true');
-        
-        await fetch('/api/enterprise-expenses/quick-capture', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          },
-          body: formData
-        });
-      } else {
-        // Store offline
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const pendingSync = JSON.parse(localStorage.getItem('pendingSync') || '{"receipts":[]}');
-          pendingSync.receipts.push({
-            file: reader.result,
-            timestamp: new Date(),
-            quickCapture: true
-          });
-          localStorage.setItem('pendingSync', JSON.stringify(pendingSync));
-        };
-        reader.readAsDataURL(blob);
-      }
-
-      // Stop camera
-      cameraStream.getTracks().forEach(track => track.stop());
-      setCameraStream(null);
-    }, 'image/jpeg');
-  };
-
-  // Location-based check-in
-  const checkIn = async () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation not supported');
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const checkInData = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          timestamp: new Date()
-        };
-
-        // Location check-in feature removed - no duty of care API available
-        alert('Check-in feature not available in this version');
-      },
-      (error) => {
-        console.error('Location error:', error);
-      }
-    );
-  };
-
-  // Mobile-optimized UI
+  // Mobile-optimized UI for consumer travel planning
   return (
     <div className="p-4 max-w-md mx-auto">
       {/* Connection Status */}
@@ -255,89 +107,92 @@ export function MobileFeatures() {
               </>
             )}
           </span>
-          {!isOnline && offlineData?.pendingSync && (
-            <span className="text-sm">
-              {Object.values(offlineData.pendingSync).flat().length} items pending sync
-            </span>
-          )}
         </AlertDescription>
       </Alert>
 
-      {/* Quick Actions */}
+      {/* Quick Actions for Travel Planning */}
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3">
           <Button 
-            onClick={captureReceipt}
+            onClick={() => window.location.href = '/itinerary'}
             className="flex flex-col items-center gap-2 h-24"
           >
-            <Camera className="h-6 w-6" />
-            <span className="text-xs">Capture Receipt</span>
+            <Calendar className="h-6 w-6" />
+            <span className="text-xs">View Itinerary</span>
           </Button>
           
-          {/* Check-in removed - no duty of care API */}
-          
           <Button 
-            onClick={() => window.location.href = '/mobile/expenses'}
+            onClick={() => window.location.href = '/map'}
             variant="outline"
             className="flex flex-col items-center gap-2 h-24"
           >
-            <Receipt className="h-6 w-6" />
-            <span className="text-xs">Log Expense</span>
+            <Map className="h-6 w-6" />
+            <span className="text-xs">Trip Map</span>
           </Button>
           
           <Button 
-            onClick={() => window.location.href = '/mobile/emergency'}
-            variant="destructive"
+            onClick={() => window.location.href = '/templates'}
+            variant="outline"
             className="flex flex-col items-center gap-2 h-24"
           >
-            <AlertTriangle className="h-6 w-6" />
-            <span className="text-xs">Emergency</span>
+            <MapPin className="h-6 w-6" />
+            <span className="text-xs">Browse Templates</span>
+          </Button>
+          
+          <Button 
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: 'My Trip',
+                  text: 'Check out my trip itinerary!',
+                  url: window.location.href
+                });
+              }
+            }}
+            variant="outline"
+            className="flex flex-col items-center gap-2 h-24"
+          >
+            <Share2 className="h-6 w-6" />
+            <span className="text-xs">Share Trip</span>
           </Button>
         </CardContent>
       </Card>
 
-      {/* Current Trip */}
+      {/* Current Trip Summary */}
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>Current Trip</CardTitle>
+          <CardTitle>My Trips</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">New York → San Francisco</span>
-              <Plane className="h-4 w-4 text-blue-600" />
+            <div className="text-sm">
+              <p className="font-medium">Weekend in Paris</p>
+              <p className="text-gray-600">Mar 15-17, 2025</p>
             </div>
             <div className="text-sm">
-              <p className="font-medium">Q1 Sales Conference</p>
-              <p className="text-gray-600">Feb 15-18, 2025</p>
+              <p className="font-medium">Summer Road Trip</p>
+              <p className="text-gray-600">Jun 1-14, 2025</p>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline">
-                <Hotel className="h-4 w-4 mr-1" />
-                Hotel
-              </Button>
-              <Button size="sm" variant="outline">
-                <Car className="h-4 w-4 mr-1" />
-                Transport
-              </Button>
-            </div>
+            <Button size="sm" variant="outline" className="w-full">
+              View All Trips
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Offline Mode */}
+      {/* Offline Mode for Trip Access */}
       <Card>
         <CardHeader>
-          <CardTitle>Offline Mode</CardTitle>
+          <CardTitle>Offline Access</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {!offlineMode ? (
             <>
               <p className="text-sm text-gray-600">
-                Download trip data for offline access
+                Download your trips for offline viewing
               </p>
               <Button onClick={enableOfflineMode} className="w-full">
                 <Download className="h-4 w-4 mr-2" />
@@ -353,8 +208,7 @@ export function MobileFeatures() {
               <p className="text-sm text-gray-600">
                 Last synced: {format(new Date(), 'MMM d, h:mm a')}
               </p>
-              {isOnline && offlineData?.pendingSync && 
-                Object.values(offlineData.pendingSync).flat().length > 0 && (
+              {isOnline && (
                 <Button onClick={syncOfflineData} className="w-full">
                   <Upload className="h-4 w-4 mr-2" />
                   Sync Now
@@ -364,47 +218,11 @@ export function MobileFeatures() {
           )}
         </CardContent>
       </Card>
-
-      {/* Camera View */}
-      {cameraStream && (
-        <div className="fixed inset-0 bg-black z-50">
-          <video 
-            autoPlay 
-            playsInline
-            className="w-full h-full object-cover"
-            ref={(video) => {
-              if (video && cameraStream) {
-                video.srcObject = cameraStream;
-              }
-            }}
-          />
-          <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-4">
-            <Button 
-              onClick={takePhoto}
-              size="lg"
-              className="rounded-full w-16 h-16"
-            >
-              <Camera className="h-6 w-6" />
-            </Button>
-            <Button 
-              onClick={() => {
-                cameraStream.getTracks().forEach(track => track.stop());
-                setCameraStream(null);
-              }}
-              variant="outline"
-              size="lg"
-              className="rounded-full"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-// Helper: Open IndexedDB
+// Helper: Open IndexedDB for offline storage
 async function openOfflineDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('RemvanaOffline', 1);
@@ -418,11 +236,11 @@ async function openOfflineDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains('trips')) {
         db.createObjectStore('trips', { keyPath: 'id' });
       }
-      if (!db.objectStoreNames.contains('expenses')) {
-        db.createObjectStore('expenses', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('templates')) {
+        db.createObjectStore('templates', { keyPath: 'id' });
       }
-      if (!db.objectStoreNames.contains('receipts')) {
-        db.createObjectStore('receipts', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('activities')) {
+        db.createObjectStore('activities', { keyPath: 'id' });
       }
     };
   });

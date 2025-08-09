@@ -12,9 +12,9 @@ if (process.env.STRIPE_SECRET_KEY) {
   console.warn('⚠ STRIPE_SECRET_KEY not found - billing features will be disabled');
 }
 
-interface CreateOrganizationSubscriptionParams {
-  organization_id: number;
-  plan: 'team' | 'enterprise';
+interface CreateSubscriptionParams {
+  userId: number;
+  plan: 'pro' | 'premium';
   customerEmail: string;
   customerName: string;
 }
@@ -24,10 +24,10 @@ interface BillingInfo {
   subscriptionId?: string;
   status: 'active' | 'inactive' | 'past_due' | 'canceled';
   currentPeriodEnd?: Date;
-  plan: 'free' | 'team' | 'enterprise';
+  plan: 'free' | 'pro' | 'premium';
 }
 
-export async function createOrganizationSubscription(params: CreateOrganizationSubscriptionParams): Promise<{
+export async function createUserSubscription(params: CreateSubscriptionParams): Promise<{
   clientSecret: string;
   subscriptionId: string;
   customerId: string;
@@ -37,20 +37,20 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
   }
 
   try {
-    // Create Stripe customer for the organization
+    // Create Stripe customer for the user
     const customer = await stripe.customers.create({
       email: params.customerEmail,
       name: params.customerName,
       metadata: {
-        organization_id: params.organization_id.toString(),
+        user_id: params.userId.toString(),
         plan: params.plan
       }
     });
 
-    // Define pricing based on plan
+    // Define pricing based on plan (consumer plans)
     const priceIds = {
-      team: process.env.STRIPE_TEAM_PRICE_ID || 'price_team_default',
-      enterprise: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_default'
+      pro: process.env.STRIPE_PRO_PRICE_ID || 'price_pro_default',
+      premium: process.env.STRIPE_PREMIUM_PRICE_ID || 'price_premium_default'
     };
 
     // Create subscription
@@ -69,7 +69,7 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
     const invoice = subscription.latest_invoice as Stripe.Invoice;
     const paymentIntent = (invoice as any)?.payment_intent as Stripe.PaymentIntent;
 
-    console.log(`✓ Created ${params.plan} subscription for organization ${params.organization_id}`);
+    console.log(`✓ Created ${params.plan} subscription for user ${params.userId}`);
     
     return {
       clientSecret: paymentIntent.client_secret!,
@@ -77,12 +77,12 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
       customerId: customer.id
     };
   } catch (error) {
-    console.error('✗ Failed to create organization subscription:', error);
+    console.error('✗ Failed to create user subscription:', error);
     throw error;
   }
 }
 
-export async function getOrganizationBilling(customerId: string): Promise<BillingInfo> {
+export async function getUserBilling(customerId: string): Promise<BillingInfo> {
   if (!stripe) {
     return {
       status: 'inactive',
@@ -116,7 +116,7 @@ export async function getOrganizationBilling(customerId: string): Promise<Billin
     }
 
     const subscription = subscriptions.data[0];
-    const plan = customer.metadata?.plan as 'team' | 'enterprise' || 'free';
+    const plan = customer.metadata?.plan as 'pro' | 'premium' || 'free';
 
     return {
       customerId,
@@ -126,7 +126,7 @@ export async function getOrganizationBilling(customerId: string): Promise<Billin
       plan
     };
   } catch (error) {
-    console.error('✗ Failed to get organization billing:', error);
+    console.error('✗ Failed to get user billing:', error);
     return {
       status: 'inactive',
       plan: 'free'
@@ -134,7 +134,7 @@ export async function getOrganizationBilling(customerId: string): Promise<Billin
   }
 }
 
-export async function cancelOrganizationSubscription(subscriptionId: string): Promise<boolean> {
+export async function cancelUserSubscription(subscriptionId: string): Promise<boolean> {
   if (!stripe) {
     throw new Error('Stripe not configured - billing features disabled');
   }
@@ -152,9 +152,9 @@ export async function cancelOrganizationSubscription(subscriptionId: string): Pr
   }
 }
 
-export async function updateOrganizationSubscription(
+export async function updateUserSubscription(
   subscriptionId: string, 
-  newPlan: 'team' | 'enterprise'
+  newPlan: 'pro' | 'premium'
 ): Promise<boolean> {
   if (!stripe) {
     throw new Error('Stripe not configured - billing features disabled');
@@ -164,8 +164,8 @@ export async function updateOrganizationSubscription(
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     
     const priceIds = {
-      team: process.env.STRIPE_TEAM_PRICE_ID || 'price_team_default',
-      enterprise: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_default'
+      pro: process.env.STRIPE_PRO_PRICE_ID || 'price_pro_default',
+      premium: process.env.STRIPE_PREMIUM_PRICE_ID || 'price_premium_default'
     };
 
     await stripe.subscriptions.update(subscriptionId, {
