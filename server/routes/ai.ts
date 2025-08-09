@@ -383,11 +383,19 @@ Guidelines for activities:
 - Mix different types of activities (sightseeing, dining, entertainment)
 - For the city they mentioned, use actual popular attractions
 
-Example activities for NYC:
-- "Visit Empire State Building" at "350 5th Ave, New York, NY"
-- "Lunch at Joe's Pizza" at "7 Carmine St, Greenwich Village"  
-- "See Hamilton on Broadway" at "Richard Rodgers Theatre, 226 W 46th St"
-- "Walk the High Line" at "Gansevoort St to 34th St, Manhattan"
+CRITICAL: Use REAL, SPECIFIC places that actually exist. Examples:
+
+For NYC:
+- "Visit Empire State Building" at "350 5th Ave, New York, NY 10118"
+- "Lunch at Joe's Pizza" at "7 Carmine St, New York, NY 10014"  
+- "See The Lion King on Broadway" at "Minskoff Theatre, 200 W 45th St, New York, NY"
+- "Walk the High Line" at "High Line Park, New York, NY 10011"
+- "Brunch at Jacob's Pickles" at "509 Amsterdam Ave, New York, NY 10024"
+
+For other cities, use similarly specific, real locations:
+- London: "Visit British Museum" at "Great Russell St, London WC1B 3DG"
+- Paris: "Lunch at Café de Flore" at "172 Bd Saint-Germain, 75006 Paris"
+- Tokyo: "Dinner at Ichiran Ramen" at "3-34-11 Shinjuku, Tokyo"
 
 Make dates start from the next Friday if not specified.` : 'Do not include any JSON blocks unless the user explicitly asks to create or plan a trip.'}
 
@@ -398,7 +406,7 @@ Keep your main response conversational and helpful.`
       model: "gpt-3.5-turbo",
       messages: [systemMessage, ...messages],
       temperature: 0.7,
-      max_tokens: 800
+      max_tokens: 1000  // Increased for detailed activities
     });
     
     const aiResponse = response.choices[0].message.content || "";
@@ -422,6 +430,22 @@ Keep your main response conversational and helpful.`
           
           tripSuggestion.startDate = nextFriday.toISOString().split('T')[0];
           tripSuggestion.endDate = new Date(nextFriday.getTime() + duration).toISOString().split('T')[0];
+        }
+        
+        // If we have activities, enrich them with geocoding
+        if (tripSuggestion.activities && tripSuggestion.activities.length > 0) {
+          const { geocodeLocation } = await import('../geocoding');
+          
+          // Geocode each activity location
+          for (const activity of tripSuggestion.activities) {
+            if (activity.locationName) {
+              const coords = await geocodeLocation(activity.locationName, tripSuggestion.city);
+              if (coords) {
+                activity.latitude = coords.latitude;
+                activity.longitude = coords.longitude;
+              }
+            }
+          }
         }
       } catch (e) {
         console.error("Failed to parse trip JSON:", e);
