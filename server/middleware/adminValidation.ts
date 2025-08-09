@@ -3,74 +3,38 @@ import { Request, Response, NextFunction } from "express";
 
 /**
  * Admin Input Validation Middleware
- * Provides strict validation for administrative endpoints
+ * Provides strict validation for administrative endpoints in consumer app
  */
-
-// Organization update validation schema
-export const organizationUpdateSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  plan: z.enum(['free', 'pro', 'enterprise']).optional(),
-  subscription_status: z.enum(['active', 'inactive', 'suspended', 'cancelled']).optional(),
-  white_label_enabled: z.boolean().optional(),
-  custom_domain: z.string().url().nullable().optional(),
-  branding_config: z.object({
-    companyName: z.string().min(1).max(100).optional(),
-    companyLogo: z.string().url().nullable().optional(),
-    primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-    secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-    accentColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-    supportEmail: z.string().email().optional(),
-    helpUrl: z.string().url().nullable().optional(),
-    footerText: z.string().max(500).nullable().optional()
-  }).optional(),
-  settings: z.object({
-    max_users: z.number().int().min(1).max(10000).optional(),
-    max_trips: z.number().int().min(1).max(100000).optional(),
-    features_enabled: z.array(z.string()).optional(),
-    api_rate_limit: z.number().int().min(100).max(10000).optional()
-  }).optional()
-}).strict(); // Reject any additional fields
-
-// White label request validation schema
-export const whiteLabelRequestSchema = z.object({
-  organization_id: z.number().int().positive(),
-  business_name: z.string().min(1).max(100),
-  business_type: z.string().min(1).max(50),
-  website_url: z.string().url().nullable().optional(),
-  contact_email: z.string().email(),
-  contact_name: z.string().min(1).max(100),
-  use_case: z.string().min(10).max(1000),
-  expected_users: z.number().int().min(1).max(100000),
-  custom_domain: z.string().min(1).max(100).nullable().optional(),
-  additional_requirements: z.string().max(2000).nullable().optional()
-}).strict();
-
-// White label request review schema
-export const whiteLabelReviewSchema = z.object({
-  status: z.enum(['approved', 'rejected']),
-  admin_notes: z.string().min(1).max(1000).optional(),
-  approved_features: z.array(z.string()).optional(),
-  rejection_reason: z.string().min(1).max(500).optional()
-}).strict();
-
-// Custom domain validation schema
-export const customDomainSchema = z.object({
-  domain: z.string().min(1).max(100).regex(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
-  subdomain: z.string().min(1).max(50).regex(/^[a-zA-Z0-9-]+$/).optional(),
-  organization_id: z.number().int().positive()
-}).strict();
-
-// Domain verification schema
-export const domainVerificationSchema = z.object({
-  verification_method: z.enum(['dns', 'file']).optional(),
-  force_recheck: z.boolean().optional()
-}).strict();
 
 // User role update schema (for admin user management)
 export const userRoleUpdateSchema = z.object({
   role: z.enum(['user', 'admin']),
-  role_type: z.enum(['member', 'manager', 'admin']).optional(),
   permissions: z.array(z.string()).optional()
+}).strict();
+
+// Creator status update schema
+export const creatorStatusUpdateSchema = z.object({
+  creator_status: z.enum(['none', 'pending', 'approved', 'verified', 'suspended']),
+  creator_tier: z.enum(['new', 'trusted', 'verified', 'partner']).optional(),
+  admin_notes: z.string().max(1000).optional()
+}).strict();
+
+// Template moderation schema
+export const templateModerationSchema = z.object({
+  status: z.enum(['draft', 'published', 'archived', 'removed']),
+  featured: z.boolean().optional(),
+  removal_reason: z.string().max(500).optional(),
+  admin_notes: z.string().max(1000).optional()
+}).strict();
+
+// Platform settings schema
+export const platformSettingsSchema = z.object({
+  commission_rate: z.number().min(0).max(0.5).optional(), // 0-50% commission
+  stripe_fee_model: z.enum(['platform_pays', 'seller_pays']).optional(),
+  template_review_required: z.boolean().optional(),
+  auto_approve_verified_creators: z.boolean().optional(),
+  max_template_price: z.number().positive().optional(),
+  min_template_price: z.number().min(0).optional()
 }).strict();
 
 /**
@@ -125,32 +89,18 @@ function getSchemaFields(schema: z.ZodSchema): string[] {
 }
 
 /**
- * Middleware to validate organization access
+ * Middleware to validate admin access
  */
-export function validateOrganizationAccess(req: Request, res: Response, next: NextFunction) {
-  const orgId = parseInt(req.params.id);
-  
-  if (isNaN(orgId)) {
-    return res.status(400).json({
-      error: "Invalid organization ID",
-      message: "Organization ID must be a valid number"
+export function validateAdminAccess(req: Request, res: Response, next: NextFunction) {
+  // Only admins can access admin endpoints
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({
+      error: "Access denied",
+      message: "Admin privileges required"
     });
   }
   
-  // Super admins can access any organization
-  if (req.user?.role === 'super_admin') {
-    return next();
-  }
-  
-  // Regular admins can only access their own organization
-  if (req.user?.role === 'admin' && req.user.organization_id === orgId) {
-    return next();
-  }
-  
-  return res.status(403).json({
-    error: "Access denied",
-    message: "Insufficient permissions to access this organization"
-  });
+  next();
 }
 
 /**
@@ -186,7 +136,6 @@ export function auditAdminOperation(operationType: string) {
           operation: operationType,
           userId: req.user?.id,
           userRole: req.user?.role,
-          organizationId: req.user?.organization_id,
           targetResource: req.params.id || 'N/A',
           method: req.method,
           ip: req.ip,
