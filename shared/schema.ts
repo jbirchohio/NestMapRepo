@@ -362,6 +362,38 @@ export const templateCollections = pgTable("template_collections", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Destinations for SEO content
+export const destinations = pgTable("destinations", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  country: text("country"),
+  title: text("title"),
+  meta_description: text("meta_description"),
+  hero_description: text("hero_description"),
+  overview: text("overview"),
+  best_time_to_visit: text("best_time_to_visit"),
+  top_attractions: jsonb("top_attractions").$type<string[]>().default([]),
+  local_tips: jsonb("local_tips").$type<string[]>().default([]),
+  getting_around: text("getting_around"),
+  where_to_stay: text("where_to_stay"),
+  food_and_drink: text("food_and_drink"),
+  faqs: jsonb("faqs").$type<Array<{question: string; answer: string}>>().default([]),
+  seasonal_weather: jsonb("seasonal_weather"),
+  cover_image: text("cover_image"),
+  thumbnail_image: text("thumbnail_image"),
+  image_attribution: text("image_attribution"),
+  status: text("status").default("draft"), // draft, published, archived
+  ai_generated: boolean("ai_generated").default(false),
+  view_count: integer("view_count").default(0),
+  activity_count: integer("activity_count").default(0),
+  template_count: integer("template_count").default(0),
+  popularity_score: decimal("popularity_score", { precision: 5, scale: 2 }).default("0"),
+  last_regenerated: timestamp("last_regenerated"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // DEPRECATED TABLES - kept as empty shells for DB compatibility only
 // These are not used in the consumer app
 
@@ -432,6 +464,7 @@ export const insertBookingSchema = createInsertSchema(bookings);
 export const insertTemplateSchema = createInsertSchema(templates);
 export const insertTemplatePurchaseSchema = createInsertSchema(templatePurchases);
 export const insertTemplateReviewSchema = createInsertSchema(templateReviews);
+export const insertDestinationSchema = createInsertSchema(destinations);
 
 // Simplified user registration schema for consumers
 export const registerUserSchema = z.object({
@@ -456,6 +489,7 @@ export type CreatorProfile = typeof creatorProfiles.$inferSelect;
 export type CreatorBalance = typeof creatorBalances.$inferSelect;
 export type ViatorCommission = typeof viatorCommissions.$inferSelect;
 export type TemplateCollection = typeof templateCollections.$inferSelect;
+export type Destination = typeof destinations.$inferSelect;
 
 // DEPRECATED types - kept for compatibility
 export type Organization = typeof organizations.$inferSelect;
