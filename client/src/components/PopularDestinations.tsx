@@ -14,6 +14,7 @@ interface Destination {
   description: string;
   activities: number;
   avgPrice: string;
+  templateCount?: number;
 }
 
 export default function PopularDestinations() {

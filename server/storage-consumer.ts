@@ -125,7 +125,9 @@ export interface IStorage {
     duration?: number;
     destination?: string;
     sort?: string;
-  }): Promise<Template[]>;
+    page?: number;
+    limit?: number;
+  }): Promise<{ templates: Template[]; total: number; page: number; totalPages: number }>;
   updateTemplate(id: number, updates: any): Promise<Template | undefined>;
   deleteTemplate(id: number): Promise<boolean>;
   incrementTemplateViews(id: number): Promise<void>;
@@ -251,7 +253,7 @@ export class ConsumerDatabaseStorage implements IStorage {
         start_date: insertTrip.start_date,
         end_date: insertTrip.end_date,
         user_id: insertTrip.user_id,
-        organization_id: null, // Always null for consumers
+        organizationId: null, // Always null for consumers
         share_code: shareCode,
         sharing_enabled: insertTrip.sharingEnabled || false,
         share_permission: insertTrip.sharePermission || "read-only",
@@ -311,7 +313,7 @@ export class ConsumerDatabaseStorage implements IStorage {
 
     const allTrips = [...ownTrips, ...collaboratingTrips.map((t) => t.trips)];
     return allTrips.sort(
-      (a, b) => b.start_date.getTime() - a.start_date.getTime(),
+      (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
     );
   }
 
@@ -365,7 +367,7 @@ export class ConsumerDatabaseStorage implements IStorage {
       .insert(activities)
       .values({
         trip_id: insertActivity.trip_id,
-        organization_id: null, // Always null for consumers
+        organizationId: null, // Always null for consumers
         title: insertActivity.title,
         date: insertActivity.date,
         time: insertActivity.time,
@@ -714,7 +716,7 @@ export class ConsumerDatabaseStorage implements IStorage {
       .from(templates)
       .where(where!);
     
-    const total = countResult?.count || 0;
+    const total = Number(countResult?.count) || 0;
     const totalPages = Math.ceil(total / limit);
     
     // Get paginated results

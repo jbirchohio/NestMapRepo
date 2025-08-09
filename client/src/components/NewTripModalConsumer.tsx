@@ -147,7 +147,7 @@ export default function NewTripModalConsumer({
       // If no coordinates yet, try to geocode the city
       if (!data.cityLatitude || !data.cityLongitude) {
         try {
-          const result = await geocodeLocation(data.city, true);
+          const result = await geocodeLocation(data.city, { isCity: true });
           if (result) {
             data.cityLatitude = result.latitude.toString();
             data.cityLongitude = result.longitude.toString();

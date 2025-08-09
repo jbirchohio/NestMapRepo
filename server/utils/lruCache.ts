@@ -7,7 +7,7 @@
 const getLRUCache = async () => {
   try {
     // Try ESM import first
-    const mod = await import('lru-cache');
+    const mod: any = await import('lru-cache');
     return mod.LRUCache || mod.default?.LRUCache || mod.default;
   } catch {
     // Fall back to require for CommonJS

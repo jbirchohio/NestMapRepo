@@ -412,7 +412,7 @@ export default function HomeConsumerRedesigned() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Use real templates if available, otherwise show hardcoded ones */}
-              {(realTemplates && realTemplates.length > 0 ? realTemplates : tripTemplates).map((template: any, index) => (
+              {(realTemplates && realTemplates.length > 0 ? realTemplates : tripTemplates).map((template: any, index: number) => (
                 <motion.div
                   key={template.id || template.slug}
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -536,7 +536,7 @@ export default function HomeConsumerRedesigned() {
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <MapPin className="h-4 w-4 mr-1" />
-                          {trip.destination || 'Planning in progress'}
+                          {trip.city || trip.location || 'Planning in progress'}
                         </div>
                       </div>
                     </CardHeader>

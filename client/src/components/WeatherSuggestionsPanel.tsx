@@ -22,9 +22,9 @@ interface WeatherSuggestionsPanelProps {
 type WeatherCondition = "sunny" | "rainy" | "hot" | "cold" | "windy";
 
 interface WeatherActivitySuggestion {
-  title: string;
-  name?: string;
-  category: "indoor" | "outdoor" | "either";
+  title?: string;
+  name: string;
+  category?: "indoor" | "outdoor" | "either";
   description: string;
   locationName?: string;
   location?: string;
@@ -526,12 +526,12 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
           
           <h4 className="font-medium">Weather-Based Activities</h4>
           <div className="space-y-3">
-            {weatherMutation.data.activities.map((activity, index) => (
+            {weatherMutation.data.activities.map((activity: WeatherActivitySuggestion, index) => (
               <Card key={index} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h5 className="font-medium">{activity.title || activity.name}</h5>
+                      <h5 className="font-medium">{activity.name || activity.title}</h5>
                       <div className="flex items-center text-sm text-muted-foreground mt-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${
                           activity.weatherSuitability?.toLowerCase().includes('indoor') 
@@ -543,7 +543,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
                           {activity.weatherSuitability?.toLowerCase().includes('indoor') ? 'indoor' : 
                            activity.weatherSuitability?.toLowerCase().includes('outdoor') ? 'outdoor' : 'either'}
                         </span>
-                        <span className="ml-2">{activity.locationName || activity.location}</span>
+                        <span className="ml-2">{activity.location || activity.locationName}</span>
                         {activity.duration && <span className="ml-2">• {activity.duration}</span>}
                       </div>
                       <p className="text-sm mt-2">{activity.description}</p>
@@ -586,7 +586,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h5 className="font-medium">{activity.title || activity.name}</h5>
+                      <h5 className="font-medium">{activity.name || activity.title}</h5>
                       <div className="flex items-center text-sm text-muted-foreground mt-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${
                           activity.category === 'indoor' 

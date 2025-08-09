@@ -19,7 +19,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { performanceOptimizer } from "./services/performanceOptimizer";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
-import { monitorDatabasePerformance } from "./middleware/database";
+// Database monitoring removed for consumer app
 import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
 import { apiRateLimit, authRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
 // Organization scoping removed for consumer app
@@ -31,7 +31,7 @@ import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
 import { jwtAuthMiddleware } from "./middleware/jwtAuth";
 import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
-import { trackUserActivity } from "./middleware/sessionTracking";
+// Session tracking removed for consumer app
 import { logger } from './utils/logger';
 import { sentryService } from './services/sentryService';
 
@@ -165,9 +165,9 @@ app.use('/api', generalRateLimit);
 
 // Apply unified monitoring (replaces performance, memory, database, and endpoint monitoring)
 import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";
-import { createPerformanceMiddleware } from "./performance-monitor";
+// Performance monitoring removed for consumer app
 app.use(unifiedMonitoringMiddleware);
-app.use(createPerformanceMiddleware());
+// Performance middleware removed
 
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
@@ -199,7 +199,7 @@ app.use('/api', jwtAuthMiddleware);
 // Demo mode removed for consumer app
 
 // Track user activity for security monitoring
-app.use(trackUserActivity);
+// Session tracking removed
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

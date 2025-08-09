@@ -1,5 +1,5 @@
 import React from 'react';
-import Head from 'next/head';
+import { Helmet } from 'react-helmet-async';
 import { SEOMetadata } from '@/lib/seo/metadata';
 
 interface SEOHeadProps extends SEOMetadata {
@@ -20,7 +20,7 @@ export default function SEOHead({
   const twitterHandle = '@remvana';
   
   return (
-    <Head>
+    <Helmet>
       {/* Primary Meta Tags */}
       <title>{title}</title>
       <meta name="title" content={title} />
@@ -56,29 +56,13 @@ export default function SEOHead({
       
       {/* Structured Data */}
       {structuredData && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
       )}
-      
-      {/* Additional meta tags */}
-      <meta name="author" content={siteName} />
-      <meta name="generator" content="Remvana Travel Platform" />
-      
-      {/* Mobile App Tags */}
-      <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      <meta name="apple-mobile-web-app-title" content={siteName} />
-      
-      {/* Favicons */}
-      <link rel="icon" href="/favicon.ico" />
-      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-      <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       
       {/* Additional custom meta tags */}
       {children}
-    </Head>
+    </Helmet>
   );
 }

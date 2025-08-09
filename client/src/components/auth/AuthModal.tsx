@@ -13,16 +13,21 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialView?: "login" | "signup";
+  defaultView?: "login" | "signup"; // Alias for initialView for compatibility
   redirectPath?: string;
+  onSuccess?: () => void;
 }
 
 export default function AuthModal({ 
   isOpen, 
   onClose, 
-  initialView = "login",
-  redirectPath = "/"
+  initialView,
+  defaultView,
+  redirectPath = "/",
+  onSuccess
 }: AuthModalProps) {
-  const [view, setView] = useState<"login" | "signup">(initialView);
+  const effectiveInitialView = initialView || defaultView || "login";
+  const [view, setView] = useState<"login" | "signup">(effectiveInitialView);
   const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,10 +38,10 @@ export default function AuthModal({
     username: ''
   });
 
-  // Update view when initialView changes
+  // Update view when initialView or defaultView changes
   useEffect(() => {
-    setView(initialView);
-  }, [initialView]);
+    setView(effectiveInitialView);
+  }, [effectiveInitialView]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +55,9 @@ export default function AuthModal({
         await signUp(formData.email, formData.password, formData.username);
       }
       onClose();
+      if (onSuccess) {
+        onSuccess();
+      }
       if (redirectPath) {
         window.location.href = redirectPath;
       }
@@ -93,6 +101,9 @@ export default function AuthModal({
               <GoogleSignIn 
                 onSuccess={() => {
                   onClose();
+                  if (onSuccess) {
+                    onSuccess();
+                  }
                   if (redirectPath) {
                     window.location.href = redirectPath;
                   }

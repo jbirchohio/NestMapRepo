@@ -22,7 +22,7 @@ interface ItinerarySidebarProps {
   activities: ClientActivity[];
   todos: Todo[];
   notes: string;
-  activeDay: Date;
+  activeDay: Date | null;
   onChangeDayClick: (day: Date) => void;
   onActivitiesUpdated: () => void;
   onAddActivity?: (activity: ClientActivity | null, day: Date | null) => void;
@@ -201,10 +201,10 @@ export default function ItinerarySidebar({
   };
   
   // Filter activities for the active day
-  const activeDayActivities = activities.filter(activity => {
+  const activeDayActivities = activeDay ? activities.filter(activity => {
     const activityDate = new Date(activity.date);
     return activityDate.toDateString() === activeDay.toDateString();
-  });
+  }) : [];
   
   return (
     <>
@@ -256,7 +256,7 @@ export default function ItinerarySidebar({
                   trip.days.map((day, index) => (
                   <Button
                     key={day.toISOString()}
-                    variant={day.toDateString() === activeDay.toDateString() ? "default" : "outline"}
+                    variant={day.toDateString() === activeDay?.toDateString() ? "default" : "outline"}
                     className="px-3 py-2 text-sm md:text-base h-auto"
                     onClick={() => onChangeDayClick(day)}
                   >
@@ -363,7 +363,7 @@ export default function ItinerarySidebar({
             {/* Itinerary Timeline */}
             <ActivityTimeline 
               activities={activeDayActivities} 
-              date={activeDay} 
+              date={activeDay || new Date()} 
               tripId={trip.id}
               onActivityUpdated={onActivitiesUpdated}
             />
@@ -432,7 +432,7 @@ export default function ItinerarySidebar({
         onClose={() => setIsAIModalOpen(false)}
         trip={trip}
         activities={activities}
-        currentDate={activeDay}
+        currentDate={activeDay || new Date()}
         onActivitiesUpdated={() => {
           queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id, "activities"] });
         }}

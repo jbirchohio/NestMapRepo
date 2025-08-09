@@ -127,7 +127,7 @@ export default function TripOptimizer() {
                       <div>
                         <CardTitle>{trip.title}</CardTitle>
                         <CardDescription>
-                          {trip.destination || 'Destination to be determined'}
+                          {trip.city || trip.location || 'Destination to be determined'}
                         </CardDescription>
                       </div>
                       <div className="text-sm text-gray-500">
@@ -147,7 +147,7 @@ export default function TripOptimizer() {
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          <span>{trip.activities?.length || 0} activities</span>
+                          <span>0 activities</span>
                         </div>
                       </div>
                       <Button

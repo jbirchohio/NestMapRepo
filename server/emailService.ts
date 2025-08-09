@@ -1,5 +1,4 @@
 import { MailService } from '@sendgrid/mail';
-import { getBrandingConfig } from '../config/branding';
 import { logger } from './utils/logger';
 
 let mailService: MailService | null = null;

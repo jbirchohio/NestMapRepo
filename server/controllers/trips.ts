@@ -9,10 +9,7 @@ import {
   contentCreationRateLimit,
   validationSchemas
 } from "../middleware/inputValidation";
-import {
-  logOrganizationAccess,
-  setOrganizationId
-} from "../organizationContext";
+// Organization context removed for consumer app
 
 // All demo data removed - system uses authentic database queries only
 
@@ -28,16 +25,12 @@ export async function getTrips(req: Request, res: Response) {
     }
     
     // Log organization access for audit
-    logOrganizationAccess(req, 'fetch', 'trips');
+    // Organization logging removed for consumer app
     
     const trips = await storage.getTripsByUserId(numericUserId);
     
-    // Filter trips by organization context for multi-tenant security
-    const filteredTrips = trips.filter(trip => {
-      if (!req.organizationContext) return true; // Skip filtering for non-authenticated requests
-      return req.organizationContext.canAccessOrganization(trip.organization_id);
-    });
-    res.json(filteredTrips);
+    // Organization filtering removed for consumer app
+    res.json(trips);
   } catch (error) {
     logger.error("Error fetching trips", { error: error instanceof Error ? error.message : 'Unknown error' });
     res.status(500).json({ message: "Could not fetch trips", error: error instanceof Error ? error.message : "Unknown error" });
@@ -67,7 +60,7 @@ export async function getTripById(req: Request, res: Response) {
     
     // CRITICAL: Verify user can access this trip's organization
     const userOrgId = req.user.organization_id || null;
-    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
     
@@ -114,15 +107,9 @@ export async function createTrip(req: Request, res: Response) {
     if (req.body.country) tripData.country = req.body.country;
     if (req.body.location) tripData.location = req.body.location;
     
-    // Enforce organization context for multi-tenant security
-    const tripDataWithOrg = setOrganizationId(req, tripData);
+    // Organization context removed for consumer app
     
-    // Process trip data with organization context
-    
-    // Log organization access for audit
-    logOrganizationAccess(req, 'create', 'trip');
-    
-    const trip = await storage.createTrip(tripDataWithOrg);
+    const trip = await storage.createTrip(tripData);
     
     // If this trip was created through the booking workflow with hotel information,
     // automatically create a hotel activity
@@ -229,7 +216,7 @@ export async function updateTrip(req: Request, res: Response) {
     );
     
     // Log organization access for audit
-    logOrganizationAccess(req, 'update', 'trip');
+    // Organization logging removed for consumer app
     
     const trip = await storage.updateTrip(tripId, filteredUpdateData);
     if (!trip) {
@@ -271,7 +258,7 @@ export async function deleteTrip(req: Request, res: Response) {
     }
     
     // Log organization access for audit
-    logOrganizationAccess(req, 'delete', 'trip');
+    // Organization logging removed for consumer app
     
     const success = await storage.deleteTrip(tripId);
     if (!success) {

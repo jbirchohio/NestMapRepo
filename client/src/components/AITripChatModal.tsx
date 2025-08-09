@@ -51,8 +51,93 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const createTripFromSuggestion = async (suggestion: any) => {
+    try {
+      // Create the trip first
+      const tripResponse = await fetch('/api/trips', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          title: suggestion.title,
+          description: suggestion.description,
+          city: suggestion.city,
+          country: suggestion.country,
+          startDate: suggestion.startDate,
+          endDate: suggestion.endDate,
+          cityLatitude: suggestion.activities?.[0]?.latitude || null,
+          cityLongitude: suggestion.activities?.[0]?.longitude || null
+        })
+      });
+
+      if (!tripResponse.ok) {
+        throw new Error('Failed to create trip');
+      }
+
+      const newTrip = await tripResponse.json();
+      console.log('Created trip:', newTrip);
+
+      // Now create activities for the trip
+      if (suggestion.activities && suggestion.activities.length > 0) {
+        for (const activity of suggestion.activities) {
+          try {
+            const activityResponse = await fetch('/api/activities', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({
+                tripId: newTrip.id,
+                title: activity.title,
+                date: activity.date,
+                time: activity.time || '09:00',
+                location: activity.locationName,
+                notes: activity.notes || '',
+                latitude: activity.latitude,
+                longitude: activity.longitude
+              })
+            });
+
+            if (!activityResponse.ok) {
+              console.error('Failed to create activity:', activity.title);
+            }
+          } catch (error) {
+            console.error('Error creating activity:', error);
+          }
+        }
+      }
+
+      // Success! Navigate to the trip
+      toast({
+        title: "✈️ Trip Created!",
+        description: `Your ${suggestion.title} is ready with ${suggestion.activities?.length || 0} activities!`,
+      });
+
+      // Navigate to the new trip
+      setLocation(`/trips/${newTrip.id}`);
+      onClose();
+      
+      return newTrip;
+    } catch (error) {
+      console.error('Error creating trip from suggestion:', error);
+      throw error;
+    }
+  };
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
+
+    // Check if user is confirming trip creation
+    const lowerText = text.toLowerCase();
+    const isConfirmingCreation = (lowerText.includes('yes') || 
+                                  lowerText.includes('create') || 
+                                  lowerText.includes('go ahead') ||
+                                  lowerText.includes('do it') ||
+                                  lowerText.includes('sure')) &&
+                                  (window as any).pendingTripSuggestion;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -66,6 +151,26 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
     setIsLoading(true);
 
     try {
+      // If user is confirming, create the trip
+      if (isConfirmingCreation) {
+        const suggestion = (window as any).pendingTripSuggestion;
+        
+        const creatingMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `Creating your trip to ${suggestion.city}... 🎉`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, creatingMessage]);
+
+        await createTripFromSuggestion(suggestion);
+        
+        // Clear the pending suggestion
+        delete (window as any).pendingTripSuggestion;
+        return;
+      }
+
+      // Otherwise, continue the conversation
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
@@ -116,7 +221,9 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I'm having trouble connecting right now. Please try again in a moment!",
+        content: error instanceof Error && error.message.includes('create trip') 
+          ? "I couldn't create the trip. Please try again or create it manually from the dashboard."
+          : "I'm having trouble connecting right now. Please try again in a moment!",
         timestamp: new Date()
       };
       

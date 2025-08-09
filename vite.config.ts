@@ -9,15 +9,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [
-    react(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-        ]
-      : []),
+    react()
   ],
   resolve: {
     alias: {
@@ -78,6 +70,6 @@ export default defineConfig({
       'wouter',
       'date-fns'
     ],
-    exclude: ['@replit/vite-plugin-cartographer']
+    exclude: []
   }
 });

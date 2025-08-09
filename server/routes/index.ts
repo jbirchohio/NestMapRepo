@@ -17,7 +17,7 @@ import adminRoutes from './admin';
 import checkoutRoutes from './checkout';
 import uploadRoutes from './upload';
 import webhookRoutes from './webhooks';
-import analyticsRoutes from './analytics';
+// import analyticsRoutes from './analytics'; // Enterprise feature
 import monitoringRoutes from './monitoring';
 
 const router = Router();
@@ -40,7 +40,7 @@ router.use('/admin', adminRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/webhooks', webhookRoutes);
-router.use('/analytics', analyticsRoutes);
+// router.use('/analytics', analyticsRoutes); // Enterprise feature
 router.use('/monitoring', monitoringRoutes);
 
 // User permissions endpoint - simplified for consumer app

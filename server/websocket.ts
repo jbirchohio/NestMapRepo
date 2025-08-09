@@ -285,6 +285,15 @@ export class CollaborationWebSocketServer {
       throw error;
     }
   }
+
+  // Public method for global broadcasting
+  public broadcastToAll(message: string): void {
+    this.wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
 }
 
 // Global instance for WebSocket operations
@@ -308,12 +317,7 @@ export const WebSocketService = {
       data
     });
     
-    wsInstance.wss.clients.forEach((client) => {
-      if (client.readyState === 1) { // OPEN state
-        // In a real implementation, check if client belongs to organizationId
-        client.send(message);
-      }
-    });
+    wsInstance.broadcastToAll(message);
   }
 };
 

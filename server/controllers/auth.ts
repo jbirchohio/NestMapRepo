@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { storage } from "../storage";
-import { ROLE_PERMISSIONS } from "../rbac";
+// RBAC removed for consumer app
 import { logger } from "../utils/logger";
 
 /**
@@ -83,7 +83,8 @@ export async function getUserPermissions(req: Request, res: Response) {
     }
 
     const userRole = user[0].role || 'user';
-    const permissions = ROLE_PERMISSIONS[userRole as keyof typeof ROLE_PERMISSIONS] || [];
+    // Simple consumer permissions
+    const permissions = ['manage_trips', 'view_trips', 'create_activities'];
 
     return res.json({ 
       permissions, 

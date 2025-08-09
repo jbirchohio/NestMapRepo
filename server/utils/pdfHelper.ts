@@ -227,7 +227,7 @@ function generatePdfHtml(data: PdfGenerationData): string {
                 <div><strong>Destination:</strong> ${trip.city || 'Not specified'}, ${trip.country || ''}</div>
                 <div><strong>Duration:</strong> ${trip.start_date} to ${trip.end_date}</div>
                 <div><strong>Type:</strong> ${trip.trip_type || 'General'}</div>
-                <div><strong>Status:</strong> ${trip.completed ? 'Completed' : 'Planned'}</div>
+                <div><strong>Status:</strong> ${trip.status === 'completed' ? 'Completed' : 'Planned'}</div>
             </div>
         </div>
         
@@ -264,6 +264,7 @@ function generatePdfHtml(data: PdfGenerationData): string {
 
 function groupActivitiesByDay(activities: Activity[]) {
   const grouped = activities.reduce((acc, activity) => {
+    if (!activity.date) return acc; // Skip activities without dates
     const date = new Date(activity.date);
     const dateKey = date.toDateString();
     
