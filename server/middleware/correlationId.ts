@@ -51,39 +51,46 @@ export function correlationIdMiddleware(req: Request, res: Response, next: NextF
     res.setHeader('X-Parent-Request-ID', String(parentRequestId));
   }
 
-  // Create child logger with correlation context
-  const childLogger = logger.child({
+  // Create context object for logging
+  const logContext = {
     correlationId,
     requestId,
     parentRequestId: parentRequestId || undefined,
     method: req.method,
     path: req.path,
     userId: (req as any).user?.id,
-  });
+  };
 
-  // Attach logger to request for use in handlers
-  (req as any).logger = childLogger;
+  // Attach context to request for use in handlers
+  (req as any).logContext = logContext;
 
-  // Log request start
-  childLogger.info('Request started', {
-    ip: req.ip,
-    userAgent: req.headers['user-agent'],
-    referer: req.headers.referer,
-  });
+  // Log request start (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    logger.info('Request started', {
+      ...logContext,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      referer: req.headers.referer,
+    });
+  }
 
   // Track request timing
   const startTime = Date.now();
 
-  // Log response when finished
+  // Log response when finished (only for errors in production)
   const originalEnd = res.end;
   res.end = function(...args: any[]) {
     const duration = Date.now() - startTime;
     
-    childLogger.info('Request completed', {
-      statusCode: res.statusCode,
-      duration: `${duration}ms`,
-      contentLength: res.getHeader('content-length'),
-    });
+    // Only log in development or for errors
+    if (process.env.NODE_ENV === 'development' || res.statusCode >= 400) {
+      logger.info('Request completed', {
+        ...logContext,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`,
+        contentLength: res.getHeader('content-length'),
+      });
+    }
 
     // Call original end method
     return originalEnd.apply(res, args as any);
@@ -92,7 +99,8 @@ export function correlationIdMiddleware(req: Request, res: Response, next: NextF
   // Handle errors
   res.on('error', (error) => {
     const duration = Date.now() - startTime;
-    childLogger.error('Request failed', {
+    logger.error('Request failed', {
+      ...logContext,
       error: error.message,
       stack: error.stack,
       duration: `${duration}ms`,
@@ -163,19 +171,24 @@ export function traced<T extends (...args: any[]) => Promise<any>>(
   context: { correlationId?: string; requestId?: string }
 ): T {
   return (async (...args: any[]) => {
-    const childLogger = logger.child({
+    const logContext = {
       correlationId: context.correlationId,
       requestId: context.requestId,
       function: fn.name || 'anonymous',
-    });
+    };
 
     try {
-      childLogger.debug(`Function ${fn.name} started`);
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`Function ${fn.name} started`, logContext);
+      }
       const result = await fn(...args);
-      childLogger.debug(`Function ${fn.name} completed`);
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`Function ${fn.name} completed`, logContext);
+      }
       return result;
     } catch (error: any) {
-      childLogger.error(`Function ${fn.name} failed`, {
+      logger.error(`Function ${fn.name} failed`, {
+        ...logContext,
         error: error.message,
         stack: error.stack,
       });
