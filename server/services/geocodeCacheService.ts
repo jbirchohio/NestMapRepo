@@ -1,5 +1,4 @@
-import pkg from 'lru-cache';
-const LRUCache = pkg.LRUCache || pkg.default || pkg;
+import { createLRUCache } from '../utils/lruCache';
 import { logger } from '../utils/logger';
 
 interface GeocodedLocation {
@@ -14,13 +13,13 @@ interface CacheEntry {
 }
 
 export class GeocodeCacheService {
-  private cache: LRUCache<string, CacheEntry>;
+  private cache: any;
   private readonly TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
   private readonly MAX_SIZE_MB = 50; // 50MB for geocode cache
   private readonly MAX_ENTRIES = 10000; // Max 10,000 locations cached
 
   constructor() {
-    this.cache = new LRUCache<string, CacheEntry>({
+    this.cache = createLRUCache<string, CacheEntry>({
       max: this.MAX_ENTRIES,
       maxSize: this.MAX_SIZE_MB * 1024 * 1024, // Convert to bytes
       sizeCalculation: (value: CacheEntry) => {

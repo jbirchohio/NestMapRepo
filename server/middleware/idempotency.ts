@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import pkg from 'lru-cache';
-const { LRUCache } = pkg;
+import { createLRUCache } from '../utils/lruCache';
 import crypto from 'crypto';
 import { logger } from '../utils/logger';
 
@@ -10,14 +9,14 @@ import { logger } from '../utils/logger';
  */
 
 // Cache for storing request results (10MB, 1 hour TTL)
-const idempotencyCache = new LRUCache<string, {
+const idempotencyCache = createLRUCache<string, {
   statusCode: number;
   body: any;
   headers: Record<string, string>;
 }>({
   max: 1000,
   ttl: 1000 * 60 * 60, // 1 hour
-  sizeCalculation: (value) => JSON.stringify(value).length,
+  sizeCalculation: (value: any) => JSON.stringify(value).length,
   maxSize: 10 * 1024 * 1024, // 10MB
 });
 

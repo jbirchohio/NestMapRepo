@@ -67,9 +67,15 @@ export const aiRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 100, // Increased significantly
   message: 'Too many AI requests, please try again later',
-  keyGenerator: (req: Request) => {
+  keyGenerator: (req: Request, res: Response) => {
     // Rate limit by user ID if authenticated, otherwise by IP
-    return (req as any).user?.id?.toString() || req.ip || 'unknown';
+    // Use res.locals.ip for IPv6 compatibility
+    return (req as any).user?.id?.toString() || res.locals.ip || req.ip || 'unknown';
+  },
+  skip: (req: Request, res: Response) => {
+    // Store IP for keyGenerator IPv6 compatibility
+    res.locals.ip = req.ip;
+    return false;
   },
   handler: (req: Request, res: Response) => {
     logger.warn(`AI rate limit exceeded for IP: ${req.ip}, user: ${(req as any).user?.id}`);
@@ -86,7 +92,7 @@ export const templateCreationRateLimit = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: 25, // Increased for active creators
   message: 'Template creation limit reached for today',
-  keyGenerator: (req: Request) => {
+  keyGenerator: (req: Request, res: Response) => {
     // Rate limit by user ID
     return (req as any).user?.id?.toString() || 'anonymous';
   },

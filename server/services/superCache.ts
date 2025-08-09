@@ -1,5 +1,4 @@
-import pkg from 'lru-cache';
-const { LRUCache } = pkg;
+import { createLRUCache } from '../utils/lruCache';
 import { logger } from '../utils/logger';
 
 /**
@@ -8,11 +7,11 @@ import { logger } from '../utils/logger';
  */
 export class SuperCache {
   // Multiple cache tiers for different data types
-  private templateCache: LRUCache<string, any>;
-  private queryCache: LRUCache<string, any>;
-  private userCache: LRUCache<string, any>;
-  private geoCache: LRUCache<string, any>;
-  private staticCache: LRUCache<string, any>;
+  private templateCache: any;
+  private queryCache: any;
+  private userCache: any;
+  private geoCache: any;
+  private staticCache: any;
   
   // Cache stats for monitoring
   private stats = {
@@ -27,7 +26,7 @@ export class SuperCache {
     // Total ~400MB to stay within Railway's 512MB limit
     
     // Templates change rarely, cache aggressively (150MB)
-    this.templateCache = new LRUCache({
+    this.templateCache = createLRUCache({
       max: 2000, // ~2000 templates
       ttl: 1000 * 60 * 60 * 24, // 24 hours
       sizeCalculation: (value) => JSON.stringify(value).length,
@@ -36,7 +35,7 @@ export class SuperCache {
     });
 
     // Query results cache (100MB)
-    this.queryCache = new LRUCache({
+    this.queryCache = createLRUCache({
       max: 5000,
       ttl: 1000 * 60 * 5, // 5 minutes for dynamic queries
       sizeCalculation: (value) => JSON.stringify(value).length,
@@ -45,7 +44,7 @@ export class SuperCache {
     });
 
     // User data cache (50MB)
-    this.userCache = new LRUCache({
+    this.userCache = createLRUCache({
       max: 10000,
       ttl: 1000 * 60 * 30, // 30 minutes
       sizeCalculation: (value) => JSON.stringify(value).length,
@@ -54,7 +53,7 @@ export class SuperCache {
     });
 
     // Geocoding cache - permanent (50MB)
-    this.geoCache = new LRUCache({
+    this.geoCache = createLRUCache({
       max: 50000,
       ttl: 1000 * 60 * 60 * 24 * 30, // 30 days - geocoding doesn't change
       sizeCalculation: (value) => JSON.stringify(value).length,
@@ -63,7 +62,7 @@ export class SuperCache {
     });
 
     // Static data cache - permanent (50MB)
-    this.staticCache = new LRUCache({
+    this.staticCache = createLRUCache({
       max: 1000,
       ttl: 1000 * 60 * 60 * 24 * 7, // 1 week
       sizeCalculation: (value) => JSON.stringify(value).length,
