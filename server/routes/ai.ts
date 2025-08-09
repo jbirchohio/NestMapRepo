@@ -338,25 +338,60 @@ router.post("/chat", async (req, res) => {
       });
     }
     
+    // Check if this looks like a trip creation request
+    const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || "";
+    const isCreatingTrip = lastMessage.includes("create") || 
+                          lastMessage.includes("plan") || 
+                          lastMessage.includes("itinerary") ||
+                          lastMessage.includes("weekend");
+    
     // Add system prompt for trip planning context
     const systemMessage = {
       role: "system",
-      content: `You are a helpful AI travel assistant. Help users plan their trips by:
-1. Understanding their preferences and requirements
-2. Suggesting destinations, activities, and itineraries
-3. Providing practical travel advice
-4. Creating trip plans they can save
+      content: `You are a helpful AI travel assistant. Help users plan their trips by providing friendly, conversational responses.
 
-When the user is ready to create a trip, format your response to include a tripSuggestion object with:
-- title: Trip title
-- description: Brief description
-- startDate: Start date (YYYY-MM-DD)
-- endDate: End date (YYYY-MM-DD)
-- city: Main destination city
-- country: Country
-- activities: Array of activities with title, date, time, and locationName
+${isCreatingTrip ? `IMPORTANT: The user wants to create a trip. You should:
+1. Provide a conversational response describing the trip plan
+2. Include a JSON block at the end with trip details AND specific activities
 
-Keep responses concise and friendly.`
+Include this EXACT format at the end of your response:
+
+<TRIP_JSON>
+{
+  "title": "Trip title here",
+  "description": "Brief trip description",
+  "startDate": "YYYY-MM-DD",
+  "endDate": "YYYY-MM-DD", 
+  "city": "City name",
+  "country": "Country name",
+  "activities": [
+    {
+      "title": "Specific activity name (e.g., 'Visit Empire State Building')",
+      "date": "YYYY-MM-DD",
+      "time": "HH:MM (e.g., '10:00')",
+      "locationName": "Exact location/address",
+      "notes": "Brief description or tips"
+    }
+  ]
+}
+</TRIP_JSON>
+
+Guidelines for activities:
+- Include 3-5 SPECIFIC activities per day
+- Use real place names (museums, restaurants, landmarks, etc.)
+- Provide realistic times
+- Mix different types of activities (sightseeing, dining, entertainment)
+- For the city they mentioned, use actual popular attractions
+
+Example activities for NYC:
+- "Visit Empire State Building" at "350 5th Ave, New York, NY"
+- "Lunch at Joe's Pizza" at "7 Carmine St, Greenwich Village"  
+- "See Hamilton on Broadway" at "Richard Rodgers Theatre, 226 W 46th St"
+- "Walk the High Line" at "Gansevoort St to 34th St, Manhattan"
+
+Make dates start from the next Friday if not specified.` : 'Do not include any JSON blocks unless the user explicitly asks to create or plan a trip.'}
+
+Keep your main response conversational and helpful.`
     };
     
     const response = await openai.chat.completions.create({
@@ -368,30 +403,38 @@ Keep responses concise and friendly.`
     
     const aiResponse = response.choices[0].message.content || "";
     
-    // Check if the response contains trip creation instructions
+    // Extract trip JSON if present
     let tripSuggestion = null;
-    if (aiResponse.toLowerCase().includes("create") && aiResponse.toLowerCase().includes("trip")) {
-      // Try to extract trip details from the response
-      // This is a simple implementation - could be enhanced with structured output
-      const titleMatch = aiResponse.match(/Title:\s*(.+)/i);
-      const cityMatch = aiResponse.match(/City:\s*(.+)/i);
-      const datesMatch = aiResponse.match(/Dates:\s*(.+)\s*to\s*(.+)/i);
-      
-      if (titleMatch && cityMatch) {
-        tripSuggestion = {
-          title: titleMatch[1].trim(),
-          city: cityMatch[1].trim(),
-          startDate: datesMatch ? datesMatch[1].trim() : new Date().toISOString().split('T')[0],
-          endDate: datesMatch ? datesMatch[2].trim() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          description: "AI-planned trip",
-          activities: []
-        };
+    const jsonMatch = aiResponse.match(/<TRIP_JSON>([\s\S]*?)<\/TRIP_JSON>/);
+    if (jsonMatch) {
+      try {
+        tripSuggestion = JSON.parse(jsonMatch[1]);
+        // Validate dates
+        const today = new Date();
+        const startDate = new Date(tripSuggestion.startDate);
+        const endDate = new Date(tripSuggestion.endDate);
+        
+        // If dates are in the past, adjust them to the future
+        if (startDate < today) {
+          const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7;
+          const nextFriday = new Date(today.getTime() + daysUntilFriday * 24 * 60 * 60 * 1000);
+          const duration = endDate.getTime() - startDate.getTime();
+          
+          tripSuggestion.startDate = nextFriday.toISOString().split('T')[0];
+          tripSuggestion.endDate = new Date(nextFriday.getTime() + duration).toISOString().split('T')[0];
+        }
+      } catch (e) {
+        console.error("Failed to parse trip JSON:", e);
+        tripSuggestion = null;
       }
     }
     
+    // Remove the JSON block from the display message
+    const displayMessage = aiResponse.replace(/<TRIP_JSON>[\s\S]*?<\/TRIP_JSON>/, '').trim();
+    
     res.json({
       success: true,
-      message: aiResponse,
+      message: displayMessage,
       tripSuggestion
     });
   } catch (error) {

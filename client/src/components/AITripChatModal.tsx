@@ -95,29 +95,20 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // If the AI suggests creating a trip, extract details and create it
+      // If the AI suggests creating a trip, offer to create it
       if (data.tripSuggestion) {
-        const createTrip = window.confirm('I\'ve prepared a trip plan for you! Would you like me to create this trip?');
-        if (createTrip) {
-          const tripResponse = await fetch('/api/trips', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(data.tripSuggestion)
-          });
-
-          if (tripResponse.ok) {
-            const newTrip = await tripResponse.json();
-            toast({
-              title: 'Trip created!',
-              description: 'Your AI-planned trip is ready!',
-            });
-            onClose();
-            setLocation(`/trip/${newTrip.id}`);
-          }
-        }
+        // Add a follow-up message asking if they want to create the trip
+        const confirmMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          role: 'assistant',
+          content: `I've prepared a trip plan for "${data.tripSuggestion.title}". Would you like me to create this trip for you? Just say "yes" or "create it" to proceed, or we can keep refining the plan!`,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, confirmMessage]);
+        
+        // Store the suggestion for later use
+        (window as any).pendingTripSuggestion = data.tripSuggestion;
       }
     } catch (error) {
       console.error('AI chat error:', error);
