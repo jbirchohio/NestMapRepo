@@ -135,10 +135,16 @@ router.post('/save-activity', async (req, res) => {
     const city = req.body.city;
     const tripId = req.body.tripId || req.body.trip_id;
     const activityDate = req.body.date;
+    const activityTime = req.body.time;
     
     // Debug logging
-    console.log('Save activity request body:', req.body);
-    console.log('Extracted values:', { productCode, productName });
+    console.log('Save activity request:', {
+      productCode,
+      productName, 
+      date: activityDate,
+      time: activityTime,
+      tripId
+    });
     
     // Validate required fields
     if (!productName || !productCode) {
@@ -175,14 +181,44 @@ router.post('/save-activity', async (req, res) => {
       console.log('Could not geocode activity location:', error);
     }
     
+    // Use provided time or determine a reasonable default based on activity type/duration
+    let finalTime = activityTime;
+    if (!finalTime) {
+      // Default time based on activity type
+      let defaultTime = '09:00'; // Default morning time
+      if (duration) {
+        // If it's a full day activity, start early
+        if (duration.toLowerCase().includes('day') || duration.includes('8h')) {
+          defaultTime = '08:00';
+        } else if (duration.includes('evening') || duration.includes('night')) {
+          defaultTime = '19:00';
+        } else if (duration.includes('afternoon')) {
+          defaultTime = '14:00';
+        }
+      }
+      finalTime = defaultTime;
+    }
+    
+    // Determine activity tag/type for better categorization
+    let activityTag = 'activity'; // default
+    const lowerName = (productName || '').toLowerCase();
+    if (lowerName.includes('tour') || lowerName.includes('sightseeing')) {
+      activityTag = 'tour';
+    } else if (lowerName.includes('food') || lowerName.includes('dinner') || lowerName.includes('lunch')) {
+      activityTag = 'food';
+    } else if (lowerName.includes('transfer') || lowerName.includes('transport')) {
+      activityTag = 'transport';
+    }
+    
     // Add the activity to the trip
     const [activity] = await db.insert(activities)
       .values({
         trip_id: targetTripId,
         title: productName || 'Viator Activity', // Ensure title is never null
-        date: activityDate || null, // Add the activity date
+        date: activityDate || null, // The specific date for the activity
+        time: finalTime, // Add time field for timeline display
         notes: notes,
-        tag: 'activity',
+        tag: activityTag, // Better categorization
         location_name: cleanCity,
         latitude: activityCoords?.latitude || null,
         longitude: activityCoords?.longitude || null,
@@ -194,6 +230,14 @@ router.post('/save-activity', async (req, res) => {
         order: 0
       })
       .returning();
+    
+    console.log('Activity saved successfully:', {
+      id: activity.id,
+      title: activity.title,
+      date: activity.date,
+      time: activity.time,
+      tripId: activity.trip_id
+    });
     
     res.json({ 
       success: true, 

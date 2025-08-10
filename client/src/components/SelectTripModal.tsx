@@ -49,6 +49,7 @@ export default function SelectTripModal({
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [activityDate, setActivityDate] = useState<Date | undefined>(undefined);
+  const [activityTime, setActivityTime] = useState<string>('09:00');
   const [isCreatingTrip, setIsCreatingTrip] = useState(false);
 
   // Reset state when modal opens/closes
@@ -59,12 +60,27 @@ export default function SelectTripModal({
       setSelectedTripId(null);
       setSelectedTrip(null);
       setActivityDate(undefined);
+      
+      // Set intelligent default time based on activity duration
+      let defaultTime = '09:00';
+      if (activity.duration) {
+        const duration = activity.duration.toLowerCase();
+        if (duration.includes('evening') || duration.includes('night')) {
+          defaultTime = '19:00';
+        } else if (duration.includes('afternoon')) {
+          defaultTime = '14:00';
+        } else if (duration.includes('full day') || duration.includes('8h')) {
+          defaultTime = '08:00';
+        }
+      }
+      setActivityTime(defaultTime);
+      
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setStartDate(tomorrow);
       setEndDate(addDays(tomorrow, 6));
     }
-  }, [isOpen]);
+  }, [isOpen, activity]);
 
   // Fetch user's trips
   const { data: trips = [], isLoading: tripsLoading } = useQuery<ClientTrip[]>({
@@ -100,7 +116,7 @@ export default function SelectTripModal({
 
   // Save activity mutation
   const saveActivityMutation = useMutation({
-    mutationFn: async ({ tripId, date }: { tripId: string; date: string }) => {
+    mutationFn: async ({ tripId, date, time }: { tripId: string; date: string; time: string }) => {
       const response = await fetch('/api/viator/save-activity', {
         method: 'POST',
         headers: {
@@ -111,7 +127,8 @@ export default function SelectTripModal({
           ...activity,
           city: cityName,
           tripId,
-          date
+          date,
+          time
         })
       });
       
@@ -202,7 +219,8 @@ export default function SelectTripModal({
     
     saveActivityMutation.mutate({ 
       tripId: selectedTripId,
-      date: format(activityDate, 'yyyy-MM-dd')
+      date: format(activityDate, 'yyyy-MM-dd'),
+      time: activityTime
     });
   };
 
@@ -239,39 +257,51 @@ export default function SelectTripModal({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Select Activity Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !activityDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {activityDate ? format(activityDate, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={activityDate}
-                    onSelect={setActivityDate}
-                    disabled={(date) => {
-                      if (!selectedTrip) return true;
-                      const tripStart = new Date(selectedTrip.startDate);
-                      const tripEnd = new Date(selectedTrip.endDate);
-                      return date < tripStart || date > tripEnd;
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <p className="text-xs text-gray-500">
-                You can only select dates within your trip duration.
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Select Activity Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !activityDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {activityDate ? format(activityDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={activityDate}
+                      onSelect={setActivityDate}
+                      disabled={(date) => {
+                        if (!selectedTrip) return true;
+                        const tripStart = new Date(selectedTrip.startDate);
+                        const tripEnd = new Date(selectedTrip.endDate);
+                        return date < tripStart || date > tripEnd;
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Select Time</Label>
+                <Input
+                  type="time"
+                  value={activityTime}
+                  onChange={(e) => setActivityTime(e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500">
+                  What time should this activity start?
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-between pt-4 border-t">
