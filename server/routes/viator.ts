@@ -125,14 +125,22 @@ router.post('/save-activity', async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    const { productCode, productName, price, duration, affiliateLink, city, tripId } = req.body;
+    // Handle both camelCase and snake_case due to case conversion middleware
+    const productCode = req.body.productCode || req.body.product_code;
+    const productName = req.body.productName || req.body.product_name;
+    const price = req.body.price;
+    const duration = req.body.duration;
+    const affiliateLink = req.body.affiliateLink || req.body.affiliate_link;
+    const city = req.body.city;
+    const tripId = req.body.tripId || req.body.trip_id;
     
     // Debug logging
     console.log('Save activity request body:', req.body);
+    console.log('Extracted values:', { productCode, productName });
     
     // Validate required fields
     if (!productName || !productCode) {
-      console.error('Missing required fields:', { productName, productCode });
+      console.error('Missing required fields:', { productName, productCode, body: req.body });
       return res.status(400).json({ error: 'Activity name and product code are required' });
     }
     
@@ -222,7 +230,10 @@ router.post('/save-activity', async (req, res) => {
  */
 router.post('/track-click', async (req, res) => {
   try {
-    const { productCode, productName, city } = req.body;
+    // Handle both camelCase and snake_case
+    const productCode = req.body.productCode || req.body.product_code;
+    const productName = req.body.productName || req.body.product_name;
+    const city = req.body.city;
     const userId = req.user?.id || null;
     
     // Log the click for analytics (you could save this to a database table)
