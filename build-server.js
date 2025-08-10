@@ -53,6 +53,12 @@ await build({
   outdir: 'dist',
   packages: 'external',
   plugins: [productionViteStubPlugin],
+  banner: {
+    js: `
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+`
+  }
 });
 
 console.log('✅ Server built successfully for production (vite completely removed)');
