@@ -1,17 +1,14 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
-import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const viteLogger = createLogger();
-
+// Simple logger that works in both dev and production
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -23,7 +20,19 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+// Production stub - does nothing
 export async function setupVite(app: Express, server: Server) {
+  if (process.env.NODE_ENV === 'production') {
+    // In production, Vite isn't needed - static files are served directly
+    return;
+  }
+
+  // Only import vite in development
+  const { createServer: createViteServer, createLogger } = await import("vite");
+  const viteConfig = await import("../vite.config");
+  
+  const viteLogger = createLogger();
+  
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -31,7 +40,7 @@ export async function setupVite(app: Express, server: Server) {
   };
 
   const vite = await createViteServer({
-    ...viteConfig,
+    ...viteConfig.default,
     configFile: false,
     customLogger: {
       ...viteLogger,
@@ -48,61 +57,46 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
+    if (url === "/health") {
+      return next();
+    }
+
     try {
-      const clientTemplate = path.resolve(
-        __dirname,
-        "..",
-        "client",
-        "index.html",
-      );
-
-      if (!fs.existsSync(clientTemplate)) {
-        throw new Error(`Missing index.html at ${clientTemplate}`);
-      }
-
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        'src="/src/main.tsx"',
-        `src="/src/main.tsx?v=${nanoid()}"`,
-      );
-      const page = await vite.transformIndexHtml(url, template);
-      res.status(200).set({ "Content-Type": "text/html" }).end(page);
-    } catch (e) {
-      vite.ssrFixStacktrace(e as Error);
-      next(e);
+      const indexPath = path.resolve(process.cwd(), "index.html");
+      let html = fs.readFileSync(indexPath, "utf-8");
+      html = await vite.transformIndexHtml(url, html);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch (e: any) {
+      vite.ssrFixStacktrace(e);
+      console.error(e);
+      res.status(500).end(e.message);
     }
   });
 }
 
+// Production stub for serving static files
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "../dist/public");
-
-  if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+  if (process.env.NODE_ENV !== 'production') {
+    // In development, Vite handles this
+    return;
   }
 
-  // Serve static assets directly
-  app.use(express.static(distPath, {
-    // Don't serve index.html for root requests
-    index: false
-  }));
+  const staticPath = path.resolve(process.cwd(), "dist", "public");
+  
+  if (fs.existsSync(staticPath)) {
+    // Serve static files in production
+    app.use(express.static(staticPath, {
+      maxAge: "1d",
+      etag: true,
+    }));
 
-  // Handle all routes by serving index.html with replaced placeholders
-  app.use("*", (_req, res) => {
-    const indexPath = path.resolve(distPath, "index.html");
-    let html = fs.readFileSync(indexPath, 'utf-8');
-    
-    // Replace placeholders
-    const nonce = Date.now().toString();
-    const mapboxToken = process.env.VITE_MAPBOX_TOKEN || '';
-    
-    html = html
-      .replace(/%NONCE%/g, nonce)
-      .replace(/%MAPBOX_TOKEN%/g, mapboxToken);
-    
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
-  });
+    // Fallback to index.html for client-side routing
+    app.get("*", (req, res) => {
+      if (!req.path.startsWith("/api")) {
+        res.sendFile(path.join(staticPath, "index.html"));
+      }
+    });
+  } else {
+    console.warn(`Static directory not found: ${staticPath}`);
+  }
 }
