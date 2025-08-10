@@ -18,15 +18,21 @@
     <!-- Google Sign In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
-    <!-- Monetization Script -->
+    <!-- Monetization Script - Temporarily disabled due to errors -->
+    <!-- To re-enable, uncomment the script below and ensure it loads after DOM is ready -->
+    <!-- 
     <script data-noptimize="1" data-cfasync="false" data-wpfc-render="false">
-      (function () {
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
           var script = document.createElement("script");
           script.async = 1;
           script.src = 'https://emrldtp.com/NDQ1OTYx.js?t=445961';
+          script.onerror = function() { console.log('Monetization script failed to load'); };
           document.head.appendChild(script);
-      })();
+        }, 3000); // Load after 3 seconds to ensure page is ready
+      });
     </script>
+    -->
   </head>
   <body>
     <div id="root"></div>

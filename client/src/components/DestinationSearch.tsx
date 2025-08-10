@@ -155,7 +155,7 @@ export default function DestinationSearch({
 
       {/* Search Results Dropdown */}
       <AnimatePresence>
-        {showResults && results.length > 0 && (
+        {showResults && (results.length > 0 || query.length >= 2) && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -193,11 +193,26 @@ export default function DestinationSearch({
             </div>
             
             {/* Create New Destination */}
-            <div className="border-t bg-gray-50 p-3">
-              <p className="text-xs text-gray-500 text-center">
-                Can't find your destination? We'll create a custom page for it!
-              </p>
-            </div>
+            {query.length >= 2 && (
+              <button
+                onClick={() => handleSelect({
+                  slug: query.toLowerCase().replace(/\s+/g, '-'),
+                  name: query.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                  country: '',
+                  type: 'city',
+                  inDatabase: false,
+                  description: `Explore ${query}`
+                })}
+                className="w-full border-t bg-gradient-to-r from-purple-50 to-pink-50 p-3 hover:from-purple-100 hover:to-pink-100 transition-colors"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                  <p className="text-sm font-medium text-purple-900">
+                    Explore "{query}" - We'll create a custom guide
+                  </p>
+                </div>
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

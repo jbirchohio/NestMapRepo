@@ -153,20 +153,20 @@ router.get('/popular', async (req, res) => {
       .orderBy(destinations.popularity_score)
       .limit(6);
     
-    if (dbDestinations.length > 0) {
-      const popularDestinations = dbDestinations.map(dest => ({
-        slug: dest.slug,
-        name: dest.name,
-        country: dest.country,
-        image: dest.thumbnail_image || `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&q=80`,
-        description: dest.hero_description || dest.meta_description,
-        activities: dest.activity_count || 0,
-        templateCount: dest.template_count || 0
-      }));
-      
-      res.json({ destinations: popularDestinations });
-    } else {
-      // Fallback to hardcoded list if no destinations in database
+    // If we have some destinations from DB, use them
+    const dbDestinationsMapped = dbDestinations.map(dest => ({
+      slug: dest.slug,
+      name: dest.name,
+      country: dest.country,
+      image: dest.thumbnail_image || `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&q=80`,
+      description: dest.hero_description || dest.meta_description,
+      activities: dest.activity_count || 0,
+      templateCount: dest.template_count || 0
+    }));
+    
+    // If we have less than 6 destinations, supplement with hardcoded popular ones
+    if (dbDestinations.length < 6) {
+      // Fallback to hardcoded list to ensure we always show destinations
       const popularDestinations = [
         { 
           slug: 'new-york',
@@ -230,7 +230,16 @@ router.get('/popular', async (req, res) => {
         }
       ];
       
-      res.json({ destinations: popularDestinations });
+      // Filter out any destinations we already have from DB
+      const existingSlugs = dbDestinationsMapped.map(d => d.slug);
+      const additionalDestinations = popularDestinations.filter(d => !existingSlugs.includes(d.slug));
+      
+      // Combine DB destinations with hardcoded ones
+      const combinedDestinations = [...dbDestinationsMapped, ...additionalDestinations].slice(0, 6);
+      res.json({ destinations: combinedDestinations });
+    } else {
+      // We have enough destinations from DB
+      res.json({ destinations: dbDestinationsMapped });
     }
   } catch (error) {
     logger.error('Popular destinations error:', error);
@@ -269,37 +278,100 @@ router.get('/search', async (req, res) => {
         description: dest.hero_description || dest.meta_description
       }));
     
-    // If we have enough database results, return them
-    if (dbMatches.length >= 5) {
-      return res.json({ results: dbMatches.slice(0, 10) });
-    }
-    
-    // Otherwise, include some popular worldwide destinations
+    // Extended list of worldwide destinations
     const popularDestinations = [
+      // Europe
+      { name: 'Madrid', country: 'Spain', region: 'Europe' },
+      { name: 'Barcelona', country: 'Spain', region: 'Europe' },
+      { name: 'Valencia', country: 'Spain', region: 'Europe' },
+      { name: 'Seville', country: 'Spain', region: 'Europe' },
+      { name: 'Paris', country: 'France', region: 'Europe' },
+      { name: 'Nice', country: 'France', region: 'Europe' },
+      { name: 'Lyon', country: 'France', region: 'Europe' },
+      { name: 'London', country: 'UK', region: 'Europe' },
+      { name: 'Edinburgh', country: 'UK', region: 'Europe' },
+      { name: 'Rome', country: 'Italy', region: 'Europe' },
+      { name: 'Milan', country: 'Italy', region: 'Europe' },
+      { name: 'Venice', country: 'Italy', region: 'Europe' },
+      { name: 'Florence', country: 'Italy', region: 'Europe' },
+      { name: 'Amsterdam', country: 'Netherlands', region: 'Europe' },
+      { name: 'Berlin', country: 'Germany', region: 'Europe' },
+      { name: 'Munich', country: 'Germany', region: 'Europe' },
+      { name: 'Vienna', country: 'Austria', region: 'Europe' },
+      { name: 'Prague', country: 'Czech Republic', region: 'Europe' },
+      { name: 'Budapest', country: 'Hungary', region: 'Europe' },
+      { name: 'Lisbon', country: 'Portugal', region: 'Europe' },
+      { name: 'Porto', country: 'Portugal', region: 'Europe' },
+      { name: 'Athens', country: 'Greece', region: 'Europe' },
+      { name: 'Dublin', country: 'Ireland', region: 'Europe' },
+      { name: 'Copenhagen', country: 'Denmark', region: 'Europe' },
+      { name: 'Stockholm', country: 'Sweden', region: 'Europe' },
+      { name: 'Oslo', country: 'Norway', region: 'Europe' },
+      { name: 'Helsinki', country: 'Finland', region: 'Europe' },
+      { name: 'Zurich', country: 'Switzerland', region: 'Europe' },
+      { name: 'Brussels', country: 'Belgium', region: 'Europe' },
+      
+      // North America
       { name: 'New York', country: 'USA', region: 'North America' },
       { name: 'Los Angeles', country: 'USA', region: 'North America' },
       { name: 'Chicago', country: 'USA', region: 'North America' },
       { name: 'Miami', country: 'USA', region: 'North America' },
       { name: 'San Francisco', country: 'USA', region: 'North America' },
       { name: 'Las Vegas', country: 'USA', region: 'North America' },
-      { name: 'London', country: 'UK', region: 'Europe' },
-      { name: 'Paris', country: 'France', region: 'Europe' },
-      { name: 'Rome', country: 'Italy', region: 'Europe' },
-      { name: 'Barcelona', country: 'Spain', region: 'Europe' },
-      { name: 'Amsterdam', country: 'Netherlands', region: 'Europe' },
-      { name: 'Berlin', country: 'Germany', region: 'Europe' },
-      { name: 'Tokyo', country: 'Japan', region: 'Asia' },
-      { name: 'Bangkok', country: 'Thailand', region: 'Asia' },
-      { name: 'Singapore', country: 'Singapore', region: 'Asia' },
-      { name: 'Dubai', country: 'UAE', region: 'Middle East' },
-      { name: 'Sydney', country: 'Australia', region: 'Oceania' },
+      { name: 'Boston', country: 'USA', region: 'North America' },
+      { name: 'Seattle', country: 'USA', region: 'North America' },
+      { name: 'Washington DC', country: 'USA', region: 'North America' },
+      { name: 'San Diego', country: 'USA', region: 'North America' },
+      { name: 'Denver', country: 'USA', region: 'North America' },
+      { name: 'Austin', country: 'USA', region: 'North America' },
       { name: 'Toronto', country: 'Canada', region: 'North America' },
+      { name: 'Vancouver', country: 'Canada', region: 'North America' },
+      { name: 'Montreal', country: 'Canada', region: 'North America' },
       { name: 'Mexico City', country: 'Mexico', region: 'North America' },
+      { name: 'Cancun', country: 'Mexico', region: 'North America' },
+      
+      // Asia
+      { name: 'Tokyo', country: 'Japan', region: 'Asia' },
+      { name: 'Kyoto', country: 'Japan', region: 'Asia' },
+      { name: 'Osaka', country: 'Japan', region: 'Asia' },
+      { name: 'Bangkok', country: 'Thailand', region: 'Asia' },
+      { name: 'Phuket', country: 'Thailand', region: 'Asia' },
+      { name: 'Singapore', country: 'Singapore', region: 'Asia' },
+      { name: 'Bali', country: 'Indonesia', region: 'Asia' },
+      { name: 'Jakarta', country: 'Indonesia', region: 'Asia' },
+      { name: 'Seoul', country: 'South Korea', region: 'Asia' },
+      { name: 'Hong Kong', country: 'China', region: 'Asia' },
+      { name: 'Shanghai', country: 'China', region: 'Asia' },
+      { name: 'Beijing', country: 'China', region: 'Asia' },
+      { name: 'Mumbai', country: 'India', region: 'Asia' },
+      { name: 'Delhi', country: 'India', region: 'Asia' },
+      { name: 'Kuala Lumpur', country: 'Malaysia', region: 'Asia' },
+      
+      // Middle East
+      { name: 'Dubai', country: 'UAE', region: 'Middle East' },
+      { name: 'Abu Dhabi', country: 'UAE', region: 'Middle East' },
+      { name: 'Istanbul', country: 'Turkey', region: 'Europe/Asia' },
+      { name: 'Tel Aviv', country: 'Israel', region: 'Middle East' },
+      { name: 'Jerusalem', country: 'Israel', region: 'Middle East' },
+      
+      // Oceania
+      { name: 'Sydney', country: 'Australia', region: 'Oceania' },
+      { name: 'Melbourne', country: 'Australia', region: 'Oceania' },
+      { name: 'Auckland', country: 'New Zealand', region: 'Oceania' },
+      
+      // South America
       { name: 'Rio de Janeiro', country: 'Brazil', region: 'South America' },
+      { name: 'São Paulo', country: 'Brazil', region: 'South America' },
       { name: 'Buenos Aires', country: 'Argentina', region: 'South America' },
+      { name: 'Lima', country: 'Peru', region: 'South America' },
+      { name: 'Santiago', country: 'Chile', region: 'South America' },
+      
+      // Africa
       { name: 'Cape Town', country: 'South Africa', region: 'Africa' },
+      { name: 'Johannesburg', country: 'South Africa', region: 'Africa' },
       { name: 'Cairo', country: 'Egypt', region: 'Africa' },
-      { name: 'Istanbul', country: 'Turkey', region: 'Europe/Asia' }
+      { name: 'Marrakech', country: 'Morocco', region: 'Africa' },
+      { name: 'Nairobi', country: 'Kenya', region: 'Africa' }
     ];
     
     const additionalResults = popularDestinations
@@ -317,6 +389,9 @@ router.get('/search', async (req, res) => {
         inDatabase: false,
         description: `Explore ${dest.name}, ${dest.country}`
       }));
+    
+    // Log for debugging
+    logger.info(`Search query: ${q}, DB matches: ${dbMatches.length}, Additional: ${additionalResults.length}`);
     
     // Combine results, prioritizing database results
     const allResults = [...dbMatches, ...additionalResults].slice(0, 10);
