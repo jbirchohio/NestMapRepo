@@ -520,17 +520,17 @@ export default function HomeConsumerRedesigned() {
             </div>
           </div>
 
-          {/* Upcoming Trips (for logged-in users) */}
-          {user && upcomingTrips.length > 0 && (
+          {/* All Trips (for logged-in users) */}
+          {user && trips.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
               className="mb-12"
             >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Your upcoming adventures</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Your trips & ideas</h2>
               <div className="grid gap-4">
-                {upcomingTrips.slice(0, 3).map((trip) => (
+                {trips.slice(0, 6).map((trip) => (
                   <Card 
                     key={trip.id}
                     className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -538,8 +538,16 @@ export default function HomeConsumerRedesigned() {
                   >
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{trip.title}</CardTitle>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-lg">{trip.title}</CardTitle>
+                            {trip.title?.includes('Ideas') && (
+                              <Badge variant="secondary" className="text-xs">
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                Ideas
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600 mt-1">
                             {format(new Date(trip.startDate), 'MMM d')} - {format(new Date(trip.endDate), 'MMM d, yyyy')}
                           </p>
@@ -554,11 +562,14 @@ export default function HomeConsumerRedesigned() {
                 ))}
               </div>
               
-              {trips.length > 3 && (
+              {trips.length > 6 && (
                 <div className="text-center mt-4">
                   <Button 
                     variant="outline" 
-                    onClick={() => setLocation('/trips')}
+                    onClick={() => {
+                      // For now, just show an alert since there's no dedicated trips page
+                      alert(`You have ${trips.length} total trips. Click on any trip card to view it.`);
+                    }}
                   >
                     View all trips ({trips.length})
                   </Button>
