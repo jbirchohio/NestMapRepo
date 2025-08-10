@@ -11,10 +11,9 @@ interface ActivityItemProps {
   activity: ClientActivity;
   onClick: (activity: ClientActivity) => void;
   onDelete?: () => void;
-  onToggleComplete?: (activityId: number, completed: boolean) => void;
 }
 
-export default function ActivityItem({ activity, onClick, onDelete, onToggleComplete }: ActivityItemProps) {
+export default function ActivityItem({ activity, onClick, onDelete }: ActivityItemProps) {
   const { toast } = useToast();
   
   // Delete activity mutation
@@ -44,36 +43,6 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
     },
   });
   
-  // Toggle activity completion
-  const toggleCompleteMutation = useMutation({
-    mutationFn: async (completed: boolean) => {
-      return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}/toggle-complete`, {
-        completed: completed
-      });
-    },
-    onSuccess: (_, completed) => {
-      // Invalidate activities query to refresh the list
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] });
-      
-      toast({
-        title: completed ? "Activity Completed" : "Activity Marked Incomplete",
-        description: completed 
-          ? "The activity has been marked as completed and will be hidden from the map." 
-          : "The activity has been marked as incomplete and will appear on the map.",
-      });
-      
-      // Call parent component's onToggleComplete if provided
-      if (onToggleComplete) onToggleComplete(activity.id, completed);
-    },
-    onError: (error) => {
-      console.error("Error updating activity completion status:", error);
-      toast({
-        title: "Error",
-        description: "Could not update the activity status. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Convert 24-hour time to 12-hour format
   const formatTime = (time: string) => {
@@ -83,12 +52,6 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
     const period = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
     return `${formattedHour}:${minutes} ${period}`;
-  };
-
-  // Handle completion toggle
-  const handleToggleComplete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the activity click
-    toggleCompleteMutation.mutate(!activity.completed);
   };
 
   // Handle delete action
@@ -149,11 +112,11 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
         </div>
         
         <div className="p-3 pt-6 relative">
-          {/* Auto-completion status indicator - read-only */}
+          {/* Completed status indicator - activities auto-complete based on time */}
           {activity.completed && (
             <div 
-              className="absolute right-2 top-2 z-10 w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded-full"
-              title="Auto-completed based on next activity time"
+              className="absolute left-2 top-2 z-10 w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded-full"
+              title="Activity completed (auto-completed based on time)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -161,16 +124,17 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
             </div>
           )}
         
-          {/* Delete button - only visible on hover */}
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div 
-              className="bg-[hsl(var(--destructive))] text-white p-1 rounded-full hover:bg-[hsl(var(--destructive))/90] cursor-pointer"
+          {/* Delete button - visible on hover on desktop, always visible on mobile */}
+          <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+            <button
+              className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 cursor-pointer shadow-sm"
               onClick={handleDelete}
+              title="Delete activity"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-            </div>
+            </button>
           </div>
           
           {/* Activity content area */}

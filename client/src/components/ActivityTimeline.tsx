@@ -40,13 +40,6 @@ export default function ActivityTimeline({
     onActivityUpdated();
   };
   
-  // Handle toggling activity completion status
-  const handleToggleComplete = (activityId: number, completed: boolean) => {
-    console.log(`Toggling activity ${activityId} completion to ${completed}`);
-    // The API request is handled in the ActivityItem component
-    // We just need to refresh the list when completed
-    onActivityUpdated();
-  };
   
   // Sort activities by time
   const sortedActivities = [...activities].sort((a, b) => {
@@ -71,7 +64,6 @@ export default function ActivityTimeline({
             key={activity.id} 
             activity={activity} 
             onClick={handleEditActivity} 
-            onToggleComplete={handleToggleComplete}
             onDelete={onActivityUpdated}
           />
         ))
