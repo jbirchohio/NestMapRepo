@@ -12,6 +12,7 @@ import NewTripModalConsumer from "@/components/NewTripModalConsumer";
 import AITripChatModal from "@/components/AITripChatModal";
 // Removed PackageSearch import
 import PopularDestinations from "@/components/PopularDestinations";
+import DestinationSearch from "@/components/DestinationSearch";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModalSimple from "@/components/auth/AuthModalSimple";
 import { motion } from "framer-motion";
@@ -258,6 +259,15 @@ export default function HomeConsumerRedesigned() {
               <p className="text-2xl text-gray-600 max-w-3xl mx-auto mb-8">
                 AI-powered travel planning that makes organizing your perfect trip as easy as texting a friend
               </p>
+              
+              {/* Destination Search */}
+              <div className="max-w-2xl mx-auto mb-8">
+                <DestinationSearch 
+                  placeholder="Where do you want to go?"
+                  showTrending={true}
+                />
+              </div>
+              
               <div className="flex gap-4 justify-center">
                 <Button
                   size="lg"

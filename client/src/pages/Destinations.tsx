@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  MapPin, Search, Globe, Users, Calendar, TrendingUp,
-  Plane, Hotel, Camera, Utensils, Mountain, Building2
+  MapPin, Globe, Users, Calendar, TrendingUp,
+  Plane, Hotel, Camera, Utensils, Mountain, Building2, Sparkles
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import DestinationSearch from '@/components/DestinationSearch';
 
 interface Destination {
   slug: string;
@@ -23,8 +23,8 @@ interface Destination {
 }
 
 export default function Destinations() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [, setLocation] = useLocation();
 
   // Fetch popular destinations
   const { data: popularData, isLoading } = useQuery({
@@ -39,12 +39,10 @@ export default function Destinations() {
 
   const destinations = popularData?.destinations || [];
 
-  // Filter destinations based on search and region
+  // Filter destinations based on region only (search is handled by component)
   const filteredDestinations = destinations.filter((dest: Destination) => {
-    const matchesSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          dest.country.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRegion = !selectedRegion || getRegion(dest.country) === selectedRegion;
-    return matchesSearch && matchesRegion;
+    return matchesRegion;
   });
 
   const regions = [
@@ -87,15 +85,14 @@ export default function Destinations() {
               find your perfect destination and start planning your next adventure.
             </p>
 
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Search destinations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 py-6 text-lg rounded-full shadow-lg"
+            {/* Enhanced Search Bar */}
+            <div className="max-w-2xl mx-auto">
+              <DestinationSearch 
+                placeholder="Search any city or destination worldwide..."
+                showTrending={true}
+                onSelect={(destination) => {
+                  setLocation(`/destinations/${destination.slug}`);
+                }}
               />
             </div>
           </motion.div>

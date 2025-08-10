@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'wouter';
+import { useParams, Link } from 'wouter';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import MetaTags from '@/components/seo/MetaTags';
 import { generateMetadata, generateFAQSchema, generateBreadcrumbSchema } from '@/lib/seo/metadata';
-// Removed hotel and package search components
+import ExpediaAffiliate from '@/components/ExpediaAffiliate';
 import { 
   MapPin, Calendar, Utensils, Car, Hotel, Plane, 
   Info, Star, TrendingUp, Heart, Camera, Sun
@@ -369,22 +369,29 @@ export default function DestinationGuide() {
                   </CardContent>
                 </Card>
                 
-                {/* CTA Card */}
+                {/* Expedia Booking Widget */}
+                <ExpediaAffiliate 
+                  destination={destinationName}
+                  variant="cta"
+                />
+                
+                {/* Plan Trip CTA */}
                 <Card className="bg-gradient-to-br from-purple-600 to-pink-600 text-white">
                   <CardContent className="text-center py-8">
                     <h3 className="text-2xl font-bold mb-4">
-                      Ready to Visit {destinationName}?
+                      Plan Your {destinationName} Trip
                     </h3>
                     <p className="mb-6">
-                      Save 22% on average when you book flight + hotel together
+                      Use our AI-powered planner to create your perfect itinerary
                     </p>
-                    <Button 
-                      size="lg"
-                      variant="secondary"
-                      onClick={() => setActiveTab('packages')}
-                    >
-                      Search Packages
-                    </Button>
+                    <Link href="/signup">
+                      <Button 
+                        size="lg"
+                        variant="secondary"
+                      >
+                        Start Planning Free
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               </div>
