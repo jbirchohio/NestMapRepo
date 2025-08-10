@@ -364,12 +364,9 @@ export default function SelectTripModal({
                 </Button>
                 <Button
                   onClick={handleSelectTrip}
-                  disabled={!selectedTripId || saveActivityMutation.isPending}
+                  disabled={!selectedTripId}
                 >
-                  {saveActivityMutation.isPending && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  )}
-                  Save to Trip
+                  Next: Select Date
                 </Button>
               </div>
             </div>

@@ -19,7 +19,8 @@ import { motion } from "framer-motion";
 import { 
   Plus, MapPin, Calendar, TrendingUp, Sparkles, 
   MessageSquare, Compass, Clock, Users, Plane,
-  Camera, Heart, Zap, Globe, Star, ArrowRight
+  Camera, Heart, Zap, Globe, Star, ArrowRight,
+  Archive, Trash2
 } from "lucide-react";
 
 
@@ -242,6 +243,48 @@ export default function HomeConsumerRedesigned() {
     }
   };
 
+  const handleArchiveTrip = async (tripId: string) => {
+    if (!confirm('Are you sure you want to archive this trip?')) return;
+    
+    try {
+      const response = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: 'archived' })
+      });
+      
+      if (response.ok) {
+        // Refetch trips
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to archive trip:', error);
+    }
+  };
+
+  const handleDeleteTrip = async (tripId: string) => {
+    if (!confirm('Are you sure you want to delete this trip? This cannot be undone.')) return;
+    
+    try {
+      const response = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        // Refetch trips
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to delete trip:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       {/* Landing Page Hero - Only show for non-logged in users */}
@@ -404,12 +447,107 @@ export default function HomeConsumerRedesigned() {
             ))}
           </div>
 
+          {/* All Trips (for logged-in users) - MOVED TO TOP */}
+          {user && trips.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mb-12"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Your trips & ideas</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsNewTripModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Trip
+                </Button>
+              </div>
+              <div className="grid gap-4">
+                {trips.slice(0, 6).map((trip) => (
+                  <Card 
+                    key={trip.id}
+                    className="cursor-pointer hover:shadow-lg transition-shadow group"
+                    onClick={() => setLocation(`/trip/${trip.id}`)}
+                  >
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-lg">{trip.title}</CardTitle>
+                            {trip.title?.includes('Ideas') && (
+                              <Badge variant="secondary" className="text-xs">
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                Ideas
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {format(new Date(trip.startDate), 'MMM d')} - {format(new Date(trip.endDate), 'MMM d, yyyy')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {trip.city || trip.location || 'Planning in progress'}
+                          </div>
+                          {/* Archive/Delete buttons (hidden by default, shown on hover) */}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleArchiveTrip(trip.id);
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTrip(trip.id);
+                              }}
+                              className="h-8 w-8 p-0 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+              
+              {trips.length > 6 && (
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      // For now, just show an alert since there's no dedicated trips page
+                      alert(`You have ${trips.length} total trips. Click on any trip card to view it.`);
+                    }}
+                  >
+                    View all trips ({trips.length})
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          )}
+
           {/* Trip Templates Section */}
           <div className="mb-12">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: user && trips.length > 0 ? 0.5 : 0.4 }}
               className="text-center mb-8"
             >
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -519,64 +657,6 @@ export default function HomeConsumerRedesigned() {
               ))}
             </div>
           </div>
-
-          {/* All Trips (for logged-in users) */}
-          {user && trips.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-              className="mb-12"
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Your trips & ideas</h2>
-              <div className="grid gap-4">
-                {trips.slice(0, 6).map((trip) => (
-                  <Card 
-                    key={trip.id}
-                    className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => setLocation(`/trip/${trip.id}`)}
-                  >
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg">{trip.title}</CardTitle>
-                            {trip.title?.includes('Ideas') && (
-                              <Badge variant="secondary" className="text-xs">
-                                <Sparkles className="h-3 w-3 mr-1" />
-                                Ideas
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {format(new Date(trip.startDate), 'MMM d')} - {format(new Date(trip.endDate), 'MMM d, yyyy')}
-                          </p>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {trip.city || trip.location || 'Planning in progress'}
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-              
-              {trips.length > 6 && (
-                <div className="text-center mt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      // For now, just show an alert since there's no dedicated trips page
-                      alert(`You have ${trips.length} total trips. Click on any trip card to view it.`);
-                    }}
-                  >
-                    View all trips ({trips.length})
-                  </Button>
-                </div>
-              )}
-            </motion.div>
-          )}
 
           {/* Features for non-logged in users */}
           {!user && (
