@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --require dotenv/config server/index.ts",
-    "build": "vite build && node scripts/build-server.js",
+    "build": "vite build && node build-server.js",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
