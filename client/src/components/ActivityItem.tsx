@@ -19,7 +19,10 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
   // Delete activity mutation
   const deleteActivity = useMutation({
     mutationFn: async () => {
-      return apiRequest("DELETE", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`);
+      console.log(`Attempting to delete activity ${activity.id}`);
+      const url = `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`;
+      console.log(`Delete URL: ${url}`);
+      return apiRequest("DELETE", url);
     },
     onSuccess: () => {
       // Invalidate activities query to refresh the list
@@ -33,11 +36,21 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
       // Call parent component's onDelete if provided
       if (onDelete) onDelete();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error deleting activity:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        response: error.response,
+        activityId: activity.id
+      });
+      
+      // Show more detailed error message
+      const errorMessage = error.message || "Could not delete the activity. Please try again.";
+      
       toast({
-        title: "Error",
-        description: "Could not delete the activity. Please try again.",
+        title: "Error Deleting Activity",
+        description: errorMessage,
         variant: "destructive",
       });
     },
