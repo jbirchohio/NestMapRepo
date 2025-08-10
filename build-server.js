@@ -53,9 +53,6 @@ await build({
   outdir: 'dist',
   packages: 'external',
   plugins: [productionViteStubPlugin],
-  define: {
-    'process.env.NODE_ENV': '"production"',
-  },
 });
 
 console.log('✅ Server built successfully for production (vite completely removed)');
