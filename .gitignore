@@ -43,3 +43,5 @@ uploads/thumbnails/user_*
 !uploads/thumbnails/thumb_template_*
 run-migration.ts
 run-full-migration.ts
+migrations/0008_add_images_column.sql
+migrations/0009_fix_type_conversions.sql
