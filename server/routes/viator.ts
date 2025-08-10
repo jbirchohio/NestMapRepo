@@ -62,4 +62,55 @@ router.post('/affiliate-link', async (req, res) => {
   }
 });
 
+/**
+ * Search activities by city name (dynamically finds destination ID)
+ */
+router.get('/search/city/:cityName', async (req, res) => {
+  try {
+    const { cityName } = req.params;
+    const { limit = 12 } = req.query;
+    
+    // Clean up the city name (remove dashes, normalize)
+    const cleanCityName = cityName.replace(/-/g, ' ');
+    
+    // Dynamically search for the destination ID
+    const destId = await viatorService.getDestinationId(cleanCityName);
+    
+    if (!destId) {
+      // If city not found, return empty array with helpful message
+      return res.json({ 
+        activities: [],
+        message: `No activities found for ${cleanCityName}. This destination might not be available on Viator yet.`,
+        city: cleanCityName
+      });
+    }
+    
+    // Search for activities using the found destination ID
+    const activities = await viatorService.searchActivities({
+      destId,
+      topX: `1-${limit}`,
+      sortOrder: 'TRAVELER_RATING'
+    });
+    
+    // Add affiliate links to each activity
+    const activitiesWithLinks = activities.map(activity => ({
+      ...activity,
+      affiliateLink: viatorService.generateAffiliateLink(activity.productCode)
+    }));
+    
+    res.json({ 
+      activities: activitiesWithLinks,
+      city: cleanCityName,
+      destId,
+      totalFound: activitiesWithLinks.length
+    });
+  } catch (error) {
+    console.error('City activities search error:', error);
+    res.status(500).json({ 
+      error: 'Failed to search city activities',
+      message: 'Unable to fetch activities at this time. Please try again later.'
+    });
+  }
+});
+
 export default router;

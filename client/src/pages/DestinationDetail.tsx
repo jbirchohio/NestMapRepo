@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { 
   MapPin, Calendar, Cloud, DollarSign, Users, 
   Utensils, Hotel, Camera, Info, ChevronRight,
-  Sparkles, Globe, Clock, Star, TrendingUp
+  Sparkles, Globe, Clock, Star, TrendingUp, Activity,
+  Tag, ExternalLink, Navigation
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,8 @@ import {
 
 export default function DestinationDetail() {
   const { destination } = useParams<{ destination: string }>();
+  const [activitiesTab, setActivitiesTab] = useState<string>('stay');
+  const [loadActivities, setLoadActivities] = useState(false);
 
   // Fetch destination content
   const { data: content, isLoading, error } = useQuery({
@@ -50,7 +53,20 @@ export default function DestinationDetail() {
     enabled: !!destination,
   });
 
+  // Fetch Viator activities - only when activities tab is clicked
+  const { data: activitiesData, isLoading: activitiesLoading } = useQuery({
+    queryKey: ['viator-activities', destination],
+    queryFn: async () => {
+      const response = await fetch(`/api/viator/search/city/${destination}`);
+      if (!response.ok) throw new Error('Failed to load activities');
+      return response.json();
+    },
+    enabled: loadActivities && !!destination,
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+  });
+
   const templates = templatesData?.templates || [];
+  const viatorActivities = activitiesData?.activities || [];
 
   if (isLoading) {
     return (
@@ -207,11 +223,22 @@ export default function DestinationDetail() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Tabs defaultValue="stay" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
+                <Tabs 
+                  defaultValue="stay" 
+                  className="w-full"
+                  value={activitiesTab}
+                  onValueChange={(value) => {
+                    setActivitiesTab(value);
+                    if (value === 'activities' && !loadActivities) {
+                      setLoadActivities(true);
+                    }
+                  }}
+                >
+                  <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="stay">Where to Stay</TabsTrigger>
                     <TabsTrigger value="food">Food & Drink</TabsTrigger>
                     <TabsTrigger value="transport">Getting Around</TabsTrigger>
+                    <TabsTrigger value="activities">Activities</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="stay">
@@ -258,6 +285,109 @@ export default function DestinationDetail() {
                         <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                           {content.gettingAround || 'Information coming soon...'}
                         </p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="activities">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Activity className="h-5 w-5 text-purple-600" />
+                          Things to Do
+                        </CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Book activities and experiences through our partner Viator
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        {activitiesLoading ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                              <div key={i} className="space-y-3">
+                                <Skeleton className="h-40 w-full rounded-lg" />
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-4 w-1/2" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : viatorActivities.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {viatorActivities.map((activity: any) => (
+                              <div 
+                                key={activity.productCode} 
+                                className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                              >
+                                {activity.primaryImageURL && (
+                                  <div className="h-40 bg-gray-200">
+                                    <img 
+                                      src={activity.primaryImageURL} 
+                                      alt={activity.productName}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <div className="p-4 space-y-2">
+                                  <h4 className="font-semibold text-sm line-clamp-2">
+                                    {activity.productName}
+                                  </h4>
+                                  
+                                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                                    {activity.duration && (
+                                      <>
+                                        <Clock className="h-3 w-3" />
+                                        <span>{activity.duration}</span>
+                                      </>
+                                    )}
+                                    {activity.rating && (
+                                      <>
+                                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                        <span>{activity.rating.toFixed(1)}</span>
+                                        {activity.reviewCount && (
+                                          <span>({activity.reviewCount})</span>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between mt-3">
+                                    <div>
+                                      <span className="text-xs text-gray-500">From</span>
+                                      <p className="font-bold text-lg">
+                                        ${activity.fromPrice}
+                                      </p>
+                                    </div>
+                                    <a
+                                      href={activity.affiliateLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors"
+                                    >
+                                      Book Now
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-600">
+                              {activitiesData?.message || 'No activities available for this destination yet'}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {viatorActivities.length > 0 && (
+                          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                            <p className="text-xs text-gray-600">
+                              <strong>Note:</strong> Prices and availability are subject to change. 
+                              Booking through our affiliate links helps support Remvana at no extra cost to you.
+                            </p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>

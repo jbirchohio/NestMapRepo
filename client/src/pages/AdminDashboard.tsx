@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useLocation } from 'wouter';
-import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Shield, UserCheck, UserX, Search, Crown, MapPin } from 'lucide-react';
+import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Shield, UserCheck, UserX, Search, Crown, MapPin, Sparkles } from 'lucide-react';
 import DestinationManagement from '@/components/admin/DestinationManagement';
+import TemplateGenerator from '@/components/admin/TemplateGenerator';
 import { formatDistanceToNow, format } from 'date-fns';
 
 // Helper function to safely format dates
@@ -241,11 +242,12 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-5' : 'grid-cols-4'} w-full max-w-3xl`}>
+          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-6' : 'grid-cols-5'} w-full max-w-4xl`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
             {isSuperAdmin && <TabsTrigger value="financials">Financials</TabsTrigger>}
           </TabsList>
 
@@ -374,6 +376,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="destinations" className="space-y-4">
             <DestinationManagement />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-4">
+            <TemplateGenerator />
           </TabsContent>
 
           {isSuperAdmin && (

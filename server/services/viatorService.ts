@@ -37,6 +37,10 @@ export class ViatorService {
     'Content-Type': 'application/json'
   };
 
+  // Simple in-memory cache for destination IDs
+  private destinationCache = new Map<string, { id: number; timestamp: number }>();
+  private CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
   /**
    * Extract the best image URL from the images array
    */
@@ -76,9 +80,39 @@ export class ViatorService {
   }
 
   /**
-   * Search for destinations by name
+   * Search for destinations by name and get destination ID
    */
   async searchDestinations(query: string): Promise<any> {
+    try {
+      // Use the destination lookup endpoint
+      const requestBody = {
+        destName: query
+      };
+
+      const response = await fetch(`${VIATOR_API_URL}/v1/taxonomy/destinations/lookup`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        // Fallback to search if lookup fails
+        return this.searchDestinationsFallback(query);
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Viator destination search error:', error);
+      // Try fallback search
+      return this.searchDestinationsFallback(query);
+    }
+  }
+
+  /**
+   * Fallback destination search using the list endpoint
+   */
+  private async searchDestinationsFallback(query: string): Promise<any> {
     try {
       const response = await fetch(`${VIATOR_API_URL}/v1/taxonomy/destinations`, {
         method: 'GET',
@@ -91,13 +125,70 @@ export class ViatorService {
 
       const data = await response.json();
       
-      // Filter destinations by query
-      return data.data.filter((dest: any) => 
-        dest.destinationName.toLowerCase().includes(query.toLowerCase())
-      );
+      // Filter destinations by query - check multiple fields
+      const normalizedQuery = query.toLowerCase().replace(/-/g, ' ');
+      return data.data.filter((dest: any) => {
+        const destName = dest.destinationName?.toLowerCase() || '';
+        const lookupId = dest.lookupId?.toLowerCase() || '';
+        const parentName = dest.parentDestinationName?.toLowerCase() || '';
+        
+        return destName.includes(normalizedQuery) || 
+               lookupId.includes(normalizedQuery) ||
+               parentName.includes(normalizedQuery);
+      });
     } catch (error) {
-      console.error('Viator destination search error:', error);
-      throw error;
+      console.error('Viator destination fallback search error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get destination ID for a city name (with caching)
+   */
+  async getDestinationId(cityName: string): Promise<number | null> {
+    try {
+      const cacheKey = cityName.toLowerCase();
+      
+      // Check cache first
+      const cached = this.destinationCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
+        console.log(`Using cached destination ID for ${cityName}: ${cached.id}`);
+        return cached.id;
+      }
+      
+      // Search for destination
+      const destinations = await this.searchDestinations(cityName);
+      
+      if (destinations && destinations.length > 0) {
+        // Return the first matching destination ID
+        // Prefer exact matches over partial matches
+        const exactMatch = destinations.find((d: any) => 
+          d.destinationName?.toLowerCase() === cityName.toLowerCase()
+        );
+        
+        let destinationId: number;
+        
+        if (exactMatch) {
+          destinationId = exactMatch.destinationId;
+        } else {
+          // Return the first result if no exact match
+          destinationId = destinations[0].destinationId;
+        }
+        
+        // Cache the result
+        this.destinationCache.set(cacheKey, {
+          id: destinationId,
+          timestamp: Date.now()
+        });
+        
+        console.log(`Found destination ID for ${cityName}: ${destinationId}`);
+        return destinationId;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting destination ID:', error);
+      return null;
     }
   }
 

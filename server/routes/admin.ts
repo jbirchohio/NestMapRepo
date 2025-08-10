@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/jwtAuth';
 import { db } from '../db-connection';
-import { templates, templatePurchases } from '@shared/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { templates, users, templatePurchases, destinations } from '@shared/schema';
+import { eq, desc, sql, gte, and } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import { storage } from '../storage';
 import { geocodeCacheService } from '../services/geocodeCacheService';
 import { aiCache } from '../services/aiCacheService';
+
 // Admin check inline
 const requireAdmin = (req: any, res: any, next: any) => {
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
@@ -18,6 +19,7 @@ const requireAdmin = (req: any, res: any, next: any) => {
   }
   next();
 };
+
 // Super admin check inline
 const requireSuperAdmin = (req: any, res: any, next: any) => {
   const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
@@ -26,11 +28,6 @@ const requireSuperAdmin = (req: any, res: any, next: any) => {
   }
   next();
 };
-import { templateQualityService } from '../services/templateQualityService';
-import { db } from '../db-connection';
-import { templates, users, templatePurchases, destinations } from '@shared/schema';
-import { eq, desc, sql, gte, and } from 'drizzle-orm';
-import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -46,7 +43,6 @@ router.get('/templates/pending', async (req, res) => {
       title: templates.title,
       description: templates.description,
       price: templates.price,
-      quality_score: templates.quality_score,
       created_at: templates.created_at,
       user: {
         id: users.id,
@@ -57,8 +53,8 @@ router.get('/templates/pending', async (req, res) => {
     })
     .from(templates)
     .leftJoin(users, eq(templates.user_id, users.id))
-    .where(eq(templates.moderation_status, 'pending'))
-    .orderBy(desc(templates.quality_score));
+    .where(eq(templates.status, 'draft'))
+    .orderBy(desc(templates.created_at));
 
     res.json(pendingTemplates);
   } catch (error) {
@@ -73,7 +69,13 @@ router.post('/templates/:id/approve', async (req, res) => {
     const templateId = parseInt(req.params.id);
     const { notes } = req.body;
     
-    await templateQualityService.approveTemplate(templateId, notes);
+    // Update template status to published
+    await db.update(templates)
+      .set({ 
+        status: 'published',
+        updated_at: new Date()
+      })
+      .where(eq(templates.id, templateId));
     
     logger.info(`Admin approved template ${templateId}`);
     res.json({ message: 'Template approved successfully' });
@@ -93,7 +95,13 @@ router.post('/templates/:id/reject', async (req, res) => {
       return res.status(400).json({ message: 'Rejection reason is required' });
     }
     
-    await templateQualityService.rejectTemplate(templateId, reason, notes);
+    // Update template status to archived
+    await db.update(templates)
+      .set({ 
+        status: 'archived',
+        updated_at: new Date()
+      })
+      .where(eq(templates.id, templateId));
     
     logger.info(`Admin rejected template ${templateId}: ${reason}`);
     res.json({ message: 'Template rejected' });
@@ -709,6 +717,275 @@ router.post('/cache/clear', requireSuperAdmin, async (req, res) => {
   } catch (error) {
     logger.error('Error clearing cache:', error);
     res.status(500).json({ message: 'Failed to clear cache' });
+  }
+});
+
+// POST /api/admin/templates/check-city - Check if city has templates
+router.post('/templates/check-city', async (req, res) => {
+  try {
+    const { city, country } = req.body;
+    
+    if (!city) {
+      return res.status(400).json({ message: 'City name is required' });
+    }
+    
+    // Check if templates exist for this city
+    const existingTemplates = await db.select({
+      id: templates.id,
+      title: templates.title,
+    })
+    .from(templates)
+    .where(
+      sql`LOWER(${templates.destinations}::text) LIKE ${`%${city.toLowerCase()}%`}`
+    )
+    .limit(10);
+    
+    const exists = existingTemplates.length > 0;
+    
+    res.json({
+      exists,
+      templateCount: existingTemplates.length,
+      message: exists 
+        ? `Found ${existingTemplates.length} template(s) for ${city}`
+        : `No templates found for ${city}. You can generate a new one!`
+    });
+  } catch (error) {
+    logger.error('Error checking city templates:', error);
+    res.status(500).json({ message: 'Failed to check city templates' });
+  }
+});
+
+// POST /api/admin/templates/generate - Generate new template for a city
+router.post('/templates/generate', async (req, res) => {
+  try {
+    const { city, price } = req.body;
+    
+    if (!city || !price) {
+      return res.status(400).json({ message: 'City and price are required' });
+    }
+    
+    // Auto-determine duration based on price
+    let duration: number;
+    if (price <= 30) {
+      duration = 3;
+    } else if (price <= 50) {
+      duration = 5;
+    } else if (price <= 75) {
+      duration = 7;
+    } else if (price <= 100) {
+      duration = 10;
+    } else {
+      duration = 14;
+    }
+    
+    // Find or create Remvana user
+    let remvanaUser = await db.select()
+      .from(users)
+      .where(eq(users.username, 'Remvana'))
+      .limit(1);
+    
+    if (remvanaUser.length === 0) {
+      // Create Remvana user
+      const [newUser] = await db.insert(users)
+        .values({
+          auth_id: 'remvana_system',
+          username: 'Remvana',
+          email: 'templates@remvana.com',
+          display_name: 'Remvana Official',
+          role: 'admin',
+          creator_status: 'verified',
+          creator_tier: 'partner',
+          creator_verified_at: new Date(),
+          creator_bio: 'Official Remvana account for AI-generated travel templates',
+        })
+        .returning();
+      remvanaUser = [newUser];
+    }
+    
+    const remvanaUserId = remvanaUser[0].id;
+    
+    // Detect country from city if possible
+    const cityLower = city.toLowerCase();
+    let country = '';
+    let tags = ['adventure', 'culture', 'food'];
+    
+    // Common city-country mappings
+    if (cityLower.includes('paris')) country = 'France';
+    else if (cityLower.includes('tokyo')) country = 'Japan';
+    else if (cityLower.includes('london')) country = 'UK';
+    else if (cityLower.includes('barcelona') || cityLower.includes('madrid')) country = 'Spain';
+    else if (cityLower.includes('rome') || cityLower.includes('milan')) country = 'Italy';
+    else if (cityLower.includes('new york') || cityLower.includes('los angeles')) country = 'USA';
+    else if (cityLower.includes('bangkok')) country = 'Thailand';
+    else if (cityLower.includes('dubai')) country = 'UAE';
+    else if (cityLower.includes('singapore')) country = 'Singapore';
+    else if (cityLower.includes('sydney') || cityLower.includes('melbourne')) country = 'Australia';
+    
+    // Auto-generate title based on city and duration
+    const cityName = city.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const title = `Ultimate ${duration}-Day ${cityName} ${duration <= 3 ? 'City Break' : duration <= 7 ? 'Adventure' : 'Journey'}`;
+    
+    // Generate AI itinerary using the existing AI service
+    const openaiClient = (await import('../services/openaiClient')).default;
+    
+    const prompt = `Create a detailed ${duration}-day travel itinerary for ${city}${country ? `, ${country}` : ''}.
+    
+    The itinerary should include:
+    - A mix of must-see attractions, local experiences, and hidden gems
+    - At least 4-5 activities per day
+    - Suggested times for each activity
+    - Detailed descriptions for each activity (at least 2-3 sentences)
+    - Restaurant recommendations integrated into the daily schedule
+    - Morning, afternoon and evening activities
+    
+    Format the response as a JSON object with this structure:
+    {
+      "tripSummary": {
+        "overview": "Comprehensive overview of the trip (3-4 sentences)",
+        "highlights": ["highlight1", "highlight2", "highlight3", "highlight4", "highlight5"]
+      },
+      "activities": [
+        {
+          "day": 1,
+          "date": "Day 1",
+          "title": "Activity name",
+          "time": "9:00 AM",
+          "location_name": "Specific location or address",
+          "description": "Detailed activity description (2-3 sentences minimum)",
+          "duration": "2 hours",
+          "tips": "Practical tips for this activity",
+          "category": "sightseeing|dining|shopping|entertainment|culture|nature"
+        }
+      ],
+      "recommendations": {
+        "bestTimeToVisit": "Detailed seasonal recommendations",
+        "gettingAround": "Specific transportation tips for this city",
+        "whereToStay": "Specific neighborhood recommendations with reasons",
+        "localTips": ["specific tip 1", "specific tip 2", "specific tip 3", "specific tip 4"],
+        "budgetTips": ["money saving tip 1", "money saving tip 2"],
+        "foodSpecialties": ["local dish 1", "local dish 2", "local dish 3"]
+      }
+    }`;
+    
+    const response = await openaiClient.chat.completions.create({
+      model: 'gpt-4o',  // Use GPT-4 for better quality
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional travel expert creating premium, detailed itineraries for a travel marketplace. Create comprehensive, actionable itineraries that travelers would pay for. Always respond with valid JSON.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 4000,
+    });
+    
+    const generatedItinerary = JSON.parse(response.choices[0].message.content || '{}');
+    
+    // Create slug from title
+    const slug = title.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') + '-' + Date.now();
+    
+    // Generate a professional description
+    const description = generatedItinerary.tripSummary.overview || 
+      `Discover the best of ${cityName} with this expertly crafted ${duration}-day itinerary. ` +
+      `From iconic landmarks to hidden local gems, experience everything this incredible destination has to offer. ` +
+      `Perfect for travelers seeking a comprehensive, well-planned adventure.`;
+    
+    // Determine tags based on duration and price
+    if (duration <= 3) tags = ['city-break', 'weekend', 'short-trip'];
+    else if (duration <= 7) tags = ['week-long', 'adventure', 'culture'];
+    else tags = ['extended-stay', 'immersive', 'complete-guide'];
+    
+    // Add cuisine tags based on location
+    if (country === 'Italy' || country === 'France') tags.push('food-lovers');
+    if (country === 'Japan' || country === 'Thailand') tags.push('asian-cuisine');
+    
+    // Format trip data for storage - structure it like existing templates
+    const tripData = {
+      title,
+      description,
+      city,
+      country,
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      duration,
+      activities: generatedItinerary.activities.map((activity: any, index: number) => ({
+        id: `gen-${index}`,
+        trip_id: 0, // Will be set when copied to a trip
+        title: activity.title,
+        date: `Day ${activity.day}`,
+        time: activity.time,
+        location_name: activity.location_name,
+        description: activity.description,
+        notes: activity.tips,
+        tag: activity.category || 'sightseeing',
+        order: index,
+      })),
+      recommendations: generatedItinerary.recommendations,
+      highlights: generatedItinerary.tripSummary.highlights,
+      budget_estimate: price * 20, // Rough budget estimate
+      generatedAt: new Date().toISOString(),
+    };
+    
+    // Fetch an image for the city using Unsplash (if available)
+    let coverImage = null;
+    try {
+      const unsplashResponse = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(city)}&per_page=1`,
+        {
+          headers: {
+            'Authorization': `Client-ID ${process.env.UNSPLASH_ACCESS_KEY || 'F0JXMh7sj7_niLgDEHixY4BW3XqJnNhJyChR7QRFnv8'}`
+          }
+        }
+      );
+      if (unsplashResponse.ok) {
+        const imageData = await unsplashResponse.json();
+        if (imageData.results && imageData.results.length > 0) {
+          coverImage = imageData.results[0].urls.regular;
+        }
+      }
+    } catch (error) {
+      logger.warn(`Failed to fetch image for ${city}:`, error);
+    }
+    
+    // Create the template
+    const [newTemplate] = await db.insert(templates)
+      .values({
+        title,
+        slug,
+        description,
+        user_id: remvanaUserId,
+        trip_data: tripData,
+        destinations: [city, country].filter(Boolean),
+        tags,
+        duration,
+        price: price.toString(),
+        currency: 'USD',
+        status: 'published',
+        ai_generated: true,
+        featured: false,
+        cover_image: coverImage,
+        view_count: 0,
+        sales_count: 0,
+      })
+      .returning();
+    
+    logger.info(`Admin generated template for ${city}: ${newTemplate.id}`);
+    
+    res.json({
+      message: `Successfully generated template for ${city}!`,
+      templateId: newTemplate.id,
+      slug: newTemplate.slug,
+      title: newTemplate.title,
+    });
+  } catch (error) {
+    logger.error('Error generating template:', error);
+    res.status(500).json({ message: 'Failed to generate template' });
   }
 });
 
