@@ -1,0 +1,26 @@
+# Docker/Railway build ignore file
+node_modules
+dist
+.git
+.gitignore
+*.log
+.env
+.env.*
+coverage
+.nyc_output
+.DS_Store
+*.swp
+*.swo
+archive
+attached_assets
+logs
+*.md
+!README.md
+tests
+scripts/*.bat
+scripts/*.ps1
+*.backup
+safe-optimize-deps.cjs
+optimize-dependencies.js
+DEPENDENCY_AUDIT_REPORT.md
+dep_patch.diff

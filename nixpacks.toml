@@ -1,0 +1,27 @@
+# Nixpacks configuration for optimized Railway builds
+# This file tells Railway exactly how to build the app
+
+[phases.setup]
+# Only install Node.js, skip all browser packages
+nixPkgs = ["nodejs_22"]
+# Explicitly disable apt packages
+aptPkgs = []
+
+[phases.install]
+# Fast npm install with caching
+cmds = ["npm ci --prefer-offline --no-audit --ignore-scripts"]
+
+[phases.build]
+# Build the application
+cmds = ["npm run build"]
+
+[start]
+# Production start command
+cmd = "node dist/index.js"
+
+[variables]
+# Skip puppeteer Chrome download completely
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+PUPPETEER_SKIP_DOWNLOAD = "true"
+# Disable puppeteer entirely if not needed
+DISABLE_PUPPETEER = "true"

@@ -5,7 +5,6 @@ import { jwtAuthMiddleware } from '../middleware/jwtAuth';
 // Organization scoping removed for consumer app
 import { fieldTransformMiddleware } from '../middleware/fieldTransform';
 import { storage } from '../storage';
-import { generatePdfBuffer } from '../utils/pdfHelper';
 import { db } from '../db-connection';
 import { trips as tripsTable, users } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -374,45 +373,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Export trip as PDF
-router.get("/:id/export/pdf", async (req: Request, res: Response) => {
-  try {
-    const tripId = parseInt(req.params.id);
-    if (isNaN(tripId)) {
-      return res.status(400).json({ message: "Invalid trip ID" });
-    }
-
-    const trip = await storage.getTrip(tripId);
-    if (!trip) {
-      return res.status(404).json({ message: "Trip not found" });
-    }
-
-    // Verify user owns this trip
-    if (trip.user_id !== req.user?.id) {
-      return res.status(403).json({ message: "Access denied: Cannot export this trip" });
-    }
-
-    const [activities, todos, notes] = await Promise.all([
-      storage.getActivitiesByTripId(tripId),
-      storage.getTodosByTripId(tripId),
-      storage.getNotesByTripId(tripId)
-    ]);
-
-    const pdfBuffer = await generatePdfBuffer({
-      trip,
-      activities,
-      todos,
-      notes
-    });
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${trip.title.replace(/[^a-z0-9]/gi, '_')}_itinerary.pdf"`);
-    res.send(pdfBuffer);
-  } catch (error) {
-    logger.error("Error generating PDF:", error);
-    res.status(500).json({ message: "Could not generate PDF export" });
-  }
-});
 
 // Generate AI-powered trip proposal
 router.post("/:tripId/proposal", async (req: Request, res: Response) => {
