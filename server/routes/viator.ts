@@ -127,6 +127,14 @@ router.post('/save-activity', async (req, res) => {
     
     const { productCode, productName, price, duration, affiliateLink, city, tripId } = req.body;
     
+    // Validate required fields
+    if (!productName || !productCode) {
+      return res.status(400).json({ error: 'Activity name is required' });
+    }
+    
+    // Clean up city name
+    const cleanCity = (city || 'Unknown').replace(/-/g, ' ');
+    
     // If no tripId provided, create a new "Ideas" trip or use existing one
     let targetTripId = tripId;
     
@@ -137,7 +145,7 @@ router.post('/save-activity', async (req, res) => {
         .where(
           and(
             eq(trips.user_id, req.user.id),
-            eq(trips.title, `${city} Ideas`),
+            eq(trips.title, `${cleanCity} Ideas`),
             eq(trips.status, 'active')
           )
         )
@@ -149,12 +157,12 @@ router.post('/save-activity', async (req, res) => {
         // Create a new ideas trip
         const [newTrip] = await db.insert(trips)
           .values({
-            title: `${city} Ideas`,
-            description: `Activities and ideas for ${city}`,
+            title: `${cleanCity} Ideas`,
+            description: `Activities and ideas for ${cleanCity}`,
             user_id: req.user.id,
             start_date: new Date().toISOString().split('T')[0],
             end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            city: city.replace(/-/g, ' '),
+            city: cleanCity,
             status: 'active'
           })
           .returning();
@@ -163,16 +171,28 @@ router.post('/save-activity', async (req, res) => {
       }
     }
     
+    // Build notes with available information
+    const notes = [
+      'Viator Activity',
+      duration ? `Duration: ${duration}` : null,
+      price ? `Price: From $${price}` : null,
+      affiliateLink ? `Booking: ${affiliateLink}` : null,
+      productCode ? `Product Code: ${productCode}` : null
+    ].filter(Boolean).join('\n');
+    
     // Add the activity to the trip
     const [activity] = await db.insert(activities)
       .values({
         trip_id: targetTripId,
-        title: productName,
-        notes: `Viator Activity - ${duration || 'Duration varies'}\nPrice: From $${price}\nBooking: ${affiliateLink}`,
+        title: productName || 'Viator Activity', // Ensure title is never null
+        notes: notes,
         tag: 'activity',
+        location_name: cleanCity,
         provider: 'viator',
-        booking_url: affiliateLink,
-        price: price?.toString(),
+        booking_url: affiliateLink || '',
+        booking_reference: productCode || '',
+        price: price ? price.toString() : null,
+        currency: 'USD',
         order: 0
       })
       .returning();
@@ -185,7 +205,11 @@ router.post('/save-activity', async (req, res) => {
     });
   } catch (error) {
     console.error('Error saving activity:', error);
-    res.status(500).json({ error: 'Failed to save activity' });
+    console.error('Request body:', req.body);
+    res.status(500).json({ 
+      error: 'Failed to save activity',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
