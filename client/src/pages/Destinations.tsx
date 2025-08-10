@@ -163,13 +163,12 @@ export default function Destinations() {
                             Featured
                           </Badge>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        <div className="absolute bottom-4 left-4 text-white">
-                          <h3 className="text-2xl font-bold">{destination.name}</h3>
-                          <p className="text-sm opacity-90">{destination.country}</p>
-                        </div>
                       </div>
                       <CardContent className="p-6">
+                        <div className="mb-3">
+                          <h3 className="text-2xl font-bold text-gray-800">{destination.name}</h3>
+                          <p className="text-sm text-gray-500">{destination.country}</p>
+                        </div>
                         <p className="text-gray-600 mb-4">{destination.description}</p>
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-1 text-gray-500">
