@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { 
   MapPin, Calendar, Cloud, DollarSign, Users, 
   Utensils, Hotel, Camera, Info, ChevronRight,
   Sparkles, Globe, Clock, Star, TrendingUp, Activity,
-  Tag, ExternalLink, Navigation
+  Tag, ExternalLink, Navigation, Plus, Check
 } from 'lucide-react';
+import { useAuth } from '@/contexts/JWTAuthContext';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,8 +25,10 @@ import {
 
 export default function DestinationDetail() {
   const { destination } = useParams<{ destination: string }>();
+  const { user } = useAuth();
   const [activitiesTab, setActivitiesTab] = useState<string>('stay');
   const [loadActivities, setLoadActivities] = useState(false);
+  const [savedActivities, setSavedActivities] = useState<Set<string>>(new Set());
 
   // Fetch destination content
   const { data: content, isLoading, error } = useQuery({
@@ -67,6 +71,61 @@ export default function DestinationDetail() {
 
   const templates = templatesData?.templates || [];
   const viatorActivities = activitiesData?.activities || [];
+
+  // Mutation to save activity to trip
+  const saveActivityMutation = useMutation({
+    mutationFn: async (activity: any) => {
+      const response = await fetch('/api/viator/save-activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          productCode: activity.productCode,
+          productName: activity.productName,
+          price: activity.fromPrice,
+          duration: activity.duration,
+          affiliateLink: activity.affiliateLink,
+          city: destination
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to save activity');
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      setSavedActivities(prev => new Set(prev).add(variables.productCode));
+      toast.success('Activity saved to your trip ideas!');
+    },
+    onError: () => {
+      toast.error('Failed to save activity. Please try again.');
+    }
+  });
+
+  // Track click and open affiliate link
+  const handleBookClick = async (activity: any) => {
+    // Track the click
+    try {
+      await fetch('/api/viator/track-click', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          productCode: activity.productCode,
+          productName: activity.productName,
+          city: destination
+        })
+      });
+    } catch (error) {
+      console.error('Failed to track click:', error);
+    }
+    
+    // Open affiliate link in new tab
+    window.open(activity.affiliateLink, '_blank', 'noopener,noreferrer');
+  };
 
   if (isLoading) {
     return (
@@ -357,15 +416,37 @@ export default function DestinationDetail() {
                                         ${activity.fromPrice}
                                       </p>
                                     </div>
-                                    <a
-                                      href={activity.affiliateLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors"
-                                    >
-                                      Book Now
-                                      <ExternalLink className="h-3 w-3" />
-                                    </a>
+                                    <div className="flex gap-2">
+                                      {user && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => saveActivityMutation.mutate(activity)}
+                                          disabled={savedActivities.has(activity.productCode)}
+                                          className="h-8"
+                                        >
+                                          {savedActivities.has(activity.productCode) ? (
+                                            <>
+                                              <Check className="h-3 w-3 mr-1" />
+                                              Saved
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Plus className="h-3 w-3 mr-1" />
+                                              Save
+                                            </>
+                                          )}
+                                        </Button>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleBookClick(activity)}
+                                        className="h-8 bg-purple-600 hover:bg-purple-700"
+                                      >
+                                        Book
+                                        <ExternalLink className="h-3 w-3 ml-1" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>

@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import { viatorService } from '../services/viatorService';
+import { db } from '../db-connection';
+import { trips, activities } from '@shared/schema';
+import { eq, and } from 'drizzle-orm';
 
 const router = Router();
 
@@ -110,6 +113,112 @@ router.get('/search/city/:cityName', async (req, res) => {
       error: 'Failed to search city activities',
       message: 'Unable to fetch activities at this time. Please try again later.'
     });
+  }
+});
+
+/**
+ * Save Viator activity to user's trip
+ */
+router.post('/save-activity', async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const { productCode, productName, price, duration, affiliateLink, city, tripId } = req.body;
+    
+    // If no tripId provided, create a new "Ideas" trip or use existing one
+    let targetTripId = tripId;
+    
+    if (!targetTripId) {
+      // Check if user has an "Ideas" trip for this city
+      const ideasTrip = await db.select()
+        .from(trips)
+        .where(
+          and(
+            eq(trips.user_id, req.user.id),
+            eq(trips.title, `${city} Ideas`),
+            eq(trips.status, 'active')
+          )
+        )
+        .limit(1);
+      
+      if (ideasTrip.length > 0) {
+        targetTripId = ideasTrip[0].id;
+      } else {
+        // Create a new ideas trip
+        const [newTrip] = await db.insert(trips)
+          .values({
+            title: `${city} Ideas`,
+            description: `Activities and ideas for ${city}`,
+            user_id: req.user.id,
+            start_date: new Date().toISOString().split('T')[0],
+            end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            city: city.replace(/-/g, ' '),
+            status: 'active'
+          })
+          .returning();
+        
+        targetTripId = newTrip.id;
+      }
+    }
+    
+    // Add the activity to the trip
+    const [activity] = await db.insert(activities)
+      .values({
+        trip_id: targetTripId,
+        title: productName,
+        notes: `Viator Activity - ${duration || 'Duration varies'}\nPrice: From $${price}\nBooking: ${affiliateLink}`,
+        tag: 'activity',
+        provider: 'viator',
+        booking_url: affiliateLink,
+        price: price?.toString(),
+        order: 0
+      })
+      .returning();
+    
+    res.json({ 
+      success: true, 
+      activityId: activity.id,
+      tripId: targetTripId,
+      message: 'Activity saved to your trip!'
+    });
+  } catch (error) {
+    console.error('Error saving activity:', error);
+    res.status(500).json({ error: 'Failed to save activity' });
+  }
+});
+
+/**
+ * Track affiliate link clicks for analytics
+ */
+router.post('/track-click', async (req, res) => {
+  try {
+    const { productCode, productName, city } = req.body;
+    const userId = req.user?.id || null;
+    
+    // Log the click for analytics (you could save this to a database table)
+    console.log('Viator affiliate click tracked:', {
+      productCode,
+      productName,
+      city,
+      userId,
+      timestamp: new Date().toISOString()
+    });
+    
+    // You could create a viator_clicks table to track this data:
+    // await db.insert(viatorClicks).values({
+    //   product_code: productCode,
+    //   product_name: productName,
+    //   city,
+    //   user_id: userId,
+    //   clicked_at: new Date()
+    // });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error tracking click:', error);
+    res.status(500).json({ error: 'Failed to track click' });
   }
 });
 

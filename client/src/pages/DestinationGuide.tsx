@@ -4,14 +4,18 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import MetaTags from '@/components/seo/MetaTags';
 import { generateMetadata, generateFAQSchema, generateBreadcrumbSchema } from '@/lib/seo/metadata';
 import ExpediaAffiliate from '@/components/ExpediaAffiliate';
 import { 
   MapPin, Calendar, Utensils, Car, Hotel, Plane, 
-  Info, Star, TrendingUp, Heart, Camera, Sun
+  Info, Star, TrendingUp, Heart, Camera, Sun,
+  Activity, ExternalLink, Plus, Check, Clock
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/JWTAuthContext';
+import { toast } from 'sonner';
 
 interface DestinationData {
   title: string;
@@ -42,7 +46,10 @@ interface DestinationData {
 
 export default function DestinationGuide() {
   const { destination } = useParams();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'hotels' | 'packages' | 'activities'>('overview');
+  const [loadActivities, setLoadActivities] = useState(false);
+  const [savedActivities, setSavedActivities] = useState<Set<string>>(new Set());
   
   // Fetch destination content with smart caching
   const { data: destinationData, isLoading, error, refetch } = useQuery<DestinationData>({
@@ -70,6 +77,82 @@ export default function DestinationGuide() {
     refetchOnWindowFocus: false, // Don't refetch on tab focus
   });
   
+  // Fetch Viator activities - only when activities tab is clicked
+  const { data: activitiesData, isLoading: activitiesLoading } = useQuery({
+    queryKey: ['viator-activities', destination],
+    queryFn: async () => {
+      const response = await fetch(`/api/viator/search/city/${destination}`);
+      if (!response.ok) throw new Error('Failed to load activities');
+      return response.json();
+    },
+    enabled: loadActivities && !!destination,
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+  });
+
+  const viatorActivities = activitiesData?.activities || [];
+
+  // Mutation to save activity to trip
+  const saveActivityMutation = useMutation({
+    mutationFn: async (activity: any) => {
+      const response = await fetch('/api/viator/save-activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          productCode: activity.productCode,
+          productName: activity.productName,
+          price: activity.fromPrice,
+          duration: activity.duration,
+          affiliateLink: activity.affiliateLink,
+          city: destination
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to save activity');
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      setSavedActivities(prev => new Set(prev).add(variables.productCode));
+      toast.success('Activity saved to your trip ideas!');
+    },
+    onError: () => {
+      toast.error('Failed to save activity. Please try again.');
+    }
+  });
+
+  // Track click and open affiliate link
+  const handleBookClick = async (activity: any) => {
+    // Track the click
+    try {
+      await fetch('/api/viator/track-click', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          productCode: activity.productCode,
+          productName: activity.productName,
+          city: destination
+        })
+      });
+    } catch (error) {
+      console.error('Failed to track click:', error);
+    }
+    
+    // Open affiliate link in new tab
+    window.open(activity.affiliateLink, '_blank', 'noopener,noreferrer');
+  };
+
+  // Load activities when tab is clicked
+  useEffect(() => {
+    if (activeTab === 'activities' && !loadActivities) {
+      setLoadActivities(true);
+    }
+  }, [activeTab, loadActivities]);
+
   // Auto-refresh if we detect generic content
   useEffect(() => {
     if (destinationData?.overview?.includes('remarkable destination that attracts millions')) {
@@ -401,7 +484,119 @@ export default function DestinationGuide() {
           {activeTab === 'activities' && (
             <div>
               <h2 className="text-3xl font-bold mb-6">Things to Do in {destinationName}</h2>
-              <p className="text-gray-600 mb-8">Activities and tours coming soon!</p>
+              <p className="text-gray-600 mb-4">Book activities and experiences through our partner Viator</p>
+              
+              {activitiesLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <Card key={i} className="overflow-hidden">
+                      <Skeleton className="h-48 w-full" />
+                      <CardContent className="p-4 space-y-3">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-8 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : viatorActivities.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {viatorActivities.map((activity: any) => (
+                    <Card key={activity.productCode} className="overflow-hidden hover:shadow-lg transition-shadow">
+                      {activity.primaryImageURL && (
+                        <div className="h-48 bg-gray-200">
+                          <img 
+                            src={activity.primaryImageURL} 
+                            alt={activity.productName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <CardContent className="p-4 space-y-3">
+                        <h3 className="font-semibold text-base line-clamp-2">
+                          {activity.productName}
+                        </h3>
+                        
+                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                          {activity.duration && (
+                            <>
+                              <Clock className="h-4 w-4" />
+                              <span>{activity.duration}</span>
+                            </>
+                          )}
+                          {activity.rating && (
+                            <>
+                              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                              <span>{activity.rating.toFixed(1)}</span>
+                              {activity.reviewCount && (
+                                <span>({activity.reviewCount} reviews)</span>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-2">
+                          <div>
+                            <span className="text-xs text-gray-500">From</span>
+                            <p className="font-bold text-xl text-purple-600">
+                              ${activity.fromPrice}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            {user && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => saveActivityMutation.mutate(activity)}
+                                disabled={savedActivities.has(activity.productCode)}
+                              >
+                                {savedActivities.has(activity.productCode) ? (
+                                  <>
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Saved
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Save
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              onClick={() => handleBookClick(activity)}
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
+                              Book
+                              <ExternalLink className="h-4 w-4 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card className="p-8 text-center">
+                  <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600 text-lg mb-2">
+                    {activitiesData?.message || 'No activities available for this destination yet'}
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Check back soon or try searching for a nearby major city
+                  </p>
+                </Card>
+              )}
+              
+              {viatorActivities.length > 0 && (
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-600">
+                    <strong>Note:</strong> Prices and availability are subject to change. 
+                    Booking through our affiliate links helps support Remvana at no extra cost to you.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </section>
