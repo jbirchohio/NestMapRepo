@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, MapPin, Plus, Check, Loader2 } from 'lucide-react';
 import { ClientTrip } from '@/lib/types';
 import { toast } from 'sonner';
-import { API_ENDPOINTS } from '@/lib/config';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 interface SelectTripModalProps {
   isOpen: boolean;
