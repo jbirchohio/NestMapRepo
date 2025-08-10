@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { viatorService } from '../services/viatorService';
+import { geocodingService } from '../services/geocodingService';
 import { db } from '../db-connection';
 import { trips, activities } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
@@ -147,41 +148,12 @@ router.post('/save-activity', async (req, res) => {
     // Clean up city name
     const cleanCity = (city || 'Unknown').replace(/-/g, ' ');
     
-    // If no tripId provided, create a new "Ideas" trip or use existing one
-    let targetTripId = tripId;
-    
-    if (!targetTripId) {
-      // Check if user has an "Ideas" trip for this city
-      const ideasTrip = await db.select()
-        .from(trips)
-        .where(
-          and(
-            eq(trips.user_id, req.user.id),
-            eq(trips.title, `${cleanCity} Ideas`),
-            eq(trips.status, 'active')
-          )
-        )
-        .limit(1);
-      
-      if (ideasTrip.length > 0) {
-        targetTripId = ideasTrip[0].id;
-      } else {
-        // Create a new ideas trip
-        const [newTrip] = await db.insert(trips)
-          .values({
-            title: `${cleanCity} Ideas`,
-            description: `Activities and ideas for ${cleanCity}`,
-            user_id: req.user.id,
-            start_date: new Date().toISOString().split('T')[0],
-            end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            city: cleanCity,
-            status: 'active'
-          })
-          .returning();
-        
-        targetTripId = newTrip.id;
-      }
+    // TripId should always be provided now from the modal
+    if (!tripId) {
+      return res.status(400).json({ error: 'Trip ID is required' });
     }
+    
+    let targetTripId = tripId;
     
     // Build notes with available information
     const notes = [
@@ -192,6 +164,16 @@ router.post('/save-activity', async (req, res) => {
       productCode ? `Product Code: ${productCode}` : null
     ].filter(Boolean).join('\n');
     
+    // Try to geocode the activity location
+    let activityCoords = null;
+    try {
+      // Use activity name + city for better geocoding results
+      const locationQuery = `${productName}, ${cleanCity}`;
+      activityCoords = await geocodingService.geocodeLocation(locationQuery, cleanCity);
+    } catch (error) {
+      console.log('Could not geocode activity location:', error);
+    }
+    
     // Add the activity to the trip
     const [activity] = await db.insert(activities)
       .values({
@@ -200,6 +182,8 @@ router.post('/save-activity', async (req, res) => {
         notes: notes,
         tag: 'activity',
         location_name: cleanCity,
+        latitude: activityCoords?.latitude || null,
+        longitude: activityCoords?.longitude || null,
         provider: 'viator',
         booking_url: affiliateLink || '',
         booking_reference: productCode || '',

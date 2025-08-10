@@ -19,6 +19,7 @@ import uploadRoutes from './upload';
 import webhookRoutes from './webhooks';
 // import analyticsRoutes from './analytics'; // Enterprise feature
 import monitoringRoutes from './monitoring';
+import geocodeRoutes from './geocode';
 
 const router = Router();
 
@@ -42,6 +43,7 @@ router.use('/upload', uploadRoutes);
 router.use('/webhooks', webhookRoutes);
 // router.use('/analytics', analyticsRoutes); // Enterprise feature
 router.use('/monitoring', monitoringRoutes);
+router.use('/geocode', geocodeRoutes);
 
 // User permissions endpoint - simplified for consumer app
 router.get('/user/permissions', async (req, res) => {

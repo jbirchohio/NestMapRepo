@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'wouter';
+import { useParams, Link, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import MetaTags from '@/components/seo/MetaTags';
 import { generateMetadata, generateFAQSchema, generateBreadcrumbSchema } from '@/lib/seo/metadata';
 import ExpediaAffiliate from '@/components/ExpediaAffiliate';
+import SelectTripModal from '@/components/SelectTripModal';
 import { 
   MapPin, Calendar, Utensils, Car, Hotel, Plane, 
   Info, Star, TrendingUp, Heart, Camera, Sun,
@@ -47,9 +48,12 @@ interface DestinationData {
 export default function DestinationGuide() {
   const { destination } = useParams();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<'overview' | 'hotels' | 'packages' | 'activities'>('overview');
   const [loadActivities, setLoadActivities] = useState(false);
   const [savedActivities, setSavedActivities] = useState<Set<string>>(new Set());
+  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [showTripModal, setShowTripModal] = useState(false);
   
   // Fetch destination content with smart caching
   const { data: destinationData, isLoading, error, refetch } = useQuery<DestinationData>({
@@ -91,39 +95,27 @@ export default function DestinationGuide() {
 
   const viatorActivities = activitiesData?.activities || [];
 
-  // Mutation to save activity to trip
-  const saveActivityMutation = useMutation({
-    mutationFn: async (activity: any) => {
-      // Debug logging to see what we're sending
-      console.log('Saving activity:', activity);
-      
-      const response = await fetch('/api/viator/save-activity', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          productCode: activity.productCode,
-          productName: activity.productName || activity.title || 'Activity', // Add fallbacks
-          price: activity.fromPrice,
-          duration: activity.duration,
-          affiliateLink: activity.affiliateLink,
-          city: destination
-        })
-      });
-      
-      if (!response.ok) throw new Error('Failed to save activity');
-      return response.json();
-    },
-    onSuccess: (data, variables) => {
-      setSavedActivities(prev => new Set(prev).add(variables.productCode));
-      toast.success('Activity saved to your trip ideas!');
-    },
-    onError: () => {
-      toast.error('Failed to save activity. Please try again.');
+  // Handle saving activity with trip selection
+  const handleSaveActivity = (activity: any) => {
+    setSelectedActivity({
+      productCode: activity.productCode,
+      productName: activity.productName || activity.title || 'Activity',
+      price: activity.fromPrice,
+      duration: activity.duration,
+      affiliateLink: activity.affiliateLink
+    });
+    setShowTripModal(true);
+  };
+
+  const handleActivitySaved = (tripId: string) => {
+    if (selectedActivity) {
+      setSavedActivities(prev => new Set(prev).add(selectedActivity.productCode));
     }
-  });
+    setSelectedActivity(null);
+    setShowTripModal(false);
+    // Navigate to the trip
+    setLocation(`/trip/${tripId}`);
+  };
 
   // Track click and open affiliate link
   const handleBookClick = async (activity: any) => {
@@ -550,7 +542,7 @@ export default function DestinationGuide() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => saveActivityMutation.mutate(activity)}
+                                onClick={() => handleSaveActivity(activity)}
                                 disabled={savedActivities.has(activity.productCode)}
                               >
                                 {savedActivities.has(activity.productCode) ? (
@@ -604,6 +596,20 @@ export default function DestinationGuide() {
           )}
         </section>
       </div>
+      
+      {/* Trip Selection Modal */}
+      {showTripModal && selectedActivity && (
+        <SelectTripModal
+          isOpen={showTripModal}
+          onClose={() => {
+            setShowTripModal(false);
+            setSelectedActivity(null);
+          }}
+          activity={selectedActivity}
+          cityName={destination?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''}
+          onSuccess={handleActivitySaved}
+        />
+      )}
     </>
   );
 }
