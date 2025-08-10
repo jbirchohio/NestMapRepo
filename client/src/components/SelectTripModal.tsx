@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { format, addDays } from 'date-fns';
 import {
@@ -41,12 +41,30 @@ export default function SelectTripModal({
   cityName,
   onSuccess
 }: SelectTripModalProps) {
+  const [step, setStep] = useState<'trip' | 'date'>('trip');
   const [mode, setMode] = useState<'select' | 'create'>('select');
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [selectedTrip, setSelectedTrip] = useState<ClientTrip | null>(null);
   const [newTripName, setNewTripName] = useState(`${cityName} Trip`);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [activityDate, setActivityDate] = useState<Date | undefined>(undefined);
   const [isCreatingTrip, setIsCreatingTrip] = useState(false);
+
+  // Reset state when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setStep('trip');
+      setMode('select');
+      setSelectedTripId(null);
+      setSelectedTrip(null);
+      setActivityDate(undefined);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setStartDate(tomorrow);
+      setEndDate(addDays(tomorrow, 6));
+    }
+  }, [isOpen]);
 
   // Fetch user's trips
   const { data: trips = [], isLoading: tripsLoading } = useQuery<ClientTrip[]>({
@@ -82,7 +100,7 @@ export default function SelectTripModal({
 
   // Save activity mutation
   const saveActivityMutation = useMutation({
-    mutationFn: async ({ tripId }: { tripId: string }) => {
+    mutationFn: async ({ tripId, date }: { tripId: string; date: string }) => {
       const response = await fetch('/api/viator/save-activity', {
         method: 'POST',
         headers: {
@@ -92,7 +110,8 @@ export default function SelectTripModal({
         body: JSON.stringify({
           ...activity,
           city: cityName,
-          tripId
+          tripId,
+          date
         })
       });
       
@@ -143,8 +162,11 @@ export default function SelectTripModal({
       
       const newTrip = await response.json();
       
-      // Now save the activity to the new trip
-      await saveActivityMutation.mutateAsync({ tripId: newTrip.id });
+      // Set the created trip as selected and move to date selection
+      setSelectedTrip(newTrip);
+      setSelectedTripId(newTrip.id);
+      setActivityDate(startDate); // Default to first day of trip
+      setStep('date');
     } catch (error) {
       console.error('Error creating trip:', error);
       toast.error('Failed to create trip. Please try again.');
@@ -158,20 +180,127 @@ export default function SelectTripModal({
       toast.error('Please select a trip');
       return;
     }
-    saveActivityMutation.mutate({ tripId: selectedTripId });
+    
+    const trip = trips.find(t => t.id === selectedTripId);
+    if (trip) {
+      setSelectedTrip(trip);
+      setActivityDate(new Date(trip.startDate)); // Default to first day of trip
+      setStep('date');
+    }
+  };
+
+  const handleSaveActivity = () => {
+    if (!activityDate) {
+      toast.error('Please select a date for the activity');
+      return;
+    }
+    
+    if (!selectedTripId) {
+      toast.error('No trip selected');
+      return;
+    }
+    
+    saveActivityMutation.mutate({ 
+      tripId: selectedTripId,
+      date: format(activityDate, 'yyyy-MM-dd')
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Save "{activity.productName}" to Trip</DialogTitle>
+          <DialogTitle>
+            {step === 'trip' 
+              ? `Save "${activity.productName}" to Trip`
+              : `Select Date for Activity`
+            }
+          </DialogTitle>
           <DialogDescription>
-            Choose an existing trip or create a new one for this activity in {cityName}.
+            {step === 'trip'
+              ? `Choose an existing trip or create a new one for this activity in ${cityName}.`
+              : `When would you like to schedule this activity during your trip?`
+            }
           </DialogDescription>
         </DialogHeader>
 
-        {mode === 'select' ? (
+        {step === 'date' ? (
+          // Date selection step
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="font-medium text-sm text-gray-700 mb-2">Selected Trip</div>
+              <div className="font-semibold">{selectedTrip?.title}</div>
+              <div className="text-sm text-gray-600">
+                {selectedTrip && (
+                  <>
+                    {format(new Date(selectedTrip.startDate), 'MMM d')} - {format(new Date(selectedTrip.endDate), 'MMM d, yyyy')}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Select Activity Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !activityDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {activityDate ? format(activityDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={activityDate}
+                    onSelect={setActivityDate}
+                    disabled={(date) => {
+                      if (!selectedTrip) return true;
+                      const tripStart = new Date(selectedTrip.startDate);
+                      const tripEnd = new Date(selectedTrip.endDate);
+                      return date < tripStart || date > tripEnd;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-gray-500">
+                You can only select dates within your trip duration.
+              </p>
+            </div>
+
+            <div className="flex justify-between pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStep('trip');
+                  setActivityDate(undefined);
+                }}
+              >
+                Back to Trip Selection
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveActivity}
+                  disabled={!activityDate || saveActivityMutation.isPending}
+                >
+                  {saveActivityMutation.isPending && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  Save Activity
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : mode === 'select' ? (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Select a trip</Label>

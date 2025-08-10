@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'wouter';
+import { useParams, Link, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import SelectTripModal from '@/components/SelectTripModal';
 import { 
   MapPin, Calendar, Cloud, DollarSign, Users, 
   Utensils, Hotel, Camera, Info, ChevronRight,
@@ -26,9 +27,12 @@ import {
 export default function DestinationDetail() {
   const { destination } = useParams<{ destination: string }>();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [activitiesTab, setActivitiesTab] = useState<string>('stay');
   const [loadActivities, setLoadActivities] = useState(false);
   const [savedActivities, setSavedActivities] = useState<Set<string>>(new Set());
+  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [showTripModal, setShowTripModal] = useState(false);
 
   // Fetch destination content
   const { data: content, isLoading, error } = useQuery({
@@ -72,36 +76,27 @@ export default function DestinationDetail() {
   const templates = templatesData?.templates || [];
   const viatorActivities = activitiesData?.activities || [];
 
-  // Mutation to save activity to trip
-  const saveActivityMutation = useMutation({
-    mutationFn: async (activity: any) => {
-      const response = await fetch('/api/viator/save-activity', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          productCode: activity.productCode,
-          productName: activity.productName || activity.title || 'Activity', // Add fallbacks
-          price: activity.fromPrice,
-          duration: activity.duration,
-          affiliateLink: activity.affiliateLink,
-          city: destination
-        })
-      });
-      
-      if (!response.ok) throw new Error('Failed to save activity');
-      return response.json();
-    },
-    onSuccess: (data, variables) => {
-      setSavedActivities(prev => new Set(prev).add(variables.productCode));
-      toast.success('Activity saved to your trip ideas!');
-    },
-    onError: () => {
-      toast.error('Failed to save activity. Please try again.');
+  // Handle saving activity with trip selection
+  const handleSaveActivity = (activity: any) => {
+    setSelectedActivity({
+      productCode: activity.productCode,
+      productName: activity.productName || activity.title || 'Activity',
+      price: activity.fromPrice,
+      duration: activity.duration,
+      affiliateLink: activity.affiliateLink
+    });
+    setShowTripModal(true);
+  };
+
+  const handleActivitySaved = (tripId: string) => {
+    if (selectedActivity) {
+      setSavedActivities(prev => new Set(prev).add(selectedActivity.productCode));
     }
-  });
+    setSelectedActivity(null);
+    setShowTripModal(false);
+    // Navigate to the trip
+    setLocation(`/trip/${tripId}`);
+  };
 
   // Track click and open affiliate link
   const handleBookClick = async (activity: any) => {
@@ -421,7 +416,7 @@ export default function DestinationDetail() {
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          onClick={() => saveActivityMutation.mutate(activity)}
+                                          onClick={() => handleSaveActivity(activity)}
                                           disabled={savedActivities.has(activity.productCode)}
                                           className="h-8"
                                         >
@@ -643,6 +638,22 @@ export default function DestinationDetail() {
           </div>
         </div>
       </div>
+      
+      {/* Trip Selection Modal */}
+      {showTripModal && selectedActivity && (
+        <SelectTripModal
+          isOpen={showTripModal}
+          onClose={() => {
+            setShowTripModal(false);
+            setSelectedActivity(null);
+          }}
+          activity={selectedActivity}
+          cityName={destination?.split('-').map(w => 
+            w.charAt(0).toUpperCase() + w.slice(1)
+          ).join(' ') || ''}
+          onSuccess={handleActivitySaved}
+        />
+      )}
     </>
   );
 }

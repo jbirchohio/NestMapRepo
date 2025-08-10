@@ -134,6 +134,7 @@ router.post('/save-activity', async (req, res) => {
     const affiliateLink = req.body.affiliateLink || req.body.affiliate_link;
     const city = req.body.city;
     const tripId = req.body.tripId || req.body.trip_id;
+    const activityDate = req.body.date;
     
     // Debug logging
     console.log('Save activity request body:', req.body);
@@ -179,6 +180,7 @@ router.post('/save-activity', async (req, res) => {
       .values({
         trip_id: targetTripId,
         title: productName || 'Viator Activity', // Ensure title is never null
+        date: activityDate || null, // Add the activity date
         notes: notes,
         tag: 'activity',
         location_name: cleanCity,
