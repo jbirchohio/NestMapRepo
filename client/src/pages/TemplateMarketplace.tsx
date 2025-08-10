@@ -47,7 +47,8 @@ export default function TemplateMarketplace() {
       
       const response = await fetch(`/api/templates?${params}`);
       if (!response.ok) throw new Error('Failed to fetch templates');
-      return response.json() as Promise<ClientTemplate[]>;
+      const data = await response.json();
+      return data.templates as ClientTemplate[];
     },
   });
 
