@@ -127,9 +127,13 @@ router.post('/save-activity', async (req, res) => {
     
     const { productCode, productName, price, duration, affiliateLink, city, tripId } = req.body;
     
+    // Debug logging
+    console.log('Save activity request body:', req.body);
+    
     // Validate required fields
     if (!productName || !productCode) {
-      return res.status(400).json({ error: 'Activity name is required' });
+      console.error('Missing required fields:', { productName, productCode });
+      return res.status(400).json({ error: 'Activity name and product code are required' });
     }
     
     // Clean up city name

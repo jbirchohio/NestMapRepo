@@ -83,7 +83,7 @@ export default function DestinationDetail() {
         },
         body: JSON.stringify({
           productCode: activity.productCode,
-          productName: activity.productName,
+          productName: activity.productName || activity.title || 'Activity', // Add fallbacks
           price: activity.fromPrice,
           duration: activity.duration,
           affiliateLink: activity.affiliateLink,

@@ -94,6 +94,9 @@ export default function DestinationGuide() {
   // Mutation to save activity to trip
   const saveActivityMutation = useMutation({
     mutationFn: async (activity: any) => {
+      // Debug logging to see what we're sending
+      console.log('Saving activity:', activity);
+      
       const response = await fetch('/api/viator/save-activity', {
         method: 'POST',
         headers: {
@@ -102,7 +105,7 @@ export default function DestinationGuide() {
         },
         body: JSON.stringify({
           productCode: activity.productCode,
-          productName: activity.productName,
+          productName: activity.productName || activity.title || 'Activity', // Add fallbacks
           price: activity.fromPrice,
           duration: activity.duration,
           affiliateLink: activity.affiliateLink,

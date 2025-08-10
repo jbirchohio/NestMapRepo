@@ -214,7 +214,7 @@ export class ViatorService {
         },
         pagination: {
           start: 1,
-          count: 10
+          count: parseInt(params.topX?.split('-')[1] || '12') || 12
         },
         currency: 'USD'
       };
@@ -263,13 +263,21 @@ export class ViatorService {
         });
       }
       
-      return filteredProducts.slice(0, 5).map((product: any) => {
+      // Don't slice here since we're already limiting in the API request
+      return filteredProducts.map((product: any, index: number) => {
         // Log the first product to see its structure
-        if (filteredProducts.indexOf(product) === 0) {
-          // console.log('First Viator product structure:', JSON.stringify(product, null, 2));
+        if (index === 0) {
+          console.log('First Viator product structure:', {
+            hasTitle: !!product.title,
+            hasProductName: !!product.productName,
+            hasProductCode: !!product.productCode,
+            title: product.title,
+            productName: product.productName,
+            productCode: product.productCode
+          });
         }
         
-        return {
+        const mappedProduct = {
           productCode: product.productCode || product.id || product.code || 'NO_CODE',
           productName: product.title || product.productName || 'Unnamed Activity',
           primaryImageURL: this.getImageUrl(product.images),
@@ -280,6 +288,17 @@ export class ViatorService {
           reviewCount: product.reviews?.totalReviews || product.reviewCount || 0,
           cancellationPolicy: product.flags?.includes('FREE_CANCELLATION') ? 'Free cancellation' : 'Check details'
         };
+        
+        // Log mapped product for first item
+        if (index === 0) {
+          console.log('Mapped Viator product:', {
+            productCode: mappedProduct.productCode,
+            productName: mappedProduct.productName,
+            hasProductName: !!mappedProduct.productName
+          });
+        }
+        
+        return mappedProduct;
       });
     } catch (error) {
       console.error('Viator activity search error:', error);
