@@ -10,6 +10,7 @@ import useMapbox from "@/hooks/useMapbox";
 import { Calendar, MapPin, Sparkles, X, ChevronRight } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { analytics } from '@/lib/analytics';
 
 interface NewTripModalProps {
   isOpen: boolean;
@@ -197,6 +198,9 @@ export default function NewTripModalConsumer({
         title: "Trip created! ✈️",
         description: "Let's start planning your adventure!",
       });
+
+      // Track trip creation
+      analytics.trackTripCreated(newTrip.id, data.city);
 
       console.log('Calling onTripCreated with:', newTrip);
       onTripCreated(newTrip);

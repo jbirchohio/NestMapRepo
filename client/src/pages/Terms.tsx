@@ -1,14 +1,9 @@
 import React from 'react';
-import MainNavigationConsumer from '@/components/MainNavigationConsumer';
-import FooterConsumer from '@/components/FooterConsumer';
 import { ScrollText, Scale, AlertTriangle, Ban, CreditCard, Users, Globe, Mail } from 'lucide-react';
 
 export function TermsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      <MainNavigationConsumer />
-      
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <ScrollText className="h-16 w-16 text-purple-600 mx-auto mb-4" />
@@ -241,8 +236,8 @@ export function TermsPage() {
             
             <div className="space-y-4 text-gray-700">
               <p>
-                These terms are governed by the laws of California, USA. Any disputes will be 
-                resolved through binding arbitration in San Francisco, California, except for 
+                These terms are governed by the laws of Ohio, USA. Any disputes will be 
+                resolved through binding arbitration in Ohio, except for 
                 small claims court matters.
               </p>
               <p>
@@ -272,11 +267,7 @@ export function TermsPage() {
                 Questions about these terms? Let us know:
               </p>
               <div className="space-y-2 text-gray-700">
-                <p><strong>Email:</strong> legal@remvana.com</p>
-                <p><strong>Support:</strong> support@remvana.com</p>
-                <p><strong>Address:</strong> Remvana, Inc.<br />
-                123 Travel Lane<br />
-                San Francisco, CA 94102</p>
+                <p><strong>Email:</strong> admin@remvana.com</p>
               </div>
             </div>
           </section>
@@ -302,9 +293,6 @@ export function TermsPage() {
             </div>
           </section>
         </div>
-      </main>
-
-      <FooterConsumer />
     </div>
   );
 }

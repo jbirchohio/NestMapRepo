@@ -12,7 +12,6 @@ import { apiRequest } from '@/lib/queryClient';
 import { motion } from 'framer-motion';
 import { 
   HelpCircle, 
-  MessageSquare, 
   BookOpen, 
   Users, 
   CreditCard, 
@@ -368,7 +367,7 @@ export default function HelpCenter() {
                       <div>
                         <div className="font-medium">Email Support</div>
                         <div className="text-sm text-slate-600 dark:text-slate-400">
-                          support@remvana.com
+                          admin@remvana.com
                         </div>
                         <div className="text-xs text-slate-500">
                           Response within 24 hours
@@ -376,18 +375,6 @@ export default function HelpCenter() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-3 rounded-lg border">
-                      <MessageSquare className="h-5 w-5 text-green-600" />
-                      <div>
-                        <div className="font-medium">Live Chat</div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400">
-                          Available 9 AM - 6 PM EST
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Instant responses
-                        </div>
-                      </div>
-                    </div>
 
                     <div className="flex items-center gap-3 p-3 rounded-lg border">
                       <Phone className="h-5 w-5 text-purple-600" />

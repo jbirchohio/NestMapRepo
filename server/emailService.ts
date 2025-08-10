@@ -64,7 +64,7 @@ export async function sendNotificationEmail(params: NotificationEmailParams): Pr
 
     const msg = {
       to: params.to,
-      from: process.env.FROM_EMAIL || 'noreply@remvana.com',
+      from: process.env.FROM_EMAIL || 'admin@remvana.com',
       subject: params.subject,
       html: generateNotificationHTML(params),
     };

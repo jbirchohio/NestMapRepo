@@ -1,14 +1,9 @@
 import React from 'react';
-import MainNavigationConsumer from '@/components/MainNavigationConsumer';
-import FooterConsumer from '@/components/FooterConsumer';
 import { Shield, Lock, Eye, UserCheck, Globe, Database, Mail, AlertCircle } from 'lucide-react';
 
 export function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      <MainNavigationConsumer />
-      
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <Shield className="h-16 w-16 text-purple-600 mx-auto mb-4" />
@@ -212,11 +207,7 @@ export function PrivacyPage() {
                 Questions about our privacy practices? We're here to help:
               </p>
               <div className="space-y-2 text-gray-700">
-                <p><strong>Email:</strong> privacy@remvana.com</p>
-                <p><strong>Support:</strong> support@remvana.com</p>
-                <p><strong>Address:</strong> Remvana, Inc.<br />
-                123 Travel Lane<br />
-                San Francisco, CA 94102</p>
+                <p><strong>Email:</strong> admin@remvana.com</p>
               </div>
             </div>
           </section>
@@ -228,9 +219,6 @@ export function PrivacyPage() {
             </p>
           </section>
         </div>
-      </main>
-
-      <FooterConsumer />
     </div>
   );
 }

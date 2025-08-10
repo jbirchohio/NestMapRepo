@@ -21,7 +21,8 @@ import {
   Home,
   ShoppingBag,
   LayoutDashboard,
-  Shield
+  Shield,
+  MapPin
 } from 'lucide-react';
 
 export default function MainNavigationConsumer() {
@@ -78,6 +79,7 @@ export default function MainNavigationConsumer() {
 
   const navigation = [
     { name: 'My Trips', href: '/', icon: Home, showWhenLoggedOut: false },
+    { name: 'Destinations', href: '/destinations', icon: MapPin, showWhenLoggedOut: true },
     { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag, showWhenLoggedOut: true },
     { name: 'Creator Hub', href: '/creator/dashboard', icon: LayoutDashboard, showWhenLoggedOut: false },
   ];
@@ -114,6 +116,7 @@ export default function MainNavigationConsumer() {
                       <span className="md:hidden">
                         {item.name === 'Marketplace' ? 'Shop' : 
                          item.name === 'Creator Hub' ? 'Create' : 
+                         item.name === 'Destinations' ? 'Places' :
                          'Trips'}
                       </span>
                     </a>

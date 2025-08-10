@@ -94,12 +94,12 @@ export const BRANDING_CONFIG = {
         const url = process.env.BASE_URL.startsWith('http') 
           ? process.env.BASE_URL 
           : `https://${process.env.BASE_URL}`;
-        return `support@${new URL(url).hostname}`;
+        return `admin@${new URL(url).hostname}`;
       } catch {
-        return 'support@remvana.app';
+        return 'admin@remvana.com';
       }
     }
-    return 'support@remvana.app';
+    return 'admin@remvana.com';
   })(),
   logoUrl: process.env.LOGO_URL || null,
   privacyUrl: process.env.PRIVACY_URL,

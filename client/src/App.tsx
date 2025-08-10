@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/JWTAuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { analytics } from "@/lib/analytics";
 import MainNavigationConsumer from "@/components/MainNavigationConsumer";
 import SimpleFooter from "@/components/SimpleFooter";
 import HomeConsumerRedesigned from "@/pages/HomeConsumerRedesigned";
@@ -75,6 +76,13 @@ function SignupRedirect() {
 }
 
 function Router() {
+  const [location] = useLocation();
+  
+  // Track page views
+  useEffect(() => {
+    analytics.trackPageView(location);
+  }, [location]);
+  
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-white to-pink-50">
       <NavigationWrapper />

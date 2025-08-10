@@ -18,6 +18,15 @@
     <!-- Google Sign In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '%VITE_GA_MEASUREMENT_ID%');
+    </script>
+    
     <!-- Monetization Script - Temporarily disabled due to errors -->
     <!-- To re-enable, uncomment the script below and ensure it loads after DOM is ready -->
     <!-- 

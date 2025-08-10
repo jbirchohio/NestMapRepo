@@ -1,7 +1,5 @@
 import React from 'react';
-import { Mail, MessageSquare, HelpCircle } from 'lucide-react';
-import MainNavigationConsumer from '@/components/MainNavigationConsumer';
-import FooterConsumer from '@/components/FooterConsumer';
+import { Mail, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,10 +30,7 @@ export function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      <MainNavigationConsumer />
-      
-      <main className="container mx-auto px-4 py-12 max-w-6xl">
+    <div className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
@@ -44,7 +39,7 @@ export function ContactPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-2xl mx-auto">
           {/* Contact Methods */}
           <Card>
             <CardHeader>
@@ -53,18 +48,7 @@ export function ContactPage() {
               <CardDescription>Get a response within 24 hours</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">support@remvana.com</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <MessageSquare className="h-8 w-8 text-purple-600 mb-2" />
-              <CardTitle>Live Chat</CardTitle>
-              <CardDescription>Chat with our team instantly</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">Available Mon-Fri, 9am-5pm EST</p>
+              <p className="text-sm text-gray-600">admin@remvana.com</p>
             </CardContent>
           </Card>
 
@@ -186,9 +170,6 @@ export function ContactPage() {
             </div>
           </div>
         </div>
-      </main>
-
-      <FooterConsumer />
     </div>
   );
 }

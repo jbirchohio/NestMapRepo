@@ -8,7 +8,7 @@ export const BRAND_CONFIG = {
     secondaryColor: "#10B981",
     tagline: "Plan Your Perfect Trip",
     description: "Create beautiful itineraries and discover amazing travel templates",
-    supportEmail: "support@remvana.com",
+    supportEmail: "admin@remvana.com",
     helpUrl: "https://help.remvana.com",
     privacyUrl: "https://remvana.com/privacy",
     termsUrl: "https://remvana.com/terms"

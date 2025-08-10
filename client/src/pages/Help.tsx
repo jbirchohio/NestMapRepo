@@ -1,6 +1,4 @@
 import React from 'react';
-import MainNavigationConsumer from '@/components/MainNavigationConsumer';
-import FooterConsumer from '@/components/FooterConsumer';
 import { 
   HelpCircle, Search, BookOpen, Users, CreditCard, Map, 
   Share2, ShoppingBag, Settings, Shield, ChevronDown, ChevronRight,
@@ -236,10 +234,7 @@ export function HelpPage() {
     : categories;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      <MainNavigationConsumer />
-      
-      <main className="container mx-auto px-4 py-12 max-w-6xl">
+    <div className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <HelpCircle className="h-16 w-16 text-purple-600 mx-auto mb-4" />
@@ -331,17 +326,10 @@ export function HelpPage() {
               <CardDescription>Our support team is here for you</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-center gap-8">
-                <div>
-                  <h3 className="font-semibold mb-1">Email Support</h3>
-                  <p className="text-sm text-gray-600">support@remvana.com</p>
-                  <p className="text-xs text-gray-500">Response within 24 hours</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Live Chat</h3>
-                  <p className="text-sm text-gray-600">Mon-Fri, 9am-5pm EST</p>
-                  <p className="text-xs text-gray-500">Average wait: 2 minutes</p>
-                </div>
+              <div className="text-center">
+                <h3 className="font-semibold mb-1">Email Support</h3>
+                <p className="text-sm text-gray-600">admin@remvana.com</p>
+                <p className="text-xs text-gray-500">We'll respond within 24 hours</p>
               </div>
               <div className="pt-4">
                 <a 
@@ -379,9 +367,6 @@ export function HelpPage() {
             </Card>
           </div>
         </div>
-      </main>
-
-      <FooterConsumer />
     </div>
   );
 }

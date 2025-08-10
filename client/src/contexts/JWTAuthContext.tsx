@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { jwtAuth, User } from '@/lib/jwtAuth';
 import { useToast } from '@/hooks/use-toast';
+import { analytics } from '@/lib/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -86,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Welcome back!",
           description: "You have been signed in successfully.",
         });
+        
+        // Track successful login
+        analytics.trackLogin('email');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
@@ -120,6 +124,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Account created!",
           description: "Your account has been created successfully.",
         });
+        
+        // Track successful signup
+        analytics.trackSignup('email');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign up failed';

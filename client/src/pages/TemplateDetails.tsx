@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 import AuthModalSimple from '@/components/auth/AuthModalSimple';
 import ShareModalSimple from '@/components/ShareModalSimple';
 import StripeCheckout from '@/components/StripeCheckout';
+import { analytics } from '@/lib/analytics';
 import ReuseTemplateDialog from '@/components/ReuseTemplateDialog';
 
 export default function TemplateDetails() {
@@ -82,6 +83,15 @@ export default function TemplateDetails() {
       description: 'The template has been added to your trips.',
     });
     refetch();
+    
+    // Track template purchase
+    if (template) {
+      analytics.trackTemplatePurchase(
+        template.id, 
+        template.price || 0, 
+        template.title
+      );
+    }
     
     // Navigate to the new trip
     // The backend returns tripId in the response
