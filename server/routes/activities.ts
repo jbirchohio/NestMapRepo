@@ -247,44 +247,4 @@ router.put("/:id/order", async (req: Request, res: Response) => {
   }
 });
 
-// Toggle activity completion status
-router.patch("/:id/complete", async (req: Request, res: Response) => {
-  try {
-    const activityId = parseInt(req.params.id);
-    if (isNaN(activityId)) {
-      return res.status(400).json({ message: "Invalid activity ID" });
-    }
-
-    // Verify activity exists
-    const existingActivity = await storage.getActivity(activityId);
-    if (!existingActivity) {
-      return res.status(404).json({ message: "Activity not found" });
-    }
-
-    // Verify trip access
-    const trip = await storage.getTrip(existingActivity.trip_id);
-    if (!trip) {
-      return res.status(404).json({ message: "Associated trip not found" });
-    }
-
-    // For consumer app, just verify user owns the trip
-    if (trip.user_id !== req.user?.id) {
-      return res.status(403).json({ message: "Access denied: Cannot modify this activity" });
-    }
-
-    const updatedActivity = await storage.updateActivity(activityId, { 
-      completed: !existingActivity.completed 
-    });
-    
-    if (!updatedActivity) {
-      return res.status(404).json({ message: "Activity not found" });
-    }
-
-    res.json(updatedActivity);
-  } catch (error) {
-    logger.error("Error toggling activity completion:", error);
-    res.status(500).json({ message: "Could not update activity completion status" });
-  }
-});
-
 export default router;

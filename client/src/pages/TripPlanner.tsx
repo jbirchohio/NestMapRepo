@@ -12,7 +12,6 @@ import AITripChat from "@/components/AITripChat";
 import SmartTourRecommendations from "@/components/SmartTourRecommendations";
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
-import { useAutoComplete } from "@/hooks/useAutoComplete";
 import { useMapboxDirections } from "@/hooks/useMapboxDirections";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
@@ -59,8 +58,6 @@ export default function TripPlanner() {
     refetchActivities 
   } = useActivities(tripId);
   
-  // Auto-complete activities based on time with immediate updates
-  useAutoComplete({ activities, tripId, onActivityCompleted: refetchActivities });
   
   // State for currently active day
   const [activeDay, setActiveDay] = useState<Date | null>(null);
@@ -160,13 +157,12 @@ export default function TripPlanner() {
     }
   }, [tripError, activitiesError, toast]);
   
-  // Filter activities for current day AND exclude completed activities from map
+  // Filter activities for current day
   const filteredActivities = activities.filter((activity) => {
     if (!activeDay) return false;
     const activityDate = new Date(activity.date);
     const isCorrectDay = activityDate.toDateString() === activeDay.toDateString();
-    const isNotCompleted = !activity.completed; // Only show pending activities on map
-    return isCorrectDay && isNotCompleted;
+    return isCorrectDay;
   });
   
   // Sort activities by time
@@ -174,7 +170,7 @@ export default function TripPlanner() {
     return a.time.localeCompare(b.time);
   });
   
-  // Prepare map markers - include all activities with coordinates (both completed and pending)
+  // Prepare map markers - include all activities with coordinates
   const mapMarkers: MapMarker[] = sortedActivities
     .filter(activity => {
       // Only include activities with valid coordinates
@@ -200,7 +196,6 @@ export default function TripPlanner() {
       longitude: parseFloat(activity.longitude || "0"),
       label: String(index + 1), // 1, 2, 3, etc.
       activity,
-      completed: activity.completed || false, // Pass completion status to map component
     }));
   
   // Prepare map routes - sort markers by activity time first

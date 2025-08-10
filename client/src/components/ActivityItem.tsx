@@ -115,7 +115,6 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
         className={`
           bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow cursor-pointer
           ${activity.conflict ? 'border-[hsl(var(--destructive))]' : ''}
-          ${activity.completed ? 'opacity-60' : ''}
           relative overflow-hidden
         `}
       >
@@ -125,17 +124,6 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
         </div>
         
         <div className="p-3 pt-6 relative">
-          {/* Completed status indicator - activities auto-complete based on time */}
-          {activity.completed && (
-            <div 
-              className="absolute left-2 top-2 z-10 w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded-full"
-              title="Activity completed (auto-completed based on time)"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          )}
         
           {/* Delete button - visible on hover on desktop, always visible on mobile */}
           <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
@@ -212,7 +200,7 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
           </div>
 
           {/* Bookable Activity Section - Hidden for now */}
-          {/* {activity.locationName && !activity.completed && (
+          {/* {activity.locationName && (
             <div className="mt-3 pt-3 border-t">
               <BookableActivity
                 activityTitle={activity.title}
