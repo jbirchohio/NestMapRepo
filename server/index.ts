@@ -13,7 +13,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import apiRoutes from "./routes/index";
 import sitemapRoutes from "./routes/sitemap";
-import { setupVite, serveStatic, log } from "./vite";
+
+// Conditionally import vite only in development
+let setupVite: any, serveStatic: any, log: any;
+if (process.env.NODE_ENV !== 'production') {
+  const viteModule = await import('./vite');
+  setupVite = viteModule.setupVite;
+  serveStatic = viteModule.serveStatic;
+  log = viteModule.log;
+} else {
+  // Production fallbacks
+  log = (message: string) => console.log(`[server] ${message}`);
+  serveStatic = (app: any) => {
+    // No-op in production - static files are served differently
+  };
+}
 // System settings not needed for consumer app
 // import { initializeSystemSettings, checkMaintenanceMode, getSetting } from "./services/systemSettingsService";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
