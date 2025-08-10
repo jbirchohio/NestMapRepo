@@ -1179,13 +1179,40 @@ Format as JSON with this structure:
 
     // If a tripId is provided, save the activities to the trip
     if (tripId) {
+      let defaultTimeIndex = 0;
+      const defaultTimes = ['09:00', '11:00', '14:00', '16:00', '19:00', '21:00'];
+      
       for (const activity of formattedActivities) {
+        // Ensure activity has a time, generate smart default if missing
+        let activityTime = activity.time;
+        if (!activityTime) {
+          // Check for meal times based on title/category
+          const title = (activity.title || '').toLowerCase();
+          const category = (activity.category || '').toLowerCase();
+          
+          if (title.includes('breakfast') || category === 'breakfast') {
+            activityTime = '08:00';
+          } else if (title.includes('lunch') || category === 'lunch') {
+            activityTime = '12:30';
+          } else if (title.includes('dinner') || category === 'dinner') {
+            activityTime = '19:00';
+          } else if (title.includes('check-in')) {
+            activityTime = '15:00';
+          } else if (title.includes('check-out')) {
+            activityTime = '11:00';
+          } else {
+            // Use rotating default times
+            activityTime = defaultTimes[defaultTimeIndex % defaultTimes.length];
+            defaultTimeIndex++;
+          }
+        }
+        
         await db.insert(activities).values({
           trip_id: parseInt(tripId),
           title: activity.title,
           description: activity.description,
           date: new Date(activity.date),
-          time: activity.time,
+          time: activityTime,
           duration: activity.duration,
           location: activity.location,
           category: activity.category,

@@ -126,12 +126,39 @@ export class TemplateCopyService {
               }
             }
             
+            // Generate smart default time if not provided
+            let activityTime = activity.time;
+            if (!activityTime) {
+              // Assign times based on order in the day
+              // First activity: 9am, then 11am, 2pm, 4pm, 7pm, etc.
+              const timeSlots = ['09:00', '11:00', '14:00', '16:00', '19:00', '21:00'];
+              activityTime = timeSlots[order % timeSlots.length];
+              
+              // Adjust based on activity type/tag if available
+              const tag = (activity.tag || '').toLowerCase();
+              const title = (activity.title || '').toLowerCase();
+              
+              if (tag === 'breakfast' || title.includes('breakfast')) {
+                activityTime = '08:00';
+              } else if (tag === 'lunch' || title.includes('lunch')) {
+                activityTime = '12:30';
+              } else if (tag === 'dinner' || title.includes('dinner')) {
+                activityTime = '19:00';
+              } else if (tag === 'hotel' && title.includes('check-in')) {
+                activityTime = '15:00';
+              } else if (tag === 'hotel' && title.includes('check-out')) {
+                activityTime = '11:00';
+              } else if (tag === 'flight' || tag === 'transport') {
+                activityTime = order === 0 ? '08:00' : '10:00';
+              }
+            }
+            
             try {
               await storage.createActivity({
                 trip_id: newTrip.id,
                 title: activity.title,
                 date: activityDate.toISOString().split('T')[0],
-              time: activity.time || null,
+              time: activityTime,
               location_name: locationName,
               latitude,
               longitude,
@@ -187,12 +214,39 @@ export class TemplateCopyService {
             }
           }
           
+          // Generate smart default time if not provided
+          let activityTime = activity.time;
+          if (!activityTime) {
+            // Assign times based on order
+            const order = activity.order || 0;
+            const timeSlots = ['09:00', '11:00', '14:00', '16:00', '19:00', '21:00'];
+            activityTime = timeSlots[order % timeSlots.length];
+            
+            // Adjust based on activity type/tag if available
+            const tag = (activity.tag || '').toLowerCase();
+            const title = (activity.title || '').toLowerCase();
+            
+            if (tag === 'breakfast' || title.includes('breakfast')) {
+              activityTime = '08:00';
+            } else if (tag === 'lunch' || title.includes('lunch')) {
+              activityTime = '12:30';
+            } else if (tag === 'dinner' || title.includes('dinner')) {
+              activityTime = '19:00';
+            } else if (tag === 'hotel' && title.includes('check-in')) {
+              activityTime = '15:00';
+            } else if (tag === 'hotel' && title.includes('check-out')) {
+              activityTime = '11:00';
+            } else if (tag === 'flight' || tag === 'transport') {
+              activityTime = order === 0 ? '08:00' : '10:00';
+            }
+          }
+          
           try {
             await storage.createActivity({
               trip_id: newTrip.id,
               title: activity.title,
               date: activityDate.toISOString().split('T')[0],
-            time: activity.time || null,
+            time: activityTime,
             location_name: locationName,
             latitude,
             longitude,
