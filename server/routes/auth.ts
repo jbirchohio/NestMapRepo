@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { hashPassword, verifyPassword } from '../auth';
 import { db } from "../db-connection";
-import { users, organizations } from '@shared/schema';
+import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import socialAuthRoutes from './auth-social';
@@ -18,8 +18,11 @@ function createJWT(payload: any): string {
   const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
   
-  // Use proper HMAC signing with secret key
-  const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback_dev_secret_change_in_production';
+  // Use proper HMAC signing with secret key - require in production
+  const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET or SESSION_SECRET must be set');
+  }
   const signature = crypto
     .createHmac('sha256', secret)
     .update(`${headerB64}.${payloadB64}`)
@@ -52,30 +55,17 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
     }
 
     // Hash password
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = hashPassword(password);
 
-    // Get default settings
-    const defaultTrialDays = await getSetting('default_trial_days') || 14;
-    const defaultSeats = await getSetting('default_organization_seats') || 5;
-    
-    // Create default organization for new user
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + defaultTrialDays);
-    
-    const [organization] = await db.insert(organizations).values({
-      name: `${username}'s Organization`,
-      plan: 'trial',
-      white_label_enabled: false
-    }).returning();
-
-    // Create user
+    // Create user for consumer app (no organization needed)
     const [user] = await db.insert(users).values({
       email,
       username,
       auth_id: `jwt_${Date.now()}_${Math.random()}`,
       password_hash: hashedPassword,
-      role: 'admin',
-      organization_id: organization.id
+      role: 'user',
+      role_type: 'consumer',
+      organization_id: null
     }).returning();
 
     // Create JWT token
@@ -84,7 +74,6 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
       email: user.email,
       username: user.username,
       role: user.role,
-      organization_id: user.organization_id
     });
 
     res.status(201).json({
@@ -93,8 +82,7 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
         email: user.email,
         username: user.username,
         role: user.role,
-        organization_id: user.organization_id
-      },
+        },
       token
     });
   } catch (error) {
@@ -119,7 +107,7 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
     }
 
     // Verify password
-    const isValidPassword = await verifyPassword(password, user.password_hash || '');
+    const isValidPassword = verifyPassword(password, user.password_hash || '');
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -135,7 +123,6 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
       email: user.email,
       username: user.username,
       role: user.role,
-      organization_id: user.organization_id
     });
 
     res.json({
@@ -144,8 +131,7 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
         email: user.email,
         username: user.username,
         role: user.role,
-        organization_id: user.organization_id
-      },
+        },
       token
     });
   } catch (error) {

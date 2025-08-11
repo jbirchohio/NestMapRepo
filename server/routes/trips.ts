@@ -17,7 +17,7 @@ router.use(jwtAuthMiddleware);
 // Organization context removed for consumer app
 router.use(fieldTransformMiddleware);
 
-// Get all trips for authenticated user with organization filtering
+// Get all trips for authenticated user with pagination
 router.get("/", async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -26,9 +26,24 @@ router.get("/", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "User ID required" });
     }
 
-    // Get trips for the user (no organization filtering)
-    const trips = await storage.getTripsByUserId(userId);
-    res.json(trips);
+    // Parse pagination parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 items
+    const offset = (page - 1) * limit;
+
+    // Get trips with pagination
+    const trips = await storage.getTripsByUserIdPaginated(userId, limit, offset);
+    const totalCount = await storage.getTripsCountByUserId(userId);
+    
+    res.json({
+      trips,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
   } catch (error) {
     logger.error("Error fetching trips:", error);
     res.status(500).json({ message: "Could not fetch trips" });

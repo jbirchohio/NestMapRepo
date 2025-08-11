@@ -73,6 +73,12 @@ export interface IStorage {
     userId: number,
     organizationId?: number | null,
   ): Promise<Trip[]>;
+  getTripsByUserIdPaginated(
+    userId: number,
+    limit: number,
+    offset: number,
+  ): Promise<Trip[]>;
+  getTripsCountByUserId(userId: number): Promise<number>;
   getTripsByOrganizationId(organizationId: number): Promise<Trip[]>;
   updateTrip(id: number, updates: any): Promise<Trip | undefined>;
   deleteTrip(id: number): Promise<boolean>;
@@ -315,6 +321,31 @@ export class ConsumerDatabaseStorage implements IStorage {
     return allTrips.sort(
       (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
     );
+  }
+
+  async getTripsByUserIdPaginated(
+    userId: number,
+    limit: number,
+    offset: number,
+  ): Promise<Trip[]> {
+    const ownTrips = await db
+      .select()
+      .from(trips)
+      .where(eq(trips.user_id, userId))
+      .orderBy(desc(trips.start_date))
+      .limit(limit)
+      .offset(offset);
+
+    return ownTrips;
+  }
+
+  async getTripsCountByUserId(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(trips)
+      .where(eq(trips.user_id, userId));
+    
+    return result[0]?.count || 0;
   }
 
   async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {

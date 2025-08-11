@@ -1,3 +1,5 @@
+import { CONFIG } from '../config/constants';
+
 // Simple in-memory cache for AI search results
 // Upgrade to Redis when scaling beyond single server
 
@@ -9,15 +11,17 @@ interface CacheEntry {
 
 class AISearchCache {
   private cache = new Map<string, CacheEntry>();
-  private maxSize = 500; // Reduced for Railway's 512MB plan
+  private maxSize = CONFIG.CACHE_MAX_SIZE;
+  private currentMemoryUsage = 0; // Track memory in bytes
+  private maxMemoryMB = CONFIG.CACHE_MAX_MEMORY_MB;
   
-  // Cache durations in seconds (optimized for Railway's 512MB plan)
+  // Cache durations in seconds from configuration
   readonly DURATIONS = {
-    LOCATION_SEARCH: 3 * 24 * 60 * 60,       // 3 days (reduced from 7)
-    ACTIVITY_SUGGESTIONS: 7 * 24 * 60 * 60,  // 7 days (reduced from 30)
-    RESTAURANT_SEARCH: 24 * 60 * 60,         // 1 day (reduced from 3)
-    WEATHER_ACTIVITIES: 3 * 60 * 60,         // 3 hours (unchanged)
-    DEFAULT: 12 * 60 * 60                    // 12 hours default
+    LOCATION_SEARCH: CONFIG.CACHE_TTL_LOCATION,
+    ACTIVITY_SUGGESTIONS: CONFIG.CACHE_TTL_ACTIVITY,
+    RESTAURANT_SEARCH: CONFIG.CACHE_TTL_RESTAURANT,
+    WEATHER_ACTIVITIES: CONFIG.CACHE_TTL_WEATHER,
+    DEFAULT: CONFIG.CACHE_TTL_DEFAULT
   };
 
   get(key: string): any | null {
@@ -46,11 +50,20 @@ class AISearchCache {
     // Use default TTL if not specified
     const ttl = ttlSeconds || this.DURATIONS.DEFAULT;
     
-    // Implement simple LRU: remove oldest entry if cache is full
-    if (this.cache.size >= this.maxSize) {
+    // Calculate size of new data
+    const dataSize = Buffer.byteLength(JSON.stringify(data));
+    const maxMemoryBytes = this.maxMemoryMB * 1024 * 1024;
+    
+    // Check memory limit before size limit
+    while ((this.currentMemoryUsage + dataSize > maxMemoryBytes || this.cache.size >= this.maxSize) && this.cache.size > 0) {
       const firstKey = this.cache.keys().next().value;
+      const entry = this.cache.get(firstKey);
+      if (entry) {
+        const entrySize = Buffer.byteLength(JSON.stringify(entry.data));
+        this.currentMemoryUsage -= entrySize;
+      }
       this.cache.delete(firstKey);
-      console.log(`Cache full, evicted: ${firstKey}`);
+      console.log(`Cache evicted: ${firstKey} (memory: ${(this.currentMemoryUsage / 1024 / 1024).toFixed(2)}MB)`);
     }
     
     this.cache.set(key, {
@@ -59,7 +72,8 @@ class AISearchCache {
       hits: 0
     });
     
-    console.log(`Cached: ${key} for ${ttl} seconds`);
+    this.currentMemoryUsage += dataSize;
+    console.log(`Cached: ${key} for ${ttl}s (size: ${(dataSize / 1024).toFixed(2)}KB, total: ${(this.currentMemoryUsage / 1024 / 1024).toFixed(2)}MB)`);
   }
 
   // Generate consistent cache keys
@@ -73,16 +87,23 @@ class AISearchCache {
   getStats() {
     let totalHits = 0;
     let totalEntries = this.cache.size;
+    let approximateSize = 0;
     
     this.cache.forEach(entry => {
       totalHits += entry.hits;
+      // Approximate memory size without serializing entire cache
+      if (entry.data) {
+        approximateSize += JSON.stringify(entry.data).length;
+      }
     });
     
     return {
       entries: totalEntries,
       totalHits,
       averageHits: totalEntries > 0 ? totalHits / totalEntries : 0,
-      memorySizeEstimate: JSON.stringify([...this.cache]).length
+      memorySizeBytes: this.currentMemoryUsage,
+      memorySizeMB: this.currentMemoryUsage / 1024 / 1024,
+      maxMemoryMB: this.maxMemoryMB
     };
   }
 
@@ -93,6 +114,8 @@ class AISearchCache {
     
     this.cache.forEach((entry, key) => {
       if (now > entry.expiry) {
+        const entrySize = Buffer.byteLength(JSON.stringify(entry.data));
+        this.currentMemoryUsage -= entrySize;
         this.cache.delete(key);
         cleaned++;
       }

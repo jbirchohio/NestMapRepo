@@ -4,12 +4,14 @@ import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 import { logger } from './utils/logger';
 
+import { CONFIG } from './config/constants';
+
 // Secure password hashing using Node.js crypto
-const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
+const SALT_ROUNDS = CONFIG.BCRYPT_SALT_ROUNDS;
 
 export function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.pbkdf2Sync(password, salt, SALT_ROUNDS * 1000, 64, 'sha512');
+  const hash = crypto.pbkdf2Sync(password, salt, CONFIG.BCRYPT_SALT_ROUNDS * 1000, 64, 'sha512');
   return `${salt}:${hash.toString('hex')}`;
 }
 
@@ -18,7 +20,7 @@ export function verifyPassword(password: string, hashedPassword: string): boolea
     const [salt, hash] = hashedPassword.split(':');
     if (!salt || !hash) return false;
     
-    const verifyHash = crypto.pbkdf2Sync(password, salt, SALT_ROUNDS * 1000, 64, 'sha512');
+    const verifyHash = crypto.pbkdf2Sync(password, salt, CONFIG.BCRYPT_SALT_ROUNDS * 1000, 64, 'sha512');
     return hash === verifyHash.toString('hex');
   } catch (error) {
     logger.error('Password verification error', { error: error instanceof Error ? error.message : 'Unknown error' });
@@ -39,8 +41,8 @@ export async function authenticateUser(email: string, password: string) {
       .limit(1);
 
     if (!user) {
-      // Log failed login attempt without exposing email
-      logger.info('Authentication failed: User not found', { email });
+      // Log failed login attempt without exposing PII
+      logger.info('Authentication failed: User not found');
       return null;
     }
 
@@ -82,7 +84,7 @@ export async function getUserById(authId: string) {
       return {
         id: user.id,
         email: user.email,
-        role: user.role || 'admin',
+        role: user.role || 'user',
         displayName: user.display_name || user.email
       };
     }

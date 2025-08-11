@@ -1,19 +1,14 @@
 import { Router } from "express";
 import { jwtAuthMiddleware } from "../middleware/jwtAuth";
 import { z } from "zod";
-import OpenAI from "openai";
 import { aiRateLimit } from "../middleware/rateLimiting";
 import { db } from "../db-connection";
 import { trips, activities } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
+import { getOpenAIClient, OPENAI_MODEL } from '../services/openaiClient';
 
-// Initialize OpenAI client
-const apiKey = process.env.OPENAI_API_KEY;
-console.log('OpenAI API Key configured:', apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}` : 'NOT SET');
-
-const openai = new OpenAI({
-  apiKey: apiKey,
-});
+// Use centralized OpenAI client
+const openai = getOpenAIClient();
 
 const router = Router();
 router.use(jwtAuthMiddleware);
@@ -53,10 +48,7 @@ router.post("/summarize-day", async (req, res) => {
     const [trip] = await db
       .select()
       .from(trips)
-      .where(and(
-        eq(trips.id, trip_id),
-        eq(trips.organization_id, req.user.organization_id!)
-      ));
+      .where(eq(trips.id, trip_id));
 
     if (!trip) {
       return res.status(404).json({ success: false, error: "Trip not found" });
@@ -93,7 +85,7 @@ ${activitiesText}
 Provide a brief, engaging summary that highlights the key experiences and flow of the day. Keep it under 150 words.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
+      model: OPENAI_MODEL, // Using GPT-3.5 for 80% cost savings
       messages: [{ role: "user", content: prompt }],
       max_tokens: 200,
       temperature: 0.7,
@@ -164,7 +156,7 @@ Format as JSON with this structure:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
+      model: OPENAI_MODEL, // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -214,10 +206,7 @@ router.post("/optimize-itinerary", async (req, res) => {
     const [trip] = await db
       .select()
       .from(trips)
-      .where(and(
-        eq(trips.id, trip_id),
-        eq(trips.organization_id, req.user.organization_id!)
-      ));
+      .where(eq(trips.id, trip_id));
 
     if (!trip) {
       return res.status(404).json({ success: false, error: "Trip not found" });
@@ -284,7 +273,7 @@ Provide specific time optimizations in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
+      model: OPENAI_MODEL, // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -403,7 +392,7 @@ Keep your main response conversational and helpful.`
     };
     
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: OPENAI_MODEL,
       messages: [systemMessage, ...messages],
       temperature: 0.7,
       max_tokens: 1000  // Increased for detailed activities
@@ -526,7 +515,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
+      model: OPENAI_MODEL, // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -619,7 +608,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
@@ -685,7 +674,7 @@ Provide the translation in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5 for 80% cost savings
+      model: OPENAI_MODEL, // Using GPT-3.5 for 80% cost savings
       messages: [
         {
           role: "system",
@@ -762,7 +751,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
@@ -845,7 +834,7 @@ Format as JSON:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
@@ -950,7 +939,7 @@ router.post("/recommend-tours", async (req, res) => {
     Provide specific tour recommendations with brief descriptions.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: prompt }],
       max_tokens: 500,
       temperature: 0.7,
@@ -1016,7 +1005,7 @@ Return format:
 If any information is missing, use reasonable defaults or mark as null.`;
 
     const extractionResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: extractionPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.3,
@@ -1155,7 +1144,7 @@ Format as JSON with this structure:
 }`;
 
     const itineraryResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: OPENAI_MODEL,
       messages: [{ role: "user", content: itineraryPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.7,

@@ -1,6 +1,7 @@
 // Load environment variables with platform-specific handling
 import './env-loader';
 import { performStartupCheck } from './startup-check';
+import { validateConfig } from './config/constants';
 import express, { type Request, Response, NextFunction } from "express";
 // Session-based auth removed - using JWT only
 import path from "path";
@@ -247,6 +248,17 @@ app.use((req, res, next) => {
 
 (async () => {
   console.log('🚀 Starting server initialization...');
+  
+  // Validate configuration first
+  try {
+    validateConfig();
+    console.log('✅ Configuration validated');
+  } catch (error) {
+    console.error('❌ Configuration validation failed:', error.message);
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  }
   
   // Perform startup environment check
   const startupStatus = performStartupCheck();

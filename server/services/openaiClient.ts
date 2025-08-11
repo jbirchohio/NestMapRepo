@@ -1,5 +1,6 @@
 // Centralized OpenAI client service
 import OpenAI from "openai";
+import { CONFIG } from '../config/constants';
 
 let openaiClient: OpenAI | null = null;
 
@@ -17,5 +18,5 @@ export function getOpenAIClient(): OpenAI {
   return openaiClient;
 }
 
-// Helper function to ensure we use a cost-effective model
-export const OPENAI_MODEL = "gpt-3.5-turbo"; // Using GPT-3.5 for 95% cost savings vs GPT-4o!
+// Use configured model from environment or default to cost-effective option
+export const OPENAI_MODEL = CONFIG.AI_MODEL; // Configurable via AI_MODEL env var
