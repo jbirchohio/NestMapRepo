@@ -49,11 +49,17 @@ class CSRFProtection {
       
       if (!token) {
         token = this.generateToken();
-        res.cookie(this.cookieName, token, {
+        const cookieOptions = {
           httpOnly: false, // Must be readable by JS for double-submit
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
+          sameSite: 'lax' as const, // Allow cookies to be sent with top-level navigations
           maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        };
+        res.cookie(this.cookieName, token, cookieOptions);
+        logger.debug('CSRF token set', { 
+          token: token.substring(0, 8) + '...', 
+          cookieOptions,
+          path: req.path 
         });
       }
 

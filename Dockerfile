@@ -41,6 +41,9 @@ RUN addgroup -g 1001 -S nodejs && \
 
 USER nodejs
 
+# Set production environment
+ENV NODE_ENV=production
+
 # Railway will provide PORT
 EXPOSE 3000
 
