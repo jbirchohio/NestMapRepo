@@ -12,8 +12,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CreditCard, Lock, CheckCircle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Initialize Stripe with public key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+// Initialize Stripe - check for the key and handle gracefully
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+console.log('Stripe key available:', !!stripeKey);
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 interface StripeCheckoutProps {
   templateId: number;
@@ -285,7 +287,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
 
 // Main component with Stripe Elements provider
 export default function StripeCheckout(props: StripeCheckoutProps) {
-  if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+  if (!stripePromise || !stripeKey) {
     return (
       <Alert variant="destructive">
         <AlertDescription>

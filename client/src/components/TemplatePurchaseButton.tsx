@@ -19,8 +19,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-// Initialize Stripe (you'll need to add your publishable key to env)
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+// Initialize Stripe - check for the key and handle gracefully
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 interface TemplatePurchaseButtonProps {
   templateId: number;
