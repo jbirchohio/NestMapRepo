@@ -728,8 +728,8 @@ export class ConsumerDatabaseStorage implements IStorage {
       const pattern = `%${search.toLowerCase()}%`;
       conditions.push(
         or(
-          sql`LOWER(${templates.title}) LIKE ${pattern}`,
-          sql`LOWER(${templates.description}) LIKE ${pattern}`,
+          sql`lower(${templates.title}) LIKE ${pattern}`,
+          sql`lower(${templates.description}) LIKE ${pattern}`,
         )!,
       );
     }

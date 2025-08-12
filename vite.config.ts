@@ -9,7 +9,10 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [
-    react()
+    react({
+      // Ensure React is properly handled
+      jsxRuntime: 'automatic'
+    })
   ],
   resolve: {
     alias: {
@@ -25,8 +28,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Core React libraries
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+          // Core React libraries - MUST stay together
+          if (id.includes('node_modules/react/') || 
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/scheduler/')) {
             return 'react-core';
           }
           
