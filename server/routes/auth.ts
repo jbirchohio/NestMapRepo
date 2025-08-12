@@ -164,25 +164,9 @@ router.post('/logout', (req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 });
 
-// Get CSRF token endpoint
+// CSRF endpoint - returns empty token since CSRF is disabled
 router.get('/csrf-token', (req: Request, res: Response) => {
-  let token = (req as any).csrfToken?.();
-  
-  // If no token exists, generate one
-  if (!token) {
-    const crypto = require('crypto');
-    token = crypto.randomBytes(24).toString('hex');
-    
-    // Set the cookie
-    res.cookie('_csrf', token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    });
-  }
-  
-  res.json({ csrfToken: token });
+  res.json({ csrfToken: '' });
 });
 
 // Get current user endpoint

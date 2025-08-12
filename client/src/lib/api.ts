@@ -9,45 +9,11 @@ interface ApiOptions extends RequestInit {
 
 class ApiClient {
   private baseUrl = '/api';
-  private csrfToken: string | null = null;
-  private csrfPromise: Promise<string> | null = null;
-
-  /**
-   * Get CSRF token (cached)
-   */
-  private async getCsrfToken(): Promise<string> {
-    // Return cached token if available
-    if (this.csrfToken) {
-      return this.csrfToken;
-    }
-
-    // Return existing promise if fetching
-    if (this.csrfPromise) {
-      return this.csrfPromise;
-    }
-
-    // Fetch new token
-    this.csrfPromise = fetch('/api/auth/csrf-token', {
-      method: 'GET',
-      credentials: 'include',
-    })
-      .then(res => res.json())
-      .then(data => {
-        this.csrfToken = data.csrfToken;
-        this.csrfPromise = null;
-        return this.csrfToken;
-      })
-      .catch(error => {
-        this.csrfPromise = null;
-        throw error;
-      });
-
-    return this.csrfPromise;
-  }
+  // CSRF removed - was causing authentication issues
 
   /**
    * Make an authenticated API request
-   * Automatically includes credentials for cookie-based auth and CSRF token
+   * Automatically includes credentials for cookie-based auth
    */
   async request<T = any>(
     endpoint: string,
@@ -55,22 +21,11 @@ class ApiClient {
   ): Promise<T> {
     const { skipAuth, ...fetchOptions } = options;
 
-    // Get CSRF token for state-changing requests
-    let csrfToken: string | undefined;
-    if (!skipAuth && fetchOptions.method && !['GET', 'HEAD'].includes(fetchOptions.method)) {
-      try {
-        csrfToken = await this.getCsrfToken();
-      } catch (error) {
-        // Continue without CSRF token for public endpoints
-      }
-    }
-
     const config: RequestInit = {
       ...fetchOptions,
       credentials: skipAuth ? 'omit' : 'include', // Always include cookies unless explicitly skipped
       headers: {
         'Content-Type': 'application/json',
-        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
         ...fetchOptions.headers,
       },
     };
@@ -84,18 +39,6 @@ class ApiClient {
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      // If CSRF token is invalid, clear it and retry once
-      if (response.status === 403) {
-        const error = await response.json().catch(() => ({ message: 'Request failed' }));
-        if (error.message?.includes('CSRF')) {
-          this.csrfToken = null;
-          // Retry the request once with a fresh token
-          if (!options.retried) {
-            return this.request(endpoint, { ...options, retried: true });
-          }
-        }
-      }
-      
       const error = await response.json().catch(() => ({ message: 'Request failed' }));
       throw new Error(error.message || `HTTP ${response.status}`);
     }
