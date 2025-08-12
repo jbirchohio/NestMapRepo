@@ -100,9 +100,11 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
             });
 
             if (!activityResponse.ok) {
-              }
-          } catch (error) {
+              console.error('Failed to create activity:', await activityResponse.text());
             }
+          } catch (error) {
+            console.error('Error creating activity:', error);
+          }
         }
       }
 
