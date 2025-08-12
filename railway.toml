@@ -1,0 +1,21 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "./Dockerfile"
+
+# Pass all VITE_ environment variables as build arguments
+[build.buildArgs]
+VITE_STRIPE_PUBLISHABLE_KEY = { fromEnv = "VITE_STRIPE_PUBLISHABLE_KEY" }
+VITE_MAPBOX_TOKEN = { fromEnv = "VITE_MAPBOX_TOKEN" }
+VITE_SUPABASE_URL = { fromEnv = "VITE_SUPABASE_URL" }
+VITE_SUPABASE_ANON_KEY = { fromEnv = "VITE_SUPABASE_ANON_KEY" }
+VITE_API_URL = { fromEnv = "VITE_API_URL" }
+VITE_BASE_URL = { fromEnv = "VITE_BASE_URL" }
+
+[deploy]
+startCommand = "node dist/index.js"
+restartPolicyType = "always"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+
+[env]
+NODE_ENV = "production"

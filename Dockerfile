@@ -17,13 +17,21 @@ RUN npm ci --prefer-offline --no-audit
 # Copy source code
 COPY . .
 
-# Accept build arguments for Vite environment variables
+# Accept build arguments for ALL Vite environment variables
 ARG VITE_STRIPE_PUBLISHABLE_KEY
 ARG VITE_MAPBOX_TOKEN
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_API_URL
+ARG VITE_BASE_URL
 
 # Set them as environment variables for the build
 ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
 ENV VITE_MAPBOX_TOKEN=$VITE_MAPBOX_TOKEN
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_BASE_URL=$VITE_BASE_URL
 
 # Build the application
 RUN npm run build
