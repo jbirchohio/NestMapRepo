@@ -159,11 +159,68 @@ export interface ClientTrip {
   completedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
+  // Family travel
+  travelingWithKids?: boolean;
+  kidsAges?: number[];
+  ageRanges?: {
+    toddlers: boolean;
+    kids: boolean;
+    teens: boolean;
+  };
+  // Collaborative mode
+  collaborativeMode?: boolean;
+  allowAnonymousSuggestions?: boolean;
+  // Group Trip RSVP
+  isGroupTrip?: boolean;
+  rsvpDeadline?: Date;
+  maxAttendees?: number;
   // Additional client-side properties
   days?: Date[];
   // Legacy coordinates (for backward compatibility)
   latitude?: string;
   longitude?: string;
+}
+
+// ======================================
+// COLLABORATIVE MODE TYPES
+// ======================================
+
+export interface ClientActivitySuggestion {
+  id: number;
+  tripId: number;
+  suggestedByUserId?: number;
+  suggestedByName?: string;
+  title: string;
+  description?: string;
+  locationName?: string;
+  date?: string;
+  time?: string;
+  estimatedCost?: string;
+  notes?: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  votesUp: number;
+  votesDown: number;
+  createdAt: Date;
+  acceptedAt?: Date;
+  acceptedAsActivityId?: number;
+  // Client-side additions
+  userVote?: 'up' | 'down' | null;
+}
+
+export interface ClientTripComment {
+  id: number;
+  tripId: number;
+  activityId?: number;
+  suggestionId?: number;
+  userId?: number;
+  commenterName?: string;
+  comment: string;
+  parentCommentId?: number;
+  createdAt: Date;
+  // Client-side additions for threading
+  replies?: ClientTripComment[];
+  userName?: string;
+  userAvatar?: string;
 }
 
 export interface ClientActivity {
@@ -194,6 +251,12 @@ export interface ClientActivity {
   travelDistanceFromPrevious?: string;
   conflict?: boolean;
   timeConflict?: boolean; // For identical time conflicts
+  // Family-friendly fields
+  kidFriendly?: boolean;
+  minAge?: number;
+  maxAge?: number;
+  strollerAccessible?: boolean;
+  category?: string;
 }
 
 export interface DayActivities {

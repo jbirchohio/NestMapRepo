@@ -111,12 +111,30 @@ export const trips = pgTable("trips", {
   sharing_enabled: boolean("sharing_enabled").default(false),
   share_permission: text("share_permission").default("read-only"),
   is_public: boolean("is_public").default(false),
-
+  
+  // Collaborative Mode
+  collaborative_mode: boolean("collaborative_mode").default(false),
+  allow_anonymous_suggestions: boolean("allow_anonymous_suggestions").default(true),
+  
+  // Group Trip RSVP
+  is_group_trip: boolean("is_group_trip").default(false),
+  rsvp_deadline: date("rsvp_deadline"),
+  max_attendees: integer("max_attendees"),
+  
   // Template source
   source_template_id: integer("source_template_id"),
 
   // Trip metadata
   trip_type: text("trip_type").default("personal"), // Always personal for consumers
+  
+  // Family travel
+  traveling_with_kids: boolean("traveling_with_kids").default(false),
+  kids_ages: jsonb("kids_ages").$type<number[]>(), // Array of kids' ages
+  age_ranges: jsonb("age_ranges").$type<{
+    toddlers: boolean; // Ages 2-5
+    kids: boolean; // Ages 6-12
+    teens: boolean; // Ages 13-17
+  }>(), // Age range filters
   
   // Budget tracking
   budget: decimal("budget", { precision: 10, scale: 2 }),
@@ -170,6 +188,14 @@ export const activities = pgTable("activities", {
   is_paid: boolean("is_paid").default(false),
   paid_by: integer("paid_by"), // User ID who paid
   provider: text("provider"),
+  
+  // Family-friendly fields
+  kid_friendly: boolean("kid_friendly").default(false),
+  min_age: integer("min_age"), // Minimum recommended age
+  max_age: integer("max_age"), // Maximum recommended age  
+  stroller_accessible: boolean("stroller_accessible").default(false),
+  category: text("category"), // dining, culture, outdoor, shopping, entertainment, etc.
+  
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -296,6 +322,65 @@ export const templates = pgTable("templates", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Template Bundles
+export const templateBundles = pgTable("template_bundles", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  creator_id: integer("creator_id").notNull(), // User who created the bundle
+  template_ids: jsonb("template_ids").$type<number[]>().notNull(), // Array of template IDs
+  
+  // Pricing
+  bundle_price: decimal("bundle_price", { precision: 10, scale: 2 }).notNull(),
+  original_price: decimal("original_price", { precision: 10, scale: 2 }).notNull(), // Sum of individual prices
+  discount_percentage: decimal("discount_percentage", { precision: 5, scale: 2 }),
+  currency: text("currency").default("USD"),
+  
+  // Bundle metadata
+  type: text("type").default("creator"), // 'creator', 'admin', 'seasonal', 'featured'
+  tags: jsonb("tags").$type<string[]>().default([]),
+  cover_image: text("cover_image"),
+  status: text("status").default("draft"), // draft, published, archived
+  featured: boolean("featured").default(false),
+  
+  // Stats
+  sales_count: integer("sales_count").default(0),
+  view_count: integer("view_count").default(0),
+  
+  // Special flags
+  is_remvana_bundle: boolean("is_remvana_bundle").default(false), // True for admin-created bundles
+  valid_from: timestamp("valid_from"),
+  valid_until: timestamp("valid_until"),
+  max_sales: integer("max_sales"), // Optional limit on bundle sales
+  
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Bundle Purchases
+export const bundlePurchases = pgTable("bundle_purchases", {
+  id: serial("id").primaryKey(),
+  bundle_id: integer("bundle_id").notNull().references(() => templateBundles.id),
+  buyer_id: integer("buyer_id").notNull().references(() => users.id),
+  
+  // Pricing at time of purchase
+  purchase_price: decimal("purchase_price", { precision: 10, scale: 2 }).notNull(),
+  platform_fee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
+  creator_earnings: decimal("creator_earnings", { precision: 10, scale: 2 }).notNull(),
+  stripe_fee: decimal("stripe_fee", { precision: 10, scale: 2 }),
+  
+  // Purchase details
+  payment_intent_id: text("payment_intent_id"),
+  status: text("status").default("pending"), // pending, completed, refunded
+  
+  // Track which templates were included (in case bundle changes later)
+  purchased_template_ids: jsonb("purchased_template_ids").$type<number[]>().notNull(),
+  
+  purchased_at: timestamp("purchased_at").defaultNow(),
+  refunded_at: timestamp("refunded_at"),
+});
+
 // Template purchases
 export const templatePurchases = pgTable("template_purchases", {
   id: serial("id").primaryKey(),
@@ -304,6 +389,7 @@ export const templatePurchases = pgTable("template_purchases", {
   user_id: integer("user_id"), // DEPRECATED - use buyer_id
   seller_id: integer("seller_id").notNull(),
   trip_id: integer("trip_id"), // Trip created from template
+  bundle_purchase_id: integer("bundle_purchase_id"), // If purchased as part of a bundle
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   platform_fee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
   seller_earnings: decimal("seller_earnings", { precision: 10, scale: 2 }).notNull(),
@@ -498,6 +584,87 @@ export const approvals = pgTable("approvals", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+// Collaborative Mode - Activity Suggestions
+export const activitySuggestions = pgTable("activity_suggestions", {
+  id: serial("id").primaryKey(),
+  trip_id: integer("trip_id").notNull(),
+  suggested_by_user_id: integer("suggested_by_user_id"), // null for anonymous suggestions
+  suggested_by_name: text("suggested_by_name"), // Name for anonymous users
+  title: text("title").notNull(),
+  description: text("description"),
+  location_name: text("location_name"),
+  date: date("date"),
+  time: text("time"),
+  estimated_cost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  notes: text("notes"),
+  status: text("status").default("pending"), // pending, accepted, rejected
+  votes_up: integer("votes_up").default(0),
+  votes_down: integer("votes_down").default(0),
+  created_at: timestamp("created_at").defaultNow(),
+  accepted_at: timestamp("accepted_at"),
+  accepted_as_activity_id: integer("accepted_as_activity_id"), // Reference to created activity
+});
+
+// Comments on activities and suggestions
+export const tripComments = pgTable("trip_comments", {
+  id: serial("id").primaryKey(),
+  trip_id: integer("trip_id").notNull(),
+  activity_id: integer("activity_id"), // null if commenting on trip
+  suggestion_id: integer("suggestion_id"), // null if not commenting on suggestion
+  user_id: integer("user_id"), // null for anonymous
+  commenter_name: text("commenter_name"), // Name for anonymous users
+  comment: text("comment").notNull(),
+  parent_comment_id: integer("parent_comment_id"), // For threaded comments
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Votes on suggestions
+export const suggestionVotes = pgTable("suggestion_votes", {
+  id: serial("id").primaryKey(),
+  suggestion_id: integer("suggestion_id").notNull(),
+  user_id: integer("user_id"), // null for anonymous
+  voter_identifier: text("voter_identifier"), // IP hash or session ID for anonymous
+  vote: text("vote").notNull(), // up or down
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Group Trip RSVPs
+export const tripRsvps = pgTable("trip_rsvps", {
+  id: serial("id").primaryKey(),
+  trip_id: integer("trip_id").notNull(),
+  user_id: integer("user_id"), // null for anonymous RSVPs
+  email: text("email").notNull(), // For notifications
+  name: text("name").notNull(),
+  status: text("status").default("pending"), // pending, yes, no, maybe
+  attending_count: integer("attending_count").default(1), // Number of people in party
+  dietary_restrictions: text("dietary_restrictions"),
+  notes: text("notes"),
+  responded_at: timestamp("responded_at"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Year in Travel Analytics
+export const travelAnalytics = pgTable("travel_analytics", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull(),
+  year: integer("year").notNull(),
+  total_trips: integer("total_trips").default(0),
+  total_days_traveled: integer("total_days_traveled").default(0),
+  countries_visited: jsonb("countries_visited").$type<string[]>().default([]),
+  cities_visited: jsonb("cities_visited").$type<string[]>().default([]),
+  total_activities: integer("total_activities").default(0),
+  favorite_destination: text("favorite_destination"),
+  travel_style: text("travel_style"), // adventurer, relaxer, foodie, culture-seeker, family-focused
+  total_distance_km: integer("total_distance_km").default(0),
+  busiest_month: text("busiest_month"),
+  longest_trip_days: integer("longest_trip_days").default(0),
+  most_visited_city: text("most_visited_city"),
+  travel_personality: text("travel_personality"),
+  fun_stats: jsonb("fun_stats").$type<Record<string, any>>().default({}),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users);
 export const insertTripSchema = createInsertSchema(trips);
@@ -509,6 +676,13 @@ export const insertTemplateSchema = createInsertSchema(templates);
 export const insertTemplatePurchaseSchema = createInsertSchema(templatePurchases);
 export const insertTemplateReviewSchema = createInsertSchema(templateReviews);
 export const insertDestinationSchema = createInsertSchema(destinations);
+export const insertActivitySuggestionSchema = createInsertSchema(activitySuggestions);
+export const insertTripCommentSchema = createInsertSchema(tripComments);
+export const insertSuggestionVoteSchema = createInsertSchema(suggestionVotes);
+export const insertTripRsvpSchema = createInsertSchema(tripRsvps);
+export const insertTravelAnalyticsSchema = createInsertSchema(travelAnalytics);
+export const insertTemplateBundleSchema = createInsertSchema(templateBundles);
+export const insertBundlePurchaseSchema = createInsertSchema(bundlePurchases);
 
 // Simplified user registration schema for consumers
 export const registerUserSchema = z.object({
@@ -534,6 +708,13 @@ export type CreatorBalance = typeof creatorBalances.$inferSelect;
 export type ViatorCommission = typeof viatorCommissions.$inferSelect;
 export type TemplateCollection = typeof templateCollections.$inferSelect;
 export type Destination = typeof destinations.$inferSelect;
+export type ActivitySuggestion = typeof activitySuggestions.$inferSelect;
+export type TripComment = typeof tripComments.$inferSelect;
+export type SuggestionVote = typeof suggestionVotes.$inferSelect;
+export type TripRsvp = typeof tripRsvps.$inferSelect;
+export type TravelAnalytics = typeof travelAnalytics.$inferSelect;
+export type TemplateBundle = typeof templateBundles.$inferSelect;
+export type BundlePurchase = typeof bundlePurchases.$inferSelect;
 
 // DEPRECATED types - kept for compatibility
 export type Organization = typeof organizations.$inferSelect;

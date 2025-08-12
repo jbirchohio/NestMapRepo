@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/jwtAuth';
 import { db } from '../db-connection';
 import { templates, users, templatePurchases, destinations } from '@shared/schema';
-import { eq, desc, sql, gte, and } from 'drizzle-orm';
+import { eq, desc, sql, gte, and, or, inArray } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import { storage } from '../storage';
 import { geocodeCacheService } from '../services/geocodeCacheService';
@@ -1062,6 +1062,29 @@ router.post('/templates/generate', async (req, res) => {
   } catch (error) {
     logger.error('Error generating template:', error);
     res.status(500).json({ message: 'Failed to generate template' });
+  }
+});
+
+// Get Remvana/seed templates for bundle creation
+router.get("/remvana-templates", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    // Get templates from Remvana/seed users (adjust IDs based on your seed data)
+    const remvanaUserIds = [1, 2, 3]; // Your seed user IDs
+    
+    const templates = await db
+      .select()
+      .from(templatesTable)
+      .where(
+        or(
+          inArray(templatesTable.user_id, remvanaUserIds),
+          eq(templatesTable.ai_generated, true)
+        )
+      );
+
+    res.json({ templates });
+  } catch (error) {
+    logger.error("Error fetching Remvana templates:", error);
+    res.status(500).json({ error: "Failed to fetch templates" });
   }
 });
 

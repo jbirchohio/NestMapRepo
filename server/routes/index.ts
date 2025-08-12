@@ -21,10 +21,19 @@ import webhookRoutes from './webhooks';
 import monitoringRoutes from './monitoring';
 import geocodeRoutes from './geocode';
 import budgetRoutes from './budget';
+import publicRoutes from './public';
+import suggestionsRoutes from './suggestions';
+import commentsRoutes from './comments';
+import rsvpRoutes from './rsvp';
+import travelAnalyticsRoutes from './travel-analytics';
+import bundlesRoutes from './bundles';
 
 const router = Router();
 
-// Mount consumer route modules
+// Mount public routes (no auth required)
+router.use('/public', publicRoutes);
+
+// Mount consumer route modules (auth required for most)
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
 router.use('/trips', tripRoutes);
@@ -46,6 +55,11 @@ router.use('/webhooks', webhookRoutes);
 router.use('/monitoring', monitoringRoutes);
 router.use('/geocode', geocodeRoutes);
 router.use('/budget', budgetRoutes);
+router.use('/suggestions', suggestionsRoutes);
+router.use('/comments', commentsRoutes);
+router.use('/rsvp', rsvpRoutes);
+router.use('/travel-analytics', travelAnalyticsRoutes);
+router.use('/bundles', bundlesRoutes);
 
 // User permissions endpoint - simplified for consumer app
 router.get('/user/permissions', async (req, res) => {

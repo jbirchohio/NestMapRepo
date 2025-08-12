@@ -7,12 +7,14 @@ interface AppShellProps {
   trip?: ClientTrip;
   onOpenShare?: () => void;
   onCreateTemplate?: () => void;
+  onCreatePoster?: () => void;
+  onToggleCollaborative?: () => void;
 }
 
-export default function AppShell({ children, trip, onOpenShare, onCreateTemplate }: AppShellProps) {
+export default function AppShell({ children, trip, onOpenShare, onCreateTemplate, onCreatePoster, onToggleCollaborative }: AppShellProps) {
   return (
     <div className="flex flex-col h-screen">
-      <Header trip={trip} onOpenShare={onOpenShare} onCreateTemplate={onCreateTemplate} />
+      <Header trip={trip} onOpenShare={onOpenShare} onCreateTemplate={onCreateTemplate} onCreatePoster={onCreatePoster} onToggleCollaborative={onToggleCollaborative} />
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden main-content">
         {/* We wrap the children in a div with a specific layout to control the sidebar and map */}
         <div className="flex flex-col md:flex-row w-full">

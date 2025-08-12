@@ -9,6 +9,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
 import NewTripModalConsumer from "@/components/NewTripModalConsumer";
+import WeekendTripModal from "@/components/WeekendTripModal";
 import AITripChatModal from "@/components/AITripChatModal";
 // Removed PackageSearch import
 import PopularDestinations from "@/components/PopularDestinations";
@@ -20,12 +21,18 @@ import {
   Plus, MapPin, Calendar, TrendingUp, Sparkles,
   MessageSquare, Compass, Clock, Users, Plane,
   Camera, Heart, Zap, Globe, Star, ArrowRight,
-  Archive, Trash2
+  Archive, Trash2, Sunset, Gift
 } from "lucide-react";
 
-// Quick action cards - dynamically adjust based on user state
+// Quick action cards - now includes Weekend Escape
 const getQuickActions = (hasAI: boolean, userTrips: number) => {
-  const baseActions = [
+  const now = new Date();
+  const currentMonth = now.getMonth(); // 0-11
+  const currentDay = now.getDate();
+  const showYearInTravel = currentMonth === 11 && currentDay >= 10; // Show from Dec 10th
+  const yearInTravelUnlocked = currentMonth === 11 && currentDay >= 18; // Unlock Dec 18th
+  
+  const actions = [
     {
       id: 'ai-plan',
       icon: Sparkles,
@@ -48,12 +55,20 @@ const getQuickActions = (hasAI: boolean, userTrips: number) => {
       iconColor: 'text-blue-600',
       action: 'quick-trip',
       enabled: true
-    }
-  ];
-
-  // Add more options as user engages
-  if (userTrips > 0) {
-    baseActions.push({
+    },
+    {
+      id: 'weekend-escape',
+      icon: Sunset,
+      title: 'Weekend Escape',
+      description: 'Perfect 2-3 day getaways',
+      color: 'from-amber-500 to-orange-500',
+      bgColor: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+      action: 'weekend-trip',
+      enabled: true,
+      badge: 'NEW'
+    },
+    {
       id: 'templates',
       icon: Globe,
       title: 'Trip Templates',
@@ -63,25 +78,40 @@ const getQuickActions = (hasAI: boolean, userTrips: number) => {
       iconColor: 'text-green-600',
       action: 'templates',
       enabled: true
-    });
-  }
-
-  if (userTrips > 2) {
-    baseActions.push({
+    },
+    {
       id: 'group',
       icon: Users,
       title: 'Group Planning',
-      description: 'Unlock after 3 trips - Plan with friends',
+      description: 'Plan with friends and family',
       color: 'from-orange-500 to-red-500',
       bgColor: 'bg-orange-50',
       iconColor: 'text-orange-600',
       action: 'group-trip',
-      enabled: userTrips > 2,
-      badge: userTrips <= 2 ? `${3 - userTrips} trips to unlock` : null
+      enabled: true,
+      badge: null
+    }
+  ];
+  
+  // Add Year in Travel card when in December
+  if (showYearInTravel) {
+    actions.unshift({
+      id: 'year-in-travel',
+      icon: Gift,
+      title: 'Your Year in Travel',
+      description: yearInTravelUnlocked 
+        ? 'See your 2024 travel wrapped!' 
+        : `Unlocks Dec 18th (${18 - currentDay} days)`,
+      color: 'from-red-500 to-green-500',
+      bgColor: 'bg-gradient-to-br from-red-50 to-green-50',
+      iconColor: 'text-red-600',
+      action: 'year-in-travel',
+      enabled: yearInTravelUnlocked,
+      badge: yearInTravelUnlocked ? '🎄 AVAILABLE NOW' : '🎁 COMING SOON'
     });
   }
-
-  return baseActions;
+  
+  return actions;
 };
 
 // Trip template cards
@@ -123,6 +153,7 @@ const tripTemplates = [
 export default function HomeConsumerRedesigned() {
   const [location, setLocation] = useLocation();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
+  const [isWeekendTripModalOpen, setIsWeekendTripModalOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("signup");
@@ -207,6 +238,10 @@ export default function HomeConsumerRedesigned() {
         // Always open new trip modal for quick trip
         setIsNewTripModalOpen(true);
         break;
+      case 'weekend-trip':
+        // Open weekend trip modal
+        setIsWeekendTripModalOpen(true);
+        break;
       case 'templates':
         // Navigate to marketplace for templates
         setLocation('/marketplace');
@@ -217,6 +252,9 @@ export default function HomeConsumerRedesigned() {
       case 'group-trip':
         // For now, just open new trip modal with a note
         setIsNewTripModalOpen(true);
+        break;
+      case 'year-in-travel':
+        setLocation('/year-in-travel');
         break;
       default:
         setIsNewTripModalOpen(true);
@@ -236,6 +274,7 @@ export default function HomeConsumerRedesigned() {
 
   const handleTripCreated = (trip: any) => {
     setIsNewTripModalOpen(false);
+    setIsWeekendTripModalOpen(false);
 
     // Make sure we have a valid ID before navigating
     if (trip && trip.id) {
@@ -365,14 +404,6 @@ export default function HomeConsumerRedesigned() {
                     : 'Ready to plan your next adventure?'}
                 </p>
               </div>
-              <Button
-                size="lg"
-                onClick={() => setIsNewTripModalOpen(true)}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                New Trip
-              </Button>
             </motion.div>
           </div>
         </section>
@@ -457,14 +488,6 @@ export default function HomeConsumerRedesigned() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Your trips & ideas</h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsNewTripModalOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Trip
-                </Button>
               </div>
               <div className="grid gap-4">
                 {trips.slice(0, 6).map((trip) => (
@@ -736,6 +759,12 @@ export default function HomeConsumerRedesigned() {
       <NewTripModalConsumer
         isOpen={isNewTripModalOpen}
         onClose={() => setIsNewTripModalOpen(false)}
+        onTripCreated={handleTripCreated}
+      />
+
+      <WeekendTripModal
+        isOpen={isWeekendTripModalOpen}
+        onClose={() => setIsWeekendTripModalOpen(false)}
         onTripCreated={handleTripCreated}
       />
 

@@ -5,6 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { MapPin, Navigation, Baby, Moon, Cookie, Coffee } from "lucide-react";
 // import BookableActivity from "@/components/BookableActivity"; // Hidden for now
 
 interface ActivityItemProps {
@@ -90,6 +91,44 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
     });
   };
 
+  // Open in Google Maps
+  const openInGoogleMaps = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the activity click
+    
+    // Generate Google Maps URL
+    let mapsUrl = '';
+    
+    if (activity.latitude && activity.longitude) {
+      // If we have coordinates, use them
+      mapsUrl = `https://www.google.com/maps/search/?api=1&query=${activity.latitude},${activity.longitude}`;
+    } else if (activity.locationName) {
+      // Otherwise use the location name
+      const encodedLocation = encodeURIComponent(activity.locationName);
+      mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+    } else if (activity.title) {
+      // Last resort, search by activity title
+      const encodedTitle = encodeURIComponent(activity.title);
+      mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedTitle}`;
+    }
+    
+    if (mapsUrl) {
+      // Check if on mobile to open app instead of browser
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Try to open in Google Maps app on mobile
+        window.location.href = mapsUrl.replace('https://', 'comgooglemaps://');
+        // Fallback to browser after a short delay
+        setTimeout(() => {
+          window.open(mapsUrl, '_blank');
+        }, 500);
+      } else {
+        // Desktop - open in new tab
+        window.open(mapsUrl, '_blank');
+      }
+    }
+  };
+
   return (
     <div className="pl-8 relative timeline-item group">
       {/* Timeline point */}
@@ -104,18 +143,41 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
         className={`
           bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow cursor-pointer
           ${activity.conflict ? 'border-[hsl(var(--destructive))]' : ''}
+          ${activity.title?.toLowerCase().includes('nap') ? 'bg-purple-50 border-purple-200' : ''}
+          ${activity.title?.toLowerCase().includes('snack') ? 'bg-orange-50 border-orange-200' : ''}
+          ${activity.title?.toLowerCase().includes('playground') ? 'bg-green-50 border-green-200' : ''}
           relative overflow-hidden
         `}
       >
         {/* Time header */}
-        <div className="bg-[hsl(var(--primary))] text-white p-2 text-center font-medium">
+        <div className={`
+          ${activity.title?.toLowerCase().includes('nap') ? 'bg-purple-500' : ''}
+          ${activity.title?.toLowerCase().includes('snack') ? 'bg-orange-500' : ''}
+          ${activity.title?.toLowerCase().includes('playground') ? 'bg-green-500' : ''}
+          ${!activity.title?.toLowerCase().includes('nap') && 
+            !activity.title?.toLowerCase().includes('snack') && 
+            !activity.title?.toLowerCase().includes('playground') ? 'bg-[hsl(var(--primary))]' : ''}
+          text-white p-2 text-center font-medium
+        `}>
           {formatTime(activity.time)}
         </div>
 
         <div className="p-3 pt-6 relative">
 
-          {/* Delete button - visible on hover on desktop, always visible on mobile */}
-          <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+          {/* Action buttons - visible on hover on desktop, always visible on mobile */}
+          <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10 flex gap-1">
+            {/* Google Maps button */}
+            {(activity.latitude || activity.longitude || activity.locationName) && (
+              <button
+                className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 cursor-pointer shadow-sm"
+                onClick={openInGoogleMaps}
+                title="Open in Google Maps"
+              >
+                <Navigation className="h-4 w-4" />
+              </button>
+            )}
+            
+            {/* Delete button */}
             <button
               className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 cursor-pointer shadow-sm"
               onClick={handleDelete}
@@ -131,7 +193,37 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
           <div onClick={() => onClick(activity)}>
             {/* Title and tag row */}
             <div className="flex justify-between items-start">
-              <h3 className="font-medium">{activity.title}</h3>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  {activity.title?.toLowerCase().includes('nap') && <Moon className="w-4 h-4 text-purple-600" />}
+                  {activity.title?.toLowerCase().includes('snack') && <Cookie className="w-4 h-4 text-orange-600" />}
+                  {activity.title?.toLowerCase().includes('coffee') && <Coffee className="w-4 h-4 text-amber-600" />}
+                  {activity.title?.toLowerCase().includes('playground') && <Baby className="w-4 h-4 text-green-600" />}
+                  <h3 className="font-medium">{activity.title}</h3>
+                </div>
+                {/* Kid-friendly and category badges */}
+                <div className="flex gap-2 mt-1">
+                  {activity.kidFriendly && (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
+                      <Baby className="h-3 w-3" />
+                      <span>Kid-Friendly</span>
+                      {activity.minAge !== undefined && activity.maxAge !== undefined && (
+                        <span className="text-green-600">({activity.minAge}-{activity.maxAge})</span>
+                      )}
+                    </div>
+                  )}
+                  {activity.strollerAccessible && (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+                      <span>♿ Stroller OK</span>
+                    </div>
+                  )}
+                  {activity.category && (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">
+                      <span>{activity.category}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
               {activity.tag && <TagBadge tag={activity.tag} />}
             </div>
 

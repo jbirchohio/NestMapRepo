@@ -16,8 +16,9 @@ import { useMapboxDirections } from "@/hooks/useMapboxDirections";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
-import { MessageCircle, X, Sparkles, Package, Share2 } from "lucide-react";
+import { MessageCircle, X, Sparkles, Package, Share2, Camera } from "lucide-react";
 import CreateTemplateModal from "@/components/CreateTemplateModal";
+import TripPosterGenerator from "@/components/TripPosterGenerator";
 
 export default function TripPlanner() {
   const [match, params] = useRoute("/trip/:id");
@@ -72,6 +73,9 @@ export default function TripPlanner() {
   
   // State for create template modal
   const [createTemplateModalOpen, setCreateTemplateModalOpen] = useState(false);
+  
+  // State for poster generator
+  const [showPosterGenerator, setShowPosterGenerator] = useState(false);
   
   // State for activity modal management
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -279,6 +283,33 @@ export default function TripPlanner() {
       throw error;
     }
   };
+
+  // Handle toggling collaborative mode
+  const handleToggleCollaborative = async () => {
+    try {
+      const newMode = !trip?.collaborativeMode;
+      const response = await apiRequest('PUT', `/api/trips/${tripId}/collaborative`, {
+        enabled: newMode,
+        allowAnonymous: true
+      });
+
+      toast({
+        title: newMode ? "Collaborative Mode Enabled" : "Collaborative Mode Disabled",
+        description: newMode 
+          ? "Others can now suggest activities and comment on your trip!"
+          : "Collaborative features have been disabled.",
+      });
+
+      // Refetch trip to get updated state
+      if (refetchActivities) refetchActivities();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to toggle collaborative mode",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Loading state
   if (isTripLoading || isActivitiesLoading) {
@@ -367,6 +398,8 @@ export default function TripPlanner() {
       trip={trip} 
       onOpenShare={handleOpenShare}
       onCreateTemplate={() => setCreateTemplateModalOpen(true)}
+      onCreatePoster={() => setShowPosterGenerator(true)}
+      onToggleCollaborative={handleToggleCollaborative}
     >
       {/* Mobile view toggle buttons */}
       <div className="md:hidden flex border rounded-md overflow-hidden shadow-sm m-2 relative z-50 bg-white dark:bg-[hsl(var(--card))]">
@@ -455,6 +488,15 @@ export default function TripPlanner() {
         trip={trip}
         onSave={handleSaveShareSettings}
       />
+      
+      {/* Trip Poster Generator */}
+      {showPosterGenerator && trip && (
+        <TripPosterGenerator
+          trip={trip}
+          activities={activities}
+          onClose={() => setShowPosterGenerator(false)}
+        />
+      )}
       
       {/* Centralized Activity Modal */}
       {isActivityModalOpen && activeDay && (

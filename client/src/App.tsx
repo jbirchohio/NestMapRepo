@@ -29,6 +29,7 @@ import CreateTemplate from "@/pages/CreateTemplate";
 import PublicTemplate from "@/pages/PublicTemplate";
 import CreatorDashboard from "@/pages/CreatorDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import YearInTravelPage from "@/pages/YearInTravelPage";
 
 // Lazy load the Destinations page
 const Destinations = lazy(() => import("@/pages/Destinations"));
@@ -101,6 +102,7 @@ function Router() {
           {/* Travel features */}
           <Route path="/ai-generator" component={AITripGeneratorPage} />
           <Route path="/optimizer" component={TripOptimizer} />
+          <Route path="/year-in-travel" component={YearInTravelPage} />
 
           {/* Creator Economy */}
           <Route path="/marketplace" component={TemplateMarketplace} />

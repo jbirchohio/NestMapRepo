@@ -261,7 +261,7 @@ export default function ShareTripModal({
         <DialogHeader>
           <DialogTitle>Share Trip</DialogTitle>
           <DialogDescription>
-            Configure sharing settings for your trip.
+            Share your trip with anyone - no account required to view!
           </DialogDescription>
         </DialogHeader>
 

@@ -11,27 +11,32 @@ import {
 import { ClientTrip } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Camera, Users } from "lucide-react";
 
 interface HeaderProps {
   trip?: ClientTrip;
   onOpenShare?: () => void;
   onCreateTemplate?: () => void;
+  onCreatePoster?: () => void;
   onToggleSidebar?: () => void;
   onRenameTrip?: () => void;
   onDuplicateTrip?: () => void;
   onExportPDF?: () => void;
   onDeleteTrip?: () => void;
+  onToggleCollaborative?: () => void;
 }
 
 export default function Header({
   trip,
   onOpenShare,
   onCreateTemplate,
+  onCreatePoster,
   onToggleSidebar,
   onRenameTrip,
   onDuplicateTrip,
   onExportPDF,
-  onDeleteTrip
+  onDeleteTrip,
+  onToggleCollaborative
 }: HeaderProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -93,6 +98,15 @@ export default function Header({
                 <span>Share</span>
               </Button>
 
+              <Button
+                variant="ghost"
+                className="hidden md:flex items-center text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+                onClick={onCreatePoster}
+              >
+                <Camera className="h-5 w-5 mr-1" />
+                <span>Poster</span>
+              </Button>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label="Trip Options">
@@ -107,6 +121,10 @@ export default function Header({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                     </svg>
                     <span>Share Trip</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onCreatePoster}>
+                    <Camera className="h-4 w-4 mr-2" />
+                    <span>Create Poster</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={onRenameTrip}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,6 +143,11 @@ export default function Header({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     <span>Export as PDF</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onToggleCollaborative}>
+                    <Users className="h-4 w-4 mr-2" />
+                    <span>{trip?.collaborativeMode ? 'Disable' : 'Enable'} Collaborative Mode</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-[hsl(var(--destructive))]" onClick={onDeleteTrip}>

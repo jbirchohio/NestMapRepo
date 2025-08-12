@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import useMapbox from "@/hooks/useMapbox";
-import { Calendar, MapPin, Sparkles, X, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Sparkles, X, ChevronRight, Baby } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { analytics } from '@/lib/analytics';
@@ -56,6 +56,13 @@ export default function NewTripModalConsumer({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [travelingWithKids, setTravelingWithKids] = useState(false);
+  const [kidsAges, setKidsAges] = useState<string>("");
+  const [ageRanges, setAgeRanges] = useState({
+    toddlers: false, // Ages 2-5
+    kids: false, // Ages 6-12
+    teens: false, // Ages 13-17
+  });
 
   // Rotate examples
   useEffect(() => {
@@ -161,6 +168,11 @@ export default function NewTripModalConsumer({
         userId: user?.id,
         startDate: data.startDate.toISOString(),
         endDate: data.endDate.toISOString(),
+        traveling_with_kids: travelingWithKids,
+        kids_ages: travelingWithKids && kidsAges 
+          ? kidsAges.split(',').map(age => parseInt(age.trim())).filter(age => !isNaN(age))
+          : [],
+        age_ranges: travelingWithKids ? ageRanges : null,
       };
 
       const response = await fetch("/api/trips", {
@@ -404,6 +416,85 @@ export default function NewTripModalConsumer({
                   className="w-full bg-transparent outline-none placeholder:text-slate-400"
                 />
               </div>
+            </motion.div>
+
+            {/* Family travel options */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.45 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
+                <label htmlFor="traveling-with-kids" className="flex items-center gap-3 cursor-pointer flex-1">
+                  <Baby className="w-5 h-5 text-purple-600" />
+                  <div>
+                    <p className="font-medium text-sm">Traveling with kids?</p>
+                    <p className="text-xs text-gray-600">Get family-friendly recommendations</p>
+                  </div>
+                </label>
+                <input
+                  type="checkbox"
+                  id="traveling-with-kids"
+                  checked={travelingWithKids}
+                  onChange={(e) => setTravelingWithKids(e.target.checked)}
+                  className="w-5 h-5 rounded text-purple-600 focus:ring-purple-500"
+                />
+              </div>
+              
+              {travelingWithKids && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  className="space-y-3"
+                >
+                  {/* Age range checkboxes */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Select age ranges:</p>
+                    <div className="flex flex-wrap gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={ageRanges.toddlers}
+                          onChange={(e) => setAgeRanges({...ageRanges, toddlers: e.target.checked})}
+                          className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm">Toddlers (2-5)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={ageRanges.kids}
+                          onChange={(e) => setAgeRanges({...ageRanges, kids: e.target.checked})}
+                          className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm">Kids (6-12)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={ageRanges.teens}
+                          onChange={(e) => setAgeRanges({...ageRanges, teens: e.target.checked})}
+                          className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm">Teens (13-17)</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {/* Optional specific ages input */}
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Specific ages (optional, e.g., 3, 7, 12)"
+                      value={kidsAges}
+                      onChange={(e) => setKidsAges(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Enter exact ages for more personalized recommendations</p>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Hidden fields */}

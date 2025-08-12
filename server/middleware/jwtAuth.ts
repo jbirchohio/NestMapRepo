@@ -169,3 +169,74 @@ export function requireAdminRole(req: Request, res: Response, next: NextFunction
   }
   next();
 }
+
+/**
+ * Optional Authentication Middleware
+ * Allows both authenticated and anonymous access
+ * Sets req.user if token is present and valid, otherwise continues without user
+ */
+export function optionalAuth(req: Request, res: Response, next: NextFunction): void {
+  // Check for JWT token in cookie first, then header as fallback
+  let token = (req as any).cookies?.auth_token;
+  
+  // Fallback to authorization header for API clients and mobile apps
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  
+  // If no token, continue without user context
+  if (!token) {
+    return next();
+  }
+
+  try {
+    // Verify JWT signature
+    const [headerB64, payloadB64, signatureB64] = token.split('.');
+    if (!headerB64 || !payloadB64 || !signatureB64) {
+      // Invalid token format, continue without user
+      return next();
+    }
+
+    // Verify signature
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      // No secret configured, continue without user
+      return next();
+    }
+    
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest('base64url');
+
+    if (signatureB64 !== expectedSignature) {
+      // Invalid signature, continue without user
+      return next();
+    }
+
+    // Decode payload
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
+
+    // Check expiration
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      // Token expired, continue without user
+      return next();
+    }
+
+    // Set user context from validated JWT
+    req.user = {
+      id: payload.id,
+      email: payload.email,
+      role: payload.role,
+      username: payload.username
+    };
+
+    next();
+  } catch (error) {
+    // Any error in token processing, continue without user
+    next();
+  }
+}

@@ -632,4 +632,84 @@ router.delete("/:id/travelers/:travelerId", async (req: Request, res: Response) 
   }
 });
 
+// Toggle collaborative mode for a trip
+router.put("/:id/collaborative", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    const { enabled, allowAnonymous } = req.body;
+
+    // Check if user owns the trip
+    const trip = await storage.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    if (trip.user_id !== req.user?.id) {
+      return res.status(403).json({ message: "Only trip owner can toggle collaborative mode" });
+    }
+
+    // Update collaborative settings
+    await db
+      .update(tripsTable)
+      .set({
+        collaborative_mode: enabled,
+        allow_anonymous_suggestions: allowAnonymous !== false, // Default to true
+        is_public: enabled, // Make trip public when collaborative mode is enabled
+        sharing_enabled: enabled // Enable sharing when collaborative
+      })
+      .where(eq(tripsTable.id, tripId));
+
+    res.json({ 
+      message: enabled ? "Collaborative mode enabled" : "Collaborative mode disabled",
+      collaborativeMode: enabled,
+      allowAnonymousSuggestions: allowAnonymous !== false
+    });
+  } catch (error) {
+    logger.error("Error toggling collaborative mode:", error);
+    res.status(500).json({ message: "Could not toggle collaborative mode" });
+  }
+});
+
+// Toggle trip completion status
+router.put("/:id/toggle-complete", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    // Check if user owns the trip
+    const trip = await storage.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    if (trip.user_id !== req.user?.id) {
+      return res.status(403).json({ message: "Only trip owner can toggle completion status" });
+    }
+
+    // Toggle the completion status
+    const newStatus = !trip.completed;
+    await db
+      .update(tripsTable)
+      .set({
+        completed: newStatus,
+        completed_at: newStatus ? new Date() : null
+      })
+      .where(eq(tripsTable.id, tripId));
+
+    res.json({ 
+      message: newStatus ? "Trip marked as completed" : "Trip marked as ongoing",
+      completed: newStatus
+    });
+  } catch (error) {
+    logger.error("Error toggling trip completion:", error);
+    res.status(500).json({ message: "Could not toggle trip completion" });
+  }
+});
+
 export default router;

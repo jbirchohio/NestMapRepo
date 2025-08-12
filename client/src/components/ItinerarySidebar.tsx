@@ -16,6 +16,10 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
 import useAIAssistant from "@/hooks/useAIAssistant";
 import BudgetTracker from "./BudgetTracker";
+import FamilyQuickActions from "./FamilyQuickActions";
+import CollaborativeSuggestions from "./CollaborativeSuggestions";
+import TripComments from "./TripComments";
+import { jwtAuth } from "@/lib/jwtAuth";
 
 interface ItinerarySidebarProps {
   trip: ClientTrip;
@@ -50,6 +54,7 @@ export default function ItinerarySidebar({
   const [newNote, setNewNote] = useState("");
 
   const { optimizeItinerary } = useAIAssistant();
+  const user = jwtAuth.getUser();
 
   // One-click auto-optimization function
   const handleAutoOptimize = async () => {
@@ -233,11 +238,14 @@ export default function ItinerarySidebar({
 
         {/* Navigation Tabs */}
         <Tabs defaultValue="itinerary">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className={`grid grid-cols-${trip.collaborativeMode ? '5' : '4'} mb-4`}>
             <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
             <TabsTrigger value="todo">To-Do</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="budget">Budget</TabsTrigger>
+            {trip.collaborativeMode && (
+              <TabsTrigger value="collaborate">Collab</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="itinerary" className="space-y-4">
@@ -347,6 +355,16 @@ export default function ItinerarySidebar({
               </div>
             </div>
 
+            {/* Family Quick Actions */}
+            {trip.travelingWithKids && (
+              <FamilyQuickActions
+                tripId={trip.id}
+                date={activeDay || new Date()}
+                onActivityAdded={onActivitiesUpdated}
+                travelingWithKids={trip.travelingWithKids}
+              />
+            )}
+
             {/* Itinerary Timeline */}
             <ActivityTimeline
               activities={activeDayActivities}
@@ -417,6 +435,29 @@ export default function ItinerarySidebar({
               onBudgetUpdate={onActivitiesUpdated}
             />
           </TabsContent>
+
+          {trip.collaborativeMode && (
+            <TabsContent value="collaborate" className="space-y-4">
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  🤝 Collaborative Mode is active! Friends can suggest activities and comment on your trip.
+                </p>
+              </div>
+              
+              <CollaborativeSuggestions
+                tripId={trip.id}
+                isOwner={trip.userId === user?.id}
+                isAuthenticated={!!user}
+              />
+              
+              <div className="mt-6">
+                <TripComments
+                  tripId={trip.id}
+                  isAuthenticated={!!user}
+                />
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </aside>
 

@@ -543,6 +543,133 @@ Format as JSON:
   }
 });
 
+// POST /api/ai/generate-weekend - Generate a weekend itinerary
+router.post("/generate-weekend", async (req, res) => {
+  try {
+    const { trip_id, destination, duration = 3 } = req.body;
+
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    if (!trip_id || !destination) {
+      return res.status(400).json({
+        success: false,
+        error: "Trip ID and destination are required"
+      });
+    }
+
+    // Get trip and verify access
+    const [trip] = await db
+      .select()
+      .from(trips)
+      .where(eq(trips.id, trip_id));
+
+    if (!trip || trip.user_id !== req.user.id) {
+      return res.status(404).json({ success: false, error: "Trip not found or access denied" });
+    }
+
+    const prompt = `Create a perfect weekend itinerary for ${destination} (${duration} days).
+
+Generate a fun, action-packed weekend trip with a mix of must-see attractions, great food spots, and local experiences.
+
+Guidelines:
+- Day 1 (Friday): Arrival day - start with afternoon/evening activities
+- Day 2 (Saturday): Full day of activities from morning to night
+- Day 3 (Sunday): Morning/afternoon activities before departure
+- Include specific restaurant recommendations
+- Mix tourist attractions with local favorites
+- Consider realistic travel times between locations
+- Include variety: sightseeing, food, culture, entertainment
+
+Return SPECIFIC activities with REAL places in JSON format:
+{
+  "activities": [
+    {
+      "title": "Specific activity name",
+      "date": "Day 1, 2, or 3",
+      "time": "HH:MM",
+      "locationName": "Exact place name and address",
+      "notes": "Brief description or tips",
+      "tag": "food/sightseeing/culture/entertainment/nightlife",
+      "latitude": null,
+      "longitude": null
+    }
+  ]
+}
+
+Include 4-6 activities per day for ${destination}.`;
+
+    const response = await openai.chat.completions.create({
+      model: OPENAI_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert weekend trip planner. Create exciting, realistic weekend itineraries with specific places and optimal timing."
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 1500,
+      temperature: 0.8,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+
+    // Calculate actual dates based on trip dates
+    const startDate = new Date(trip.start_date);
+    const activities = result.activities || [];
+
+    // Map activities to actual dates
+    const enrichedActivities = activities.map((activity: any, index: number) => {
+      // Determine which day this activity is for
+      let dayOffset = 0;
+      if (activity.date?.includes('2')) dayOffset = 1;
+      if (activity.date?.includes('3')) dayOffset = 2;
+      
+      const activityDate = new Date(startDate);
+      activityDate.setDate(startDate.getDate() + dayOffset);
+
+      return {
+        ...activity,
+        date: activityDate.toISOString().split('T')[0],
+        trip_id,
+        order: index
+      };
+    });
+
+    // Geocode activities if we have the geocoding service
+    try {
+      const { geocodeLocation } = await import('../geocoding');
+      for (const activity of enrichedActivities) {
+        if (activity.locationName) {
+          const coords = await geocodeLocation(activity.locationName, destination);
+          if (coords) {
+            activity.latitude = coords.latitude;
+            activity.longitude = coords.longitude;
+          }
+        }
+      }
+    } catch (e) {
+      // Geocoding is optional, continue without it
+    }
+
+    res.json({
+      success: true,
+      trip_id,
+      destination,
+      duration,
+      activities: enrichedActivities,
+      message: `Generated ${enrichedActivities.length} activities for your weekend in ${destination}!`
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate weekend itinerary"
+    });
+  }
+});
+
 // POST /api/ai/find-location - Find hotels and locations using AI
 router.post("/find-location", async (req, res) => {
   try {

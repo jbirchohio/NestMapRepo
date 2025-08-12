@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import BundleCreator from '@/components/BundleCreator';
 import {
   DollarSign, TrendingUp, Users, Eye, Package,
   ArrowUpRight, ArrowDownRight, Download, CreditCard,
@@ -196,9 +197,10 @@ export default function CreatorDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-md">
+          <TabsList className="grid grid-cols-5 w-full max-w-lg">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="bundles">Bundles</TabsTrigger>
             <TabsTrigger value="earnings">Earnings</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -545,6 +547,11 @@ export default function CreatorDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Bundles Tab */}
+          <TabsContent value="bundles" className="space-y-6">
+            <BundleCreator isAdmin={false} />
           </TabsContent>
 
           {/* Settings Tab */}
