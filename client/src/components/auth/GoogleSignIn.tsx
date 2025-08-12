@@ -67,8 +67,8 @@ export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) 
 
       const data = await res.json();
 
-      // Set the auth token
-      jwtAuth.setAuth(data.token, data.user);
+      // The token is now in an httpOnly cookie, so we just need to refresh auth state
+      await jwtAuth.refreshUser();
 
       onSuccess?.();
     } catch (error) {

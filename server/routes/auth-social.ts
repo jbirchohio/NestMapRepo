@@ -78,15 +78,23 @@ router.post('/google', async (req: Request, res: Response) => {
 
     const token = createAuthToken(user);
 
+    // Set JWT token as httpOnly cookie (same as regular login)
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.json({
       message: 'Login successful',
-      token,
       user: {
         id: user.id,
         email: user.email,
         username: user.username,
         fullName: user.display_name,
         avatarUrl: user.avatar_url,
+        role: user.role,
       }
     });
   } catch (error) {
