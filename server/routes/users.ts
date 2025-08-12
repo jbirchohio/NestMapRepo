@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/auth/:id', async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
-    
+
     // Get user from database
     const [user] = await db.select({
       id: users.id,
@@ -21,14 +21,13 @@ router.get('/auth/:id', async (req: Request, res: Response) => {
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     res.json(user);
   } catch (error) {
-    console.error('Get user error:', error);
     res.status(500).json({ message: 'Failed to get user' });
   }
 });

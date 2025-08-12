@@ -17,29 +17,25 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
 }> {
   try {
     // Debug to see what's being received
-    console.log("AI Location search:", { searchQuery, cityContext });
-    
     // Use the provided city context but don't default to NYC
     let context = "";
-    
+
     // If a city is provided and not already in the search query, add it as context
     if (cityContext && cityContext.trim() !== "") {
       context = `in ${cityContext}`;
-      console.log(`Using provided city context: ${context}`);
-    }
+      }
     // No default city - will just search for the location as specified
     else {
-      console.log("No city context provided, searching without city context");
-    }
-    
+      }
+
     const openaiInstance = getOpenAIClient();
-    
+
     const response = await openaiInstance.chat.completions.create({
       model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
-          content: 
+          content:
             "You are a location identification expert. Your job is to take partial or ambiguous location names and return multiple potential matches. " +
             "Always return your response as a JSON object with a 'locations' array containing 2-4 possible matches. " +
             "Each location in the array should have these fields: name, address, city, region, country, description. " +
@@ -61,10 +57,10 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
     }
 
     const result = JSON.parse(content);
-    
+
     // For queries that appear to be city names rather than specific locations
     // Check if the query contains words that suggest it's a city name (like "City", "Ohio", etc.)
-    if (searchQuery.includes(",") || 
+    if (searchQuery.includes(",") ||
         /\b(city|town|village|municipality)\b/i.test(searchQuery)) {
       // This looks like a city name rather than a specific location
       return {
@@ -76,10 +72,10 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
         }]
       };
     }
-    
+
     // Special case for departure/leaving activities
-    if (searchQuery.toLowerCase().includes("leave") || 
-        searchQuery.toLowerCase().includes("depart") || 
+    if (searchQuery.toLowerCase().includes("leave") ||
+        searchQuery.toLowerCase().includes("depart") ||
         searchQuery.toLowerCase().includes("exit")) {
       // For departure activities, don't use a default city
       return {
@@ -91,7 +87,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
         }]
       };
     }
-    
+
     // Special case for Leo House which often doesn't geocode well
     if (searchQuery.toLowerCase().includes("leo house")) {
       return {
@@ -105,7 +101,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
         }]
       };
     }
-    
+
     // Check if we have valid locations
     if (!result.locations || !Array.isArray(result.locations) || result.locations.length === 0) {
       // Return error without default city
@@ -119,7 +115,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
         error: "Could not find specific location details"
       };
     }
-    
+
     // Return the array of locations
     return {
       locations: result.locations.map((loc: any) => ({
@@ -132,7 +128,6 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
       }))
     };
   } catch (error) {
-    console.error("Error finding location with AI:", error);
     return {
       locations: [{
         name: searchQuery,

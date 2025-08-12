@@ -30,11 +30,11 @@ interface TemplatePurchaseButtonProps {
   onPurchaseComplete?: (tripId: number) => void;
 }
 
-function CheckoutForm({ 
-  templateId, 
+function CheckoutForm({
+  templateId,
   clientSecret,
-  onSuccess 
-}: { 
+  onSuccess
+}: {
   templateId: number;
   clientSecret: string;
   onSuccess: (tripId: number) => void;

@@ -9,8 +9,8 @@ import MetaTags from '@/components/seo/MetaTags';
 import { generateMetadata, generateFAQSchema, generateBreadcrumbSchema } from '@/lib/seo/metadata';
 import ExpediaAffiliate from '@/components/ExpediaAffiliate';
 import SelectTripModal from '@/components/SelectTripModal';
-import { 
-  MapPin, Calendar, Utensils, Car, Hotel, Plane, 
+import {
+  MapPin, Calendar, Utensils, Car, Hotel, Plane,
   Info, Star, TrendingUp, Heart, Camera, Sun,
   Activity, ExternalLink, Plus, Check, Clock
 } from 'lucide-react';
@@ -54,24 +54,24 @@ export default function DestinationGuide() {
   const [savedActivities, setSavedActivities] = useState<Set<string>>(new Set());
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
   const [showTripModal, setShowTripModal] = useState(false);
-  
+
   // Fetch destination content with smart caching
   const { data: destinationData, isLoading, error, refetch } = useQuery<DestinationData>({
     queryKey: ['destination', destination],
     queryFn: async () => {
       const response = await fetch(`/api/destinations/${destination}/content`);
       if (!response.ok) throw new Error('Failed to load destination');
-      
+
       const data = await response.json();
-      
+
       // Check if content looks generic (fallback content)
       const isGeneric = data.overview?.includes('remarkable destination that attracts millions');
-      
+
       // If generic, throw error to trigger refetch
       if (isGeneric) {
         throw new Error('Loading destination details...');
       }
-      
+
       return data;
     },
     staleTime: 5 * 60 * 1000, // Only cache for 5 minutes
@@ -80,7 +80,7 @@ export default function DestinationGuide() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
     refetchOnWindowFocus: false, // Don't refetch on tab focus
   });
-  
+
   // Fetch Viator activities - only when activities tab is clicked
   const { data: activitiesData, isLoading: activitiesLoading } = useQuery({
     queryKey: ['viator-activities', destination],
@@ -134,9 +134,8 @@ export default function DestinationGuide() {
         })
       });
     } catch (error) {
-      console.error('Failed to track click:', error);
-    }
-    
+      }
+
     // Open affiliate link in new tab
     window.open(activity.affiliateLink, '_blank', 'noopener,noreferrer');
   };
@@ -157,21 +156,21 @@ export default function DestinationGuide() {
       return () => clearTimeout(timer);
     }
   }, [destinationData, refetch]);
-  
+
   // Generate SEO metadata
-  const seoMetadata = generateMetadata('destination', { 
-    destination: destination?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) 
+  const seoMetadata = generateMetadata('destination', {
+    destination: destination?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
   });
-  
+
   // Generate structured data
   const breadcrumbs = generateBreadcrumbSchema([
     { name: 'Home', url: '/' },
     { name: 'Destinations', url: '/destinations' },
     { name: destination?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '', url: `/destinations/${destination}` }
   ]);
-  
+
   const faqSchema = destinationData?.faqs ? generateFAQSchema(destinationData.faqs) : null;
-  
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -180,7 +179,7 @@ export default function DestinationGuide() {
       faqSchema
     ].filter(Boolean)
   };
-  
+
   if (isLoading || (error && error.message === 'Loading destination details...')) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -194,7 +193,7 @@ export default function DestinationGuide() {
             </div>
           </div>
         </div>
-        
+
         {/* Skeleton Content */}
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -226,27 +225,27 @@ export default function DestinationGuide() {
       </div>
     );
   }
-  
+
   const destinationName = destination?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '';
-  
+
   return (
     <>
-      <MetaTags 
+      <MetaTags
         {...seoMetadata}
         structuredData={structuredData}
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
         {/* Hero Image */}
         <section className="relative h-[50vh] overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: destinationData?.image ? `url(${destinationData.image})` : 'linear-gradient(to bottom right, #9333ea, #ec4899)',
             }}
           />
         </section>
-        
+
         {/* Hero Content - Below Image */}
         <section className="bg-white py-8 shadow-sm">
           <div className="max-w-7xl mx-auto px-4">
@@ -265,7 +264,7 @@ export default function DestinationGuide() {
               <p className="text-xl md:text-2xl max-w-3xl text-gray-600">
                 {destinationData?.heroDescription || `Discover the best of ${destinationName} with our comprehensive guide`}
               </p>
-              
+
               {destinationData?.seasonalWeather && (
                 <div className="flex items-center gap-4 mt-6 text-gray-700">
                   <div className="flex items-center gap-2">
@@ -279,11 +278,11 @@ export default function DestinationGuide() {
                   </span>
                 </div>
               )}
-              
+
               {destinationData?.imageAttribution && (
                 <div className="mt-4 text-sm text-gray-500">
                   Photo by{' '}
-                  <a 
+                  <a
                     href={destinationData.imageAttribution.photographerUrl}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -292,7 +291,7 @@ export default function DestinationGuide() {
                     {destinationData.imageAttribution.photographerName}
                   </a>
                   {' '}on{' '}
-                  <a 
+                  <a
                     href={destinationData.imageAttribution.photoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -305,7 +304,7 @@ export default function DestinationGuide() {
             </motion.div>
           </div>
         </section>
-        
+
         {/* Navigation Tabs */}
         <section className="sticky top-0 bg-white shadow-sm z-40">
           <div className="max-w-7xl mx-auto px-4">
@@ -330,7 +329,7 @@ export default function DestinationGuide() {
             </div>
           </div>
         </section>
-        
+
         {/* Content */}
         <section className="max-w-7xl mx-auto px-4 py-12">
           {activeTab === 'overview' && (
@@ -348,7 +347,7 @@ export default function DestinationGuide() {
                     <p>{destinationData?.overview || `Welcome to ${destinationName}, a destination that offers something for every traveler.`}</p>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -367,7 +366,7 @@ export default function DestinationGuide() {
                     </ul>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -379,7 +378,7 @@ export default function DestinationGuide() {
                     <p>{destinationData?.foodAndDrink || `${destinationName} offers a diverse culinary scene worth exploring.`}</p>
                   </CardContent>
                 </Card>
-                
+
                 {/* FAQs */}
                 {destinationData?.faqs && destinationData.faqs.length > 0 && (
                   <Card>
@@ -397,7 +396,7 @@ export default function DestinationGuide() {
                   </Card>
                 )}
               </div>
-              
+
               {/* Sidebar */}
               <div className="space-y-6">
                 <Card>
@@ -413,7 +412,7 @@ export default function DestinationGuide() {
                     </p>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -427,7 +426,7 @@ export default function DestinationGuide() {
                     </p>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -446,13 +445,13 @@ export default function DestinationGuide() {
                     </ul>
                   </CardContent>
                 </Card>
-                
+
                 {/* Expedia Booking Widget */}
-                <ExpediaAffiliate 
+                <ExpediaAffiliate
                   destination={destinationName}
                   variant="cta"
                 />
-                
+
                 {/* Plan Trip CTA */}
                 <Card className="bg-gradient-to-br from-purple-600 to-pink-600 text-white">
                   <CardContent className="text-center py-8">
@@ -463,7 +462,7 @@ export default function DestinationGuide() {
                       Use our AI-powered planner to create your perfect itinerary
                     </p>
                     <Link href="/signup">
-                      <Button 
+                      <Button
                         size="lg"
                         variant="secondary"
                       >
@@ -475,12 +474,12 @@ export default function DestinationGuide() {
               </div>
             </div>
           )}
-          
+
           {activeTab === 'activities' && (
             <div>
               <h2 className="text-3xl font-bold mb-6">Things to Do in {destinationName}</h2>
               <p className="text-gray-600 mb-4">Book activities and experiences through our partner Viator</p>
-              
+
               {activitiesLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1, 2, 3, 4, 5, 6].map(i => (
@@ -500,8 +499,8 @@ export default function DestinationGuide() {
                     <Card key={activity.productCode} className="overflow-hidden hover:shadow-lg transition-shadow">
                       {activity.primaryImageURL && (
                         <div className="h-48 bg-gray-200">
-                          <img 
-                            src={activity.primaryImageURL} 
+                          <img
+                            src={activity.primaryImageURL}
                             alt={activity.productName}
                             className="w-full h-full object-cover"
                           />
@@ -511,7 +510,7 @@ export default function DestinationGuide() {
                         <h3 className="font-semibold text-base line-clamp-2">
                           {activity.productName}
                         </h3>
-                        
+
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                           {activity.duration && (
                             <>
@@ -529,7 +528,7 @@ export default function DestinationGuide() {
                             </>
                           )}
                         </div>
-                        
+
                         <div className="flex items-center justify-between pt-2">
                           <div>
                             <span className="text-xs text-gray-500">From</span>
@@ -583,11 +582,11 @@ export default function DestinationGuide() {
                   </p>
                 </Card>
               )}
-              
+
               {viatorActivities.length > 0 && (
                 <div className="mt-8 p-4 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-600">
-                    <strong>Note:</strong> Prices and availability are subject to change. 
+                    <strong>Note:</strong> Prices and availability are subject to change.
                     Booking through our affiliate links helps support Remvana at no extra cost to you.
                   </p>
                 </div>
@@ -596,7 +595,7 @@ export default function DestinationGuide() {
           )}
         </section>
       </div>
-      
+
       {/* Trip Selection Modal */}
       {showTripModal && selectedActivity && (
         <SelectTripModal

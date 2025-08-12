@@ -17,31 +17,27 @@ const stripeKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeKey) {
   logger.error('STRIPE_SECRET_KEY is not configured in environment variables');
 }
-const stripe = stripeKey 
+const stripe = stripeKey
   ? new Stripe(stripeKey, { apiVersion: '2023-10-16' })
   : null;
 
 // POST /api/checkout/create-payment-intent - Create a payment intent for template purchase
 router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdempotency, async (req, res) => {
   try {
-    logger.info('Payment intent creation requested', { 
+    logger.info('Payment intent creation requested', {
       hasStripe: !!stripe,
-      hasKey: !!process.env.STRIPE_SECRET_KEY 
+      hasKey: !!process.env.STRIPE_SECRET_KEY
     });
-    
+
     if (!stripe) {
       logger.error('Stripe not initialized - missing STRIPE_SECRET_KEY');
-      return res.status(503).json({ 
-        message: 'Payment processing is not configured. Please contact support.' 
+      return res.status(503).json({
+        message: 'Payment processing is not configured. Please contact support.'
       });
     }
 
     const { template_id, start_date, end_date } = req.body;
     const userId = req.user!.id;
-
-    console.log('Create payment intent - template_id from request:', template_id, 'type:', typeof template_id);
-    console.log('User ID:', userId);
-    console.log('Travel dates:', start_date, 'to', end_date);
 
     if (!template_id) {
       return res.status(400).json({ message: 'Template ID is required' });
@@ -55,7 +51,7 @@ router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdem
 
     // Check if already purchased
     const alreadyPurchased = await storage.hasUserPurchasedTemplate(userId, template_id);
-    
+
     // Also check what templates this user has purchased
     const userPurchases = await db.select({
       template_id: templatePurchases.template_id,
@@ -63,16 +59,10 @@ router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdem
     })
     .from(templatePurchases)
     .where(eq(templatePurchases.buyer_id, userId));
-    
-    console.log(`User ${userId} has purchased these templates:`, userPurchases);
-    console.log(`Currently trying to purchase template ${template_id}`);
-    
+
     if (alreadyPurchased) {
-      console.log(`User ${userId} already purchased template ${template_id}`);
       return res.status(400).json({ message: 'You have already purchased this template' });
     }
-    console.log(`User ${userId} has not purchased template ${template_id} - proceeding with payment`);
-
     // Get user details for receipt
     const [user] = await db.select()
       .from(users)
@@ -80,7 +70,7 @@ router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdem
 
     // Create payment intent
     const amount = Math.round(parseFloat(template.price || '0') * 100); // Convert to cents
-    
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: template.currency?.toLowerCase() || 'usd',
@@ -115,16 +105,13 @@ router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdem
 router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempotency, async (req, res) => {
   try {
     if (!stripe) {
-      return res.status(503).json({ 
-        message: 'Payment processing is not configured' 
+      return res.status(503).json({
+        message: 'Payment processing is not configured'
       });
     }
 
     const { payment_intent_id, template_id, start_date, end_date } = req.body;
     const userId = req.user!.id;
-    
-    console.log('Confirm purchase - template_id:', template_id, 'payment_intent_id:', payment_intent_id, 'userId:', userId);
-    console.log('Travel dates:', start_date, 'to', end_date);
 
     if (!payment_intent_id || !template_id) {
       return res.status(400).json({ message: 'Payment intent ID and template ID are required' });
@@ -132,7 +119,7 @@ router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempoten
 
     // Verify payment intent
     const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent_id);
-    
+
     if (paymentIntent.status !== 'succeeded') {
       return res.status(400).json({ message: 'Payment not completed' });
     }
@@ -166,15 +153,15 @@ router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempoten
 
     if (existingPurchase.length > 0) {
       logger.info(`Purchase already exists for payment intent ${payment_intent_id}`);
-      
+
       // If trip wasn't created yet, try to create it now
       const { templateCopyService } = await import('../services/templateCopyService');
       let tripId = existingPurchase[0].trip_id;
-      
+
       if (!tripId) {
         try {
           tripId = await templateCopyService.copyTemplateToTrip(
-            template_id, 
+            template_id,
             userId,
             start_date ? new Date(start_date) : undefined,
             end_date ? new Date(end_date) : undefined
@@ -184,7 +171,7 @@ router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempoten
           logger.error('Failed to create trip for existing purchase:', error);
         }
       }
-      
+
       return res.json({
         message: 'Purchase already processed',
         purchaseId: existingPurchase[0].id,
@@ -197,7 +184,7 @@ router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempoten
     // Stripe fees: 2.9% + $0.30 per transaction
     const stripeFee = (grossPrice * 0.029) + 0.30;
     const netRevenue = grossPrice - stripeFee;
-    
+
     // Split net revenue: 70% to creator, 30% to platform
     const sellerEarnings = netRevenue * 0.70;
     const platformFee = netRevenue * 0.30;
@@ -234,14 +221,14 @@ router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempoten
     // Copy template to user's trips with the selected dates (using transactional version)
     const { templateCopyServiceV2 } = await import('../services/templateCopyServiceV2');
     const newTripId = await templateCopyServiceV2.copyTemplateToTrip(
-      template_id, 
+      template_id,
       userId,
       start_date ? new Date(start_date) : undefined,
       end_date ? new Date(end_date) : undefined
     );
 
     logger.info(`Template ${template_id} purchased by user ${userId}, copied to trip ${newTripId}`);
-    
+
     // Audit log the purchase
     await auditService.logTemplateEvent('template.purchased', template_id, userId, {
       price: grossPrice,

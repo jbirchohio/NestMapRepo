@@ -131,7 +131,7 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
           Browse Trip Templates
         </Button>
       </DialogTrigger>
-      <DialogContent 
+      <DialogContent
         className="max-w-4xl max-h-[80vh] overflow-y-auto"
         style={{
           position: 'fixed',
@@ -149,7 +149,7 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
         <DialogHeader>
           <DialogTitle>Choose a Trip Template</DialogTitle>
         </DialogHeader>
-        
+
         {selectedTemplate ? (
           <div className="space-y-6">
             <div className="flex items-start gap-4">
@@ -171,9 +171,9 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
                   </div>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setSelectedTemplate(null)}
               >
                 Back to Templates
@@ -230,15 +230,15 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
               )}
 
               <div className="flex gap-2">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={!startDate || createTripMutation.isPending}
                   className="flex-1"
                 >
                   {createTripMutation.isPending ? "Creating Trip..." : "Create Trip"}
                 </Button>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setSelectedTemplate(null)}
                 >

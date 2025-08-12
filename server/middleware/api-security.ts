@@ -55,7 +55,7 @@ function encryptSensitiveFields(obj: any, fields: string[]): any {
   if (!obj || typeof obj !== 'object') return obj;
 
   const result: any = Array.isArray(obj) ? [] : {};
-  
+
   for (const key in obj) {
     if (fields.includes(key.toLowerCase()) && typeof obj[key] === 'string') {
       // In production, implement proper encryption
@@ -66,7 +66,7 @@ function encryptSensitiveFields(obj: any, fields: string[]): any {
       result[key] = obj[key];
     }
   }
-  
+
   return result;
 }
 
@@ -108,7 +108,7 @@ class ApiKeyManager {
     rateLimit?: number;
   } {
     const keyData = this.keys.get(apiKey);
-    
+
     if (!keyData) {
       return { valid: false };
     }
@@ -138,13 +138,13 @@ const apiKeyManager = new ApiKeyManager();
 
 export function authenticateApiKey(req: Request, res: Response, next: NextFunction) {
   const apiKey = req.headers['x-api-key'] as string;
-  
+
   if (!apiKey) {
     return next(); // Let other auth methods handle this
   }
 
   const validation = apiKeyManager.validateApiKey(apiKey);
-  
+
   if (!validation.valid) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
@@ -165,7 +165,7 @@ export function verifyWebhookSignature(secret: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const signature = req.headers['x-webhook-signature'] as string;
     const timestamp = req.headers['x-webhook-timestamp'] as string;
-    
+
     if (!signature || !timestamp) {
       return res.status(401).json({ error: 'Missing webhook signature or timestamp' });
     }
@@ -173,7 +173,7 @@ export function verifyWebhookSignature(secret: string) {
     // Verify timestamp is recent (within 5 minutes)
     const now = Math.floor(Date.now() / 1000);
     const webhookTime = parseInt(timestamp);
-    
+
     if (Math.abs(now - webhookTime) > 300) {
       return res.status(401).json({ error: 'Webhook timestamp too old' });
     }
@@ -186,7 +186,7 @@ export function verifyWebhookSignature(secret: string) {
       .digest('hex');
 
     const providedSignature = signature.replace('sha256=', '');
-    
+
     if (!crypto.timingSafeEqual(
       Buffer.from(expectedSignature, 'hex'),
       Buffer.from(providedSignature, 'hex')
@@ -230,7 +230,7 @@ class AdvancedRateLimit {
     // Refill tokens based on time elapsed
     const timePassed = (now - bucket.lastRefill) / 1000;
     const tokensToAdd = Math.floor(timePassed * (limit.requests / limit.window));
-    
+
     bucket.tokens = Math.min(limit.requests, bucket.tokens + tokensToAdd);
     bucket.lastRefill = now;
 
@@ -238,7 +238,7 @@ class AdvancedRateLimit {
       bucket.tokens--;
       bucket.violations = Math.max(0, bucket.violations - 1);
       this.buckets.set(key, bucket);
-      
+
       return {
         allowed: true,
         remaining: bucket.tokens,
@@ -247,7 +247,7 @@ class AdvancedRateLimit {
     } else {
       bucket.violations++;
       this.buckets.set(key, bucket);
-      
+
       return {
         allowed: false,
         remaining: 0,
@@ -266,17 +266,17 @@ const advancedRateLimit = new AdvancedRateLimit();
 export function tieredRateLimit(req: Request, res: Response, next: NextFunction) {
   const key = req.ip || 'unknown';
   const tier = (req.user as any)?.subscription_tier || 'free';
-  
+
   const result = advancedRateLimit.checkLimit(key, tier as any);
-  
+
   res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
   res.setHeader('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
-  
+
   if (!result.allowed) {
     // Increase delay for repeated violations
     const violations = advancedRateLimit.getViolations(key);
     const delay = Math.min(violations * 1000, 10000); // Max 10 second delay
-    
+
     setTimeout(() => {
       res.status(429).json({
         error: 'Rate limit exceeded',
@@ -284,10 +284,10 @@ export function tieredRateLimit(req: Request, res: Response, next: NextFunction)
         tier: tier
       });
     }, delay);
-    
+
     return;
   }
-  
+
   next();
 }
 
@@ -316,14 +316,14 @@ class EndpointMonitor {
 
     // Track hourly metrics
     const now = Date.now();
-    const hourlyMetric = { 
-      requests: 1, 
-      errors: isError ? 1 : 0, 
-      timestamp: now 
+    const hourlyMetric = {
+      requests: 1,
+      errors: isError ? 1 : 0,
+      timestamp: now
     };
-    
+
     metric.lastHour.push(hourlyMetric);
-    
+
     // Clean old hourly data
     metric.lastHour = metric.lastHour.filter(m => now - m.timestamp < 3600000);
 
@@ -342,16 +342,13 @@ class EndpointMonitor {
     // Only alert for significant issues with reasonable thresholds
     // Skip alerts for low traffic endpoints (< 10 requests)
     if (hourlyRequests >= 10 && errorRate > 0.5) { // >50% error rate with meaningful traffic
-      console.warn('HIGH_ERROR_RATE:', { endpoint, errorRate, hourlyErrors, hourlyRequests });
-    }
+      }
 
     if (metric.requests >= 10 && avgResponseTime > 5000) { // >5s average response time
-      console.warn('SLOW_ENDPOINT:', { endpoint, avgResponseTime });
-    }
+      }
 
     if (hourlyRequests > 10000) { // Unusual traffic spike
-      console.warn('TRAFFIC_SPIKE:', { endpoint, hourlyRequests });
-    }
+      }
   }
 
   getMetrics(endpoint?: string) {
@@ -375,7 +372,7 @@ export function monitorEndpoints(req: Request, res: Response, next: NextFunction
     const isError = res.statusCode >= 400;
 
     endpointMonitor.recordRequest(endpoint, responseTime, isError);
-    
+
     return originalEnd.call(this, chunk, encoding, cb);
   };
 

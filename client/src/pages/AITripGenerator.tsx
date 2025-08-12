@@ -7,7 +7,7 @@ export default function AITripGeneratorPage() {
   return (
     <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
       {/* Hero Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -20,7 +20,7 @@ export default function AITripGeneratorPage() {
 
         <div className="relative container mx-auto px-6 py-16">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}

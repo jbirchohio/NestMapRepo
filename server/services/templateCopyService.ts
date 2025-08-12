@@ -18,7 +18,7 @@ export class TemplateCopyService {
    * @param endDate - Optional custom end date (defaults to startDate + template duration)
    */
   async copyTemplateToTrip(
-    templateId: number, 
+    templateId: number,
     userId: number,
     startDate?: Date,
     endDate?: Date
@@ -44,14 +44,14 @@ export class TemplateCopyService {
       // Use provided dates or create default dates
       const tripStartDate = startDate || new Date();
       const defaultDuration = template.duration || 7;
-      
+
       // Calculate end date if not provided
       let tripEndDate = endDate;
       if (!tripEndDate) {
         tripEndDate = new Date(tripStartDate);
         tripEndDate.setDate(tripStartDate.getDate() + defaultDuration - 1);
       }
-      
+
       const newTrip = await storage.createTrip({
         title: tripData.title || template.title,
         start_date: tripStartDate,
@@ -88,34 +88,34 @@ export class TemplateCopyService {
       if (tripData.days && Array.isArray(tripData.days)) {
         // New format: structured by days
         const actualStartDate = new Date(newTrip.start_date);
-        
+
         for (const day of tripData.days) {
           if (!day.activities || !Array.isArray(day.activities)) continue;
-          
+
           // Validate day number
           const dayNumber = parseInt(day.day) || 1;
           const activityDate = new Date(actualStartDate);
           activityDate.setDate(actualStartDate.getDate() + (dayNumber - 1));
-          
+
           // Validate the date is valid
           if (isNaN(activityDate.getTime())) {
             logger.error(`Invalid date calculated for day ${day.day}:`, { actualStartDate, dayNumber });
             continue;
           }
-          
+
           let order = 0;
           for (const activity of day.activities) {
             if (!activity || !activity.title) continue;
-            
+
             const locationName = activity.location || activity.locationName || activity.location_name;
             let latitude = activity.latitude?.toString() || null;
             let longitude = activity.longitude?.toString() || null;
-            
+
             // If coordinates are missing but we have a location name, geocode it
             if (!latitude || !longitude) {
               if (locationName) {
                 const geocoded = await geocodingService.geocodeWithFallback(
-                  locationName, 
+                  locationName,
                   tripData.city || tripData.country
                 );
                 if (geocoded) {
@@ -125,7 +125,7 @@ export class TemplateCopyService {
                 }
               }
             }
-            
+
             // Generate smart default time if not provided
             let activityTime = activity.time;
             if (!activityTime) {
@@ -133,11 +133,11 @@ export class TemplateCopyService {
               // First activity: 9am, then 11am, 2pm, 4pm, 7pm, etc.
               const timeSlots = ['09:00', '11:00', '14:00', '16:00', '19:00', '21:00'];
               activityTime = timeSlots[order % timeSlots.length];
-              
+
               // Adjust based on activity type/tag if available
               const tag = (activity.tag || '').toLowerCase();
               const title = (activity.title || '').toLowerCase();
-              
+
               if (tag === 'breakfast' || title.includes('breakfast')) {
                 activityTime = '08:00';
               } else if (tag === 'lunch' || title.includes('lunch')) {
@@ -152,7 +152,7 @@ export class TemplateCopyService {
                 activityTime = order === 0 ? '08:00' : '10:00';
               }
             }
-            
+
             try {
               await storage.createActivity({
                 trip_id: newTrip.id,
@@ -176,10 +176,10 @@ export class TemplateCopyService {
       } else if (tripData.activities && Array.isArray(tripData.activities)) {
         // Old format: flat activities array (for backwards compatibility)
         const actualStartDate = new Date(newTrip.start_date);
-        
+
         for (const activity of tripData.activities) {
           if (!activity || !activity.title) continue;
-          
+
           // Use the activity's date if available, otherwise calculate from day number
           let activityDate = new Date(actualStartDate);
           if (activity.date) {
@@ -188,22 +188,22 @@ export class TemplateCopyService {
             const dayNumber = parseInt(activity.day) || 1;
             activityDate.setDate(actualStartDate.getDate() + (dayNumber - 1));
           }
-          
+
           // Validate the date is valid
           if (isNaN(activityDate.getTime())) {
             logger.error(`Invalid date for activity "${activity.title}"`);
             continue;
           }
-          
+
           const locationName = activity.location || activity.locationName || activity.location_name;
           let latitude = activity.latitude?.toString() || null;
           let longitude = activity.longitude?.toString() || null;
-          
+
           // If coordinates are missing but we have a location name, geocode it
           if (!latitude || !longitude) {
             if (locationName) {
               const geocoded = await geocodingService.geocodeWithFallback(
-                locationName, 
+                locationName,
                 tripData.city || tripData.country
               );
               if (geocoded) {
@@ -213,7 +213,7 @@ export class TemplateCopyService {
               }
             }
           }
-          
+
           // Generate smart default time if not provided
           let activityTime = activity.time;
           if (!activityTime) {
@@ -221,11 +221,11 @@ export class TemplateCopyService {
             const order = activity.order || 0;
             const timeSlots = ['09:00', '11:00', '14:00', '16:00', '19:00', '21:00'];
             activityTime = timeSlots[order % timeSlots.length];
-            
+
             // Adjust based on activity type/tag if available
             const tag = (activity.tag || '').toLowerCase();
             const title = (activity.title || '').toLowerCase();
-            
+
             if (tag === 'breakfast' || title.includes('breakfast')) {
               activityTime = '08:00';
             } else if (tag === 'lunch' || title.includes('lunch')) {
@@ -240,7 +240,7 @@ export class TemplateCopyService {
               activityTime = order === 0 ? '08:00' : '10:00';
             }
           }
-          
+
           try {
             await storage.createActivity({
               trip_id: newTrip.id,
@@ -279,7 +279,7 @@ export class TemplateCopyService {
       duration: template.duration,
       tripData: template.trip_data
     };
-    
+
     const hash = crypto.createHash('sha256');
     hash.update(JSON.stringify(content));
     return hash.digest('hex').substring(0, 16); // Use first 16 chars for brevity
@@ -289,13 +289,13 @@ export class TemplateCopyService {
    * Batch copy activities from template data
    */
   private async copyActivities(
-    tripId: number, 
-    activities: any[], 
+    tripId: number,
+    activities: any[],
     startDate: Date
   ): Promise<void> {
     // Group activities by day
     const activitiesByDay = new Map<number, any[]>();
-    
+
     activities.forEach((activity) => {
       const dayNumber = activity.dayNumber || 0;
       if (!activitiesByDay.has(dayNumber)) {
@@ -308,13 +308,13 @@ export class TemplateCopyService {
     for (const [dayNumber, dayActivities] of activitiesByDay) {
       const activityDate = new Date(startDate);
       activityDate.setDate(startDate.getDate() + dayNumber);
-      
+
       // Validate the date is valid
       if (isNaN(activityDate.getTime())) {
         logger.error(`Invalid date calculated for day ${dayNumber}:`, { startDate, dayNumber });
         continue;
       }
-      
+
       let order = 0;
       for (const activity of dayActivities) {
         await storage.createActivity({

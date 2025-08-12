@@ -17,7 +17,7 @@ function createJWT(payload: any): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  
+
   // Use proper HMAC signing with secret key - require in production
   const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET;
   if (!secret) {
@@ -27,7 +27,7 @@ function createJWT(payload: any): string {
     .createHmac('sha256', secret)
     .update(`${headerB64}.${payloadB64}`)
     .digest('base64url');
-    
+
   return `${headerB64}.${payloadB64}.${signature}`;
 }
 
@@ -37,11 +37,11 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
     // Check if signups are enabled
     const { getSetting } = await import('../services/systemSettingsService');
     const signupsEnabled = await getSetting('enable_signups');
-    
+
     if (signupsEnabled === false) {
       return res.status(403).json({ message: 'Public signups are currently disabled' });
     }
-    
+
     const { email, password, username } = req.body;
 
     if (!email || !password || !username) {
@@ -68,12 +68,21 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
       organization_id: null
     }).returning();
 
-    // Create JWT token
+    // Create JWT token with expiry
     const token = createJWT({
       id: user.id,
       email: user.email,
       username: user.username,
       role: user.role,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
+    });
+
+    // Set JWT token as httpOnly cookie
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     res.status(201).json({
@@ -82,8 +91,8 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
         email: user.email,
         username: user.username,
         role: user.role,
-        },
-      token
+      },
+      message: 'Registration successful'
     });
   } catch (error) {
     logger.error('Registration error:', error);
@@ -117,12 +126,21 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
       .set({ last_login: new Date() })
       .where(eq(users.id, user.id));
 
-    // Create JWT token
+    // Create JWT token with expiry
     const token = createJWT({
       id: user.id,
       email: user.email,
       username: user.username,
       role: user.role,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
+    });
+
+    // Set JWT token as httpOnly cookie
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     res.json({
@@ -131,8 +149,8 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
         email: user.email,
         username: user.username,
         role: user.role,
-        },
-      token
+      },
+      message: 'Login successful'
     });
   } catch (error) {
     logger.error('Login error:', error);
@@ -140,17 +158,36 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
   }
 });
 
+// Logout endpoint
+router.post('/logout', (req: Request, res: Response) => {
+  res.clearCookie('auth_token');
+  res.json({ message: 'Logged out successfully' });
+});
+
+// Get CSRF token endpoint
+router.get('/csrf-token', (req: Request, res: Response) => {
+  const token = (req as any).csrfToken?.() || '';
+  res.json({ csrfToken: token });
+});
+
 // Get current user endpoint
 router.get('/user', async (req: Request, res: Response) => {
   try {
-    // Check for auth header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Check for auth token in cookie first, then header as fallback
+    let token = req.cookies?.auth_token;
+    
+    // Fallback to authorization header for API clients
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+    
+    if (!token) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const token = authHeader.substring(7);
-    
     try {
       // Verify JWT signature
       const [headerB64, payloadB64, signatureB64] = token.split('.');
@@ -171,7 +208,7 @@ router.get('/user', async (req: Request, res: Response) => {
 
       // Decode payload
       const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
-      
+
       // Check expiration if present
       if (payload.exp && Date.now() >= payload.exp * 1000) {
         return res.status(401).json({ message: 'Token expired' });

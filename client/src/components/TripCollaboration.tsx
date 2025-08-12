@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { 
+import {
   Users, UserPlus, Share2, Copy, Mail,
   Check, X, Edit, Eye, Shield, MessageSquare,
   Bell, Settings, Link, QrCode, Phone,
@@ -92,11 +92,10 @@ export default function TripCollaboration({
           }
         }
       ];
-      
+
       setCollaborators(mockCollaborators);
     } catch (error) {
-      console.error('Failed to fetch collaborators:', error);
-    }
+      }
   };
 
   const generateShareLink = () => {
@@ -120,7 +119,7 @@ export default function TripCollaboration({
     }
 
     setIsLoading(true);
-    
+
     try {
       // Send invitation
       const response = await fetch('/api/trips/invite', {
@@ -158,18 +157,17 @@ export default function TripCollaboration({
         setCollaborators(prev => [...prev, newCollaborator]);
         setInviteEmail('');
         setInviteMessage('');
-        
+
         toast({
           title: "✉️ Invitation Sent!",
           description: `Invitation sent to ${inviteEmail}`,
         });
-        
+
         if (onCollaboratorAdded) {
           onCollaboratorAdded(newCollaborator);
         }
       }
     } catch (error) {
-      console.error('Failed to send invitation:', error);
       toast({
         title: "Failed to send invitation",
         description: "Please try again",
@@ -204,11 +202,11 @@ export default function TripCollaboration({
           canBook: false,
           canComment: true
         };
-        
+
         if (onPermissionsChanged) {
           onPermissionsChanged(collaboratorId, newPermissions);
         }
-        
+
         return { ...c, role: newRole, permissions: newPermissions };
       }
       return c;
@@ -276,7 +274,7 @@ export default function TripCollaboration({
             {collaborators.map((collaborator) => {
               const RoleIcon = getRoleIcon(collaborator.role);
               const roleColor = getRoleColor(collaborator.role);
-              
+
               return (
                 <motion.div
                   key={collaborator.id}
@@ -293,7 +291,7 @@ export default function TripCollaboration({
                               {collaborator.name.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-semibold">{collaborator.name}</h4>
@@ -307,20 +305,20 @@ export default function TripCollaboration({
                             <p className="text-sm text-gray-500">{collaborator.email}</p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <Badge className={`bg-${roleColor}-100 text-${roleColor}-700 border-${roleColor}-300`}>
                             <RoleIcon className="w-3 h-3 mr-1" />
                             {collaborator.role}
                           </Badge>
-                          
+
                           {collaborator.role !== 'owner' && collaborator.id !== currentUserId && (
                             <div className="flex gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleChangeRole(
-                                  collaborator.id, 
+                                  collaborator.id,
                                   collaborator.role === 'editor' ? 'viewer' : 'editor'
                                 )}
                               >
@@ -337,7 +335,7 @@ export default function TripCollaboration({
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Permissions */}
                       {collaborator.role !== 'owner' && (
                         <div className="flex gap-2 mt-3 pt-3 border-t">
@@ -386,7 +384,7 @@ export default function TripCollaboration({
                   onChange={(e) => setInviteEmail(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="message">Personal Message (Optional)</Label>
                 <Input
@@ -396,7 +394,7 @@ export default function TripCollaboration({
                   onChange={(e) => setInviteMessage(e.target.value)}
                 />
               </div>
-              
+
               <Button
                 onClick={handleInviteCollaborator}
                 disabled={isLoading || !inviteEmail}
@@ -426,7 +424,7 @@ export default function TripCollaboration({
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
-              
+
               <div className="flex gap-2">
                 <Button
                   variant="outline"

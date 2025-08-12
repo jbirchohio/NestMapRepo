@@ -57,19 +57,19 @@ router.post('/template-cover', requireAuth, upload.single('image'), async (req, 
 
     // Process and optimize the main image
     await sharp(req.file.buffer)
-      .resize(1200, 630, { 
+      .resize(1200, 630, {
         fit: 'cover',
         position: 'center',
-        withoutEnlargement: true 
+        withoutEnlargement: true
       })
       .webp({ quality: 85 })
       .toFile(path.join(COVERS_DIR, fileName));
 
     // Create thumbnail for list views
     await sharp(req.file.buffer)
-      .resize(400, 300, { 
+      .resize(400, 300, {
         fit: 'cover',
-        position: 'center' 
+        position: 'center'
       })
       .webp({ quality: 80 })
       .toFile(path.join(THUMBNAILS_DIR, thumbnailName));
@@ -82,7 +82,7 @@ router.post('/template-cover', requireAuth, upload.single('image'), async (req, 
 
     // Return URLs for accessing the images
     const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
-    
+
     res.json({
       success: true,
       coverUrl: `${baseUrl}/uploads/covers/${fileName}`,
@@ -94,7 +94,7 @@ router.post('/template-cover', requireAuth, upload.single('image'), async (req, 
     });
   } catch (error) {
     logger.error('Error uploading template cover:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to upload image',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -105,7 +105,7 @@ router.post('/template-cover', requireAuth, upload.single('image'), async (req, 
 router.delete('/template-cover/:fileId', requireAuth, async (req, res) => {
   try {
     const { fileId } = req.params;
-    
+
     // Validate fileId format
     if (!/^[a-zA-Z0-9_-]+$/.test(fileId)) {
       return res.status(400).json({ message: 'Invalid file ID' });

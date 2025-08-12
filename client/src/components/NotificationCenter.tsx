@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
@@ -12,13 +12,13 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Bell, 
-  Check, 
-  X, 
-  Users, 
-  Plane, 
-  Calendar, 
+import {
+  Bell,
+  Check,
+  X,
+  Users,
+  Plane,
+  Calendar,
   CreditCard,
   AlertTriangle,
   Info,
@@ -109,7 +109,7 @@ export default function NotificationCenter() {
     if (!notification.read) {
       markAsReadMutation.mutate(notification.id);
     }
-    
+
     if (notification.actionUrl) {
       window.location.href = notification.actionUrl;
     }
@@ -119,7 +119,7 @@ export default function NotificationCenter() {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -132,8 +132,8 @@ export default function NotificationCenter() {
         <Button variant="ghost" size="sm" className="relative">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
+            <Badge
+              variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center p-0"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
@@ -182,7 +182,7 @@ export default function NotificationCenter() {
                   {notifications.map((notification: Notification) => {
                     const IconComponent = notificationIcons[notification.type] || Info;
                     const iconColor = notificationColors[notification.type] || 'text-slate-600';
-                    
+
                     return (
                       <div
                         key={notification.id}
@@ -195,7 +195,7 @@ export default function NotificationCenter() {
                           <div className={`flex-shrink-0 ${iconColor}`}>
                             <IconComponent className="h-5 w-5" />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
                               <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
@@ -210,7 +210,7 @@ export default function NotificationCenter() {
                                 )}
                               </div>
                             </div>
-                            
+
                             <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                               {notification.message}
                             </p>
@@ -219,7 +219,7 @@ export default function NotificationCenter() {
                               <Badge variant="outline" className="text-xs">
                                 {notification.type.replace('_', ' ')}
                               </Badge>
-                              
+
                               <div className="flex items-center gap-1">
                                 {!notification.read && (
                                   <Button
@@ -234,7 +234,7 @@ export default function NotificationCenter() {
                                     <Check className="h-3 w-3" />
                                   </Button>
                                 )}
-                                
+
                                 <Button
                                   variant="ghost"
                                   size="sm"

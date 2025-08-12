@@ -7,24 +7,22 @@ import { Todo, Note } from "@shared/schema";
 export default function useTrip(tripId: string | number) {
   // Safeguard against objects being passed as tripId
   if (typeof tripId === 'object') {
-    console.error('useTrip: tripId is an object! This should never happen.', tripId);
-    console.error('Stack trace:', new Error().stack);
+    // tripId is an object! This should never happen.
     // Try to extract the ID if possible
     const extractedId = (tripId as any)?.id;
     if (extractedId && (typeof extractedId === 'string' || typeof extractedId === 'number')) {
       tripId = extractedId;
-      console.warn('useTrip: Extracted ID from object:', tripId);
+      // Extracted ID from object
     } else {
       // If we can't extract a valid ID, return early to avoid making bad API calls
-      console.error('useTrip: Could not extract valid ID from object, using empty string');
+      // Could not extract valid ID from object, using empty string
       tripId = '';
     }
   }
   
   // Additional check for '[object Object]' string
   if (tripId === '[object Object]') {
-    console.error('useTrip: tripId is the string "[object Object]"! This indicates an object was stringified.');
-    console.error('Stack trace:', new Error().stack);
+    // tripId is the string "[object Object]"! This indicates an object was stringified.
     tripId = '';
   }
   
@@ -125,7 +123,7 @@ export default function useTrip(tripId: string | number) {
       const res = await apiRequest("PUT", `${API_ENDPOINTS.TRIPS}/${tripId}`, updateData);
       return res; // apiRequest already parses JSON
     } catch (error) {
-      console.error("Error updating trip:", error);
+      // Error updating trip
       throw error;
     }
   };
@@ -138,7 +136,7 @@ export default function useTrip(tripId: string | number) {
       await apiRequest("DELETE", `${API_ENDPOINTS.TRIPS}/${tripId}`, undefined);
       return true;
     } catch (error) {
-      console.error("Error deleting trip:", error);
+      // Error deleting trip
       throw error;
     }
   };

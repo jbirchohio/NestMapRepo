@@ -54,7 +54,6 @@ function generateNotificationHTML(params: NotificationEmailParams): string {
 
 export async function sendNotificationEmail(params: NotificationEmailParams): Promise<boolean> {
   if (!process.env.SENDGRID_API_KEY) {
-    console.log('⚠ SendGrid not configured - email sending disabled');
     return false;
   }
 
@@ -70,23 +69,20 @@ export async function sendNotificationEmail(params: NotificationEmailParams): Pr
     };
 
     await sgMail.send(msg);
-    console.log(`Notification email sent to ${params.to}: ${params.subject}`);
     return true;
   } catch (error) {
-    console.error('Error sending notification email:', error);
     return false;
   }
 }
 
 export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams): Promise<boolean> {
   if (!mailService) {
-    console.log(`[EMAIL DISABLED] Would send invitation to ${params.to} for ${params.organizationName}`);
     return false;
   }
 
   try {
     const invitationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/invite/${params.invitationToken}`;
-    
+
     const emailHTML = `
       <!DOCTYPE html>
       <html>
@@ -109,12 +105,12 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
               <h1>🗺️ You're Invited to Join Remvana</h1>
               <p>Professional Travel Management Platform</p>
             </div>
-            
+
             <div class="content">
               <h2>Welcome to ${params.organizationName}!</h2>
-              
+
               <p><strong>${params.inviterName}</strong> has invited you to join their team on Remvana as a <span class="role-badge">${params.role.toUpperCase()}</span>.</p>
-              
+
               <p>Remvana is a comprehensive travel planning platform that helps teams:</p>
               <ul>
                 <li>📅 Create and manage collaborative itineraries</li>
@@ -122,14 +118,14 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
                 <li>📊 Track travel analytics and budgets</li>
                 <li>🚀 Streamline business travel workflows</li>
               </ul>
-              
+
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${invitationUrl}" class="button">Accept Invitation</a>
               </div>
-              
+
               <p><small>This invitation will expire in 7 days. If you have trouble with the button above, copy and paste this link: ${invitationUrl}</small></p>
             </div>
-            
+
             <div class="footer">
               <p>© 2025 Remvana - Professional Travel Management</p>
               <p>If you didn't expect this invitation, you can safely ignore this email.</p>
@@ -147,10 +143,8 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
       text: `${params.inviterName} has invited you to join ${params.organizationName} on Remvana as a ${params.role}. Accept your invitation: ${invitationUrl}`
     });
 
-    console.log(`✓ Team invitation email sent to ${params.to}`);
     return true;
   } catch (error) {
-    console.error('✗ Failed to send team invitation email:', error);
     return false;
   }
 }
@@ -163,7 +157,6 @@ interface WelcomeEmailParams {
 
 export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<boolean> {
   if (!mailService) {
-    console.log(`[EMAIL DISABLED] Would send welcome email to ${params.to}`);
     return false;
   }
 
@@ -189,15 +182,15 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
               <h1>🗺️ Welcome to Remvana!</h1>
               <p>Professional Travel Management Platform</p>
             </div>
-            
+
             <div class="content">
               <h2>Hello ${params.name}! 👋</h2>
-              
-              ${params.organizationName ? 
+
+              ${params.organizationName ?
                 `<p>You've successfully joined <strong>${params.organizationName}</strong> on Remvana!</p>` :
                 `<p>Welcome to Remvana! You're all set to start planning amazing trips.</p>`
               }
-              
+
               <p>Here's what you can do now:</p>
               <ul>
                 <li>🗺️ Create your first collaborative itinerary</li>
@@ -205,12 +198,12 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
                 <li>📱 Access your trips on any device</li>
                 <li>📊 Track travel budgets and analytics</li>
               </ul>
-              
+
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}" class="button">Start Planning</a>
               </div>
             </div>
-            
+
             <div class="footer">
               <p>© 2025 Remvana - Professional Travel Management</p>
               <p>Need help? Reply to this email or visit our support center.</p>
@@ -228,10 +221,8 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
       text: `Welcome to Remvana! ${params.organizationName ? `You've joined ${params.organizationName}.` : ''} Start planning: ${process.env.FRONTEND_URL || 'http://localhost:5000'}`
     });
 
-    console.log(`✓ Welcome email sent to ${params.to}`);
     return true;
   } catch (error) {
-    console.error('✗ Failed to send welcome email:', error);
     return false;
   }
 }

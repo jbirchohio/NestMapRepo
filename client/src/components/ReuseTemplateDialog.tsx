@@ -17,7 +17,7 @@ export default function ReuseTemplateDialog({ template, isOpen, onClose, onSucce
   const [isProcessing, setIsProcessing] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  
+
   // Calculate end date based on start date and duration
   const calculateEndDate = (start: string) => {
     if (!start) return '';
@@ -25,9 +25,9 @@ export default function ReuseTemplateDialog({ template, isOpen, onClose, onSucce
     date.setDate(date.getDate() + (template.duration || 7) - 1);
     return date.toISOString().split('T')[0];
   };
-  
+
   const endDate = calculateEndDate(startDate);
-  
+
   // Set default start date to tomorrow
   useEffect(() => {
     const tomorrow = new Date();
@@ -37,7 +37,7 @@ export default function ReuseTemplateDialog({ template, isOpen, onClose, onSucce
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!startDate) {
       setError('Please select a start date');
       return;
@@ -67,7 +67,7 @@ export default function ReuseTemplateDialog({ template, isOpen, onClose, onSucce
       }
 
       const data = await response.json();
-      
+
       toast({
         title: 'Trip created!',
         description: `Your ${template.duration}-day ${template.title} trip has been created.`,

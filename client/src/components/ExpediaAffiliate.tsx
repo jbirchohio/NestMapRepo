@@ -1,9 +1,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Hotel, Plane, Car, Package, Calendar, 
-  Search, ExternalLink, TrendingUp, DollarSign 
+import {
+  Hotel, Plane, Car, Package, Calendar,
+  Search, ExternalLink, TrendingUp, DollarSign
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { affiliateConfig, getExpediaAffiliateId } from '@/config/affiliates';
@@ -16,14 +16,14 @@ interface ExpediaAffiliateProps {
   campaign?: string; // Optional campaign tracking
 }
 
-export default function ExpediaAffiliate({ 
+export default function ExpediaAffiliate({
   destination = '',
   checkIn,
   checkOut,
   variant = 'full',
   campaign = 'default'
 }: ExpediaAffiliateProps) {
-  
+
   // Format dates for Expedia URL
   const formatDate = (date: Date) => {
     return date.toISOString().split('T')[0];
@@ -33,17 +33,17 @@ export default function ExpediaAffiliate({
   const generateExpediaUrl = (type: 'hotels' | 'flights' | 'packages' | 'cars') => {
     // Use your custom affiliate link
     const baseUrl = affiliateConfig.expedia.baseUrl;
-    
+
     const params = new URLSearchParams();
-    
+
     // Add product type
     params.append('product', type);
-    
+
     // Add destination search
     if (destination) {
       params.append('destination', destination);
     }
-    
+
     // Add dates if provided
     if (checkIn) {
       params.append('checkin', formatDate(checkIn));
@@ -51,12 +51,12 @@ export default function ExpediaAffiliate({
     if (checkOut) {
       params.append('checkout', formatDate(checkOut));
     }
-    
+
     // Add tracking for analytics
     params.append('utm_source', 'remvana');
     params.append('utm_medium', 'destination_page');
     params.append('utm_campaign', campaign);
-    
+
     return `${baseUrl}?${params.toString()}`;
   };
 
@@ -119,7 +119,7 @@ export default function ExpediaAffiliate({
           <p className="mb-6 text-white/90">
             Save when you bundle flight + hotel together
           </p>
-          <Button 
+          <Button
             size="lg"
             variant="secondary"
             onClick={() => handleClick('packages')}
@@ -169,7 +169,7 @@ export default function ExpediaAffiliate({
               <ExternalLink className="h-3 w-3 ml-auto" />
             </a>
           </Button>
-          
+
           <Button
             variant="outline"
             className="justify-start"
@@ -182,7 +182,7 @@ export default function ExpediaAffiliate({
               <ExternalLink className="h-3 w-3 ml-auto" />
             </a>
           </Button>
-          
+
           <Button
             variant="outline"
             className="justify-start"
@@ -195,7 +195,7 @@ export default function ExpediaAffiliate({
               <ExternalLink className="h-3 w-3 ml-auto" />
             </a>
           </Button>
-          
+
           <Button
             variant="outline"
             className="justify-start"
@@ -209,7 +209,7 @@ export default function ExpediaAffiliate({
             </a>
           </Button>
         </div>
-        
+
         <div className="mt-4 p-3 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-900 font-medium mb-1">
             💰 Bundle & Save
@@ -218,7 +218,7 @@ export default function ExpediaAffiliate({
             Book flight + hotel together and save an average of 22% on your trip
           </p>
         </div>
-        
+
         <p className="text-xs text-gray-500 mt-3 text-center">
           We earn a commission from bookings at no extra cost to you
         </p>
@@ -228,8 +228,8 @@ export default function ExpediaAffiliate({
 }
 
 // Additional component for inline booking links
-export function ExpediaBookingButton({ 
-  destination, 
+export function ExpediaBookingButton({
+  destination,
   type = 'packages' as 'hotels' | 'flights' | 'packages' | 'cars',
   className = '',
   children
@@ -241,7 +241,7 @@ export function ExpediaBookingButton({
 }) {
   const generateUrl = () => {
     const baseUrl = affiliateConfig.expedia.baseUrl;
-    
+
     const params = new URLSearchParams({
       product: type,
       destination: destination,
@@ -249,19 +249,19 @@ export function ExpediaBookingButton({
       utm_medium: 'button',
       utm_campaign: `${type}_${destination.toLowerCase().replace(/\s+/g, '_')}`
     });
-    
+
     return `${baseUrl}?${params.toString()}`;
   };
-  
+
   const icons = {
     hotels: Hotel,
     flights: Plane,
     packages: Package,
     cars: Car
   };
-  
+
   const Icon = icons[type];
-  
+
   return (
     <Button asChild className={className}>
       <a href={generateUrl()} target="_blank" rel="noopener noreferrer">

@@ -49,14 +49,14 @@ export default function NewTripModalConsumer({
   const { user } = useAuth();
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [currentExample, setCurrentExample] = useState(0);
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  
+
   // Rotate examples
   useEffect(() => {
     if (!isOpen) return;
@@ -109,17 +109,16 @@ export default function NewTripModalConsumer({
         const response = await fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=5`
         );
-        
+
         if (!response.ok) return;
-        
+
         const data = await response.json();
         if (data.features && data.features.length > 0) {
           setLocationSuggestions(data.features);
           setShowSuggestions(true);
         }
       } catch (error) {
-        console.error("Geocoding error:", error);
-      }
+        }
     }, 300);
 
     return () => clearTimeout(searchTimeout);
@@ -132,18 +131,18 @@ export default function NewTripModalConsumer({
       setValue("cityLongitude", suggestion.center[0].toString());
       setValue("cityLatitude", suggestion.center[1].toString());
     }
-    
+
     // Generate a simple trip title
     const locationName = suggestion.text || suggestion.place_name.split(",")[0];
     setValue("title", `${locationName} Trip`);
-    
+
     setShowSuggestions(false);
     setSearchQuery("");
   };
 
   const onSubmit = async (data: TripFormValues) => {
     setIsLoading(true);
-    
+
     try {
       // If no coordinates yet, try to geocode the city
       if (!data.cityLatitude || !data.cityLongitude) {
@@ -154,8 +153,7 @@ export default function NewTripModalConsumer({
             data.cityLongitude = result.longitude.toString();
           }
         } catch (error) {
-          console.error("Geocoding error:", error);
-        }
+          }
       }
 
       const tripData = {
@@ -179,13 +177,8 @@ export default function NewTripModalConsumer({
       }
 
       const newTrip = await response.json();
-      console.log('New trip created - full response:', newTrip);
-      console.log('Trip ID:', newTrip.id);
-      console.log('Trip ID type:', typeof newTrip.id);
-      
       // Ensure we're passing the trip object correctly
       if (!newTrip.id) {
-        console.error('ERROR: Trip created but no ID returned!', newTrip);
         toast({
           title: "Error",
           description: "Trip created but ID missing. Please refresh.",
@@ -193,7 +186,7 @@ export default function NewTripModalConsumer({
         });
         return;
       }
-      
+
       toast({
         title: "Trip created! ✈️",
         description: "Let's start planning your adventure!",
@@ -202,12 +195,10 @@ export default function NewTripModalConsumer({
       // Track trip creation
       analytics.trackTripCreated(newTrip.id, data.city);
 
-      console.log('Calling onTripCreated with:', newTrip);
       onTripCreated(newTrip);
       reset();
       onClose();
     } catch (error) {
-      console.error("Error creating trip:", error);
       toast({
         title: "Error",
         description: "Could not create trip. Please try again.",
@@ -220,16 +211,15 @@ export default function NewTripModalConsumer({
 
   if (!isOpen) return null;
 
-
   return (
     <AnimatePresence>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
       >
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
@@ -244,7 +234,7 @@ export default function NewTripModalConsumer({
             >
               <X className="w-5 h-5" />
             </button>
-            
+
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -261,7 +251,7 @@ export default function NewTripModalConsumer({
 
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 -mt-4 space-y-5">
             {/* Destination Input */}
-            <motion.div 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -283,7 +273,7 @@ export default function NewTripModalConsumer({
                   className="w-full bg-transparent pl-12 pr-4 py-4 text-lg outline-none placeholder:text-slate-400"
                   autoFocus
                 />
-                
+
                 {/* Animated example */}
                 {!watchedCity && (
                   <motion.div
@@ -298,7 +288,7 @@ export default function NewTripModalConsumer({
                   </motion.div>
                 )}
               </div>
-              
+
               {/* Location suggestions */}
               <AnimatePresence>
                 {showSuggestions && locationSuggestions.length > 0 && (
@@ -332,7 +322,7 @@ export default function NewTripModalConsumer({
                   </motion.div>
                 )}
               </AnimatePresence>
-              
+
               {errors.city && (
                 <p className="text-sm text-red-500 mt-2">{errors.city.message}</p>
               )}
@@ -361,7 +351,7 @@ export default function NewTripModalConsumer({
                   className="w-full bg-transparent outline-none text-slate-900 dark:text-white"
                 />
               </div>
-              
+
               <div className={`bg-slate-50 dark:bg-slate-800 rounded-xl p-4 transition-all duration-200 ${
                 focusedField === 'endDate' ? 'ring-2 ring-purple-500 ring-offset-2' : ''
               }`}>

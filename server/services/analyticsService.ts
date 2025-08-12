@@ -83,8 +83,8 @@ export class AnalyticsService {
    * Get comprehensive analytics for a template
    */
   async getTemplateAnalytics(
-    templateId: number, 
-    startDate?: Date, 
+    templateId: number,
+    startDate?: Date,
     endDate?: Date
   ): Promise<TemplateAnalytics | null> {
     const template = await db.select()
@@ -97,13 +97,13 @@ export class AnalyticsService {
     }
 
     const t = template[0];
-    
+
     // Get purchases within date range
     const purchaseConditions = [
       eq(templatePurchases.template_id, templateId),
       eq(templatePurchases.status, 'completed')
     ];
-    
+
     if (startDate) {
       purchaseConditions.push(gte(templatePurchases.purchased_at, startDate));
     }
@@ -120,7 +120,7 @@ export class AnalyticsService {
     .where(and(...purchaseConditions));
 
     // Calculate revenue
-    const revenue = purchases.reduce((sum, p) => 
+    const revenue = purchases.reduce((sum, p) =>
       sum + parseFloat(p.sellerEarnings || '0'), 0
     );
 
@@ -164,7 +164,7 @@ export class AnalyticsService {
       .where(eq(templates.user_id, userId));
 
     const templateIds = creatorTemplates.map(t => t.id);
-    
+
     if (templateIds.length === 0) {
       return {
         userId,
@@ -183,7 +183,7 @@ export class AnalyticsService {
       eq(templatePurchases.seller_id, userId),
       eq(templatePurchases.status, 'completed')
     ];
-    
+
     if (startDate) {
       purchaseConditions.push(gte(templatePurchases.purchased_at, startDate));
     }
@@ -196,18 +196,18 @@ export class AnalyticsService {
       .where(and(...purchaseConditions));
 
     // Calculate totals
-    const totalRevenue = purchases.reduce((sum, p) => 
+    const totalRevenue = purchases.reduce((sum, p) =>
       sum + parseFloat(p.seller_earnings || '0'), 0
     );
-    
+
     const totalSales = purchases.length;
 
     // Calculate average price
     const prices = creatorTemplates
       .map(t => parseFloat(t.price || '0'))
       .filter(p => p > 0);
-    const averagePrice = prices.length > 0 
-      ? prices.reduce((a, b) => a + b, 0) / prices.length 
+    const averagePrice = prices.length > 0
+      ? prices.reduce((a, b) => a + b, 0) / prices.length
       : 0;
 
     // Calculate average rating
@@ -252,7 +252,7 @@ export class AnalyticsService {
     const purchaseConditions = [
       eq(templatePurchases.status, 'completed')
     ];
-    
+
     if (startDate) {
       purchaseConditions.push(gte(templatePurchases.purchased_at, startDate));
     }
@@ -265,7 +265,7 @@ export class AnalyticsService {
       .where(and(...purchaseConditions));
 
     // Calculate totals
-    const totalRevenue = allPurchases.reduce((sum, p) => 
+    const totalRevenue = allPurchases.reduce((sum, p) =>
       sum + parseFloat(p.price || '0'), 0
     );
 
@@ -303,8 +303,8 @@ export class AnalyticsService {
   async trackView(templateId: number, userId?: number) {
     // Increment view count
     await db.update(templates)
-      .set({ 
-        view_count: sql`COALESCE(view_count, 0) + 1` 
+      .set({
+        view_count: sql`COALESCE(view_count, 0) + 1`
       })
       .where(eq(templates.id, templateId));
 
@@ -371,7 +371,7 @@ export class AnalyticsService {
 
     for (const purchase of purchases) {
       const date = new Date(purchase.purchasedAt).toISOString().split('T')[0];
-      
+
       if (!statsMap.has(date)) {
         statsMap.set(date, {
           date,
@@ -386,7 +386,7 @@ export class AnalyticsService {
       stats.revenue += parseFloat(purchase.sellerEarnings || '0');
     }
 
-    return Array.from(statsMap.values()).sort((a, b) => 
+    return Array.from(statsMap.values()).sort((a, b) =>
       a.date.localeCompare(b.date)
     );
   }
@@ -397,7 +397,7 @@ export class AnalyticsService {
     for (const purchase of purchases) {
       const date = new Date(purchase.purchased_at);
       const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
+
       if (!revenueMap.has(month)) {
         revenueMap.set(month, {
           month,
@@ -411,7 +411,7 @@ export class AnalyticsService {
       stats.revenue += parseFloat(purchase.seller_earnings || '0');
     }
 
-    return Array.from(revenueMap.values()).sort((a, b) => 
+    return Array.from(revenueMap.values()).sort((a, b) =>
       a.month.localeCompare(b.month)
     );
   }
@@ -432,7 +432,7 @@ export class AnalyticsService {
 
     // Get revenue for each template
     const performances: TemplatePerformance[] = [];
-    
+
     for (const template of templates) {
       const purchases = await db.select({
         earnings: templatePurchases.seller_earnings
@@ -443,7 +443,7 @@ export class AnalyticsService {
         eq(templatePurchases.status, 'completed')
       ));
 
-      const revenue = purchases.reduce((sum, p) => 
+      const revenue = purchases.reduce((sum, p) =>
         sum + parseFloat(p.earnings || '0'), 0
       );
 
@@ -464,7 +464,7 @@ export class AnalyticsService {
 
     for (const template of templates) {
       const tags = template.tags as string[] || [];
-      
+
       for (const tag of tags) {
         if (!categoryMap.has(tag)) {
           categoryMap.set(tag, {
@@ -473,7 +473,7 @@ export class AnalyticsService {
             revenue: 0
           });
         }
-        
+
         const stats = categoryMap.get(tag)!;
         stats.count++;
         // Revenue calculation would need purchase data
@@ -490,7 +490,7 @@ export class AnalyticsService {
 
     for (const template of templates) {
       const destinations = template.destinations as string[] || [];
-      
+
       for (const dest of destinations) {
         if (!destMap.has(dest)) {
           destMap.set(dest, {
@@ -499,7 +499,7 @@ export class AnalyticsService {
             totalSales: 0
           });
         }
-        
+
         const stats = destMap.get(dest)!;
         stats.templateCount++;
         stats.totalSales += template.sales_count || 0;
@@ -524,7 +524,7 @@ export class AnalyticsService {
     // Count templates in each bucket
     for (const template of templates) {
       const price = parseFloat(template.price || '0');
-      
+
       if (price === 0) {
         buckets[0].count++;
         buckets[0].sales += template.sales_count || 0;

@@ -6,12 +6,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate environment variables
 if (!supabaseUrl) {
-  console.error('VITE_SUPABASE_URL is required but not set');
-}
+  }
 
 if (!supabaseAnonKey) {
-  console.error('VITE_SUPABASE_ANON_KEY is required but not set');
-}
+  }
 
 // Validate URL format
 let validUrl = supabaseUrl;
@@ -21,7 +19,7 @@ if (supabaseUrl && !supabaseUrl.startsWith('http')) {
 
 // Create the Supabase client with error handling
 export const supabase = createClient(
-  validUrl || 'https://placeholder.supabase.co', 
+  validUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key'
 );
 
@@ -36,7 +34,7 @@ export const auth = {
         data: metadata
       }
     });
-    
+
     return { data, error };
   },
 
@@ -46,7 +44,7 @@ export const auth = {
       email,
       password
     });
-    
+
     return { data, error };
   },
 
@@ -55,28 +53,28 @@ export const auth = {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider
     });
-    
+
     return { data, error };
   },
-  
+
   // Sign out
   signOut: async () => {
     const { error } = await supabase.auth.signOut();
     return { error };
   },
-  
+
   // Get current user
   getUser: async () => {
     const { data, error } = await supabase.auth.getUser();
     return { user: data.user, error };
   },
-  
+
   // Get session
   getSession: async () => {
     const { data, error } = await supabase.auth.getSession();
     return { session: data.session, error };
   },
-  
+
   // Set up auth state change listener
   onAuthStateChange: (callback: (event: string, session: Session | null) => void) => {
     return supabase.auth.onAuthStateChange(callback);

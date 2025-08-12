@@ -44,7 +44,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
   const { toast } = useToast();
   const [budgetLevel, setBudgetLevel] = useState<BudgetLevel>("medium");
   const [activityType, setActivityType] = useState<ActivityType>("");
-  
+
   const budgetMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", API_ENDPOINTS.AI.BUDGET_OPTIONS, {
@@ -60,8 +60,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
         description: "Could not get budget suggestions. Please try again.",
         variant: "destructive",
       });
-      console.error("Error getting budget suggestions:", error);
-    },
+      },
   });
 
   const handleGetSuggestions = () => {
@@ -91,12 +90,12 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
           Get suggestions to help you plan your trip within budget.
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="budget">Budget Level</Label>
-          <Select 
-            value={budgetLevel} 
+          <Select
+            value={budgetLevel}
             onValueChange={(value) => setBudgetLevel(value as BudgetLevel)}
           >
             <SelectTrigger id="budget" className="mt-1">
@@ -109,11 +108,11 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
           <Label htmlFor="category">Category (Optional)</Label>
-          <Select 
-            value={activityType} 
+          <Select
+            value={activityType}
             onValueChange={(value) => setActivityType(value as ActivityType)}
           >
             <SelectTrigger id="category" className="mt-1">
@@ -129,29 +128,29 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
           </Select>
         </div>
       </div>
-      
-      <Button 
+
+      <Button
         onClick={handleGetSuggestions}
         disabled={budgetMutation.isPending}
         className="w-full"
       >
         {budgetMutation.isPending ? "Getting suggestions..." : "Get Budget Options"}
       </Button>
-      
+
       {budgetMutation.isSuccess && budgetMutation.data && (
         <div className="mt-4 space-y-4">
           <div className="bg-muted p-4 rounded-md">
             <div className="flex items-center justify-between">
               <h4 className="font-medium flex items-center">
                 <BadgeDollarSign className="h-5 w-5 mr-2" />
-                {budgetMutation.data.level.charAt(0).toUpperCase() + 
+                {budgetMutation.data.level.charAt(0).toUpperCase() +
                   budgetMutation.data.level.slice(1)} Budget in {budgetMutation.data.location}
               </h4>
               <span className="text-sm font-bold">
                 ${budgetMutation.data.dailyTotal.average} {budgetMutation.data.currency}/day
               </span>
             </div>
-            
+
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="font-medium">Accommodation:</p>
@@ -170,7 +169,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
                 <p>${budgetMutation.data.breakdown.activities.low} - ${budgetMutation.data.breakdown.activities.high}</p>
               </div>
             </div>
-            
+
             <div className="mt-3">
               <p className="text-sm font-medium">Money-Saving Tips:</p>
               <ul className="text-sm mt-1 list-disc list-inside">
@@ -180,7 +179,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
               </ul>
             </div>
           </div>
-          
+
           <h4 className="font-medium">Budget Breakdown by Category</h4>
           <div className="space-y-3">
             {Object.entries(budgetMutation.data.breakdown).map(([category, details]) => (
@@ -197,7 +196,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
                       ${details.average}/day
                     </span>
                   </div>
-                  
+
                   {details.suggestions.length > 0 && (
                     <div className="mt-2">
                       <p className="text-sm text-muted-foreground">Suggestions:</p>

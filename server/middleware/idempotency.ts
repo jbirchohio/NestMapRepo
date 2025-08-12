@@ -38,7 +38,7 @@ function generateIdempotencyKey(req: Request): string | null {
     const body = JSON.stringify(req.body || {});
     const userId = (req as any).user?.id || 'anonymous';
     const key = `${req.method}:${req.path}:${userId}:${body}`;
-    
+
     // Create hash for consistent key length
     const hash = crypto.createHash('sha256').update(key).digest('hex');
     return `auto:${hash}`;
@@ -71,26 +71,26 @@ export function idempotent(options?: {
     const cached = idempotencyCache.get(key);
     if (cached) {
       logger.info(`Idempotency cache hit for key: ${key.substring(0, 20)}...`);
-      
+
       // Set headers from cached response
       Object.entries(cached.headers).forEach(([header, value]) => {
         res.setHeader(header, value);
       });
-      
+
       // Add idempotency header
       res.setHeader('X-Idempotent-Replayed', 'true');
-      
+
       return res.status(cached.statusCode).json(cached.body);
     }
 
     // Check if request is already in progress
     if (inProgressRequests.has(key)) {
       logger.info(`Request already in progress for key: ${key.substring(0, 20)}...`);
-      
+
       try {
         // Wait for the in-progress request to complete
         const result = await inProgressRequests.get(key);
-        
+
         // Return the same result
         res.setHeader('X-Idempotent-Replayed', 'true');
         return res.status(result.statusCode).json(result.body);
@@ -111,7 +111,7 @@ export function idempotent(options?: {
       const cacheResponse = (body: any) => {
         const statusCode = res.statusCode;
         const headers: Record<string, string> = {};
-        
+
         // Capture important headers
         ['content-type', 'x-request-id', 'x-correlation-id'].forEach(header => {
           const value = res.getHeader(header);
@@ -121,14 +121,14 @@ export function idempotent(options?: {
         });
 
         const result = { statusCode, body, headers };
-        
+
         // Only cache successful responses and client errors (not server errors)
         if (statusCode < 500) {
           const ttl = options?.ttl || (1000 * 60 * 60); // Default 1 hour
           idempotencyCache.set(key!, result, { ttl });
           logger.info(`Cached response for idempotency key: ${key!.substring(0, 20)}...`);
         }
-        
+
         resolve(result);
       };
 
@@ -184,7 +184,7 @@ export const paymentIdempotency = idempotent({
     if (paymentIntentId) {
       return `payment:${paymentIntentId}`;
     }
-    
+
     // Otherwise use default key generation
     return generateIdempotencyKey(req);
   }

@@ -9,14 +9,14 @@ export const TEMPLATE_TAGS = [
   { value: 'luxury', label: 'Luxury', category: 'style' },
   { value: 'budget', label: 'Budget-Friendly', category: 'style' },
   { value: 'backpacking', label: 'Backpacking', category: 'style' },
-  
+
   // Travel Group
   { value: 'solo', label: 'Solo Travel', category: 'group' },
   { value: 'couples', label: 'Couples', category: 'group' },
   { value: 'family', label: 'Family-Friendly', category: 'group' },
   { value: 'groups', label: 'Group Travel', category: 'group' },
   { value: 'honeymoon', label: 'Honeymoon', category: 'group' },
-  
+
   // Interests
   { value: 'foodie', label: 'Foodie', category: 'interest' },
   { value: 'photography', label: 'Photography', category: 'interest' },
@@ -30,7 +30,7 @@ export const TEMPLATE_TAGS = [
   { value: 'wellness', label: 'Wellness & Spa', category: 'interest' },
   { value: 'sports', label: 'Sports & Activities', category: 'interest' },
   { value: 'wildlife', label: 'Wildlife', category: 'interest' },
-  
+
   // Trip Type
   { value: 'weekend', label: 'Weekend Trip', category: 'duration' },
   { value: 'week-long', label: 'Week Long', category: 'duration' },
@@ -39,7 +39,7 @@ export const TEMPLATE_TAGS = [
   { value: 'road-trip', label: 'Road Trip', category: 'type' },
   { value: 'island-hopping', label: 'Island Hopping', category: 'type' },
   { value: 'multi-city', label: 'Multi-City', category: 'type' },
-  
+
   // Special
   { value: 'off-beaten-path', label: 'Off the Beaten Path', category: 'special' },
   { value: 'hidden-gems', label: 'Hidden Gems', category: 'special' },

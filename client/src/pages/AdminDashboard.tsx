@@ -114,7 +114,6 @@ export default function AdminDashboard() {
         setLocation('/');
       }
     } catch (error) {
-      console.error('Admin check failed:', error);
       setLocation('/');
     } finally {
       setLoading(false);
@@ -156,8 +155,7 @@ export default function AdminDashboard() {
         }
       }
     } catch (error) {
-      console.error('Error loading admin data:', error);
-    }
+      }
   };
 
   const handleApproveTemplate = async (templateId: number) => {
@@ -176,8 +174,7 @@ export default function AdminDashboard() {
         loadAdminData(isSuperAdmin); // Refresh stats
       }
     } catch (error) {
-      console.error('Error approving template:', error);
-    }
+      }
   };
 
   const handleRejectTemplate = async (templateId: number, reason: string) => {
@@ -196,8 +193,7 @@ export default function AdminDashboard() {
         loadAdminData(isSuperAdmin); // Refresh stats
       }
     } catch (error) {
-      console.error('Error rejecting template:', error);
-    }
+      }
   };
 
   const getQualityBadgeColor = (score: number) => {
@@ -483,20 +479,19 @@ function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       const params = new URLSearchParams();
       if (filterRole !== 'all') params.append('role', filterRole);
       if (filterCreatorStatus !== 'all') params.append('creator_status', filterCreatorStatus);
-      
+
       const response = await fetch(`/api/admin/users?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -510,18 +505,17 @@ function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.ok) {
         loadUsers();
       }
     } catch (error) {
-      console.error('Error verifying creator:', error);
-    }
+      }
   };
 
   const handleSuspendUser = async (userId: number) => {
     if (!confirm('Are you sure you want to suspend this user?')) return;
-    
+
     try {
       const response = await fetch(`/api/admin/users/${userId}/suspend`, {
         method: 'POST',
@@ -531,18 +525,17 @@ function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         },
         body: JSON.stringify({ reason: 'Admin suspension' })
       });
-      
+
       if (response.ok) {
         loadUsers();
       }
     } catch (error) {
-      console.error('Error suspending user:', error);
-    }
+      }
   };
 
   const handleMakeAdmin = async (userId: number) => {
     if (!confirm('Grant admin privileges to this user?')) return;
-    
+
     try {
       const response = await fetch(`/api/admin/users/${userId}/make-admin`, {
         method: 'POST',
@@ -551,18 +544,17 @@ function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.ok) {
         loadUsers();
       }
     } catch (error) {
-      console.error('Error making user admin:', error);
-    }
+      }
   };
 
   const handleRemoveAdmin = async (userId: number) => {
     if (!confirm('Remove admin privileges from this user?')) return;
-    
+
     try {
       const response = await fetch(`/api/admin/users/${userId}/remove-admin`, {
         method: 'POST',
@@ -571,16 +563,15 @@ function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.ok) {
         loadUsers();
       }
     } catch (error) {
-      console.error('Error removing admin:', error);
-    }
+      }
   };
 
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -703,7 +694,7 @@ function UserManagementTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                           Verify
                         </Button>
                       )}
-                      
+
                       {user.creator_status !== 'suspended' && user.creator_status !== 'none' && (
                         <Button
                           size="sm"

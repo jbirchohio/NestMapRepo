@@ -51,6 +51,8 @@ export default function SelectTripModal({
   const [activityDate, setActivityDate] = useState<Date | undefined>(undefined);
   const [activityTime, setActivityTime] = useState<string>('09:00');
   const [isCreatingTrip, setIsCreatingTrip] = useState(false);
+  const [tripBudget, setTripBudget] = useState<number>(0);
+  const [tripCurrency, setTripCurrency] = useState<string>('USD');
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function SelectTripModal({
       setSelectedTripId(null);
       setSelectedTrip(null);
       setActivityDate(undefined);
-      
+
       // Set intelligent default time based on activity duration
       let defaultTime = '09:00';
       if (activity.duration) {
@@ -74,7 +76,7 @@ export default function SelectTripModal({
         }
       }
       setActivityTime(defaultTime);
-      
+
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setStartDate(tomorrow);
@@ -109,8 +111,7 @@ export default function SelectTripModal({
         };
       }
     } catch (error) {
-      console.error('Failed to geocode city:', error);
-    }
+      }
     return null;
   };
 
@@ -131,7 +132,7 @@ export default function SelectTripModal({
           time
         })
       });
-      
+
       if (!response.ok) throw new Error('Failed to save activity');
       return response.json();
     },
@@ -155,7 +156,7 @@ export default function SelectTripModal({
     try {
       // Get city coordinates
       const coordinates = await geocodeCity(cityName);
-      
+
       // Create the trip
       const response = await fetch(API_ENDPOINTS.TRIPS, {
         method: 'POST',
@@ -166,6 +167,8 @@ export default function SelectTripModal({
         body: JSON.stringify({
           title: newTripName,
           description: `Trip to ${cityName}`,
+          budget: tripBudget > 0 ? tripBudget : undefined,
+          currency: tripCurrency,
           startDate: format(startDate, 'yyyy-MM-dd'),
           endDate: format(endDate, 'yyyy-MM-dd'),
           city: cityName,
@@ -176,16 +179,15 @@ export default function SelectTripModal({
       });
 
       if (!response.ok) throw new Error('Failed to create trip');
-      
+
       const newTrip = await response.json();
-      
+
       // Set the created trip as selected and move to date selection
       setSelectedTrip(newTrip);
       setSelectedTripId(newTrip.id);
       setActivityDate(startDate); // Default to first day of trip
       setStep('date');
     } catch (error) {
-      console.error('Error creating trip:', error);
       toast.error('Failed to create trip. Please try again.');
     } finally {
       setIsCreatingTrip(false);
@@ -197,7 +199,7 @@ export default function SelectTripModal({
       toast.error('Please select a trip');
       return;
     }
-    
+
     const trip = trips.find(t => t.id === selectedTripId);
     if (trip) {
       setSelectedTrip(trip);
@@ -211,13 +213,13 @@ export default function SelectTripModal({
       toast.error('Please select a date for the activity');
       return;
     }
-    
+
     if (!selectedTripId) {
       toast.error('No trip selected');
       return;
     }
-    
-    saveActivityMutation.mutate({ 
+
+    saveActivityMutation.mutate({
       tripId: selectedTripId,
       date: format(activityDate, 'yyyy-MM-dd'),
       time: activityTime
@@ -229,7 +231,7 @@ export default function SelectTripModal({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {step === 'trip' 
+            {step === 'trip'
               ? `Save "${activity.productName}" to Trip`
               : `Select Date for Activity`
             }
@@ -477,6 +479,47 @@ export default function SelectTripModal({
                 <MapPin className="h-4 w-4 mr-2" />
                 Trip location: <span className="font-medium ml-1">{cityName}</span>
               </div>
+            </div>
+
+            {/* Budget Settings (Optional) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Trip Budget (Optional)</Label>
+                <span className="text-xs text-gray-500">Set to track expenses</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={tripBudget || ''}
+                    onChange={(e) => setTripBudget(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="100"
+                  />
+                  <span className="text-xs text-gray-500">Total budget amount</span>
+                </div>
+                <div className="space-y-2">
+                  <select
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    value={tripCurrency}
+                    onChange={(e) => setTripCurrency(e.target.value)}
+                  >
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="JPY">JPY (¥)</option>
+                    <option value="AUD">AUD (A$)</option>
+                    <option value="CAD">CAD (C$)</option>
+                  </select>
+                  <span className="text-xs text-gray-500">Currency</span>
+                </div>
+              </div>
+              {tripBudget > 0 && (
+                <div className="text-sm text-green-600">
+                  💰 Budget tracking enabled - You'll be able to track expenses for this trip
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between pt-4 border-t">

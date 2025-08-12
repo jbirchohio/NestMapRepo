@@ -23,8 +23,8 @@ interface HeaderProps {
   onDeleteTrip?: () => void;
 }
 
-export default function Header({ 
-  trip, 
+export default function Header({
+  trip,
   onOpenShare,
   onCreateTemplate,
   onToggleSidebar,
@@ -35,13 +35,13 @@ export default function Header({
 }: HeaderProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   return (
     <header className="bg-white dark:bg-[hsl(var(--card))] shadow-sm z-10">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <div 
-            className="flex items-center cursor-pointer" 
+          <div
+            className="flex items-center cursor-pointer"
             onClick={() => setLocation('/')}
           >
             <div className="h-8 w-8 bg-[hsl(var(--secondary))] rounded-full flex items-center justify-center">
@@ -53,7 +53,7 @@ export default function Header({
           </div>
           <span className="hidden md:block text-sm text-[hsl(var(--muted-foreground))]">Plan. Pin. Wander.</span>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button
             id="toggleSidebar"
@@ -67,7 +67,7 @@ export default function Header({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </Button>
-          
+
           {trip && (
             <>
               <Button
@@ -81,7 +81,7 @@ export default function Header({
                 </svg>
                 <span>Save as Template</span>
               </Button>
-              
+
               <Button
                 variant="ghost"
                 className="hidden md:flex items-center text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
@@ -92,7 +92,7 @@ export default function Header({
                 </svg>
                 <span>Share</span>
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label="Trip Options">

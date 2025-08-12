@@ -3,6 +3,7 @@ import './env-loader';
 import { performStartupCheck } from './startup-check';
 import { validateConfig } from './config/constants';
 import express, { type Request, Response, NextFunction } from "express";
+import cookieParser from 'cookie-parser';
 // Session-based auth removed - using JWT only
 import path from "path";
 import fs from "fs";
@@ -25,6 +26,7 @@ import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } 
 import { apiRateLimit, authRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
 // Organization scoping removed for consumer app
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
+import { csrfVerify } from "./middleware/csrf";
 // Migration import removed - handled inline
 import { db } from "./db-connection";
 import { users } from "../shared/schema";
@@ -34,6 +36,11 @@ import { jwtAuthMiddleware } from "./middleware/jwtAuth";
 import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
 // Session tracking removed for consumer app
 import { logger } from './utils/logger';
+import { correlationIdMiddleware } from './middleware/correlationId';
+import { smartCache, contentTypeCache } from './middleware/httpCache';
+import { generalRateLimit } from './middleware/rateLimiting';
+import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";
+import { intervalCleanup } from './services/intervalCleanup';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -85,12 +92,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Cookie parser middleware (must be early for auth)
+app.use(cookieParser());
+
 // Correlation ID middleware (must be early in stack)
-import { correlationIdMiddleware } from './middleware/correlationId';
 app.use(correlationIdMiddleware);
 
 // HTTP caching middleware (early in stack for best performance)
-import { smartCache, contentTypeCache } from './middleware/httpCache';
 app.use(smartCache());
 app.use(contentTypeCache());
 
@@ -99,7 +107,6 @@ app.use(performanceOptimizer.viteAssetOptimizer());
 app.use(performanceOptimizer.memoryReliefMiddleware());
 
 // Start interval cleanup monitoring
-import { intervalCleanup } from './services/intervalCleanup';
 intervalCleanup.startMonitoring();
 
 // Input validation and sanitization middleware
@@ -157,11 +164,9 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(configureCORS);
 
 // Apply general rate limiting to all API routes
-import { generalRateLimit } from './middleware/rateLimiting';
 app.use('/api', generalRateLimit);
 
 // Apply unified monitoring (replaces performance, memory, database, and endpoint monitoring)
-import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";
 // Performance monitoring removed for consumer app
 app.use(unifiedMonitoringMiddleware);
 // Performance middleware removed
@@ -192,6 +197,9 @@ app.get('/api/ping', (req, res) => {
 // Apply case conversion middleware first, then JWT authentication only to API routes
 app.use(caseConversionMiddleware);
 app.use('/api', jwtAuthMiddleware);
+
+// CSRF verification for state-changing API requests (after auth)
+app.use('/api', csrfVerify);
 
 // Demo mode removed for consumer app
 

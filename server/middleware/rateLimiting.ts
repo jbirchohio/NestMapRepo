@@ -25,7 +25,7 @@ export const generalRateLimit = rateLimit({
 
 // Strict rate limit for auth endpoints - 10 attempts per 15 minutes (reasonable for forgot password)
 export const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 60 * 1000,
   max: 10, // Increased from 5
   message: 'Too many authentication attempts, please try again later',
   skipSuccessfulRequests: true // Don't count successful logins

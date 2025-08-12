@@ -39,7 +39,6 @@ export function useMapboxDirections() {
       );
 
       if (!response.ok) {
-        console.error('Directions API error:', response.status);
         return null;
       }
 
@@ -55,7 +54,6 @@ export function useMapboxDirections() {
 
       return null;
     } catch (error) {
-      console.error('Error fetching directions:', error);
       return null;
     }
   }, []);

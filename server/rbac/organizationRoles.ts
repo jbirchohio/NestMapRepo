@@ -13,25 +13,25 @@ export interface OrganizationPermissions {
   deleteAllTrips: boolean;
   deleteOwnTrips: boolean;
   viewAllTrips: boolean;
-  
+
   // Team Management
   inviteMembers: boolean;
   manageMembers: boolean;
   assignRoles: boolean;
-  
+
   // Organization Settings
   editOrganization: boolean;
   viewBilling: boolean;
   manageBilling: boolean;
-  
+
   // Analytics & Reports
   viewAnalytics: boolean;
   exportData: boolean;
-  
+
   // White Label & Branding
   manageWhiteLabel: boolean;
   editBranding: boolean;
-  
+
   // Advanced Features
   useAIFeatures: boolean;
   accessAPI: boolean;
@@ -50,31 +50,31 @@ export const ORGANIZATION_ROLE_PERMISSIONS: Record<OrganizationRole, Organizatio
     deleteAllTrips: true,
     deleteOwnTrips: true,
     viewAllTrips: true,
-    
+
     // Team management
     inviteMembers: true,
     manageMembers: true,
     assignRoles: true,
-    
+
     // Organization settings
     editOrganization: true,
     viewBilling: true,
     manageBilling: true,
-    
+
     // Analytics & reports
     viewAnalytics: true,
     exportData: true,
-    
+
     // White label & branding
     manageWhiteLabel: true,
     editBranding: true,
-    
+
     // Advanced features
     useAIFeatures: true,
     accessAPI: true,
     manageIntegrations: true,
   },
-  
+
   manager: {
     // Trip management for team
     createTrips: true,
@@ -83,31 +83,31 @@ export const ORGANIZATION_ROLE_PERMISSIONS: Record<OrganizationRole, Organizatio
     deleteAllTrips: false, // Cannot delete others' trips
     deleteOwnTrips: true,
     viewAllTrips: true,
-    
+
     // Limited team management
     inviteMembers: true,
     manageMembers: false, // Cannot remove members
     assignRoles: false, // Cannot assign roles
-    
+
     // Read-only organization settings
     editOrganization: false,
     viewBilling: true,
     manageBilling: false,
-    
+
     // Analytics access
     viewAnalytics: true,
     exportData: true,
-    
+
     // No white label access
     manageWhiteLabel: false,
     editBranding: false,
-    
+
     // Standard features
     useAIFeatures: true,
     accessAPI: true,
     manageIntegrations: false,
   },
-  
+
   editor: {
     // Trip editing capabilities
     createTrips: true,
@@ -116,31 +116,31 @@ export const ORGANIZATION_ROLE_PERMISSIONS: Record<OrganizationRole, Organizatio
     deleteAllTrips: false,
     deleteOwnTrips: true,
     viewAllTrips: true,
-    
+
     // No team management
     inviteMembers: false,
     manageMembers: false,
     assignRoles: false,
-    
+
     // No organization settings
     editOrganization: false,
     viewBilling: false,
     manageBilling: false,
-    
+
     // Limited analytics
     viewAnalytics: true,
     exportData: false,
-    
+
     // No white label access
     manageWhiteLabel: false,
     editBranding: false,
-    
+
     // Standard features
     useAIFeatures: true,
     accessAPI: false,
     manageIntegrations: false,
   },
-  
+
   member: {
     // Basic trip capabilities
     createTrips: true,
@@ -149,31 +149,31 @@ export const ORGANIZATION_ROLE_PERMISSIONS: Record<OrganizationRole, Organizatio
     deleteAllTrips: false,
     deleteOwnTrips: true,
     viewAllTrips: false, // Can only see assigned trips
-    
+
     // No team management
     inviteMembers: false,
     manageMembers: false,
     assignRoles: false,
-    
+
     // No organization settings
     editOrganization: false,
     viewBilling: false,
     manageBilling: false,
-    
+
     // No analytics
     viewAnalytics: false,
     exportData: false,
-    
+
     // No white label access
     manageWhiteLabel: false,
     editBranding: false,
-    
+
     // Basic features
     useAIFeatures: true,
     accessAPI: false,
     manageIntegrations: false,
   },
-  
+
   viewer: {
     // Read-only access
     createTrips: false,
@@ -182,25 +182,25 @@ export const ORGANIZATION_ROLE_PERMISSIONS: Record<OrganizationRole, Organizatio
     deleteAllTrips: false,
     deleteOwnTrips: false,
     viewAllTrips: false, // Can only see assigned trips
-    
+
     // No team management
     inviteMembers: false,
     manageMembers: false,
     assignRoles: false,
-    
+
     // No organization settings
     editOrganization: false,
     viewBilling: false,
     manageBilling: false,
-    
+
     // No analytics
     viewAnalytics: false,
     exportData: false,
-    
+
     // No white label access
     manageWhiteLabel: false,
     editBranding: false,
-    
+
     // No advanced features
     useAIFeatures: false,
     accessAPI: false,
@@ -220,7 +220,7 @@ export function hasOrganizationPermission(
   if (customPermissions && customPermissions[permission] !== undefined) {
     return customPermissions[permission]!;
   }
-  
+
   // Check role-based permissions
   return ORGANIZATION_ROLE_PERMISSIONS[userRole][permission];
 }
@@ -233,12 +233,12 @@ export function getOrganizationPermissions(
   customPermissions?: Partial<OrganizationPermissions>
 ): OrganizationPermissions {
   const rolePermissions = ORGANIZATION_ROLE_PERMISSIONS[userRole];
-  
+
   // Merge with custom permissions if provided
   if (customPermissions) {
     return { ...rolePermissions, ...customPermissions };
   }
-  
+
   return rolePermissions;
 }
 
@@ -253,20 +253,20 @@ export function canAccessTrip(
   customPermissions?: Partial<OrganizationPermissions>
 ): boolean {
   const permissions = getOrganizationPermissions(userRole, customPermissions);
-  
+
   switch (action) {
     case 'view':
       return permissions.viewAllTrips || isOwnTrip || isCollaborator;
-    
+
     case 'edit':
       if (isOwnTrip && permissions.editOwnTrips) return true;
       if (permissions.editAllTrips) return true;
       return isCollaborator; // Trip collaborators can edit
-    
+
     case 'delete':
       if (isOwnTrip && permissions.deleteOwnTrips) return true;
       return permissions.deleteAllTrips;
-    
+
     default:
       return false;
   }
@@ -303,7 +303,7 @@ export function canAssignRole(assignerRole: OrganizationRole, targetRole: Organi
     member: 2,
     viewer: 1,
   };
-  
+
   // Can only assign roles equal to or lower than your own
   return roleHierarchy[assignerRole] >= roleHierarchy[targetRole];
 }

@@ -49,13 +49,13 @@ export class GeocodeCacheService {
   get(locationName: string, cityContext?: string): GeocodedLocation | null | undefined {
     const key = this.getCacheKey(locationName, cityContext);
     const entry = this.cache.get(key);
-    
+
     if (entry) {
       const age = Date.now() - entry.timestamp;
       logger.debug(`GeocodeCache hit for "${locationName}" (age: ${Math.round(age / 1000)}s)`);
       return entry.result;
     }
-    
+
     return undefined; // undefined means not in cache
   }
 
@@ -68,7 +68,7 @@ export class GeocodeCacheService {
       result,
       timestamp: Date.now()
     };
-    
+
     this.cache.set(key, entry);
     logger.debug(`GeocodeCache stored result for "${locationName}"`);
   }
@@ -87,8 +87,8 @@ export class GeocodeCacheService {
   getStats() {
     const size = this.cache.size;
     const calculatedSize = this.cache.calculatedSize;
-    const hitRate = this.cache.size > 0 
-      ? Math.round((this.cache.size / this.MAX_ENTRIES) * 100) 
+    const hitRate = this.cache.size > 0
+      ? Math.round((this.cache.size / this.MAX_ENTRIES) * 100)
       : 0;
 
     return {
@@ -117,11 +117,11 @@ export class GeocodeCacheService {
     const beforeSize = this.cache.size;
     this.cache.purgeStale();
     const purged = beforeSize - this.cache.size;
-    
+
     if (purged > 0) {
       logger.info(`GeocodeCache purged ${purged} expired entries`);
     }
-    
+
     return purged;
   }
 }

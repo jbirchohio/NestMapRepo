@@ -28,7 +28,9 @@ export default function SocialAuthButtons({ mode, onSuccess }: SocialAuthButtons
     fetch('/api/auth/social/providers')
       .then(res => res.json())
       .then(data => setProviders(data.providers || []))
-      .catch(err => console.error('Failed to load social providers:', err));
+      .catch(err => {
+        // Handle error silently
+      });
   }, []);
 
   // Initialize Google Sign In
@@ -56,10 +58,10 @@ export default function SocialAuthButtons({ mode, onSuccess }: SocialAuthButtons
       }
 
       const data = await res.json();
-      
+
       // Update auth using jwtAuth
       jwtAuth.setAuth(data.token, data.user);
-      
+
       toast({
         title: 'Success!',
         description: mode === 'login' ? 'Welcome back!' : 'Account created successfully!',
@@ -71,7 +73,6 @@ export default function SocialAuthButtons({ mode, onSuccess }: SocialAuthButtons
         setLocation('/');
       }
     } catch (error) {
-      console.error('Google auth error:', error);
       toast({
         title: 'Authentication failed',
         description: 'Could not sign in with Google. Please try again.',
@@ -87,7 +88,6 @@ export default function SocialAuthButtons({ mode, onSuccess }: SocialAuthButtons
       window.google.accounts.id.prompt();
     }
   };
-
 
   const hasProviders = providers.length > 0;
 

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Camera, 
-  MapPin, 
-  Wifi, 
-  WifiOff, 
+import {
+  Camera,
+  MapPin,
+  Wifi,
+  WifiOff,
   Download,
   Upload,
   CheckCircle,
@@ -50,16 +50,15 @@ export function MobileFeatures() {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       const data = await response.json();
-      
+
       // Store in localStorage for offline access
       localStorage.setItem('offlineData', JSON.stringify(data));
       setOfflineData(data);
       setOfflineMode(true);
     } catch (error) {
-      console.error('Failed to enable offline mode:', error);
-    }
+      }
   };
 
   // Sync changes when back online
@@ -69,7 +68,7 @@ export function MobileFeatures() {
     try {
       // Sync any locally created activities or notes
       const pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
-      
+
       for (const change of pendingChanges) {
         await fetch(`/api/${change.type}`, {
           method: change.method,
@@ -84,8 +83,7 @@ export function MobileFeatures() {
       // Clear pending changes
       localStorage.removeItem('pendingChanges');
     } catch (error) {
-      console.error('Sync failed:', error);
-    }
+      }
   };
 
   // Mobile-optimized UI for consumer travel planning
@@ -116,15 +114,15 @@ export function MobileFeatures() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3">
-          <Button 
+          <Button
             onClick={() => window.location.href = '/itinerary'}
             className="flex flex-col items-center gap-2 h-24"
           >
             <Calendar className="h-6 w-6" />
             <span className="text-xs">View Itinerary</span>
           </Button>
-          
-          <Button 
+
+          <Button
             onClick={() => window.location.href = '/map'}
             variant="outline"
             className="flex flex-col items-center gap-2 h-24"
@@ -132,8 +130,8 @@ export function MobileFeatures() {
             <Map className="h-6 w-6" />
             <span className="text-xs">Trip Map</span>
           </Button>
-          
-          <Button 
+
+          <Button
             onClick={() => window.location.href = '/templates'}
             variant="outline"
             className="flex flex-col items-center gap-2 h-24"
@@ -141,8 +139,8 @@ export function MobileFeatures() {
             <MapPin className="h-6 w-6" />
             <span className="text-xs">Browse Templates</span>
           </Button>
-          
-          <Button 
+
+          <Button
             onClick={() => {
               if (navigator.share) {
                 navigator.share({
@@ -226,13 +224,13 @@ export function MobileFeatures() {
 async function openOfflineDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('RemvanaOffline', 1);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
+
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      
+
       if (!db.objectStoreNames.contains('trips')) {
         db.createObjectStore('trips', { keyPath: 'id' });
       }

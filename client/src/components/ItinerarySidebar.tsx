@@ -15,6 +15,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
 import useAIAssistant from "@/hooks/useAIAssistant";
+import BudgetTracker from "./BudgetTracker";
 
 interface ItinerarySidebarProps {
   trip: ClientTrip;
@@ -41,19 +42,13 @@ export default function ItinerarySidebar({
   mobileView,
   setMobileView,
 }: ItinerarySidebarProps) {
-  console.log('ItinerarySidebar render:', { 
-    tripHasDays: !!trip.days, 
-    daysLength: trip.days?.length,
-    firstDay: trip.days?.[0],
-    activeDay 
-  });
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isOptimizationModalOpen, setIsOptimizationModalOpen] = useState(false);
   const [isAutoOptimizing, setIsAutoOptimizing] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [newNote, setNewNote] = useState("");
-  
+
   const { optimizeItinerary } = useAIAssistant();
 
   // One-click auto-optimization function
@@ -61,47 +56,44 @@ export default function ItinerarySidebar({
     setIsAutoOptimizing(true);
     try {
       const result = await optimizeItinerary.mutateAsync(trip.id);
-      
+
       // Debug: Log what optimizations we received
-      console.log("Optimization result:", result);
-      
       // Apply each optimization by updating the activity times
       let successfulUpdates = 0;
       for (const optimization of result.optimizedActivities) {
         // Find activity by ID - optimization.id should be a string representation of the numeric ID
         const activity = activities.find(a => a.id.toString() === optimization.id.toString());
-        
+
         if (!activity) {
-          console.warn(`Could not find activity with ID ${optimization.id}`);
           continue;
         }
-        
+
         if (activity.time !== optimization.suggestedTime) {
           try {
-            console.log(`Updating activity ${activity.id} (${activity.title}) from ${activity.time} to ${optimization.suggestedTime}`);
-            
+            // Update activity time from optimization suggestion
+
             // Send update request with minimal data to avoid overwrites
             await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
               time: optimization.suggestedTime,
             });
-            
+
             successfulUpdates++;
           } catch (updateError) {
-            console.error(`Failed to update activity ${activity.id}:`, updateError);
+            // Handle update error silently
           }
         }
       }
-      
+
       // Refresh activities to show changes
       onActivitiesUpdated();
-      
+
       toast({
         title: "🚀 Itinerary Auto-Optimized!",
         description: `Applied ${successfulUpdates} time optimization${successfulUpdates !== 1 ? 's' : ''}. ${result.recommendations?.length ? result.recommendations.join(". ") : ''}`,
       });
     } catch (error) {
       toast({
-        title: "Optimization Failed", 
+        title: "Optimization Failed",
         description: "Unable to auto-optimize your itinerary. Please try again.",
         variant: "destructive",
       });
@@ -109,7 +101,7 @@ export default function ItinerarySidebar({
       setIsAutoOptimizing(false);
     }
   };
-  
+
   const toggleTodo = useMutation({
     mutationFn: async (todo: Todo) => {
       const res = await apiRequest("PUT", `${API_ENDPOINTS.TODOS}/${todo.id}`, {
@@ -122,7 +114,7 @@ export default function ItinerarySidebar({
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id, "todos"] });
     }
   });
-  
+
   const addTodo = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", API_ENDPOINTS.TODOS, {
@@ -156,7 +148,7 @@ export default function ItinerarySidebar({
       });
     }
   });
-  
+
   const updateNotes = useMutation({
     mutationFn: async () => {
       // If notes are empty but we're adding content, create a new note
@@ -166,7 +158,7 @@ export default function ItinerarySidebar({
           content: newNote,
         });
         return res;
-      } 
+      }
       // Otherwise update existing note (assuming there's only one note per trip for simplicity)
       else {
         const res = await apiRequest("PUT", `${API_ENDPOINTS.NOTES}/1`, {
@@ -184,27 +176,27 @@ export default function ItinerarySidebar({
       });
     }
   });
-  
+
   const handleSubmitTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       addTodo.mutate();
     }
   };
-  
+
   const handleSubmitNotes = (e: React.FormEvent) => {
     e.preventDefault();
     if (newNote.trim() !== notes) {
       updateNotes.mutate();
     }
   };
-  
+
   // Filter activities for the active day
   const activeDayActivities = activeDay ? activities.filter(activity => {
     const activityDate = new Date(activity.date);
     return activityDate.toDateString() === activeDay.toDateString();
   }) : [];
-  
+
   return (
     <>
       <aside id="sidebar" className="w-full h-full bg-white dark:bg-[hsl(var(--card))] border-r dark:border-[hsl(var(--border))] overflow-y-auto p-4">
@@ -241,12 +233,13 @@ export default function ItinerarySidebar({
 
         {/* Navigation Tabs */}
         <Tabs defaultValue="itinerary">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
             <TabsTrigger value="todo">To-Do</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="budget">Budget</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="itinerary" className="space-y-4">
             {/* Day Selection - better stacking for days */}
             <div className="mb-4">
@@ -273,7 +266,7 @@ export default function ItinerarySidebar({
             {/* Split buttons into separate containers */}
             <div className="space-y-2 mb-4">
               {/* Add Activity Button */}
-              <Button 
+              <Button
                 className="w-full"
                 onClick={() => {
                   if (onAddActivity) {
@@ -293,9 +286,9 @@ export default function ItinerarySidebar({
                 </svg>
                 Add Activity
               </Button>
-              
+
               {/* AI Assistant Button */}
-              <Button 
+              <Button
                 variant="outline"
                 className="w-full"
                 onClick={() => setIsAIModalOpen(true)}
@@ -309,7 +302,7 @@ export default function ItinerarySidebar({
               {/* AI Itinerary Optimization Buttons */}
               <div className="flex gap-2">
                 {/* One-Click Auto Optimize Button */}
-                <Button 
+                <Button
                   variant="secondary"
                   size="sm"
                   className="flex-1"
@@ -330,9 +323,9 @@ export default function ItinerarySidebar({
                     </>
                   )}
                 </Button>
-                
+
                 {/* Review & Optimize Button */}
-                <Button 
+                <Button
                   variant="outline"
                   size="sm"
                   className="flex-1"
@@ -355,14 +348,14 @@ export default function ItinerarySidebar({
             </div>
 
             {/* Itinerary Timeline */}
-            <ActivityTimeline 
-              activities={activeDayActivities} 
-              date={activeDay || new Date()} 
+            <ActivityTimeline
+              activities={activeDayActivities}
+              date={activeDay || new Date()}
               tripId={trip.id}
               onActivityUpdated={onActivitiesUpdated}
             />
           </TabsContent>
-          
+
           <TabsContent value="todo">
             <div className="space-y-4">
               <form onSubmit={handleSubmitTodo} className="flex space-x-2">
@@ -377,19 +370,19 @@ export default function ItinerarySidebar({
                   Add
                 </Button>
               </form>
-              
+
               <div className="space-y-2">
                 {todos.length === 0 ? (
                   <p className="text-center py-4 text-[hsl(var(--muted-foreground))]">No tasks yet. Add one above!</p>
                 ) : (
                   todos.map((todo) => (
                     <div key={todo.id} className="flex items-center space-x-2 p-2 hover:bg-[hsl(var(--muted))] rounded-md">
-                      <Checkbox 
-                        id={`todo-${todo.id}`} 
+                      <Checkbox
+                        id={`todo-${todo.id}`}
                         checked={(todo as any).completed ?? todo.is_completed ?? false}
                         onCheckedChange={() => toggleTodo.mutate(todo)}
                       />
-                      <label 
+                      <label
                         htmlFor={`todo-${todo.id}`}
                         className={`flex-1 cursor-pointer ${(todo as any).completed || todo.is_completed ? 'line-through text-[hsl(var(--muted-foreground))]' : ''}`}
                       >
@@ -401,7 +394,7 @@ export default function ItinerarySidebar({
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="notes">
             <form onSubmit={handleSubmitNotes}>
               <textarea
@@ -417,9 +410,16 @@ export default function ItinerarySidebar({
               </div>
             </form>
           </TabsContent>
+
+          <TabsContent value="budget">
+            <BudgetTracker 
+              trip={trip} 
+              onBudgetUpdate={onActivitiesUpdated}
+            />
+          </TabsContent>
         </Tabs>
       </aside>
-      
+
       {/* AI Assistant Modal */}
       <EnhancedAIAssistantModal
         isOpen={isAIModalOpen}

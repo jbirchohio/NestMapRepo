@@ -17,11 +17,10 @@ interface GoogleSignInProps {
 export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) {
   // Use the same client ID that was working before
   const clientId = '856158383068-c7806t6cmp3d26epm1cuktdmp299crfh.apps.googleusercontent.com';
-  
+
   useEffect(() => {
     // Check if client ID is configured
     if (!clientId) {
-      console.warn('Google Sign-In: VITE_GOOGLE_CLIENT_ID not configured');
       return;
     }
 
@@ -67,13 +66,12 @@ export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) 
       }
 
       const data = await res.json();
-      
+
       // Set the auth token
       jwtAuth.setAuth(data.token, data.user);
-      
+
       onSuccess?.();
     } catch (error) {
-      console.error('Google auth error:', error);
       onError?.(error instanceof Error ? error.message : 'Google sign-in failed');
     }
   };
@@ -83,25 +81,25 @@ export default function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) 
       onError?.('Google Sign-In is not configured. Please add VITE_GOOGLE_CLIENT_ID to your environment variables.');
       return;
     }
-    
+
     if (window.google) {
       // Use the Sign-In button flow directly instead of One Tap
       // This ensures we get an ID token, not an access token
       const buttonDiv = document.createElement('div');
       buttonDiv.style.display = 'none';
       document.body.appendChild(buttonDiv);
-      
+
       window.google.accounts.id.renderButton(buttonDiv, {
         theme: 'outline',
         size: 'large',
       });
-      
+
       // Trigger the button click programmatically
       const button = buttonDiv.querySelector('[role="button"]') as HTMLElement;
       if (button) {
         button.click();
       }
-      
+
       // Clean up
       setTimeout(() => {
         if (buttonDiv.parentNode) {

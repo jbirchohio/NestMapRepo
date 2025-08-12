@@ -14,14 +14,14 @@ const router = Router();
 router.get('/:destination/content', async (req, res) => {
   try {
     const { destination } = req.params;
-    
+
     // First, try to get from database
     const [destinationData] = await db
       .select()
       .from(destinations)
       .where(eq(destinations.slug, destination))
       .limit(1);
-    
+
     if (destinationData) {
       // Destination exists - check if it needs updating
       if (destinationData.status === 'published' && destinationData.overview && destinationData.overview.length > 100) {
@@ -30,13 +30,13 @@ router.get('/:destination/content', async (req, res) => {
           .update(destinations)
           .set({ view_count: (destinationData.view_count || 0) + 1 })
           .where(eq(destinations.id, destinationData.id));
-        
+
         // Set cache headers for browser caching
         res.set({
           'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
           'ETag': `"${destination}-${destinationData.updated_at?.toISOString().split('T')[0]}"` // Based on last update
         });
-        
+
         // Return the stored content
         return res.json({
           title: destinationData.title,
@@ -56,19 +56,19 @@ router.get('/:destination/content', async (req, res) => {
           lastUpdated: destinationData.updated_at?.toISOString()
         });
       }
-      
+
       // Destination exists but needs better content - regenerate
     }
-    
+
     // Generate fresh content (for new destinations or ones needing update)
     const destinationName = destinationData?.name || destination
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
-    
+
     // Use optimized generator for faster response times
     const content = await optimizedContentGenerator.generateDestinationContent(destinationName);
-    
+
     // Save or update in database
     if (content.title && content.overview && content.overview.length > 100) {
       try {
@@ -128,14 +128,14 @@ router.get('/:destination/content', async (req, res) => {
         logger.error(`Failed to save/update destination ${destination}:`, err);
       }
     }
-    
+
     // Return the generated content with seasonal weather
     res.json({
       ...content,
       image: content.coverImage || content.contentImage,
       lastUpdated: new Date().toISOString()
     });
-    
+
   } catch (error) {
     logger.error('Destination content error:', error);
     res.status(500).json({ error: 'Failed to load destination content' });
@@ -152,7 +152,7 @@ router.get('/popular', async (req, res) => {
       .where(eq(destinations.status, 'published'))
       .orderBy(destinations.popularity_score)
       .limit(6);
-    
+
     // If we have some destinations from DB, use them
     const dbDestinationsMapped = dbDestinations.map(dest => ({
       slug: dest.slug,
@@ -163,12 +163,12 @@ router.get('/popular', async (req, res) => {
       activities: dest.activity_count || 0,
       templateCount: dest.template_count || 0
     }));
-    
+
     // If we have less than 6 destinations, supplement with hardcoded popular ones
     if (dbDestinations.length < 6) {
       // Fallback to hardcoded list to ensure we always show destinations
       const popularDestinations = [
-        { 
+        {
           slug: 'new-york',
           name: 'New York',
           country: 'USA',
@@ -229,11 +229,11 @@ router.get('/popular', async (req, res) => {
           templateCount: 0
         }
       ];
-      
+
       // Filter out any destinations we already have from DB
       const existingSlugs = dbDestinationsMapped.map(d => d.slug);
       const additionalDestinations = popularDestinations.filter(d => !existingSlugs.includes(d.slug));
-      
+
       // Combine DB destinations with hardcoded ones
       const combinedDestinations = [...dbDestinationsMapped, ...additionalDestinations].slice(0, 6);
       res.json({ destinations: combinedDestinations });
@@ -251,20 +251,20 @@ router.get('/popular', async (req, res) => {
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
-    
+
     if (!q || typeof q !== 'string') {
       return res.status(400).json({ error: 'Search query required' });
     }
-    
+
     // First, search in database
     const dbResults = await db
       .select()
       .from(destinations)
       .where(eq(destinations.status, 'published'))
       .limit(10);
-    
+
     const dbMatches = dbResults
-      .filter(dest => 
+      .filter(dest =>
         dest.name.toLowerCase().includes(q.toLowerCase()) ||
         dest.country?.toLowerCase().includes(q.toLowerCase()) ||
         dest.region?.toLowerCase().includes(q.toLowerCase())
@@ -277,7 +277,7 @@ router.get('/search', async (req, res) => {
         inDatabase: true,
         description: dest.hero_description || dest.meta_description
       }));
-    
+
     // Extended list of worldwide destinations
     const popularDestinations = [
       // Europe
@@ -310,7 +310,7 @@ router.get('/search', async (req, res) => {
       { name: 'Helsinki', country: 'Finland', region: 'Europe' },
       { name: 'Zurich', country: 'Switzerland', region: 'Europe' },
       { name: 'Brussels', country: 'Belgium', region: 'Europe' },
-      
+
       // North America
       { name: 'New York', country: 'USA', region: 'North America' },
       { name: 'Los Angeles', country: 'USA', region: 'North America' },
@@ -329,7 +329,7 @@ router.get('/search', async (req, res) => {
       { name: 'Montreal', country: 'Canada', region: 'North America' },
       { name: 'Mexico City', country: 'Mexico', region: 'North America' },
       { name: 'Cancun', country: 'Mexico', region: 'North America' },
-      
+
       // Asia
       { name: 'Tokyo', country: 'Japan', region: 'Asia' },
       { name: 'Kyoto', country: 'Japan', region: 'Asia' },
@@ -346,26 +346,26 @@ router.get('/search', async (req, res) => {
       { name: 'Mumbai', country: 'India', region: 'Asia' },
       { name: 'Delhi', country: 'India', region: 'Asia' },
       { name: 'Kuala Lumpur', country: 'Malaysia', region: 'Asia' },
-      
+
       // Middle East
       { name: 'Dubai', country: 'UAE', region: 'Middle East' },
       { name: 'Abu Dhabi', country: 'UAE', region: 'Middle East' },
       { name: 'Istanbul', country: 'Turkey', region: 'Europe/Asia' },
       { name: 'Tel Aviv', country: 'Israel', region: 'Middle East' },
       { name: 'Jerusalem', country: 'Israel', region: 'Middle East' },
-      
+
       // Oceania
       { name: 'Sydney', country: 'Australia', region: 'Oceania' },
       { name: 'Melbourne', country: 'Australia', region: 'Oceania' },
       { name: 'Auckland', country: 'New Zealand', region: 'Oceania' },
-      
+
       // South America
       { name: 'Rio de Janeiro', country: 'Brazil', region: 'South America' },
       { name: 'São Paulo', country: 'Brazil', region: 'South America' },
       { name: 'Buenos Aires', country: 'Argentina', region: 'South America' },
       { name: 'Lima', country: 'Peru', region: 'South America' },
       { name: 'Santiago', country: 'Chile', region: 'South America' },
-      
+
       // Africa
       { name: 'Cape Town', country: 'South Africa', region: 'Africa' },
       { name: 'Johannesburg', country: 'South Africa', region: 'Africa' },
@@ -373,9 +373,9 @@ router.get('/search', async (req, res) => {
       { name: 'Marrakech', country: 'Morocco', region: 'Africa' },
       { name: 'Nairobi', country: 'Kenya', region: 'Africa' }
     ];
-    
+
     const additionalResults = popularDestinations
-      .filter(dest => 
+      .filter(dest =>
         dest.name.toLowerCase().includes(q.toLowerCase()) ||
         dest.country.toLowerCase().includes(q.toLowerCase()) ||
         dest.region.toLowerCase().includes(q.toLowerCase())
@@ -389,13 +389,13 @@ router.get('/search', async (req, res) => {
         inDatabase: false,
         description: `Explore ${dest.name}, ${dest.country}`
       }));
-    
+
     // Log for debugging
     logger.info(`Search query: ${q}, DB matches: ${dbMatches.length}, Additional: ${additionalResults.length}`);
-    
+
     // Combine results, prioritizing database results
     const allResults = [...dbMatches, ...additionalResults].slice(0, 10);
-    
+
     res.json({ results: allResults });
   } catch (error) {
     logger.error('Destination search error:', error);
@@ -407,21 +407,21 @@ router.get('/search', async (req, res) => {
 router.post('/:destination/regenerate', async (req, res) => {
   try {
     const { destination } = req.params;
-    
+
     // Get existing destination to preserve some data
     const [existingDest] = await db
       .select()
       .from(destinations)
       .where(eq(destinations.slug, destination))
       .limit(1);
-    
+
     if (!existingDest) {
       return res.status(404).json({ error: 'Destination not found' });
     }
-    
+
     // Generate fresh content
     const content = await optimizedContentGenerator.generateDestinationContent(existingDest.name);
-    
+
     // Update the destination with new content
     await db.update(destinations)
       .set({
@@ -446,11 +446,11 @@ router.post('/:destination/regenerate', async (req, res) => {
         updated_at: new Date()
       })
       .where(eq(destinations.id, existingDest.id));
-    
+
     logger.info(`Regenerated destination: ${destination}`);
-    res.json({ 
-      success: true, 
-      message: `Successfully regenerated content for ${existingDest.name}` 
+    res.json({
+      success: true,
+      message: `Successfully regenerated content for ${existingDest.name}`
     });
   } catch (error) {
     logger.error('Destination regeneration error:', error);
@@ -462,13 +462,13 @@ router.post('/:destination/regenerate', async (req, res) => {
 router.get('/:destination/activities/:type', async (req, res) => {
   try {
     const { destination, type } = req.params;
-    
+
     // Convert to proper names
     const destinationName = destination
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
-    
+
     // Generate activity content
     const activities = [
       {
@@ -482,7 +482,7 @@ router.get('/:destination/activities/:type', async (req, res) => {
       },
       // Add more mock activities
     ];
-    
+
     res.json({ activities });
   } catch (error) {
     logger.error('Activities error:', error);

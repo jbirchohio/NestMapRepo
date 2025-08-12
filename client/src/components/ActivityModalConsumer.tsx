@@ -16,16 +16,16 @@ interface ActivityModalProps {
   onSave: () => void;
 }
 
-export default function ActivityModalConsumer({ 
-  tripId, 
-  date, 
-  activity, 
-  onClose, 
-  onSave 
+export default function ActivityModalConsumer({
+  tripId,
+  date,
+  activity,
+  onClose,
+  onSave
 }: ActivityModalProps) {
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
-  
+
   // Get trip context from localStorage for geocoding proximity
   const getTripContext = () => {
     try {
@@ -34,8 +34,7 @@ export default function ActivityModalConsumer({
         return JSON.parse(tripData);
       }
     } catch (e) {
-      console.error('Error getting trip context:', e);
-    }
+      }
     return null;
   };
 
@@ -56,11 +55,9 @@ export default function ActivityModalConsumer({
           if (result) {
             locationData.latitude = result.latitude.toString();
             locationData.longitude = result.longitude.toString();
-            console.log(`Geocoded with trip context: ${data.locationName}`, result);
-          }
+            }
         } catch (error) {
-          console.log("Could not geocode location");
-        }
+          }
       }
 
       const activityData = {
@@ -69,23 +66,23 @@ export default function ActivityModalConsumer({
         tripId: typeof tripId === 'string' ? parseInt(tripId) : tripId,
         order: 0,  // New activities don't have an order yet
       };
-      
+
       const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
-      
+
       if (isGuestTrip) {
         const newActivity = {
           ...activityData,
           id: Date.now(),
           date: data.date.toISOString(),
         };
-        
+
         const existingActivities = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
         existingActivities.push(newActivity);
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(existingActivities));
         return newActivity;
       }
-      
+
       return apiRequest("POST", API_ENDPOINTS.ACTIVITIES, activityData);
     },
     onSuccess: () => {
@@ -105,22 +102,22 @@ export default function ActivityModalConsumer({
       });
     },
   });
-  
+
   const updateActivity = useMutation({
     mutationFn: async (data: any) => {
       if (!activity) return null;
-      
+
       // Geocode if location changed but no new coordinates provided
       let locationData = {
         latitude: data.latitude || activity.latitude || "",
         longitude: data.longitude || activity.longitude || "",
       };
-      
+
       // Check if location name changed and needs geocoding
       const locationChanged = data.locationName && data.locationName !== activity.locationName;
-      const needsGeocoding = locationChanged && !data.latitude && !data.longitude && 
+      const needsGeocoding = locationChanged && !data.latitude && !data.longitude &&
                              data.locationName !== "Find a spot nearby";
-      
+
       if (needsGeocoding) {
         try {
           const tripContext = getTripContext();
@@ -128,18 +125,15 @@ export default function ActivityModalConsumer({
           if (result) {
             locationData.latitude = result.latitude.toString();
             locationData.longitude = result.longitude.toString();
-            console.log(`Geocoded updated location with context: ${data.locationName}`, result);
-          } else {
-            console.log(`Could not geocode updated location: ${data.locationName}`);
-          }
+            } else {
+            }
         } catch (error) {
-          console.log("Geocoding error during update:", error);
-        }
+          }
       }
-      
+
       const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
-      
+
       if (isGuestTrip) {
         const updatedActivity = {
           ...activity,
@@ -147,15 +141,15 @@ export default function ActivityModalConsumer({
           ...locationData,
           date: typeof data.date === 'string' ? data.date : data.date.toISOString(),
         };
-        
+
         const existingActivities: ClientActivity[] = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
-        const updatedActivities = existingActivities.map((act: ClientActivity) => 
+        const updatedActivities = existingActivities.map((act: ClientActivity) =>
           act.id === activity.id ? updatedActivity : act
         );
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(updatedActivities));
         return updatedActivity;
       }
-      
+
       // Ensure we send the proper data structure for update
       const updateData = {
         title: data.title,
@@ -163,11 +157,17 @@ export default function ActivityModalConsumer({
         locationName: data.locationName,
         notes: data.notes,
         date: data.date,
+        // Cost tracking fields
+        price: data.price || data.estimatedCost,
+        actualCost: data.actualCost,
+        costCategory: data.costCategory,
+        isPaid: data.isPaid,
+        splitBetween: data.splitBetween,
         ...locationData,
         tripId: typeof tripId === 'string' ? parseInt(tripId) : tripId,
         order: activity.order,
       };
-      
+
       return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, updateData);
     },
     onSuccess: () => {

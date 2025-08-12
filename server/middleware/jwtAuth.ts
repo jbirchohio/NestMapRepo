@@ -28,7 +28,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
   // Get the path relative to the /api mount point
   const relativePath = req.path;
   const fullPath = req.originalUrl;
-  
+
   // Define paths that don't require authentication (relative to /api mount point)
   const publicPaths = [
     '/auth',
@@ -42,29 +42,29 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     '/acme-challenge',
     '/demo'
   ];
-  
+
   // Templates need special handling - GET is public, but POST/PUT need auth
   // Template share links are always public (check this first)
   const isTemplateShare = relativePath.startsWith('/templates/share/') && req.method === 'GET';
   // Regular template reads are also public for GET
   const isTemplateRead = relativePath.match(/^\/templates($|\/\d+$|\/[^\/]+$)/) && req.method === 'GET' && !isTemplateShare;
-  
+
   // Debug logging for template share requests
   if (relativePath.includes('/templates/share/') || fullPath.includes('/templates/share/')) {
-    logger.info('Template share path detected:', { 
-      relativePath, 
+    logger.info('Template share path detected:', {
+      relativePath,
       fullPath,
       originalUrl: req.originalUrl,
-      method: req.method, 
-      isTemplateShare, 
-      isTemplateRead 
+      method: req.method,
+      isTemplateShare,
+      isTemplateRead
     });
   }
-  
+
   if (isTemplateRead || isTemplateShare) {
     return next();
   }
-  
+
   // Destinations content is public (for SEO)
   const isDestinationContent = relativePath.match(/^\/destinations\/[^\/]+\/content$/) && req.method === 'GET';
   const isPopularDestinations = relativePath === '/destinations/popular' && req.method === 'GET';
@@ -72,31 +72,38 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
   if (isDestinationContent || isPopularDestinations || isDestinationSearch) {
     return next();
   }
-  
+
   // In test environment, log the paths for debugging
   if (process.env.NODE_ENV === 'test' && relativePath.includes('auth')) {
     logger.info('JWT middleware checking path:', { relativePath, fullPath, originalUrl: req.originalUrl });
   }
-  
+
   // Check both req.path and req.originalUrl for public paths
   const isPublicPath = publicPaths.some(path => {
-    return relativePath.startsWith(path) || 
+    return relativePath.startsWith(path) ||
            fullPath.startsWith(`/api${path}`) ||
            fullPath.includes(`/api${path}`);
   });
-  
+
   if (isPublicPath || isTemplateShare) {
     return next();
   }
 
-  // Require valid JWT token for all protected routes
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // Check for JWT token in cookie first, then header as fallback
+  let token = (req as any).cookies?.auth_token;
+  
+  // Fallback to authorization header for API clients and mobile apps
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  
+  if (!token) {
     return res.status(401).json({ message: 'Authentication required' });
   }
 
-  const token = authHeader.substring(7);
-  
   try {
     // Verify JWT signature
     const [headerB64, payloadB64, signatureB64] = token.split('.');
@@ -121,7 +128,7 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
 
     // Decode payload
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
-    
+
     // Check expiration
     if (payload.exp && Date.now() >= payload.exp * 1000) {
       return res.status(401).json({ message: 'Token expired' });

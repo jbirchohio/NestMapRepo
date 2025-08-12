@@ -38,14 +38,14 @@ export class GeocodingBatchService {
     if (!this.mapboxToken) {
       logger.warn('No Mapbox token configured - geocoding will be unavailable');
     }
-    
+
     // Create a queue with concurrency limit to avoid rate limiting
-    this.queue = new PQueue({ 
+    this.queue = new PQueue({
       concurrency: 3, // Process 3 geocoding requests in parallel
       interval: 1000, // Per second
       intervalCap: 10 // Max 10 per second
     });
-    
+
     this.batchBuffer = new Map();
   }
 
@@ -55,7 +55,7 @@ export class GeocodingBatchService {
   async processBatch(requests: BatchGeocodingRequest[]): Promise<BatchGeocodingResult[]> {
     const results: BatchGeocodingResult[] = [];
     const uncachedRequests: BatchGeocodingRequest[] = [];
-    
+
     // Step 1: Check cache for all requests
     for (const req of requests) {
       const cached = geocodeCacheService.get(req.locationName, req.cityContext);
@@ -69,13 +69,13 @@ export class GeocodingBatchService {
         uncachedRequests.push(req);
       }
     }
-    
+
     logger.info(`Batch geocoding: ${requests.length} total, ${results.length} from cache, ${uncachedRequests.length} to process`);
-    
+
     if (uncachedRequests.length === 0) {
       return results;
     }
-    
+
     // Step 2: Deduplicate uncached requests
     const uniqueLocations = new Map<string, BatchGeocodingRequest[]>();
     for (const req of uncachedRequests) {
@@ -85,13 +85,13 @@ export class GeocodingBatchService {
       }
       uniqueLocations.get(key)!.push(req);
     }
-    
+
     // Step 3: Process unique locations with rate limiting
-    const geocodingPromises = Array.from(uniqueLocations.entries()).map(([key, reqs]) => 
+    const geocodingPromises = Array.from(uniqueLocations.entries()).map(([key, reqs]) =>
       this.queue.add(async () => {
         const firstReq = reqs[0];
         const location = await this.geocodeSingle(firstReq.locationName, firstReq.cityContext);
-        
+
         // Apply result to all requests with the same location
         for (const req of reqs) {
           results.push({
@@ -100,13 +100,13 @@ export class GeocodingBatchService {
             fromCache: false
           });
         }
-        
+
         return location;
       })
     );
-    
+
     await Promise.all(geocodingPromises);
-    
+
     return results;
   }
 
@@ -119,7 +119,7 @@ export class GeocodingBatchService {
     }
 
     try {
-      const searchQuery = cityContext 
+      const searchQuery = cityContext
         ? `${locationName}, ${cityContext}`
         : locationName;
 
@@ -134,11 +134,11 @@ export class GeocodingBatchService {
       }
 
       const data = await response.json() as any;
-      
+
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
         const [longitude, latitude] = feature.center;
-        
+
         const result = {
           latitude: latitude.toString(),
           longitude: longitude.toString(),
@@ -164,7 +164,7 @@ export class GeocodingBatchService {
   async queueForGeocoding(request: BatchGeocodingRequest): Promise<BatchGeocodingResult> {
     return new Promise((resolve) => {
       const key = `${request.locationName}:${request.cityContext || ''}`;
-      
+
       // Check cache first
       const cached = geocodeCacheService.get(request.locationName, request.cityContext);
       if (cached !== undefined) {
@@ -175,22 +175,22 @@ export class GeocodingBatchService {
         });
         return;
       }
-      
+
       // Add to batch buffer
       if (!this.batchBuffer.has(key)) {
         this.batchBuffer.set(key, []);
       }
-      
+
       this.batchBuffer.get(key)!.push({
         ...request,
         callback: resolve
       } as any);
-      
+
       // Reset timer to process batch
       if (this.batchTimer) {
         clearTimeout(this.batchTimer);
       }
-      
+
       this.batchTimer = setTimeout(() => {
         this.processBatchBuffer();
       }, this.BATCH_DELAY_MS);
@@ -202,15 +202,15 @@ export class GeocodingBatchService {
    */
   private async processBatchBuffer() {
     if (this.batchBuffer.size === 0) return;
-    
+
     const allRequests: any[] = [];
     for (const requests of this.batchBuffer.values()) {
       allRequests.push(...requests);
     }
-    
+
     this.batchBuffer.clear();
     this.batchTimer = null;
-    
+
     // Process in chunks
     for (let i = 0; i < allRequests.length; i += this.BATCH_SIZE) {
       const chunk = allRequests.slice(i, i + this.BATCH_SIZE);
@@ -219,9 +219,9 @@ export class GeocodingBatchService {
         locationName: r.locationName,
         cityContext: r.cityContext
       }));
-      
+
       const results = await this.processBatch(batchRequests);
-      
+
       // Call callbacks with results
       for (const req of chunk) {
         const result = results.find(r => r.id === req.id);
@@ -243,7 +243,7 @@ export class GeocodingBatchService {
   }>, cityContext?: string): Promise<Map<string, GeocodedLocation | null>> {
     const results = new Map<string, GeocodedLocation | null>();
     const toGeocode: BatchGeocodingRequest[] = [];
-    
+
     // Filter activities that need geocoding
     for (const activity of activities) {
       if (activity.locationName && (!activity.latitude || !activity.longitude)) {
@@ -260,18 +260,18 @@ export class GeocodingBatchService {
         });
       }
     }
-    
+
     if (toGeocode.length === 0) {
       return results;
     }
-    
+
     // Process batch
     const geocoded = await this.processBatch(toGeocode);
-    
+
     for (const result of geocoded) {
       results.set(result.id, result.location);
     }
-    
+
     return results;
   }
 
@@ -279,23 +279,23 @@ export class GeocodingBatchService {
    * Preload cache with common locations
    */
   async preloadCommonLocations(locations: string[], cityContext?: string) {
-    const uncached = locations.filter(loc => 
+    const uncached = locations.filter(loc =>
       geocodeCacheService.get(loc, cityContext) === undefined
     );
-    
+
     if (uncached.length === 0) {
       logger.info('All common locations already cached');
       return;
     }
-    
+
     logger.info(`Preloading ${uncached.length} common locations`);
-    
+
     const requests = uncached.map((loc, i) => ({
       id: `preload-${i}`,
       locationName: loc,
       cityContext
     }));
-    
+
     await this.processBatch(requests);
     logger.info('Common locations preloaded to cache');
   }

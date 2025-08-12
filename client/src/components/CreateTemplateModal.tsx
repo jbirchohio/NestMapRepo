@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { 
-  Package, Upload, DollarSign, Tag, Image, 
+import {
+  Package, Upload, DollarSign, Tag, Image,
   AlertCircle, Check, X, Sparkles
 } from 'lucide-react';
 import {
@@ -42,7 +42,7 @@ export default function CreateTemplateModal({
 }: CreateTemplateModalProps) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  
+
   const [title, setTitle] = useState(trip.title + ' - Travel Guide');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState([19]);
@@ -84,8 +84,8 @@ export default function CreateTemplateModal({
     onSuccess: (template) => {
       toast({
         title: 'Template created!',
-        description: isPublic 
-          ? 'Your template is now live in the marketplace.' 
+        description: isPublic
+          ? 'Your template is now live in the marketplace.'
           : 'Your template has been saved as a draft.',
       });
       onClose();
@@ -101,8 +101,8 @@ export default function CreateTemplateModal({
   });
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
+    setSelectedTags(prev =>
+      prev.includes(tag)
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
@@ -272,8 +272,8 @@ export default function CreateTemplateModal({
           <Alert className="bg-green-50 border-green-200">
             <Sparkles className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              <strong>Revenue Potential:</strong> 10 sales = ${(price[0] * 0.7 * 10).toFixed(0)}, 
-              50 sales = ${(price[0] * 0.7 * 50).toFixed(0)}, 
+              <strong>Revenue Potential:</strong> 10 sales = ${(price[0] * 0.7 * 10).toFixed(0)},
+              50 sales = ${(price[0] * 0.7 * 50).toFixed(0)},
               100 sales = ${(price[0] * 0.7 * 100).toFixed(0)}
             </AlertDescription>
           </Alert>
@@ -286,9 +286,9 @@ export default function CreateTemplateModal({
           <Button
             onClick={() => createTemplateMutation.mutate()}
             disabled={
-              !title || 
-              !description || 
-              selectedTags.length === 0 || 
+              !title ||
+              !description ||
+              selectedTags.length === 0 ||
               selectedTags.length > 5 ||
               createTemplateMutation.isPending
             }

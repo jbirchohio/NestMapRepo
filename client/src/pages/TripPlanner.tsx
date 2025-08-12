@@ -36,7 +36,6 @@ export default function TripPlanner() {
   // If no trip ID, redirect to home
   useEffect(() => {
     if (!tripId) {
-      console.log('No trip ID provided, redirecting to home');
       setLocation('/');
     }
   }, [tripId, setLocation]);
@@ -119,7 +118,7 @@ export default function TripPlanner() {
         new Date(trip.endDate)
       );
       
-      console.log('Setting tripDays:', days.length, 'days for trip', trip.id);
+      // Setting trip days
       
       // Set days in state
       setTripDays(days);
@@ -133,7 +132,7 @@ export default function TripPlanner() {
           longitude: trip.longitude
         }));
       } catch (e) {
-        console.error("Error saving trip geocoding context:", e);
+        // Error saving trip geocoding context
       }
     }
   }, [trip, tripId]);
@@ -177,16 +176,7 @@ export default function TripPlanner() {
       const hasLat = activity.latitude && activity.latitude !== "0" && !isNaN(parseFloat(activity.latitude));
       const hasLng = activity.longitude && activity.longitude !== "0" && !isNaN(parseFloat(activity.longitude));
       
-      // Debug log
-      console.log('Activity coordinate check:', {
-        id: activity.id,
-        title: activity.title,
-        latitude: activity.latitude,
-        longitude: activity.longitude,
-        hasLat,
-        hasLng,
-        included: hasLat && hasLng
-      });
+      // Check if activity has valid coordinates
       
       return hasLat && hasLng;
     })
@@ -246,25 +236,12 @@ export default function TripPlanner() {
     ? [parseFloat(trip.cityLongitude), parseFloat(trip.cityLatitude)] as [number, number]
     : [-74.006, 40.7128] as [number, number]; // Default to NYC coordinates instead of undefined
 
-  // Debug map center calculation
-  console.log('Map center calculation debug:', {
-    hasMarkers: mapMarkers.length > 0,
-    markerCount: mapMarkers.length,
-    tripCityLat: trip?.cityLatitude,
-    tripCityLng: trip?.cityLongitude,
-    tripObject: trip,
-    parsedLat: trip?.cityLatitude ? parseFloat(trip.cityLatitude) : 'no lat',
-    parsedLng: trip?.cityLongitude ? parseFloat(trip.cityLongitude) : 'no lng',
-    isValidLat: trip?.cityLatitude ? !isNaN(parseFloat(trip.cityLatitude)) : false,
-    isValidLng: trip?.cityLongitude ? !isNaN(parseFloat(trip.cityLongitude)) : false,
-    calculatedCenter: mapCenter
-  });
+  // Map center has been calculated based on markers or trip city coordinates
   
   // Handle activity marker click
   const handleMarkerClick = (marker: MapMarker) => {
     if (marker.activity) {
       // Could open activity details modal here
-      console.log("Clicked activity:", marker.activity);
     }
   };
   
@@ -293,7 +270,7 @@ export default function TripPlanner() {
         description: "Share settings updated successfully",
       });
     } catch (error) {
-      console.error("Error updating share settings:", error);
+      // Error updating share settings
       toast({
         title: "Error",
         description: "Failed to update share settings",
@@ -319,7 +296,7 @@ export default function TripPlanner() {
   
   // Check if trip exists
   if (!isTripLoading && !trip && tripId) {
-    console.log('Trip not found:', { tripId, trip, tripError });
+    // Trip not found
     return (
       <AppShell>
         <div className="flex-1 flex items-center justify-center">
@@ -337,7 +314,7 @@ export default function TripPlanner() {
   
   // Check if activeDay is set
   if (!activeDay && trip) {
-    console.log('Trip loaded but no active day:', { trip });
+    // Trip loaded but no active day
     // This shouldn't happen, but if it does, set it
     if (trip.startDate) {
       setActiveDay(new Date(trip.startDate));
@@ -347,14 +324,7 @@ export default function TripPlanner() {
   
   // Error state
   if (!trip || tripError || activitiesError) {
-    console.log('Trip planner error state:', {
-      trip,
-      tripError,
-      activitiesError,
-      isTripLoading,
-      isActivitiesLoading,
-      tripId
-    });
+    // Trip planner error state
     return (
       <AppShell>
         <div className="flex-1 flex items-center justify-center">
@@ -386,7 +356,7 @@ export default function TripPlanner() {
           tripId: trip.id,
         });
       } catch (error) {
-        console.error('Error adding activity:', error);
+        // Error adding activity
       }
     }
     refetchActivities();

@@ -12,16 +12,16 @@ export async function backupDatabase(): Promise<string> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const backupDir = path.join(process.cwd(), 'backups');
   const backupFile = path.join(backupDir, `remvana-backup-${timestamp}.sql`);
-  
+
   // Ensure backup directory exists
   await fs.mkdir(backupDir, { recursive: true });
-  
+
   // Get database URL
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error('DATABASE_URL not configured');
   }
-  
+
   try {
     // For PostgreSQL, use pg_dump
     // Parse connection URL
@@ -31,24 +31,24 @@ export async function backupDatabase(): Promise<string> {
     const database = url.pathname.slice(1);
     const username = url.username;
     const password = url.password;
-    
+
     // Set PGPASSWORD environment variable
     process.env.PGPASSWORD = password;
-    
+
     // Run pg_dump
     const command = `pg_dump -h ${host} -p ${port} -U ${username} -d ${database} -f "${backupFile}"`;
-    
+
     await execAsync(command);
-    
+
     // Clean up old backups
     await cleanupOldBackups(backupDir);
-    
+
     // Log backup
     await db.execute(sql`
       INSERT INTO backup_logs (backup_file, backup_size, status, created_at)
       VALUES (${backupFile}, ${(await fs.stat(backupFile)).size}, 'success', NOW())
     `);
-    
+
     return backupFile;
   } catch (error) {
     // Log failed backup
@@ -56,7 +56,7 @@ export async function backupDatabase(): Promise<string> {
       INSERT INTO backup_logs (backup_file, status, error_message, created_at)
       VALUES (${backupFile}, 'failed', ${String(error)}, NOW())
     `);
-    
+
     throw error;
   } finally {
     // Clean up environment
@@ -68,18 +68,17 @@ async function cleanupOldBackups(backupDir: string) {
   const retentionDays = await getSetting('backup_retention_days') || 30;
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
-  
+
   const files = await fs.readdir(backupDir);
-  
+
   for (const file of files) {
     if (file.startsWith('remvana-backup-')) {
       const filePath = path.join(backupDir, file);
       const stats = await fs.stat(filePath);
-      
+
       if (stats.mtime < cutoffDate) {
         await fs.unlink(filePath);
-        console.log(`Deleted old backup: ${file}`);
-      }
+        }
     }
   }
 }

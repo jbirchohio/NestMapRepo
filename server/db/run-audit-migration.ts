@@ -14,20 +14,15 @@ const DATABASE_URL = process.env.DATABASE_URL;
 
 async function runMigration() {
   try {
-    console.log('Adding risk_level to superadmin_audit_logs...');
-    
     const sql = neon(DATABASE_URL!);
-    
+
     // Read and execute the SQL
     const sqlPath = path.join(__dirname, 'add-audit-risk-level.sql');
     const migrationSQL = fs.readFileSync(sqlPath, 'utf-8');
-    
+
     await sql(migrationSQL);
-    
-    console.log('Migration completed successfully!');
-    
-  } catch (error) {
-    console.error('Migration failed:', error);
+
+    } catch (error) {
     process.exit(1);
   }
 }

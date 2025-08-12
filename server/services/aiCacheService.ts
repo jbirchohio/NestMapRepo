@@ -28,20 +28,17 @@ class AISearchCache {
     const entry = this.cache.get(key);
     
     if (!entry) {
-      console.log(`Cache miss for: ${key}`);
       return null;
     }
     
     // Check if expired
     if (Date.now() > entry.expiry) {
       this.cache.delete(key);
-      console.log(`Cache expired for: ${key}`);
       return null;
     }
     
     // Update hit count
     entry.hits++;
-    console.log(`Cache hit for: ${key} (${entry.hits} total hits)`);
     
     return entry.data;
   }
@@ -63,7 +60,6 @@ class AISearchCache {
         this.currentMemoryUsage -= entrySize;
       }
       this.cache.delete(firstKey);
-      console.log(`Cache evicted: ${firstKey} (memory: ${(this.currentMemoryUsage / 1024 / 1024).toFixed(2)}MB)`);
     }
     
     this.cache.set(key, {
@@ -73,7 +69,6 @@ class AISearchCache {
     });
     
     this.currentMemoryUsage += dataSize;
-    console.log(`Cached: ${key} for ${ttl}s (size: ${(dataSize / 1024).toFixed(2)}KB, total: ${(this.currentMemoryUsage / 1024 / 1024).toFixed(2)}MB)`);
   }
 
   // Generate consistent cache keys
@@ -121,15 +116,13 @@ class AISearchCache {
       }
     });
     
-    if (cleaned > 0) {
-      console.log(`Cleaned ${cleaned} expired cache entries`);
-    }
+    // Cleaned expired entries
   }
 
   // Clear all cache
   clear(): void {
     this.cache.clear();
-    console.log('Cache cleared');
+    this.currentMemoryUsage = 0;
   }
 }
 

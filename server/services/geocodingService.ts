@@ -40,7 +40,7 @@ export class GeocodingService {
 
     try {
       // Add city context if provided for better results
-      const searchQuery = cityContext 
+      const searchQuery = cityContext
         ? `${locationName}, ${cityContext}`
         : locationName;
 
@@ -56,11 +56,11 @@ export class GeocodingService {
       }
 
       const data = await response.json() as any;
-      
+
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
         const [longitude, latitude] = feature.center;
-        
+
         const result = {
           latitude: latitude.toString(),
           longitude: longitude.toString(),
@@ -90,7 +90,7 @@ export class GeocodingService {
     locations: Array<{ name: string; cityContext?: string }>
   ): Promise<Map<string, GeocodedLocation | null>> {
     const results = new Map<string, GeocodedLocation | null>();
-    
+
     // Deduplicate locations first
     const uniqueLocations = new Map<string, { name: string; cityContext?: string }>();
     for (const loc of locations) {
@@ -99,9 +99,9 @@ export class GeocodingService {
         uniqueLocations.set(key, loc);
       }
     }
-    
+
     logger.info(`Batch geocoding: ${locations.length} locations, ${uniqueLocations.size} unique`);
-    
+
     // Check cache for all locations first
     const toGeocode: Array<{ name: string; cityContext?: string }> = [];
     for (const loc of uniqueLocations.values()) {
@@ -112,19 +112,19 @@ export class GeocodingService {
         toGeocode.push(loc);
       }
     }
-    
+
     if (toGeocode.length === 0) {
       logger.info('All locations found in cache');
       return results;
     }
-    
+
     logger.info(`${results.size} locations from cache, ${toGeocode.length} need geocoding`);
-    
+
     // Process uncached locations in batches to avoid rate limiting
     const batchSize = 5;
     for (let i = 0; i < toGeocode.length; i += batchSize) {
       const batch = toGeocode.slice(i, i + batchSize);
-      
+
       const promises = batch.map(async (loc) => {
         const result = await this.geocodeLocation(loc.name, loc.cityContext);
         results.set(loc.name, result);
@@ -132,10 +132,10 @@ export class GeocodingService {
         await new Promise(resolve => setTimeout(resolve, 200));
         return result;
       });
-      
+
       await Promise.all(promises);
     }
-    
+
     return results;
   }
 
@@ -159,9 +159,9 @@ export class GeocodingService {
     if (process.env.OPENAI_API_KEY) {
       try {
         const { callOpenAI } = await import('../openai');
-        
+
         const prompt = `Find the approximate latitude and longitude coordinates for: ${locationName}${cityContext ? ` in ${cityContext}` : ''}.
-        
+
 Return ONLY a JSON object with this exact format:
 {
   "latitude": "number",
@@ -174,11 +174,11 @@ If you cannot find the location, return:
   "longitude": null
 }`;
 
-        const response = await callOpenAI(prompt, { 
-          temperature: 0.1, 
-          max_tokens: 100 
+        const response = await callOpenAI(prompt, {
+          temperature: 0.1,
+          max_tokens: 100
         });
-        
+
         try {
           const coords = JSON.parse(response);
           if (coords.latitude && coords.longitude) {

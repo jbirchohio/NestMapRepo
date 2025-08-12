@@ -9,12 +9,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Sparkles, 
-  MapPin, 
-  Calendar, 
-  DollarSign, 
-  Users, 
+import {
+  Sparkles,
+  MapPin,
+  Calendar,
+  DollarSign,
+  Users,
   Briefcase,
   Clock,
   Utensils,
@@ -172,7 +172,7 @@ export default function AITripGenerator() {
       });
       return;
     }
-    
+
     createItineraryMutation.mutate({
       tripData: generatedTrip!,
       clientEmail
@@ -185,7 +185,7 @@ export default function AITripGenerator() {
 
   const generateTripMutation = useMutation({
     mutationFn: async (userPrompt: string) => {
-      const response = await apiRequest('POST', '/api/ai/generate-trip', { 
+      const response = await apiRequest('POST', '/api/ai/generate-trip', {
         prompt: userPrompt,
         conversation,
         tripId: null // Can be connected to existing trip if needed
@@ -246,7 +246,7 @@ export default function AITripGenerator() {
           </h1>
         </div>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          {showQuestions ? 
+          {showQuestions ?
             "Let me gather a few more details to create your perfect vacation itinerary!" :
             "Tell me about your dream vacation and I'll create a complete itinerary with activities, hotels, and restaurants."
           }
@@ -304,7 +304,7 @@ export default function AITripGenerator() {
               disabled={isGenerating}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500">
               Press Shift + Enter for new line, Enter to generate
@@ -349,7 +349,7 @@ export default function AITripGenerator() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="p-4 border-pink-100">
           <div className="flex items-center space-x-3">
             <Calendar className="w-5 h-5 text-pink-600" />
@@ -359,7 +359,7 @@ export default function AITripGenerator() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="p-4 border-purple-100">
           <div className="flex items-center space-x-3">
             <DollarSign className="w-5 h-5 text-purple-600" />
@@ -438,7 +438,7 @@ function TripResultsView({ trip, onBack }: TripResultsViewProps) {
       });
       return;
     }
-    
+
     createItineraryMutation.mutate({
       tripData: trip,
       clientEmail
@@ -615,7 +615,7 @@ function TripResultsView({ trip, onBack }: TripResultsViewProps) {
           <div className="mt-6 space-y-4 border-t pt-4">
             <h3 className="font-semibold text-gray-900">Client Tracking</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button 
+              <Button
                 onClick={handleCreateItinerary}
                 className="bg-blue-600 hover:bg-blue-700"
                 disabled={createItineraryMutation.isPending}
@@ -623,9 +623,9 @@ function TripResultsView({ trip, onBack }: TripResultsViewProps) {
                 <Send className="w-4 h-4 mr-2" />
                 {createItineraryMutation.isPending ? "Creating..." : "Send Mobile Tracking Link"}
               </Button>
-              
+
               {trip?.clientAccess?.trackingCode && (
-                <Button 
+                <Button
                   onClick={() => handleShareItinerary(trip.clientAccess!.trackingCode)}
                   variant="outline"
                   disabled={shareItineraryMutation.isPending}
@@ -653,14 +653,14 @@ function TripResultsView({ trip, onBack }: TripResultsViewProps) {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button 
+                  <Button
                     onClick={handleSubmitClientForm}
                     disabled={createItineraryMutation.isPending}
                     className="flex-1"
                   >
                     Send Tracking Link
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => setShowClientForm(false)}
                     variant="outline"
                   >

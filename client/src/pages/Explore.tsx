@@ -8,7 +8,7 @@ import NewTripModalConsumer from '@/components/NewTripModalConsumer';
 import ViatorMarketplace from '@/components/ViatorMarketplace';
 import PopularDestinations from '@/components/PopularDestinations';
 import AuthModal from '@/components/auth/AuthModal';
-import { 
+import {
   Compass, Map, Calendar, Users, Brain, Sparkles,
   TrendingUp, Clock, Globe, Star, ChevronRight, Zap,
   Target, Route, Share2, DollarSign
@@ -82,11 +82,11 @@ export default function Explore() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const authParam = params.get('auth');
-    
+
     if (authParam === 'login' || authParam === 'signup') {
       setAuthView(authParam as 'login' | 'signup');
       setIsAuthModalOpen(true);
-      
+
       // Clean up URL
       window.history.replaceState({}, '', '/');
     }
@@ -106,7 +106,7 @@ export default function Explore() {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10" />
-        
+
         <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -119,7 +119,7 @@ export default function Explore() {
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
               AI-powered trip planning that actually saves time. Visual maps, smart suggestions, and one-click booking.
             </p>
-            
+
             <div className="flex gap-4 justify-center mb-12">
               <Button
                 size="lg"
@@ -228,7 +228,7 @@ export default function Explore() {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-4">Book Amazing Experiences</h2>
             <p className="text-gray-600 mb-6">Powered by Viator - Instant confirmation on thousands of tours</p>
-            
+
             {/* City Search */}
             <div className="max-w-md mx-auto flex gap-2">
               <input
@@ -244,7 +244,7 @@ export default function Explore() {
                 }}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
-              <Button 
+              <Button
                 className="bg-purple-600 hover:bg-purple-700 text-white"
                 onClick={() => {
                   // Force re-render by trimming
@@ -257,7 +257,7 @@ export default function Explore() {
               </Button>
             </div>
           </div>
-          <ViatorMarketplace 
+          <ViatorMarketplace
             destination={selectedCity}
             dates={{ start: new Date(), end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }}
           />
@@ -274,7 +274,6 @@ export default function Explore() {
           <PopularDestinations />
         </div>
       </section>
-
 
       {/* CTA Section */}
       <section className="py-16 px-4">

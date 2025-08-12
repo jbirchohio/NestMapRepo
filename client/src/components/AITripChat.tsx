@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { 
-  Send, 
-  Sparkles, 
-  Loader2, 
-  MapPin, 
+import {
+  Send,
+  Sparkles,
+  Loader2,
+  MapPin,
   Calendar,
   Clock,
   Plus,
@@ -39,7 +39,7 @@ export default function AITripChat({ tripId, tripDetails, onAddActivity, onUpdat
       id: '1',
       role: 'assistant',
       content: `Hi! I'm your AI travel assistant. I can help you:
-      
+
 • Add activities to your trip
 • Optimize your schedule
 • Find restaurants and attractions
@@ -112,15 +112,13 @@ What would you like to do?`,
         handleParsedActivities(data.activities);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: "I'm having trouble processing that request. Could you try rephrasing it?",
         timestamp: new Date(),
       };
-      
+
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -136,23 +134,23 @@ What would you like to do?`,
       timestamp: new Date(),
       activities,
     };
-    
+
     setMessages(prev => [...prev, confirmMessage]);
   };
 
   const handleAddParsedActivities = async (activities: any[]) => {
     if (onUpdateItinerary) {
       onUpdateItinerary(activities);
-      
+
       const successMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
         content: `Great! I've added ${activities.length} activities to your trip. You can see them in your itinerary.`,
         timestamp: new Date(),
       };
-      
+
       setMessages(prev => [...prev, successMessage]);
-      
+
       toast({
         title: 'Activities added!',
         description: `${activities.length} activities have been added to your trip.`,
@@ -201,16 +199,16 @@ What would you like to do?`,
                   <Bot className="w-4 h-4 text-white" />
                 </div>
               )}
-              
+
               <div className={`max-w-[80%] ${message.role === 'user' ? 'order-first' : ''}`}>
                 <div className={`rounded-2xl px-4 py-2 ${
-                  message.role === 'user' 
-                    ? 'bg-primary text-primary-foreground' 
+                  message.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-slate-100 dark:bg-slate-800'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 </div>
-                
+
                 {/* Show parsed activities */}
                 {message.activities && message.activities.length > 0 && (
                   <div className="mt-2 space-y-2">
@@ -253,7 +251,7 @@ What would you like to do?`,
                     </Button>
                   </div>
                 )}
-                
+
                 {/* Show suggestions */}
                 {message.suggestions && message.suggestions.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -270,12 +268,12 @@ What would you like to do?`,
                     ))}
                   </div>
                 )}
-                
+
                 <div className="text-xs text-muted-foreground mt-1">
                   {format(message.timestamp, 'h:mm a')}
                 </div>
               </div>
-              
+
               {message.role === 'user' && (
                 <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
                   <User className="w-4 h-4" />
@@ -284,7 +282,7 @@ What would you like to do?`,
             </motion.div>
           ))}
         </AnimatePresence>
-        
+
         {isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -299,7 +297,7 @@ What would you like to do?`,
             </div>
           </motion.div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 

@@ -16,7 +16,7 @@ export class TemplateCopyServiceV2 {
    * Copy a template to a user's trips with full transaction support
    */
   async copyTemplateToTrip(
-    templateId: number, 
+    templateId: number,
     userId: number,
     startDate?: Date,
     endDate?: Date
@@ -37,17 +37,17 @@ export class TemplateCopyServiceV2 {
         }
 
         const tripData = template.trip_data as any;
-        
+
         // Calculate dates
         const defaultDuration = template.duration || 7;
         const tripStartDate = startDate || new Date();
         let tripEndDate = endDate;
-        
+
         if (!tripEndDate) {
           tripEndDate = new Date(tripStartDate);
           tripEndDate.setDate(tripStartDate.getDate() + defaultDuration - 1);
         }
-        
+
         // Create trip within transaction
         const [newTrip] = await tx.insert(trips).values({
           title: tripData.title || template.title,
@@ -86,29 +86,29 @@ export class TemplateCopyServiceV2 {
         if (tripData.days && Array.isArray(tripData.days)) {
           // New format: structured by days
           const actualStartDate = new Date(newTrip.start_date);
-          
+
           for (const day of tripData.days) {
             if (!day.activities || !Array.isArray(day.activities)) continue;
-            
+
             const dayNumber = parseInt(day.day) || 1;
             const activityDate = new Date(actualStartDate);
             activityDate.setDate(actualStartDate.getDate() + (dayNumber - 1));
-            
+
             if (isNaN(activityDate.getTime())) {
               logger.error(`Invalid date calculated for day ${day.day}`);
               continue;
             }
-            
+
             let order = 0;
             for (const activity of day.activities) {
               if (!activity || !activity.title) continue;
-              
+
               const locationName = activity.location || activity.locationName || activity.location_name;
               let latitude = activity.latitude?.toString() || null;
               let longitude = activity.longitude?.toString() || null;
-              
+
               const activityId = `${newTrip.id}-${dayNumber}-${order}`;
-              
+
               // Collect activities that need geocoding
               if ((!latitude || !longitude) && locationName) {
                 activitiesToGeocode.push({
@@ -117,7 +117,7 @@ export class TemplateCopyServiceV2 {
                   cityContext: tripData.city || tripData.country
                 });
               }
-              
+
               activitiesToInsert.push({
                 id: activityId,
                 trip_id: newTrip.id,
@@ -137,11 +137,11 @@ export class TemplateCopyServiceV2 {
         } else if (tripData.activities && Array.isArray(tripData.activities)) {
           // Old format: flat activities array
           const actualStartDate = new Date(newTrip.start_date);
-          
+
           for (let i = 0; i < tripData.activities.length; i++) {
             const activity = tripData.activities[i];
             if (!activity || !activity.title) continue;
-            
+
             const activityDate = new Date(actualStartDate);
             if (activity.date) {
               activityDate.setTime(new Date(activity.date).getTime());
@@ -149,13 +149,13 @@ export class TemplateCopyServiceV2 {
               const dayNumber = parseInt(activity.day) || 1;
               activityDate.setDate(actualStartDate.getDate() + (dayNumber - 1));
             }
-            
+
             const locationName = activity.locationName || activity.location_name || activity.location;
             let latitude = activity.latitude?.toString() || null;
             let longitude = activity.longitude?.toString() || null;
-            
+
             const activityId = `${newTrip.id}-flat-${i}`;
-            
+
             if ((!latitude || !longitude) && locationName) {
               activitiesToGeocode.push({
                 id: activityId,
@@ -163,7 +163,7 @@ export class TemplateCopyServiceV2 {
                 cityContext: tripData.city || tripData.country
               });
             }
-            
+
             activitiesToInsert.push({
               id: activityId,
               trip_id: newTrip.id,
@@ -185,7 +185,7 @@ export class TemplateCopyServiceV2 {
         if (activitiesToGeocode.length > 0) {
           logger.info(`Batch geocoding ${activitiesToGeocode.length} activities for trip ${newTrip.id}`);
           const geocodedResults = await geocodingBatchService.processBatch(activitiesToGeocode);
-          
+
           // Update activities with geocoded coordinates
           for (const result of geocodedResults) {
             const activity = activitiesToInsert.find(a => a.id === result.id);
@@ -225,7 +225,7 @@ export class TemplateCopyServiceV2 {
       duration: template.duration,
       destinations: template.destinations
     });
-    
+
     return crypto
       .createHash('sha256')
       .update(content)

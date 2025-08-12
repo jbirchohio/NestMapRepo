@@ -26,22 +26,22 @@ interface MobileFeatures {
   currentLocation: MobileGeolocationPosition | null;
   isLocationEnabled: boolean;
   locationError: string | null;
-  
+
   // Offline capabilities
   isOnline: boolean;
   offlineData: OfflineDataItem[];
-  
+
   // Camera integration
   capturePhoto: () => Promise<string | null>;
-  
+
   // Push notifications
   sendNotification: (title: string, body: string, options?: NotificationOptions) => void;
   requestNotificationPermission: () => Promise<boolean>;
-  
+
   // Travel mode
   isTravelMode: boolean;
   setTravelMode: (enabled: boolean) => void;
-  
+
   // Navigation
   openMapsNavigation: (destination: { lat: number; lng: number; name?: string }) => void;
 }
@@ -53,7 +53,7 @@ export function useMobileFeatures(): MobileFeatures {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineData, setOfflineData] = useState<OfflineDataItem[]>([]);
   const [isTravelMode, setIsTravelMode] = useState(false);
-  
+
   const watchIdRef = useRef<number | null>(null);
 
   // Initialize geolocation
@@ -83,7 +83,7 @@ export function useMobileFeatures(): MobileFeatures {
     const error = (err: GeolocationPositionError) => {
       setLocationError(err.message);
       setIsLocationEnabled(false);
-      
+
       switch (err.code) {
         case err.PERMISSION_DENIED:
           setLocationError('Location access denied by user');
@@ -122,7 +122,7 @@ export function useMobileFeatures(): MobileFeatures {
       // Sync offline data when back online
       syncOfflineData();
     };
-    
+
     const handleOffline = () => {
       setIsOnline(false);
     };
@@ -143,8 +143,7 @@ export function useMobileFeatures(): MobileFeatures {
       try {
         setOfflineData(JSON.parse(saved));
       } catch (error) {
-        console.error('Error loading offline data:', error);
-      }
+        }
     }
   }, []);
 
@@ -168,25 +167,24 @@ export function useMobileFeatures(): MobileFeatures {
           });
         }
       }
-      
+
       // Clear offline data after successful sync
       setOfflineData([]);
       localStorage.removeItem('remvana_offline_data');
     } catch (error) {
-      console.error('Error syncing offline data:', error);
-    }
+      }
   };
 
   const capturePhoto = async (): Promise<string | null> => {
     try {
       // Check if we're in a mobile app with camera access
       if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
             facingMode: 'environment' // Use back camera
-          } 
+          }
         });
-        
+
         // Create a video element to capture the stream
         const video = document.createElement('video');
         video.srcObject = stream;
@@ -197,13 +195,13 @@ export function useMobileFeatures(): MobileFeatures {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            
+
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(video, 0, 0);
-            
+
             // Stop the stream
             stream.getTracks().forEach(track => track.stop());
-            
+
             // Convert to base64
             const dataURL = canvas.toDataURL('image/jpeg', 0.8);
             resolve(dataURL);
@@ -215,7 +213,7 @@ export function useMobileFeatures(): MobileFeatures {
         input.type = 'file';
         input.accept = 'image/*';
         input.capture = 'environment';
-        
+
         return new Promise((resolve) => {
           input.onchange = (e: Event) => {
             const file = (e.target as HTMLInputElement).files?.[0];
@@ -231,7 +229,6 @@ export function useMobileFeatures(): MobileFeatures {
         });
       }
     } catch (error) {
-      console.error('Error capturing photo:', error);
       return null;
     }
   };
@@ -275,7 +272,7 @@ export function useMobileFeatures(): MobileFeatures {
 
   const setTravelModeWithEffects = (enabled: boolean) => {
     setIsTravelMode(enabled);
-    
+
     if (enabled) {
       // Request location permission and start tracking
       if (navigator.geolocation && !isLocationEnabled) {
@@ -284,10 +281,10 @@ export function useMobileFeatures(): MobileFeatures {
           (err) => setLocationError(err.message)
         );
       }
-      
+
       // Request notification permission
       requestNotificationPermission();
-      
+
       // Send welcome notification
       setTimeout(() => {
         sendNotification(
@@ -300,14 +297,14 @@ export function useMobileFeatures(): MobileFeatures {
 
   const openMapsNavigation = (destination: { lat: number; lng: number; name?: string }) => {
     const { lat, lng, name } = destination;
-    
+
     // Check if we're on mobile
     const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
+
     if (isMobile) {
       // Try to open native maps app
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      
+
       if (isIOS) {
         // iOS Maps
         window.open(`maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w${name ? `&q=${encodeURIComponent(name)}` : ''}`);

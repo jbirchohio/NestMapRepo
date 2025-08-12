@@ -11,7 +11,7 @@ export class OptimizedQueries {
    */
   async getTemplatesWithCreators(templateIds: number[]) {
     if (templateIds.length === 0) return [];
-    
+
     // Join templates with users and creator profiles in one query
     const results = await db
       .select({
@@ -23,7 +23,7 @@ export class OptimizedQueries {
       .leftJoin(users, eq(templates.user_id, users.id))
       .leftJoin(creatorProfiles, eq(templates.user_id, creatorProfiles.user_id))
       .where(inArray(templates.id, templateIds));
-    
+
     return results.map(row => ({
       ...row.template,
       creator: {
@@ -47,22 +47,22 @@ export class OptimizedQueries {
    */
   async getTemplatesWithPurchaseStatus(userId: number, templateIds: number[]) {
     if (templateIds.length === 0) return [];
-    
+
     const query = sql.raw(`
-      SELECT 
+      SELECT
         t.*,
-        CASE 
-          WHEN tp.id IS NOT NULL AND tp.status = 'completed' THEN true 
-          ELSE false 
+        CASE
+          WHEN tp.id IS NOT NULL AND tp.status = 'completed' THEN true
+          ELSE false
         END as has_purchased
       FROM templates t
-      LEFT JOIN template_purchases tp 
-        ON t.id = tp.template_id 
+      LEFT JOIN template_purchases tp
+        ON t.id = tp.template_id
         AND tp.buyer_id = ${userId}
         AND tp.status = 'completed'
       WHERE t.id = ANY(ARRAY[${templateIds.join(',')}]::int[])
     `);
-    
+
     const result = await db.execute(query);
     return result.rows;
   }
@@ -72,7 +72,7 @@ export class OptimizedQueries {
    */
   async getUserTripsWithActivityCounts(userId: number) {
     const query = sql.raw(`
-      SELECT 
+      SELECT
         t.*,
         COUNT(a.id) as activity_count,
         MIN(a.date) as first_activity_date,
@@ -83,7 +83,7 @@ export class OptimizedQueries {
       GROUP BY t.id
       ORDER BY t.created_at DESC
     `);
-    
+
     const result = await db.execute(query);
     return result.rows;
   }
@@ -93,12 +93,12 @@ export class OptimizedQueries {
    */
   async batchGetUsers(userIds: number[]) {
     if (userIds.length === 0) return new Map();
-    
+
     const userResults = await db
       .select()
       .from(users)
       .where(inArray(users.id, userIds));
-    
+
     return new Map(userResults.map(u => [u.id, u]));
   }
 
@@ -107,9 +107,9 @@ export class OptimizedQueries {
    */
   async getTemplateStats(templateIds: number[]) {
     if (templateIds.length === 0) return new Map();
-    
+
     const query = sql.raw(`
-      SELECT 
+      SELECT
         t.id,
         COUNT(DISTINCT tp.id) as purchase_count,
         COUNT(DISTINCT tr.id) as review_count,
@@ -121,7 +121,7 @@ export class OptimizedQueries {
       WHERE t.id = ANY(ARRAY[${templateIds.join(',')}]::int[])
       GROUP BY t.id
     `);
-    
+
     const result = await db.execute(query);
     return new Map(result.rows.map((r: any) => [r.id, r]));
   }

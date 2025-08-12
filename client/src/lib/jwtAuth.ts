@@ -1,6 +1,6 @@
 /**
  * JWT-only Authentication System
- * Replaces Supabase authentication with custom JWT tokens
+ * Uses httpOnly cookies for secure token storage
  */
 
 interface User {
@@ -15,39 +15,36 @@ interface User {
 
 interface AuthResponse {
   user: User;
-  token: string;
+  message: string;
 }
 
 class JWTAuth {
-  private token: string | null = null;
   private user: User | null = null;
+  private isLoading: boolean = true;
 
   constructor() {
-    // Load token from localStorage on initialization
-    this.token = localStorage.getItem('auth_token');
-    if (this.token) {
-      this.loadUserFromToken();
-    }
+    // Check auth status on initialization
+    this.checkAuthStatus();
   }
 
-  private loadUserFromToken() {
-    if (!this.token) return;
-    
+  private async checkAuthStatus() {
     try {
-      // Decode JWT payload (basic decode without verification - server will verify)
-      const payload = JSON.parse(atob(this.token.split('.')[1]));
-      this.user = {
-        id: payload.id,
-        email: payload.email,
-        username: payload.username,
-        role: payload.role,
-        displayName: payload.displayName,
-        fullName: payload.fullName,
-        avatarUrl: payload.avatarUrl
-      };
+      const response = await fetch('/api/auth/user', {
+        method: 'GET',
+        credentials: 'include' // Important: include cookies
+      });
+
+      if (response.ok) {
+        const user = await response.json();
+        this.user = user;
+      } else {
+        this.user = null;
+      }
     } catch (error) {
-      console.warn('Failed to decode token:', error);
-      this.signOut();
+      this.user = null;
+    } finally {
+      this.isLoading = false;
+      this.notifyListeners();
     }
   }
 
@@ -56,6 +53,7 @@ class JWTAuth {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important: include cookies
         body: JSON.stringify({ email, password })
       });
 
@@ -65,12 +63,9 @@ class JWTAuth {
       }
 
       const data: AuthResponse = await response.json();
-      
-      this.token = data.token;
       this.user = data.user;
-      
-      localStorage.setItem('auth_token', this.token);
-      
+      this.notifyListeners();
+
       return { user: this.user, error: null };
     } catch (error) {
       return { user: null, error: error as Error };
@@ -82,6 +77,7 @@ class JWTAuth {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important: include cookies
         body: JSON.stringify({ email, password, username })
       });
 
@@ -91,34 +87,46 @@ class JWTAuth {
       }
 
       const data: AuthResponse = await response.json();
-      
-      this.token = data.token;
       this.user = data.user;
-      
-      localStorage.setItem('auth_token', this.token);
-      
+      this.notifyListeners();
+
       return { user: this.user, error: null };
     } catch (error) {
       return { user: null, error: error as Error };
     }
   }
 
-  signOut(): void {
-    this.token = null;
-    this.user = null;
-    localStorage.removeItem('auth_token');
+  async signOut(): Promise<void> {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include' // Important: include cookies
+      });
+    } catch (error) {
+      // Even if logout fails, clear local state
+    } finally {
+      this.user = null;
+      this.notifyListeners();
+    }
   }
 
   getUser(): User | null {
     return this.user;
   }
 
+  // No longer expose token since it's in httpOnly cookie
   getToken(): string | null {
-    return this.token;
+    // Return a placeholder to maintain backward compatibility
+    // The actual token is in httpOnly cookie and sent automatically
+    return this.user ? 'authenticated' : null;
   }
 
   isAuthenticated(): boolean {
-    return this.token !== null && this.user !== null;
+    return this.user !== null;
+  }
+
+  getIsLoading(): boolean {
+    return this.isLoading;
   }
 
   // Auth state change listeners
@@ -127,6 +135,11 @@ class JWTAuth {
   onAuthStateChange(callback: (user: User | null) => void): () => void {
     this.listeners.push(callback);
     
+    // Call immediately with current state if not loading
+    if (!this.isLoading) {
+      callback(this.user);
+    }
+
     // Return unsubscribe function
     return () => {
       const index = this.listeners.indexOf(callback);
@@ -140,19 +153,15 @@ class JWTAuth {
     this.listeners.forEach(callback => callback(this.user));
   }
 
-  // Update internal state and notify listeners
-  private updateAuthState(user: User | null, token: string | null) {
-    this.user = user;
-    this.token = token;
-    this.notifyListeners();
+  // For social login callbacks
+  async handleSocialAuth(): Promise<User | null> {
+    await this.checkAuthStatus();
+    return this.user;
   }
 
-  // Set auth state (for social login)
-  setAuth(token: string, user: User): void {
-    this.token = token;
-    this.user = user;
-    localStorage.setItem('auth_token', token);
-    this.notifyListeners();
+  // Refresh user data
+  async refreshUser(): Promise<void> {
+    await this.checkAuthStatus();
   }
 }
 

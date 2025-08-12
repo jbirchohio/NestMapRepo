@@ -12,7 +12,7 @@ export class SuperCache {
   private userCache: any;
   private geoCache: any;
   private staticCache: any;
-  
+
   // Cache stats for monitoring
   private stats = {
     hits: 0,
@@ -24,7 +24,7 @@ export class SuperCache {
   constructor() {
     // Allocate cache sizes based on importance and update frequency
     // Total ~400MB to stay within Railway's 512MB limit
-    
+
     // Templates change rarely, cache aggressively (150MB)
     this.templateCache = createLRUCache({
       max: 2000, // ~2000 templates
@@ -82,7 +82,7 @@ export class SuperCache {
    */
   async getTemplate(id: number, fetcher?: () => Promise<any>): Promise<any> {
     const key = `template:${id}`;
-    
+
     let cached = this.templateCache.get(key);
     if (cached) {
       this.stats.hits++;
@@ -90,7 +90,7 @@ export class SuperCache {
     }
 
     this.stats.misses++;
-    
+
     if (fetcher) {
       const data = await fetcher();
       if (data) {
@@ -98,7 +98,7 @@ export class SuperCache {
       }
       return data;
     }
-    
+
     return null;
   }
 
@@ -113,7 +113,7 @@ export class SuperCache {
     }
 
     this.stats.misses++;
-    
+
     const data = await fetcher();
     if (data) {
       const options: any = {};
@@ -122,7 +122,7 @@ export class SuperCache {
       }
       this.queryCache.set(queryKey, data, options);
     }
-    
+
     return data;
   }
 
@@ -222,7 +222,7 @@ export class SuperCache {
    * Get cache statistics
    */
   getStats() {
-    const totalSize = 
+    const totalSize =
       this.templateCache.calculatedSize +
       this.queryCache.calculatedSize +
       this.userCache.calculatedSize +
@@ -305,7 +305,7 @@ export class SuperCache {
         sort: 'popular',
         limit: 100
       });
-      
+
       for (const template of topTemplates.templates) {
         this.templateCache.set(`template:${template.id}`, template);
       }
@@ -315,7 +315,7 @@ export class SuperCache {
         sort: 'newest',
         limit: 50
       });
-      
+
       for (const template of recentTemplates.templates) {
         this.templateCache.set(`template:${template.id}`, template);
       }

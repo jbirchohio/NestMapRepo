@@ -21,10 +21,10 @@ interface OptimizationSummaryProps {
   };
 }
 
-export function OptimizationSummary({ 
-  optimizations, 
+export function OptimizationSummary({
+  optimizations,
   totalFilesOptimized,
-  performanceImprovements 
+  performanceImprovements
 }: OptimizationSummaryProps) {
   const totalOriginalLines = optimizations.reduce((sum, opt) => sum + opt.originalSize, 0);
   const totalCurrentLines = optimizations.reduce((sum, opt) => sum + opt.currentSize, 0);
@@ -96,13 +96,13 @@ export function OptimizationSummary({
                 <div key={opt.name} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium">{opt.name}</h3>
-                    <Badge 
+                    <Badge
                       variant={opt.status === 'completed' ? 'default' : 'secondary'}
                     >
                       {opt.status}
                     </Badge>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-4 mb-3">
                     <div>
                       <p className="text-sm text-muted-foreground">Original</p>

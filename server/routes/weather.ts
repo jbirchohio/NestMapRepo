@@ -17,7 +17,7 @@ router.post("/forecast", async (req, res) => {
   try {
     const validatedData = forecastSchema.parse(req.body);
     const { location, dates } = validatedData;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
@@ -32,16 +32,16 @@ router.post("/forecast", async (req, res) => {
           forecast: []
         });
       } else {
-        return res.status(404).json({ 
-          success: false, 
-          error: "Could not fetch weather data" 
+        return res.status(404).json({
+          success: false,
+          error: "Could not fetch weather data"
         });
       }
     }
 
     // Get forecast for the requested dates
     const forecast = await getWeatherForecast(location, dates);
-    
+
     // Also get current weather
     const currentWeather = await getCurrentWeather(location);
 
@@ -51,10 +51,9 @@ router.post("/forecast", async (req, res) => {
       forecast: forecast
     });
   } catch (error) {
-    console.error("Weather forecast error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to fetch weather forecast" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch weather forecast"
     });
   }
 });

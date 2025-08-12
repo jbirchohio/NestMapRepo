@@ -268,7 +268,7 @@ export class AntiPiracyService {
     // Check activity count
     const tripActivities = await storage.getActivitiesByTripId(trip.id);
     const templateActivities = this.extractTemplateActivities(templateData);
-    
+
     if (tripActivities.length > 0 && templateActivities.length > 0) {
       const countRatio = Math.min(tripActivities.length, templateActivities.length) / Math.max(tripActivities.length, templateActivities.length);
       if (countRatio > 0.8) {
@@ -383,11 +383,11 @@ export class AntiPiracyService {
       if (!templateData) continue;
 
       const templateActivities = this.extractTemplateActivities(templateData);
-      
+
       // Create and compare sequences
       const tripSequences = this.createActivitySequences(tripActivities);
       const templateSequences = this.createActivitySequences(templateActivities);
-      
+
       const matchingSequences = this.findMatchingSequences(tripSequences, templateSequences);
       const matchRatio = matchingSequences / Math.min(tripSequences.length, templateSequences.length);
 

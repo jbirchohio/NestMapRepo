@@ -5,6 +5,4 @@ import { clearViolations } from '../middleware/comprehensive-rate-limiting.js';
 const currentIP = '172.31.128.58';
 const key = `tier:free:none:${currentIP}`;
 
-console.log('Clearing rate limit violations for key:', key);
 clearViolations(key);
-console.log('Rate limit violations cleared successfully');

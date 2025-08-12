@@ -16,11 +16,11 @@ const ACTIVITY_TYPES = [
 router.get('/sitemap.xml', async (req, res) => {
   try {
     const baseUrl = process.env.SITEMAP_BASE_URL || process.env.BASE_URL || 'https://remvana.com';
-    
+
     // Start XML
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-    
+
     // Static pages
     const staticPages = [
       { url: '/', priority: 1.0, changefreq: 'daily' },
@@ -30,7 +30,7 @@ router.get('/sitemap.xml', async (req, res) => {
       { url: '/blog', priority: 0.7, changefreq: 'daily' },
       { url: '/contact', priority: 0.6, changefreq: 'monthly' },
     ];
-    
+
     staticPages.forEach(page => {
       xml += `  <url>\n`;
       xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
@@ -39,7 +39,7 @@ router.get('/sitemap.xml', async (req, res) => {
       xml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
       xml += `  </url>\n`;
     });
-    
+
     // Destination pages (dynamically from database)
     try {
       const allDestinations = await db.select({
@@ -47,7 +47,7 @@ router.get('/sitemap.xml', async (req, res) => {
         updated_at: destinations.updated_at
       }).from(destinations)
       .where(eq(destinations.status, 'published'));
-      
+
       allDestinations.forEach(destination => {
         // Main destination page
         xml += `  <url>\n`;
@@ -60,21 +60,21 @@ router.get('/sitemap.xml', async (req, res) => {
           xml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
         }
         xml += `  </url>\n`;
-        
+
         // Hotels page
         xml += `  <url>\n`;
         xml += `    <loc>${baseUrl}/hotels/${destination.slug}</loc>\n`;
         xml += `    <changefreq>daily</changefreq>\n`;
         xml += `    <priority>0.8</priority>\n`;
         xml += `  </url>\n`;
-        
+
         // Packages page
         xml += `  <url>\n`;
         xml += `    <loc>${baseUrl}/packages/${destination.slug}</loc>\n`;
         xml += `    <changefreq>daily</changefreq>\n`;
         xml += `    <priority>0.9</priority>\n`;
         xml += `  </url>\n`;
-        
+
         // Activity type pages
         ACTIVITY_TYPES.forEach(activityType => {
           xml += `  <url>\n`;
@@ -87,7 +87,7 @@ router.get('/sitemap.xml', async (req, res) => {
     } catch (error) {
       logger.error('Error fetching destinations for sitemap:', error);
     }
-    
+
     // Comparison pages (vs competitors)
     const competitors = ['tripadvisor', 'expedia', 'booking-com', 'kayak', 'tripit', 'wanderlog'];
     competitors.forEach(competitor => {
@@ -97,7 +97,7 @@ router.get('/sitemap.xml', async (req, res) => {
       xml += `    <priority>0.8</priority>\n`;
       xml += `  </url>\n`;
     });
-    
+
     // Public trips (if any)
     try {
       const publicTrips = await db.select({
@@ -107,7 +107,7 @@ router.get('/sitemap.xml', async (req, res) => {
       .from(trips)
       .where(sql`${trips.privacy_level} = 'public'`)
       .limit(1000);
-      
+
       publicTrips.forEach(trip => {
         xml += `  <url>\n`;
         xml += `    <loc>${baseUrl}/trips/${trip.id}</loc>\n`;
@@ -121,15 +121,15 @@ router.get('/sitemap.xml', async (req, res) => {
     } catch (error) {
       logger.error('Error fetching public trips for sitemap:', error);
     }
-    
+
     // Close XML
     xml += '</urlset>';
-    
+
     // Set headers and send
     res.header('Content-Type', 'application/xml');
     res.header('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
     res.send(xml);
-    
+
   } catch (error) {
     logger.error('Sitemap generation error:', error);
     res.status(500).send('Error generating sitemap');
@@ -139,7 +139,7 @@ router.get('/sitemap.xml', async (req, res) => {
 // Generate robots.txt
 router.get('/robots.txt', (req, res) => {
   const baseUrl = process.env.SITEMAP_BASE_URL || process.env.BASE_URL || 'https://remvana.com';
-  
+
   let robots = '# Remvana Robots.txt\n';
   robots += 'User-agent: *\n';
   robots += 'Allow: /\n';
@@ -155,7 +155,7 @@ router.get('/robots.txt', (req, res) => {
   robots += `Sitemap: ${baseUrl}/sitemap.xml\n`;
   robots += `Sitemap: ${baseUrl}/sitemap-destinations.xml\n`;
   robots += `Sitemap: ${baseUrl}/sitemap-blog.xml\n`;
-  
+
   res.header('Content-Type', 'text/plain');
   res.header('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
   res.send(robots);
@@ -165,10 +165,10 @@ router.get('/robots.txt', (req, res) => {
 router.get('/sitemap-destinations.xml', async (req, res) => {
   try {
     const baseUrl = process.env.SITEMAP_BASE_URL || process.env.BASE_URL || 'https://remvana.com';
-    
+
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
-    
+
     // Get all destinations from database
     const allDestinations = await db.select({
       slug: destinations.slug,
@@ -177,7 +177,7 @@ router.get('/sitemap-destinations.xml', async (req, res) => {
       updated_at: destinations.updated_at
     }).from(destinations)
     .where(eq(destinations.status, 'published'));
-    
+
     allDestinations.forEach(destination => {
       xml += `  <url>\n`;
       xml += `    <loc>${baseUrl}/destinations/${destination.slug}</loc>\n`;
@@ -194,13 +194,13 @@ router.get('/sitemap-destinations.xml', async (req, res) => {
       }
       xml += `  </url>\n`;
     });
-    
+
     xml += '</urlset>';
-    
+
     res.header('Content-Type', 'application/xml');
     res.header('Cache-Control', 'public, max-age=3600');
     res.send(xml);
-    
+
   } catch (error) {
     logger.error('Destination sitemap error:', error);
     res.status(500).send('Error generating destination sitemap');

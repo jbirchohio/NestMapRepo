@@ -19,7 +19,7 @@ interface SuspiciousPattern {
  */
 export class AntiPiracyServiceV2 {
   private suspiciousPatterns: Map<number, SuspiciousPattern[]> = new Map();
-  
+
   /**
    * Track user behavior patterns for suspicious activity
    */
@@ -89,7 +89,7 @@ export class AntiPiracyServiceV2 {
     ));
 
     const templatesPerDay = recentTemplates.length / 7;
-    
+
     if (templatesPerDay > 3) {
       return {
         suspicious: true,
@@ -139,7 +139,7 @@ export class AntiPiracyServiceV2 {
     let suspiciousCreations = 0;
     for (const purchase of purchases) {
       const purchaseTime = new Date(purchase.purchasedAt).getTime();
-      
+
       const nearbyTemplates = userTemplates.filter(t => {
         const creationTime = new Date(t.created_at || 0).getTime();
         const hoursDiff = Math.abs(creationTime - purchaseTime) / (1000 * 60 * 60);
@@ -199,7 +199,7 @@ export class AntiPiracyServiceV2 {
           userTemplates[i].trip_data,
           userTemplates[j].trip_data
         );
-        
+
         if (similarity > 0.8) {
           highSimilarityPairs++;
         }
@@ -243,7 +243,7 @@ export class AntiPiracyServiceV2 {
     let manipulationDetected = false;
     for (const template of userTemplates) {
       const initialPrice = parseFloat(template.price || '0');
-      
+
       // Check if template had reviews when price was low
       const reviews = await db.select()
         .from(templates)
@@ -257,7 +257,7 @@ export class AntiPiracyServiceV2 {
         const [current] = await db.select({ price: templates.price })
           .from(templates)
           .where(eq(templates.id, template.id));
-        
+
         const currentPrice = parseFloat(current?.price || '0');
         if (currentPrice > initialPrice * 3) {
           manipulationDetected = true;
@@ -333,15 +333,15 @@ export class AntiPiracyServiceV2 {
       // Location features
       city: trip.city?.toLowerCase().trim(),
       country: trip.country?.toLowerCase().trim(),
-      
+
       // Temporal features
       duration: Math.ceil((new Date(trip.end_date).getTime() - new Date(trip.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1,
-      
+
       // Activity features
       activityCount: activities.length,
       activityTitles: activities.map(a => a.title?.toLowerCase().trim()).sort(),
       activityTags: [...new Set(activities.map(a => a.tag).filter(Boolean))].sort(),
-      
+
       // Time distribution
       morningActivities: activities.filter(a => {
         const hour = parseInt(a.time?.split(':')[0] || '12');
@@ -355,10 +355,10 @@ export class AntiPiracyServiceV2 {
         const hour = parseInt(a.time?.split(':')[0] || '12');
         return hour >= 18 || hour < 6;
       }).length,
-      
+
       // Geographic spread (unique locations)
       uniqueLocations: [...new Set(activities.map(a => a.location_name?.toLowerCase().trim()).filter(Boolean))].length,
-      
+
       // Activity patterns
       hasHotel: !!trip.hotel,
       hasFoodActivities: activities.some(a => a.tag === 'food' || a.title?.toLowerCase().includes('restaurant')),
@@ -386,7 +386,7 @@ export class AntiPiracyServiceV2 {
     if (!this.suspiciousPatterns.has(userId)) {
       this.suspiciousPatterns.set(userId, []);
     }
-    
+
     this.suspiciousPatterns.get(userId)!.push(pattern);
 
     logger.warn(`Suspicious activity detected for user ${userId}: ${activity}`, details);
@@ -402,7 +402,7 @@ export class AntiPiracyServiceV2 {
    */
   private calculateSeverity(details: any): 'low' | 'medium' | 'high' {
     const riskScore = details.riskScore || 0;
-    
+
     if (riskScore >= 70) return 'high';
     if (riskScore >= 40) return 'medium';
     return 'low';
@@ -438,7 +438,7 @@ export class AntiPiracyServiceV2 {
    */
   cleanupOldPatterns() {
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
-    
+
     for (const [userId, patterns] of this.suspiciousPatterns.entries()) {
       const filtered = patterns.filter(p => p.timestamp.getTime() > cutoff);
       if (filtered.length === 0) {

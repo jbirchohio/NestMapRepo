@@ -4,8 +4,8 @@ if (!process.env.DUFFEL_API_KEY) {
   throw new Error('DUFFEL_API_KEY environment variable is required');
 }
 
-const DUFFEL_API_BASE = process.env.NODE_ENV === 'production' 
-  ? 'https://api.duffel.com' 
+const DUFFEL_API_BASE = process.env.NODE_ENV === 'production'
+  ? 'https://api.duffel.com'
   : 'https://api.duffel.com'; // Duffel uses same endpoint for both
 
 // HTTP client for Duffel API
@@ -181,7 +181,7 @@ export class DuffelFlightService {
   async searchFlights(params: FlightSearchParams): Promise<FlightOffer[]> {
     try {
       logger.info('Searching flights with Duffel API:', params);
-      
+
       // Create offer request
       const offerRequestData = {
         slices: [
@@ -213,7 +213,7 @@ export class DuffelFlightService {
         method: 'POST',
         body: JSON.stringify({ data: offerRequestData })
       });
-      
+
       logger.info('Duffel offer request created:', offerRequest.data.id);
 
       // Get offers from the request
@@ -295,11 +295,11 @@ export class DuffelFlightService {
 
     } catch (error: any) {
       logger.error('Duffel flight search error:', error);
-      
+
       if (error.response?.data) {
         logger.error('Duffel API error details:', error.response.data);
       }
-      
+
       throw new Error(`Flight search failed: ${error.message}`);
     }
   }
@@ -311,7 +311,7 @@ export class DuffelFlightService {
     try {
       const offerResponse = await duffelClient.request(`/air/offers/${offerId}`);
       const offer = offerResponse.data;
-      
+
       // Transform to our format (same as in searchFlights)
       return {
         id: offer.id,
@@ -449,11 +449,11 @@ export class DuffelFlightService {
 
     } catch (error: any) {
       logger.error('Duffel booking error:', error);
-      
+
       if (error.response?.data) {
         logger.error('Duffel API booking error details:', error.response.data);
       }
-      
+
       throw new Error(`Booking failed: ${error.message}`);
     }
   }

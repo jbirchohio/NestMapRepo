@@ -15,39 +15,29 @@ interface ActivityItemProps {
 
 export default function ActivityItem({ activity, onClick, onDelete }: ActivityItemProps) {
   const { toast } = useToast();
-  
+
   // Delete activity mutation
   const deleteActivity = useMutation({
     mutationFn: async () => {
-      console.log(`Attempting to delete activity ${activity.id}`);
       const url = `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`;
-      console.log(`Delete URL: ${url}`);
       return apiRequest("DELETE", url);
     },
     onSuccess: () => {
       // Invalidate activities query to refresh the list
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] });
-      
+
       toast({
         title: "Activity Deleted",
         description: "The activity has been removed from your itinerary.",
       });
-      
+
       // Call parent component's onDelete if provided
       if (onDelete) onDelete();
     },
     onError: (error: any) => {
-      console.error("Error deleting activity:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        response: error.response,
-        activityId: activity.id
-      });
-      
       // Show more detailed error message
       const errorMessage = error.message || "Could not delete the activity. Please try again.";
-      
+
       toast({
         title: "Error Deleting Activity",
         description: errorMessage,
@@ -55,7 +45,6 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
       });
     },
   });
-  
 
   // Convert 24-hour time to 12-hour format
   const formatTime = (time: string) => {
@@ -70,14 +59,14 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
   // Handle delete action
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the activity click
-    
+
     // Show a confirmation toast
     const { dismiss } = toast({
       title: "Delete Activity?",
       description: "Are you sure you want to delete this activity?",
       action: (
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={() => {
               deleteActivity.mutate();
               dismiss();
@@ -88,7 +77,7 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
           >
             Delete
           </Button>
-          <Button 
+          <Button
             onClick={() => dismiss()}
             variant="outline"
             size="sm"
@@ -100,7 +89,7 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
       ),
     });
   };
-  
+
   return (
     <div className="pl-8 relative timeline-item group">
       {/* Timeline point */}
@@ -109,9 +98,9 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
           <div className="h-2 w-2 bg-white rounded-full"></div>
         </div>
       </div>
-      
+
       {/* Activity card with time header */}
-      <div 
+      <div
         className={`
           bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow cursor-pointer
           ${activity.conflict ? 'border-[hsl(var(--destructive))]' : ''}
@@ -122,9 +111,9 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
         <div className="bg-[hsl(var(--primary))] text-white p-2 text-center font-medium">
           {formatTime(activity.time)}
         </div>
-        
+
         <div className="p-3 pt-6 relative">
-        
+
           {/* Delete button - visible on hover on desktop, always visible on mobile */}
           <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
             <button
@@ -137,7 +126,7 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
               </svg>
             </button>
           </div>
-          
+
           {/* Activity content area */}
           <div onClick={() => onClick(activity)}>
             {/* Title and tag row */}
@@ -145,12 +134,32 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
               <h3 className="font-medium">{activity.title}</h3>
               {activity.tag && <TagBadge tag={activity.tag} />}
             </div>
-            
+
             {/* Notes (if any) */}
             {activity.notes && (
               <div className="text-sm mt-2">{activity.notes}</div>
             )}
-            
+
+            {/* Cost indicator */}
+            {(activity.price || activity.actualCost) && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`text-sm font-medium ${activity.isPaid ? 'text-green-600' : 'text-gray-600'}`}>
+                  💰 {activity.actualCost ? `$${activity.actualCost}` : `~$${activity.price}`}
+                  {activity.splitBetween && activity.splitBetween > 1 && (
+                    <span className="text-xs ml-1">÷{activity.splitBetween}</span>
+                  )}
+                </span>
+                {activity.isPaid && (
+                  <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Paid</span>
+                )}
+                {activity.costCategory && (
+                  <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded capitalize">
+                    {activity.costCategory}
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Travel time indicator */}
             {activity.travelTimeFromPrevious && (
               <div className="flex items-center text-xs text-[hsl(var(--muted-foreground))] mt-2">
@@ -207,8 +216,7 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
                 latitude={activity.latitude}
                 longitude={activity.longitude}
                 onBook={(product) => {
-                  console.log('Booking clicked for activity:', activity.title, product);
-                }}
+                  }}
               />
             </div>
           )} */}

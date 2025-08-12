@@ -18,15 +18,15 @@ export function injectEnvVars(req: Request, res: Response, next: NextFunction) {
     if (typeof data === 'string' && data.includes('<!DOCTYPE html>')) {
       // Generate a nonce for CSP
       const nonce = crypto.randomBytes(16).toString('base64');
-      
+
       // Get Mapbox token from environment
       const mapboxToken = process.env.VITE_MAPBOX_TOKEN || '';
-      
+
       // Replace placeholders
       data = data
         .replace(/%NONCE%/g, nonce)
         .replace(/%MAPBOX_TOKEN%/g, mapboxToken);
-      
+
       // Set CSP header with nonce
       res.setHeader(
         'Content-Security-Policy',
@@ -35,9 +35,9 @@ export function injectEnvVars(req: Request, res: Response, next: NextFunction) {
         `font-src 'self' https://fonts.gstatic.com;`
       );
     }
-    
+
     return originalSend.call(this, data);
   };
-  
+
   next();
 }

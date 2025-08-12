@@ -10,7 +10,7 @@ export default function SimpleFooter() {
             <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Remvana</span>
             <span className="ml-2 text-sm text-gray-600">© 2024. Travel made simple.</span>
           </div>
-          
+
           <div className="flex space-x-6">
             <Link href="/help">
               <a className="text-sm text-gray-600 hover:text-purple-600 transition-colors">Help</a>

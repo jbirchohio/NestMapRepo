@@ -16,13 +16,12 @@ import DestinationSearch from "@/components/DestinationSearch";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModalSimple from "@/components/auth/AuthModalSimple";
 import { motion } from "framer-motion";
-import { 
-  Plus, MapPin, Calendar, TrendingUp, Sparkles, 
+import {
+  Plus, MapPin, Calendar, TrendingUp, Sparkles,
   MessageSquare, Compass, Clock, Users, Plane,
   Camera, Heart, Zap, Globe, Star, ArrowRight,
   Archive, Trash2
 } from "lucide-react";
-
 
 // Quick action cards - dynamically adjust based on user state
 const getQuickActions = (hasAI: boolean, userTrips: number) => {
@@ -128,39 +127,44 @@ export default function HomeConsumerRedesigned() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("signup");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
-  
+
   const { user, userId } = useAuth();
-  
+
   // Check for auth query parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const authParam = params.get('auth');
-    
+
     if (authParam === 'login' || authParam === 'signup') {
       setAuthView(authParam as 'login' | 'signup');
       setIsAuthModalOpen(true);
-      
+
       // Clean up URL
       window.history.replaceState({}, '', '/');
     }
   }, []);
-  
-  // Get user trips
-  const tripsQuery = useQuery<ClientTrip[]>({
+
+  // Get user trips with pagination support
+  const tripsQuery = useQuery<{ trips: ClientTrip[]; pagination: any }>({
     queryKey: [API_ENDPOINTS.TRIPS, userId],
     queryFn: async () => {
-      if (!userId) return [];
-      
-      const response = await fetch(`${API_ENDPOINTS.TRIPS}?userId=${userId}`);
+      if (!userId) return { trips: [], pagination: null };
+
+      const response = await fetch(`${API_ENDPOINTS.TRIPS}?userId=${userId}&limit=100`);
       if (!response.ok) {
         throw new Error('Failed to fetch trips');
       }
-      return response.json();
+      const data = await response.json();
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(data)) {
+        return { trips: data, pagination: null };
+      }
+      return data;
     },
     enabled: !!userId,
   });
-  
-  const trips = tripsQuery.data || [];
+
+  const trips = tripsQuery.data?.trips || [];
   const upcomingTrips = trips.filter(trip => {
     const startDate = new Date(trip.startDate);
     return startDate >= new Date();
@@ -181,7 +185,7 @@ export default function HomeConsumerRedesigned() {
 
   // Check if OpenAI is configured
   const hasAI = true; // AI features enabled with GPT-3.5-turbo for cost efficiency
-  
+
   // Get dynamic quick actions based on user progress
   const quickActions = getQuickActions(hasAI, trips.length);
 
@@ -192,9 +196,9 @@ export default function HomeConsumerRedesigned() {
       setIsAuthModalOpen(true);
       return;
     }
-    
+
     setSelectedAction(action);
-    
+
     switch(action) {
       case 'ai-chat':
         setIsAIChatOpen(true);
@@ -225,27 +229,23 @@ export default function HomeConsumerRedesigned() {
       setIsAuthModalOpen(true);
       return;
     }
-    
+
     // Navigate to marketplace to see real templates
     setLocation('/marketplace');
   };
 
   const handleTripCreated = (trip: any) => {
-    console.log('HomeConsumer - Trip created:', trip);
-    console.log('HomeConsumer - Navigating to trip ID:', trip.id, 'type:', typeof trip.id);
     setIsNewTripModalOpen(false);
-    
+
     // Make sure we have a valid ID before navigating
     if (trip && trip.id) {
       setLocation(`/trip/${trip.id}`);
-    } else {
-      console.error('HomeConsumer - Invalid trip object for navigation:', trip);
     }
   };
 
   const handleArchiveTrip = async (tripId: string) => {
     if (!confirm('Are you sure you want to archive this trip?')) return;
-    
+
     try {
       const response = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}`, {
         method: 'PATCH',
@@ -255,19 +255,19 @@ export default function HomeConsumerRedesigned() {
         },
         body: JSON.stringify({ status: 'archived' })
       });
-      
+
       if (response.ok) {
         // Refetch trips
         window.location.reload();
       }
     } catch (error) {
-      console.error('Failed to archive trip:', error);
+      // Failed to archive trip
     }
   };
 
   const handleDeleteTrip = async (tripId: string) => {
     if (!confirm('Are you sure you want to delete this trip? This cannot be undone.')) return;
-    
+
     try {
       const response = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}`, {
         method: 'DELETE',
@@ -275,13 +275,13 @@ export default function HomeConsumerRedesigned() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (response.ok) {
         // Refetch trips
         window.location.reload();
       }
     } catch (error) {
-      console.error('Failed to delete trip:', error);
+      // Failed to delete trip
     }
   };
 
@@ -302,15 +302,15 @@ export default function HomeConsumerRedesigned() {
               <p className="text-2xl text-gray-600 max-w-3xl mx-auto mb-8">
                 AI-powered travel planning that makes organizing your perfect trip as easy as texting a friend
               </p>
-              
+
               {/* Destination Search */}
               <div className="max-w-2xl mx-auto mb-8">
-                <DestinationSearch 
+                <DestinationSearch
                   placeholder="Where do you want to go?"
                   showTrending={true}
                 />
               </div>
-              
+
               <div className="flex gap-4 justify-center">
                 <Button
                   size="lg"
@@ -360,7 +360,7 @@ export default function HomeConsumerRedesigned() {
                   })()}! 👋
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  {upcomingTrips.length > 0 
+                  {upcomingTrips.length > 0
                     ? `You have ${upcomingTrips.length} upcoming ${upcomingTrips.length === 1 ? 'trip' : 'trips'}`
                     : 'Ready to plan your next adventure?'}
                 </p>
@@ -405,10 +405,10 @@ export default function HomeConsumerRedesigned() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card 
+                <Card
                   className={`group transition-all duration-300 border-0 overflow-hidden relative ${
-                    action.enabled 
-                      ? 'cursor-pointer hover:shadow-xl' 
+                    action.enabled
+                      ? 'cursor-pointer hover:shadow-xl'
                       : 'opacity-75 cursor-not-allowed'
                   }`}
                   onClick={() => action.enabled && handleAction(action.action)}
@@ -431,8 +431,8 @@ export default function HomeConsumerRedesigned() {
                     <CardDescription>{action.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="w-full justify-between p-0 h-auto hover:bg-transparent"
                       disabled={!action.enabled}
                     >
@@ -468,7 +468,7 @@ export default function HomeConsumerRedesigned() {
               </div>
               <div className="grid gap-4">
                 {trips.slice(0, 6).map((trip) => (
-                  <Card 
+                  <Card
                     key={trip.id}
                     className="cursor-pointer hover:shadow-lg transition-shadow group"
                     onClick={() => setLocation(`/trip/${trip.id}`)}
@@ -525,11 +525,11 @@ export default function HomeConsumerRedesigned() {
                   </Card>
                 ))}
               </div>
-              
+
               {trips.length > 6 && (
                 <div className="text-center mt-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       // For now, just show an alert since there's no dedicated trips page
                       alert(`You have ${trips.length} total trips. Click on any trip card to view it.`);
@@ -568,7 +568,7 @@ export default function HomeConsumerRedesigned() {
                   transition={{ delay: 0.5 + index * 0.1 }}
                   whileHover={{ y: -5 }}
                 >
-                  <Card 
+                  <Card
                     className="group cursor-pointer overflow-hidden hover:shadow-xl transition-shadow"
                     onClick={() => {
                       if (realTemplates && realTemplates.length > 0) {
@@ -582,8 +582,8 @@ export default function HomeConsumerRedesigned() {
                     {/* Cover Image - matching marketplace style */}
                     <div className="relative h-48 bg-gradient-to-br from-purple-400 to-pink-400">
                       {(template.coverImage || template.image || template.imageUrl) ? (
-                        <img 
-                          src={template.coverImage || template.image || template.imageUrl} 
+                        <img
+                          src={template.coverImage || template.image || template.imageUrl}
                           alt={template.title}
                           className="w-full h-full object-cover"
                           loading="lazy"
@@ -610,7 +610,7 @@ export default function HomeConsumerRedesigned() {
                       <h3 className="font-semibold text-lg mb-1 line-clamp-1">
                         {template.title}
                       </h3>
-                      
+
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                         {template.description || `Explore amazing destinations over ${template.duration || template.tripLength || 5} days`}
                       </p>
@@ -728,7 +728,7 @@ export default function HomeConsumerRedesigned() {
           )}
         </div>
       </section>
-      
+
       {/* Popular Destinations Section */}
       <PopularDestinations />
 
@@ -743,7 +743,6 @@ export default function HomeConsumerRedesigned() {
         isOpen={isAIChatOpen}
         onClose={() => setIsAIChatOpen(false)}
       />
-
 
       {isAuthModalOpen && (
         <AuthModalSimple

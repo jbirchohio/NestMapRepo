@@ -23,11 +23,11 @@ interface BookableActivityProps {
   onBook?: (product: ViatorProduct) => void;
 }
 
-export default function BookableActivity({ 
-  activityTitle, 
-  latitude, 
+export default function BookableActivity({
+  activityTitle,
+  latitude,
   longitude,
-  onBook 
+  onBook
 }: BookableActivityProps) {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<ViatorProduct[]>([]);
@@ -42,52 +42,42 @@ export default function BookableActivity({
 
   const searchBookableActivities = async () => {
     if (!activityTitle || !latitude || !longitude) return;
-    
+
     setLoading(true);
     setHasSearched(true);
-    
+
     try {
       const response = await apiRequest('POST', '/api/viator/search', {
         activityName: activityTitle,
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude)
       });
-      
-      console.log('Viator search response:', response);
-      
+
       if (response.activities && response.activities.length > 0) {
-        console.log('Activities found:', response.activities);
         setProducts(response.activities);
       }
     } catch (error) {
-      console.error('Error searching activities:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
 
   const handleBookActivity = async (product: ViatorProduct) => {
     try {
-      console.log('Booking activity:', product);
-      console.log('Product code:', product.productCode);
-      
       // Get affiliate link
       const response = await apiRequest('POST', '/api/viator/affiliate-link', {
         productCode: product.productCode
       });
-      
-      console.log('Affiliate link response:', response);
-      
+
       // Open in new tab
       window.open(response.affiliateLink, '_blank');
-      
+
       // Track conversion
       if (onBook) {
         onBook(product);
       }
     } catch (error) {
-      console.error('Error generating affiliate link:', error);
-    }
+      }
   };
 
   // Don't show anything if we don't have location data yet
@@ -123,8 +113,8 @@ export default function BookableActivity({
               <CardContent className="p-3">
                 <div className="flex gap-3">
                   {product.primaryImageURL && (
-                    <img 
-                      src={product.primaryImageURL} 
+                    <img
+                      src={product.primaryImageURL}
                       alt={product.productName}
                       className="w-16 h-16 object-cover rounded"
                     />
@@ -133,7 +123,7 @@ export default function BookableActivity({
                     <h5 className="font-medium text-sm line-clamp-2">
                       {product.productName}
                     </h5>
-                    
+
                     <div className="flex items-center gap-2 mt-1">
                       {product.rating && product.rating > 0 && (
                         <div className="flex items-center gap-1 text-xs">

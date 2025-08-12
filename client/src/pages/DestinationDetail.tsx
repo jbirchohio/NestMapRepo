@@ -4,8 +4,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import SelectTripModal from '@/components/SelectTripModal';
-import { 
-  MapPin, Calendar, Cloud, DollarSign, Users, 
+import {
+  MapPin, Calendar, Cloud, DollarSign, Users,
   Utensils, Hotel, Camera, Info, ChevronRight,
   Sparkles, Globe, Clock, Star, TrendingUp, Activity,
   Tag, ExternalLink, Navigation, Plus, Check
@@ -49,10 +49,10 @@ export default function DestinationDetail() {
   const { data: templatesData } = useQuery({
     queryKey: ['templates', 'destination', destination],
     queryFn: async () => {
-      const destinationName = destination?.split('-').map(w => 
+      const destinationName = destination?.split('-').map(w =>
         w.charAt(0).toUpperCase() + w.slice(1)
       ).join(' ');
-      
+
       const response = await fetch(`/api/templates?destination=${encodeURIComponent(destinationName || '')}&limit=6`);
       if (!response.ok) return { templates: [] };
       const data = await response.json();
@@ -115,9 +115,8 @@ export default function DestinationDetail() {
         })
       });
     } catch (error) {
-      console.error('Failed to track click:', error);
-    }
-    
+      }
+
     // Open affiliate link in new tab
     window.open(activity.affiliateLink, '_blank', 'noopener,noreferrer');
   };
@@ -158,7 +157,7 @@ export default function DestinationDetail() {
     );
   }
 
-  const destinationName = destination?.split('-').map(w => 
+  const destinationName = destination?.split('-').map(w =>
     w.charAt(0).toUpperCase() + w.slice(1)
   ).join(' ');
 
@@ -188,15 +187,15 @@ export default function DestinationDetail() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
         {/* Hero Section */}
         <section className="relative h-[500px] overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ 
-              backgroundImage: `url(${content.image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&h=800&fit=crop'})` 
+            style={{
+              backgroundImage: `url(${content.image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&h=800&fit=crop'})`
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/70" />
           </div>
-          
+
           <div className="relative h-full flex items-end">
             <div className="max-w-7xl mx-auto px-4 pb-12 w-full">
               <motion.div
@@ -277,8 +276,8 @@ export default function DestinationDetail() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Tabs 
-                  defaultValue="stay" 
+                <Tabs
+                  defaultValue="stay"
                   className="w-full"
                   value={activitiesTab}
                   onValueChange={(value) => {
@@ -294,7 +293,7 @@ export default function DestinationDetail() {
                     <TabsTrigger value="transport">Getting Around</TabsTrigger>
                     <TabsTrigger value="activities">Activities</TabsTrigger>
                   </TabsList>
-                  
+
                   <TabsContent value="stay">
                     <Card>
                       <CardHeader>
@@ -310,7 +309,7 @@ export default function DestinationDetail() {
                       </CardContent>
                     </Card>
                   </TabsContent>
-                  
+
                   <TabsContent value="food">
                     <Card>
                       <CardHeader>
@@ -326,7 +325,7 @@ export default function DestinationDetail() {
                       </CardContent>
                     </Card>
                   </TabsContent>
-                  
+
                   <TabsContent value="transport">
                     <Card>
                       <CardHeader>
@@ -342,7 +341,7 @@ export default function DestinationDetail() {
                       </CardContent>
                     </Card>
                   </TabsContent>
-                  
+
                   <TabsContent value="activities">
                     <Card>
                       <CardHeader>
@@ -368,14 +367,14 @@ export default function DestinationDetail() {
                         ) : viatorActivities.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {viatorActivities.map((activity: any) => (
-                              <div 
-                                key={activity.productCode} 
+                              <div
+                                key={activity.productCode}
                                 className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
                               >
                                 {activity.primaryImageURL && (
                                   <div className="h-40 bg-gray-200">
-                                    <img 
-                                      src={activity.primaryImageURL} 
+                                    <img
+                                      src={activity.primaryImageURL}
                                       alt={activity.productName}
                                       className="w-full h-full object-cover"
                                     />
@@ -385,7 +384,7 @@ export default function DestinationDetail() {
                                   <h4 className="font-semibold text-sm line-clamp-2">
                                     {activity.productName}
                                   </h4>
-                                  
+
                                   <div className="flex items-center gap-2 text-xs text-gray-600">
                                     {activity.duration && (
                                       <>
@@ -403,7 +402,7 @@ export default function DestinationDetail() {
                                       </>
                                     )}
                                   </div>
-                                  
+
                                   <div className="flex items-center justify-between mt-3">
                                     <div>
                                       <span className="text-xs text-gray-500">From</span>
@@ -455,11 +454,11 @@ export default function DestinationDetail() {
                             </p>
                           </div>
                         )}
-                        
+
                         {viatorActivities.length > 0 && (
                           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                             <p className="text-xs text-gray-600">
-                              <strong>Note:</strong> Prices and availability are subject to change. 
+                              <strong>Note:</strong> Prices and availability are subject to change.
                               Booking through our affiliate links helps support Remvana at no extra cost to you.
                             </p>
                           </div>
@@ -526,7 +525,7 @@ export default function DestinationDetail() {
                         {content.bestTimeToVisit || 'Year-round'}
                       </p>
                     </div>
-                    
+
                     {content.seasonalWeather && (
                       <div>
                         <div className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-1">
@@ -638,7 +637,7 @@ export default function DestinationDetail() {
           </div>
         </div>
       </div>
-      
+
       {/* Trip Selection Modal */}
       {showTripModal && selectedActivity && (
         <SelectTripModal
@@ -648,7 +647,7 @@ export default function DestinationDetail() {
             setSelectedActivity(null);
           }}
           activity={selectedActivity}
-          cityName={destination?.split('-').map(w => 
+          cityName={destination?.split('-').map(w =>
             w.charAt(0).toUpperCase() + w.slice(1)
           ).join(' ') || ''}
           onSuccess={handleActivitySaved}

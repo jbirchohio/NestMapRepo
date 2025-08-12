@@ -57,7 +57,7 @@ export default function ProfileSettings() {
   const { user, userId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Privacy settings state
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: 'public',
@@ -79,7 +79,7 @@ export default function ProfileSettings() {
     weeklyDigest: true,
     instantUpdates: true,
   });
-  
+
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -125,7 +125,7 @@ export default function ProfileSettings() {
         newPassword: data.newPassword,
         userId,
       });
-      
+
       const result = await response.json();
       if (!result.success) {
         throw new Error(result.message);

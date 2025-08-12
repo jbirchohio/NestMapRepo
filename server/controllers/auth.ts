@@ -22,16 +22,16 @@ export async function getUserPermissions(req: Request, res: Response) {
     }
 
     const requestedUserId = req.query.user_id as string;
-    
+
     // Handle demo users
     if (requestedUserId && (requestedUserId.startsWith('demo-corp-') || requestedUserId.startsWith('demo-agency-'))) {
       const permissions = ["manage_users", "manage_organizations", "view_analytics", "export_data"];
       return res.json({ permissions, role: "admin" });
     }
-    
+
     // Use authenticated user's ID if no specific user requested
     const targetUserId = requestedUserId ? Number(requestedUserId) : req.user.id;
-    
+
     if (isNaN(targetUserId)) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
@@ -52,7 +52,7 @@ export async function getUserPermissions(req: Request, res: Response) {
     // 1. Their own account
     // 2. Users in their organization (if they're admin/manager)
     // 3. Any user (if they're super_admin)
-    
+
     if (targetUserId !== req.user!.id) {
       // Requesting another user's permissions
       if (req.user!.role === 'super_admin') {
@@ -68,16 +68,16 @@ export async function getUserPermissions(req: Request, res: Response) {
             endpoint: '/api/user/permissions',
             timestamp: new Date().toISOString()
           });
-          return res.status(403).json({ 
-            error: "Access denied", 
-            message: "Cannot view permissions for users outside your organization" 
+          return res.status(403).json({
+            error: "Access denied",
+            message: "Cannot view permissions for users outside your organization"
           });
         }
       } else {
         // Regular users can only view their own permissions
-        return res.status(403).json({ 
-          error: "Access denied", 
-          message: "Can only view your own permissions" 
+        return res.status(403).json({
+          error: "Access denied",
+          message: "Can only view your own permissions"
         });
       }
     }
@@ -86,11 +86,11 @@ export async function getUserPermissions(req: Request, res: Response) {
     // Simple consumer permissions
     const permissions = ['manage_trips', 'view_trips', 'create_activities'];
 
-    return res.json({ 
-      permissions, 
+    return res.json({
+      permissions,
       role: userRole,
       userId: targetUserId,
-      organizationId: user[0].organization_id 
+      organizationId: user[0].organization_id
     });
   } catch (error) {
     logger.error("Error fetching user permissions:", error);
@@ -102,18 +102,18 @@ export async function getUserPermissions(req: Request, res: Response) {
 export async function createUser(req: Request, res: Response) {
   try {
     const userData = insertUserSchema.parse(req.body);
-    
+
     // Check if user already exists by auth_id
     const existingUser = await db
       .select()
       .from(users)
       .where(eq(users.auth_id, userData.auth_id))
       .limit(1);
-      
+
     if (existingUser.length > 0) {
       return res.status(409).json({ message: "User already exists" });
     }
-    
+
     const user = await storage.createUser(userData);
     res.status(201).json(user);
   } catch (error) {
@@ -129,20 +129,20 @@ export async function createUser(req: Request, res: Response) {
 export async function getUserByAuthId(req: Request, res: Response) {
   try {
     const authId = req.params.authId;
-    
+
     if (!authId) {
       return res.status(400).json({ message: "Auth ID is required" });
     }
-    
+
     const [user] = await db
       .select()
       .from(users)
       .where(eq(users.auth_id, authId));
-      
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     res.status(200).json(user);
   } catch (error) {
     logger.error("Error getting user by auth ID:", error);

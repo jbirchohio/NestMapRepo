@@ -15,7 +15,7 @@ export default function TripOptimizer() {
   const [, setLocation] = useLocation();
   const [selectedTripId, setSelectedTripId] = useState<number | null>(null);
   const [optimizing, setOptimizing] = useState(false);
-  
+
   // Get user trips
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, userId],
@@ -36,7 +36,7 @@ export default function TripOptimizer() {
   const handleOptimizeTrip = async (tripId: number) => {
     setSelectedTripId(tripId);
     setOptimizing(true);
-    
+
     // Simulate optimization process
     setTimeout(() => {
       setOptimizing(false);
@@ -55,7 +55,7 @@ export default function TripOptimizer() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
+            <Button
               onClick={() => setLocation('/login')}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
             >
@@ -96,7 +96,7 @@ export default function TripOptimizer() {
               <p className="text-gray-600 mb-4">
                 Create a trip first, then come back to optimize it!
               </p>
-              <Button 
+              <Button
                 onClick={() => setLocation('/')}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
               >
@@ -182,7 +182,7 @@ export default function TripOptimizer() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700">
-                  Optimize your trips at least 2 weeks before traveling to get the best deals on activities and accommodations. 
+                  Optimize your trips at least 2 weeks before traveling to get the best deals on activities and accommodations.
                   Our AI considers seasonal pricing and availability!
                 </p>
               </CardContent>

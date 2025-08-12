@@ -143,6 +143,17 @@ export interface ClientTrip {
   clientName?: string;
   projectType?: string;
   budget?: number;
+  currency?: string;
+  budgetCategories?: {
+    accommodation?: number;
+    transportation?: number;
+    food?: number;
+    activities?: number;
+    shopping?: number;
+    emergency?: number;
+  };
+  totalSpent?: number;
+  budgetAlertThreshold?: number;
   completed?: boolean;
   status?: string;
   completedAt?: Date;
@@ -171,6 +182,14 @@ export interface ClientActivity {
   order: number;
   travelMode?: string | null;
   completed?: boolean;
+  // Budget tracking
+  price?: number;
+  actualCost?: number;
+  costCategory?: 'accommodation' | 'transportation' | 'food' | 'activities' | 'shopping' | 'other';
+  splitBetween?: number;
+  isPaid?: boolean;
+  paidBy?: number;
+  currency?: string;
   travelTimeFromPrevious?: string;
   travelDistanceFromPrevious?: string;
   conflict?: boolean;
@@ -277,4 +296,84 @@ export interface Collaborator {
   id: number;
   username: string;
   role: 'viewer' | 'editor' | 'commenter';
+}
+
+// ======================================
+// BUDGET TRACKING TYPES
+// ======================================
+
+export interface BudgetSummary {
+  tripId: number;
+  budget: number;
+  currency: string;
+  totalSpent: number;
+  remaining: number;
+  percentUsed: number;
+  spendingByCategory: Record<string, number>;
+  budgetCategories: Record<string, number>;
+  alertThreshold: number;
+  groupExpensesCount: number;
+  startDate: Date;
+  endDate: Date;
+}
+
+export interface GroupExpense {
+  id: number;
+  tripId: number;
+  activityId?: number;
+  description: string;
+  totalAmount: number;
+  currency: string;
+  paidBy: number;
+  paidByUser?: {
+    id: number;
+    username: string;
+    displayName?: string;
+  };
+  splitType: 'equal' | 'custom' | 'percentage';
+  splitDetails: Array<{
+    userId: number;
+    amount: number;
+    percentage?: number;
+    isSettled: boolean;
+  }>;
+  category?: string;
+  receiptUrl?: string;
+  notes?: string;
+  isSettled: boolean;
+  settledAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ExpenseSummary {
+  tripId: number;
+  totalExpenses: number;
+  unsettledExpenses: number;
+  totalAmount: number;
+  balances: Record<number, number>;
+  suggestedTransactions: Array<{
+    from: number;
+    to: number;
+    amount: number;
+  }>;
+}
+
+export interface FreeActivity {
+  title: string;
+  description: string;
+  location: string;
+  cost: number;
+  category: string;
+  duration: string;
+}
+
+export interface ActivityCostFormData {
+  estimatedCost?: number;
+  actualCost?: number;
+  category?: 'accommodation' | 'transportation' | 'food' | 'activities' | 'shopping' | 'other';
+  splitBetween?: number;
+  isPaid?: boolean;
+  paidBy?: number;
+  currency?: string;
 }

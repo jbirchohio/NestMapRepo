@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, differenceInDays } from 'date-fns';
-import { 
-  Calendar, Clock, MapPin, Plane, Hotel, 
+import {
+  Calendar, Clock, MapPin, Plane, Hotel,
   Activity, Utensils, Car, Camera, Coffee,
   Sun, Moon, Sunrise, ChevronRight, Filter,
   Check, Circle, AlertCircle, DollarSign
@@ -165,7 +165,7 @@ export default function TripTimeline({
   // Group items by day
   const itemsByDay = useMemo(() => {
     const grouped = new Map<string, TimelineItem[]>();
-    
+
     timelineItems.forEach(item => {
       const dateKey = format(item.date, 'yyyy-MM-dd');
       if (!grouped.has(dateKey)) {
@@ -180,18 +180,18 @@ export default function TripTimeline({
   // Calculate trip days
   const tripDays = useMemo(() => {
     if (!trip.startDate || !trip.endDate) return [];
-    
+
     const days = [];
     const start = new Date(trip.startDate);
     const end = new Date(trip.endDate);
     const totalDays = differenceInDays(end, start) + 1;
-    
+
     for (let i = 0; i < totalDays; i++) {
       const date = new Date(start);
       date.setDate(date.getDate() + i);
       days.push(date);
     }
-    
+
     return days;
   }, [trip]);
 
@@ -200,7 +200,7 @@ export default function TripTimeline({
       {tripDays.map((day, dayIndex) => {
         const dateKey = format(day, 'yyyy-MM-dd');
         const dayItems = itemsByDay.get(dateKey) || [];
-        
+
         return (
           <motion.div
             key={dateKey}
@@ -237,11 +237,11 @@ export default function TripTimeline({
               <div className="relative ml-8">
                 {/* Timeline line */}
                 <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-200" />
-                
+
                 {dayItems.map((item, index) => {
                   const Icon = item.icon;
                   const TimeIcon = getTimeOfDayIcon(item.time);
-                  
+
                   return (
                     <motion.div
                       key={item.id}
@@ -251,9 +251,9 @@ export default function TripTimeline({
                       className="relative flex gap-4 mb-6"
                     >
                       {/* Timeline dot */}
-                      <div className={`absolute -left-3 w-6 h-6 rounded-full border-4 border-white z-10 
-                        ${item.status === 'completed' ? 'bg-green-500' : 
-                          item.status === 'confirmed' ? `bg-${item.color}-500` : 
+                      <div className={`absolute -left-3 w-6 h-6 rounded-full border-4 border-white z-10
+                        ${item.status === 'completed' ? 'bg-green-500' :
+                          item.status === 'confirmed' ? `bg-${item.color}-500` :
                           'bg-gray-300'}`}>
                         {item.status === 'completed' && (
                           <Check className="w-3 h-3 text-white absolute inset-0 m-auto" />
@@ -261,7 +261,7 @@ export default function TripTimeline({
                       </div>
 
                       {/* Activity card */}
-                      <Card 
+                      <Card
                         className={`flex-1 ml-6 hover:shadow-lg transition-all cursor-pointer
                           ${item.status === 'completed' ? 'opacity-75' : ''}`}
                         onClick={() => onActivityClick && onActivityClick(item)}
@@ -278,11 +278,11 @@ export default function TripTimeline({
                                   </Badge>
                                 )}
                               </div>
-                              
+
                               {item.description && (
                                 <p className="text-sm text-gray-600 mb-2">{item.description}</p>
                               )}
-                              
+
                               <div className="flex flex-wrap gap-3 text-xs text-gray-500">
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
@@ -309,7 +309,7 @@ export default function TripTimeline({
                                 </div>
                               )}
                             </div>
-                            
+
                             <TimeIcon className="w-5 h-5 text-gray-400" />
                           </div>
                         </CardContent>
@@ -330,7 +330,7 @@ export default function TripTimeline({
       {tripDays.map((day, dayIndex) => {
         const dateKey = format(day, 'yyyy-MM-dd');
         const dayItems = itemsByDay.get(dateKey) || [];
-        
+
         return (
           <motion.div
             key={dateKey}
@@ -386,7 +386,7 @@ export default function TripTimeline({
     <div className="space-y-2">
       {timelineItems.map((item, index) => {
         const Icon = item.icon;
-        
+
         return (
           <motion.div
             key={item.id}
@@ -394,7 +394,7 @@ export default function TripTimeline({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.02 }}
           >
-            <Card 
+            <Card
               className="hover:shadow-md transition-all cursor-pointer"
               onClick={() => onActivityClick && onActivityClick(item)}
             >
@@ -403,7 +403,7 @@ export default function TripTimeline({
                   <div className={`p-2 rounded-lg bg-${item.color}-100`}>
                     <Icon className={`w-5 h-5 text-${item.color}-600`} />
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{item.title}</h4>
@@ -424,7 +424,7 @@ export default function TripTimeline({
                       {item.price && <span>${item.price}</span>}
                     </div>
                   </div>
-                  
+
                   <ChevronRight className="w-5 h-5 text-gray-400" />
                 </div>
               </CardContent>
@@ -505,11 +505,11 @@ export default function TripTimeline({
         <TabsContent value="timeline">
           {renderTimelineView()}
         </TabsContent>
-        
+
         <TabsContent value="daily">
           {renderDailyView()}
         </TabsContent>
-        
+
         <TabsContent value="list">
           {renderListView()}
         </TabsContent>

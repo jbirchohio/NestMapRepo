@@ -46,9 +46,9 @@ router.post('/', async (req, res) => {
       content: req.body.content,
       organizationId: req.body.organization_id
     };
-    
+
     const validatedData = createNoteSchema.parse(dataToValidate);
-    
+
     // Set organization ID from authenticated user if not provided
     if (!validatedData.organizationId && req.user?.organization_id) {
       validatedData.organizationId = req.user.organization_id;
@@ -75,7 +75,7 @@ router.put('/:id', async (req, res) => {
 
     const validatedData = updateNoteSchema.parse(req.body);
     const note = await storage.updateNote(noteId, validatedData);
-    
+
     if (!note) {
       return res.status(404).json({ message: 'Note not found' });
     }
@@ -99,7 +99,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     const success = await storage.deleteNote(noteId);
-    
+
     if (!success) {
       return res.status(404).json({ message: 'Note not found' });
     }

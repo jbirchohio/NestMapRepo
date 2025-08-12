@@ -14,30 +14,25 @@ const DATABASE_URL = process.env.DATABASE_URL;
 async function checkRiskLevel() {
   try {
     const sql = neon(DATABASE_URL!);
-    
+
     // Check if risk_level exists in organizations
     const result = await sql`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'organizations' 
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'organizations'
       AND column_name = 'risk_level'
     `;
-    
-    console.log('Risk level in organizations:', result);
-    
+
     // Check superadmin_audit_logs columns
     const auditCols = await sql`
-      SELECT column_name 
-      FROM information_schema.columns 
+      SELECT column_name
+      FROM information_schema.columns
       WHERE table_name = 'superadmin_audit_logs'
       ORDER BY ordinal_position
     `;
-    
-    console.log('Superadmin audit logs columns:', auditCols);
-    
-  } catch (error) {
-    console.error('Error:', error);
-  }
+
+    } catch (error) {
+    }
 }
 
 checkRiskLevel();

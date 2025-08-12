@@ -12,7 +12,7 @@ interface AnimatedCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
 const AnimatedCard = forwardRef<HTMLDivElement, AnimatedCardProps>(
   ({ children, variant = "default", interactive = true, className, ...props }, ref) => {
     const baseStyles = "relative overflow-hidden backdrop-blur-sm";
-    
+
     const variants = {
       default: "bg-white/90 dark:bg-navy-900/90 border border-gray-200/50 dark:border-navy-700/50 shadow-soft",
       hover: "bg-white/95 dark:bg-navy-900/95 border border-electric-200/30 dark:border-electric-500/30 shadow-soft-lg",
@@ -21,16 +21,16 @@ const AnimatedCard = forwardRef<HTMLDivElement, AnimatedCardProps>(
     };
 
     const motionVariants = {
-      initial: { 
-        scale: 1, 
+      initial: {
+        scale: 1,
         y: 0,
         boxShadow: variant === "glow" ? "0 0 20px rgba(109, 93, 251, 0.3)" : "0 4px 20px rgba(0, 0, 0, 0.05)"
       },
-      hover: { 
+      hover: {
         scale: interactive ? 1.02 : 1,
         y: interactive ? -4 : 0,
-        boxShadow: variant === "glow" 
-          ? "0 0 40px rgba(109, 93, 251, 0.6)" 
+        boxShadow: variant === "glow"
+          ? "0 0 40px rgba(109, 93, 251, 0.6)"
           : "0 8px 40px rgba(0, 0, 0, 0.12)",
         transition: {
           type: "spring",
@@ -38,7 +38,7 @@ const AnimatedCard = forwardRef<HTMLDivElement, AnimatedCardProps>(
           damping: 25
         }
       },
-      tap: interactive ? { 
+      tap: interactive ? {
         scale: 0.98,
         transition: {
           type: "spring",
@@ -66,7 +66,7 @@ const AnimatedCard = forwardRef<HTMLDivElement, AnimatedCardProps>(
       >
         {/* Subtle gradient overlay - reduced opacity to fix desktop hazy effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/2 to-transparent dark:from-electric-500/2 dark:to-transparent rounded-2xl pointer-events-none" />
-        
+
         {/* Content */}
         <div className="relative z-10">
           {children}

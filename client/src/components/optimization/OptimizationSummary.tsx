@@ -193,8 +193,8 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
           Keep Original
         </Button>
         <div className="flex gap-3">
-          <Button 
-            onClick={onApplyChanges} 
+          <Button
+            onClick={onApplyChanges}
             disabled={isLoading}
             className="bg-green-600 hover:bg-green-700 text-white"
           >

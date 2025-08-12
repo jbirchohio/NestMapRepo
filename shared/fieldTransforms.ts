@@ -5,15 +5,15 @@ export function snakeToCamel(obj: any): any {
   if (obj === null || obj === undefined || typeof obj !== 'object') {
     return obj;
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => snakeToCamel(item));
   }
-  
+
   if (obj instanceof Date) {
     return obj;
   }
-  
+
   const result: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -27,15 +27,15 @@ export function camelToSnake(obj: any): any {
   if (obj === null || obj === undefined || typeof obj !== 'object') {
     return obj;
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => camelToSnake(item));
   }
-  
+
   if (obj instanceof Date) {
     return obj;
   }
-  
+
   const result: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
@@ -47,7 +47,7 @@ export function camelToSnake(obj: any): any {
 // Transform frontend trip data to database format
 export function transformTripToDatabase(tripData: any) {
   const result: any = {};
-  
+
   // Handle fields that need camelCase to snake_case transformation
   if (tripData.title !== undefined) result.title = tripData.title;
   if (tripData.startDate !== undefined) result.start_date = tripData.startDate;
@@ -66,7 +66,7 @@ export function transformTripToDatabase(tripData: any) {
   if (tripData.tripType !== undefined) result.trip_type = tripData.tripType;
   if (tripData.clientName !== undefined) result.client_name = tripData.clientName;
   if (tripData.projectType !== undefined) result.project_type = tripData.projectType;
-  
+
   // Handle fields that don't need transformation
   if (tripData.city !== undefined) result.city = tripData.city;
   if (tripData.country !== undefined) result.country = tripData.country;
@@ -76,21 +76,21 @@ export function transformTripToDatabase(tripData: any) {
   if (tripData.budget !== undefined) result.budget = tripData.budget;
   if (tripData.collaborators !== undefined) result.collaborators = tripData.collaborators;
   if (tripData.organization !== undefined) result.organization = tripData.organization;
-  
+
   return result;
 }
 
 // Transform frontend activity data to database format
 export function transformActivityToDatabase(activityData: any) {
   const result: any = {};
-  
+
   // Handle fields that need camelCase to snake_case transformation
   if (activityData.tripId !== undefined) result.trip_id = activityData.tripId;
   if (activityData.locationName !== undefined) result.location_name = activityData.locationName;
   if (activityData.organizationId !== undefined) result.organization_id = activityData.organizationId;
   if (activityData.assignedTo !== undefined) result.assigned_to = activityData.assignedTo;
   if (activityData.travelMode !== undefined) result.travel_mode = activityData.travelMode;
-  
+
   // Handle fields that don't need transformation
   if (activityData.title !== undefined) result.title = activityData.title;
   if (activityData.date !== undefined) result.date = activityData.date;
@@ -101,6 +101,6 @@ export function transformActivityToDatabase(activityData: any) {
   if (activityData.longitude !== undefined) result.longitude = activityData.longitude;
   if (activityData.notes !== undefined) result.notes = activityData.notes;
   if (activityData.tag !== undefined) result.tag = activityData.tag;
-  
+
   return result;
 }

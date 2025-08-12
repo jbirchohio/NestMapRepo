@@ -12,7 +12,7 @@ const router = Router();
 // Basic health check
 router.get('/health', async (req, res) => {
   const dbHealthy = await testConnection(1);
-  
+
   res.status(dbHealthy ? 200 : 503).json({
     status: dbHealthy ? 'healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
@@ -26,24 +26,24 @@ router.get('/health/detailed', async (req, res) => {
   const memoryUsage = process.memoryUsage();
   const cpuUsage = process.cpuUsage();
   const loadAverage = os.loadavg();
-  
+
   // Get database stats
   const dbStats = getPoolStats();
-  
+
   // Get cache stats
   const cacheStats = superCache.getStats();
-  
+
   // Calculate memory percentage
   const totalMemory = os.totalmem();
   const freeMemory = os.freemem();
   const usedMemory = totalMemory - freeMemory;
   const memoryPercentage = (usedMemory / totalMemory) * 100;
-  
+
   // Check if we're approaching Railway's 512MB limit
   const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
   const memoryWarning = heapUsedMB > 400; // Warn at 400MB
   const memoryCritical = heapUsedMB > 450; // Critical at 450MB
-  
+
   res.json({
     status: memoryCritical ? 'critical' : memoryWarning ? 'warning' : 'healthy',
     timestamp: new Date().toISOString(),
@@ -93,7 +93,7 @@ router.get('/health/detailed', async (req, res) => {
 // Performance metrics endpoint
 router.get('/metrics', async (req, res) => {
   const metrics = await collectMetrics();
-  
+
   // Return in Prometheus format for easy integration
   res.set('Content-Type', 'text/plain');
   res.send(formatPrometheusMetrics(metrics));
@@ -104,16 +104,16 @@ const responseTimes: Map<string, number[]> = new Map();
 
 router.get('/metrics/endpoints', (req, res) => {
   const endpointStats: any[] = [];
-  
+
   responseTimes.forEach((times, endpoint) => {
     if (times.length === 0) return;
-    
+
     const sorted = [...times].sort((a, b) => a - b);
     const avg = times.reduce((a, b) => a + b, 0) / times.length;
     const p50 = sorted[Math.floor(sorted.length * 0.5)];
     const p95 = sorted[Math.floor(sorted.length * 0.95)];
     const p99 = sorted[Math.floor(sorted.length * 0.99)];
-    
+
     endpointStats.push({
       endpoint,
       count: times.length,
@@ -125,10 +125,10 @@ router.get('/metrics/endpoints', (req, res) => {
       max: Math.max(...times).toFixed(2)
     });
   });
-  
+
   // Sort by average response time
   endpointStats.sort((a, b) => parseFloat(b.avg) - parseFloat(a.avg));
-  
+
   res.json({
     slowestEndpoints: endpointStats.slice(0, 10),
     totalEndpoints: endpointStats.length,
@@ -143,12 +143,12 @@ router.get('/ready', async (req, res) => {
     const dbHealthy = await testConnection(1);
     const cacheStats = superCache.getStats();
     const memoryUsage = process.memoryUsage();
-    
-    const ready = 
-      dbHealthy && 
+
+    const ready =
+      dbHealthy &&
       cacheStats.hitRate > 0 && // Cache is working
       memoryUsage.heapUsed < 450 * 1024 * 1024; // Under memory limit
-    
+
     res.status(ready ? 200 : 503).json({
       ready,
       checks: {
@@ -173,13 +173,13 @@ function formatUptime(seconds: number): string {
   const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  
+
   const parts = [];
   if (days > 0) parts.push(`${days}d`);
   if (hours > 0) parts.push(`${hours}h`);
   if (minutes > 0) parts.push(`${minutes}m`);
   parts.push(`${secs}s`);
-  
+
   return parts.join(' ');
 }
 
@@ -187,7 +187,7 @@ async function collectMetrics() {
   const memoryUsage = process.memoryUsage();
   const dbStats = getPoolStats();
   const cacheStats = superCache.getStats();
-  
+
   return {
     process_heap_used_bytes: memoryUsage.heapUsed,
     process_heap_total_bytes: memoryUsage.heapTotal,
@@ -202,23 +202,23 @@ async function collectMetrics() {
 
 function formatPrometheusMetrics(metrics: any): string {
   const lines: string[] = [];
-  
+
   for (const [key, value] of Object.entries(metrics)) {
     lines.push(`# TYPE ${key} gauge`);
     lines.push(`${key} ${value}`);
   }
-  
+
   return lines.join('\n');
 }
 
 function calculateOverallStats(endpointStats: any[]): any {
   if (endpointStats.length === 0) return null;
-  
+
   const allTimes: number[] = [];
   endpointStats.forEach(stat => {
     allTimes.push(parseFloat(stat.avg));
   });
-  
+
   return {
     averageResponseTime: (allTimes.reduce((a, b) => a + b, 0) / allTimes.length).toFixed(2),
     totalRequests: endpointStats.reduce((sum, stat) => sum + stat.count, 0)
@@ -229,24 +229,24 @@ function calculateOverallStats(endpointStats: any[]): any {
 export function responseTimeTracking() {
   return (req: any, res: any, next: any) => {
     const start = Date.now();
-    
+
     res.on('finish', () => {
       const duration = Date.now() - start;
       const endpoint = `${req.method} ${req.route?.path || req.path}`;
-      
+
       if (!responseTimes.has(endpoint)) {
         responseTimes.set(endpoint, []);
       }
-      
+
       const times = responseTimes.get(endpoint)!;
       times.push(duration);
-      
+
       // Keep only last 1000 measurements per endpoint
       if (times.length > 1000) {
         times.shift();
       }
     });
-    
+
     next();
   };
 }

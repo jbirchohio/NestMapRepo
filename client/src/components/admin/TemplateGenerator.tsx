@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
+import {
   Sparkles, AlertCircle, CheckCircle, Loader2, MapPin, DollarSign
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -21,6 +21,11 @@ export default function TemplateGenerator() {
   const [checking, setChecking] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [checkResult, setCheckResult] = useState<CityCheckResult | null>(null);
+  
+  // Budget generation fields
+  const [includeBudget, setIncludeBudget] = useState(true);
+  const [budgetLevel, setBudgetLevel] = useState<'budget' | 'mid' | 'luxury'>('mid');
+  const [dailyBudget, setDailyBudget] = useState('');
 
   const handleCheckCity = async () => {
     if (!city.trim()) {
@@ -42,7 +47,7 @@ export default function TemplateGenerator() {
       });
 
       if (!response.ok) throw new Error('Failed to check city');
-      
+
       const result = await response.json();
       setCheckResult(result);
 
@@ -52,7 +57,6 @@ export default function TemplateGenerator() {
         toast.success(`${city} is available for template generation!`);
       }
     } catch (error) {
-      console.error('Error checking city:', error);
       toast.error('Failed to check city availability');
     } finally {
       setChecking(false);
@@ -88,15 +92,18 @@ export default function TemplateGenerator() {
         },
         body: JSON.stringify({
           city: city.trim(),
-          price: parseFloat(price)
+          price: parseFloat(price),
+          includeBudget,
+          budgetLevel,
+          dailyBudget: dailyBudget ? parseFloat(dailyBudget) : null
         })
       });
 
       if (!response.ok) throw new Error('Failed to generate template');
-      
+
       const result = await response.json();
       toast.success(`Successfully generated template for ${city}!`);
-      
+
       // Reset form
       setCity('');
       setPrice('');
@@ -107,7 +114,6 @@ export default function TemplateGenerator() {
         window.open(`/template/${result.templateId}`, '_blank');
       }
     } catch (error) {
-      console.error('Error generating template:', error);
       toast.error('Failed to generate template');
     } finally {
       setGenerating(false);
@@ -126,37 +132,100 @@ export default function TemplateGenerator() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="city">
-              <MapPin className="inline h-4 w-4 mr-1" />
-              City Name
-            </Label>
-            <Input
-              id="city"
-              placeholder="e.g., Barcelona, Tokyo, New York"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              onBlur={handleCheckCity}
-            />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="city">
+                <MapPin className="inline h-4 w-4 mr-1" />
+                City Name
+              </Label>
+              <Input
+                id="city"
+                placeholder="e.g., Barcelona, Tokyo, New York"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                onBlur={handleCheckCity}
+              />
+            </div>
+            <div>
+              <Label htmlFor="price">
+                <DollarSign className="inline h-4 w-4 mr-1" />
+                Template Price (USD)
+              </Label>
+              <Input
+                id="price"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g., 49.99"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Duration will be based on price (higher price = longer trip)
+              </p>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="price">
-              <DollarSign className="inline h-4 w-4 mr-1" />
-              Price (USD)
-            </Label>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="e.g., 49.99"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Duration will be based on price (higher price = longer trip)
-            </p>
+
+          {/* Budget Generation Section */}
+          <div className="border rounded-lg p-4 bg-purple-50">
+            <div className="flex items-center gap-2 mb-3">
+              <input
+                type="checkbox"
+                id="includeBudget"
+                checked={includeBudget}
+                onChange={(e) => setIncludeBudget(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="includeBudget" className="font-semibold cursor-pointer">
+                💰 Include Smart Budget Breakdown
+              </Label>
+            </div>
+            
+            {includeBudget && (
+              <div className="space-y-3 mt-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="budgetLevel">Budget Level</Label>
+                    <select
+                      id="budgetLevel"
+                      className="w-full p-2 border rounded-md"
+                      value={budgetLevel}
+                      onChange={(e) => setBudgetLevel(e.target.value as any)}
+                    >
+                      <option value="budget">Budget ($30-80/day)</option>
+                      <option value="mid">Mid-Range ($80-200/day)</option>
+                      <option value="luxury">Luxury ($200+/day)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="dailyBudget">
+                      Custom Daily Budget (Optional)
+                    </Label>
+                    <Input
+                      id="dailyBudget"
+                      type="number"
+                      min="0"
+                      step="10"
+                      placeholder="Auto-calculate based on level"
+                      value={dailyBudget}
+                      onChange={(e) => setDailyBudget(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="text-sm text-purple-700 bg-purple-100 p-2 rounded">
+                  <strong>AI will generate:</strong>
+                  <ul className="mt-1 list-disc list-inside text-xs">
+                    <li>Realistic budget allocation (accommodation, food, activities, transport)</li>
+                    <li>Cost estimates for each activity</li>
+                    <li>Money-saving tips specific to {city || 'the destination'}</li>
+                    <li>Free activity suggestions</li>
+                    <li>Budget vs splurge recommendations</li>
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

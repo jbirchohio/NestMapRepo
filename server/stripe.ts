@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 
 // Make Stripe optional - only initialize if key is provided
-export const stripe = process.env.STRIPE_SECRET_KEY 
+export const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2024-11-20.acacia" as any, // Using latest API version
     })
@@ -59,7 +59,7 @@ export async function createSubscription(customerId: string, priceId: string) {
 export async function updateSubscription(subscriptionId: string, newPriceId: string) {
   if (!stripe) throw new Error('Stripe is not configured');
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  
+
   return await stripe.subscriptions.update(subscriptionId, {
     items: [{
       id: subscription.items.data[0].id,
@@ -79,15 +79,15 @@ export async function createRefund(paymentIntentId: string, amount?: number, rea
   const refundData: Stripe.RefundCreateParams = {
     payment_intent: paymentIntentId,
   };
-  
+
   if (amount) {
     refundData.amount = Math.round(amount * 100); // Convert to cents
   }
-  
+
   if (reason) {
     refundData.reason = reason as Stripe.RefundCreateParams.Reason;
   }
-  
+
   return await stripe.refunds.create(refundData);
 }
 
@@ -131,7 +131,6 @@ export async function createCardholder(params: {
       billing: params.billing,
     });
   } catch (error: any) {
-    console.error('Stripe cardholder creation error:', error);
     throw new Error(`Failed to create cardholder: ${error.message}`);
   }
 }
@@ -160,7 +159,6 @@ export async function createCorporateCard(params: {
       metadata: params.metadata,
     });
   } catch (error: any) {
-    console.error('Stripe card creation error:', error);
     throw new Error(`Failed to create card: ${error.message}`);
   }
 }
@@ -190,7 +188,6 @@ export async function authorizeTransaction(params: {
       merchant_data: params.merchant_data
     } as any;
   } catch (error: any) {
-    console.error('Stripe authorization error:', error);
     throw new Error(`Failed to authorize transaction: ${error.message}`);
   }
 }
@@ -222,7 +219,6 @@ export async function createTransaction(params: {
       metadata: params.metadata
     } as any;
   } catch (error: any) {
-    console.error('Stripe transaction creation error:', error);
     throw new Error(`Failed to create transaction: ${error.message}`);
   }
 }
@@ -237,7 +233,6 @@ export async function getCardBalance(cardId: string) {
       currency: card.currency,
     };
   } catch (error: any) {
-    console.error('Error retrieving card balance:', error);
     throw new Error(`Failed to get card balance: ${error.message}`);
   }
 }
@@ -261,7 +256,6 @@ export async function addFundsToCard(cardId: string, amount: number) {
       },
     });
   } catch (error: any) {
-    console.error('Error adding funds to card:', error);
     throw new Error(`Failed to add funds to card: ${error.message}`);
   }
 }
@@ -273,7 +267,6 @@ export async function freezeCard(cardId: string) {
       status: 'inactive',
     });
   } catch (error: any) {
-    console.error('Error freezing card:', error);
     throw new Error(`Failed to freeze card: ${error.message}`);
   }
 }
@@ -285,7 +278,6 @@ export async function unfreezeCard(cardId: string) {
       status: 'active',
     });
   } catch (error: any) {
-    console.error('Error unfreezing card:', error);
     throw new Error(`Failed to unfreeze card: ${error.message}`);
   }
 }

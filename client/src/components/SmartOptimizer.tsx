@@ -8,11 +8,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Zap, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
+import {
+  Zap,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
   Route,
   Bell,
   Calendar,
@@ -74,7 +74,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
 
   const hasConflicts = conflicts && Array.isArray(conflicts) && conflicts.length > 0;
   const hasOptimizations = optimization && (optimization as any).improvements && Array.isArray((optimization as any).improvements);
-  
+
   if (optimizationLoading || conflictsLoading || remindersLoading) {
     return (
       <Card>
@@ -152,7 +152,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
               />
               <span className="text-sm font-medium">Auto-optimize schedule</span>
             </div>
-            
+
             <Button
               onClick={() => refetchOptimization()}
               variant="outline"
@@ -213,16 +213,16 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             </TabsList>
 
             <TabsContent value="optimization" className="space-y-4">
-              <OptimizationTab 
-                optimization={optimization} 
+              <OptimizationTab
+                optimization={optimization}
                 onApplyOptimization={() => applyOptimizationMutation.mutate()}
                 isApplying={applyOptimizationMutation.isPending}
               />
             </TabsContent>
 
             <TabsContent value="conflicts" className="space-y-4">
-              <ConflictsTab 
-                conflicts={conflicts || []} 
+              <ConflictsTab
+                conflicts={conflicts || []}
                 onAutoFix={(conflictIds: any) => autoFixMutation.mutate(conflictIds)}
                 isFixing={autoFixMutation.isPending}
               />
@@ -233,7 +233,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-4">
-              <SettingsTab 
+              <SettingsTab
                 isAutoOptimizeEnabled={isAutoOptimizeEnabled}
                 onAutoOptimizeChange={setIsAutoOptimizeEnabled}
               />

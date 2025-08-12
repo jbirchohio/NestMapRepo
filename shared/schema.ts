@@ -18,7 +18,7 @@ export const users = pgTable("users", {
   job_title: text("job_title"), // DEPRECATED
   team_size: text("team_size"), // DEPRECATED
   use_case: text("use_case"), // DEPRECATED
-  
+
   // Creator fields for template marketplace
   creator_status: text("creator_status").default("none"), // none, pending, approved, verified, suspended
   creator_tier: text("creator_tier").default("new"), // new, trusted, verified, partner
@@ -28,10 +28,10 @@ export const users = pgTable("users", {
   total_template_revenue: decimal("total_template_revenue", { precision: 10, scale: 2 }).default("0"),
   creator_verified_at: timestamp("creator_verified_at"),
   creator_bio: text("creator_bio"),
-  
+
   // Stripe customer ID for purchases
   stripe_customer_id: text("stripe_customer_id"),
-  
+
   last_login: timestamp("last_login"),
   created_at: timestamp("created_at").defaultNow(),
 });
@@ -95,7 +95,7 @@ export const trips = pgTable("trips", {
   end_date: date("end_date").notNull(),
   user_id: integer("user_id").notNull(),
   organizationId: integer("organization_id"), // DEPRECATED - always null
-  
+
   // Location data
   city: text("city"),
   country: text("country"),
@@ -105,27 +105,39 @@ export const trips = pgTable("trips", {
   hotel: text("hotel"),
   hotel_latitude: decimal("hotel_latitude", { precision: 11, scale: 8 }),
   hotel_longitude: decimal("hotel_longitude", { precision: 11, scale: 8 }),
-  
+
   // Sharing
   share_code: text("share_code").unique(),
   sharing_enabled: boolean("sharing_enabled").default(false),
   share_permission: text("share_permission").default("read-only"),
   is_public: boolean("is_public").default(false),
-  
+
   // Template source
   source_template_id: integer("source_template_id"),
-  
+
   // Trip metadata
   trip_type: text("trip_type").default("personal"), // Always personal for consumers
+  
+  // Budget tracking
   budget: decimal("budget", { precision: 10, scale: 2 }),
   currency: text("currency").default("USD"),
+  budget_categories: jsonb("budget_categories").$type<{
+    accommodation?: number;
+    transportation?: number;
+    food?: number;
+    activities?: number;
+    shopping?: number;
+    emergency?: number;
+  }>(),
+  total_spent: decimal("total_spent", { precision: 10, scale: 2 }).default("0"),
+  budget_alert_threshold: integer("budget_alert_threshold").default(80), // Percentage
   collaborators: jsonb("collaborators").$type<any[]>().default([]),
   status: text("status").default("active"), // active, completed, cancelled, revoked, frozen
   revoked_reason: text("revoked_reason"),
   revoked_at: timestamp("revoked_at"),
   frozen_reason: text("frozen_reason"),
   frozen_at: timestamp("frozen_at"),
-  
+
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -148,8 +160,15 @@ export const activities = pgTable("activities", {
   travel_mode: text("travel_mode"),
   booking_url: text("booking_url"),
   booking_reference: text("booking_reference"),
-  price: decimal("price", { precision: 10, scale: 2 }),
+  
+  // Cost tracking
+  price: decimal("price", { precision: 10, scale: 2 }), // Estimated cost
+  actual_cost: decimal("actual_cost", { precision: 10, scale: 2 }), // What was actually paid
   currency: text("currency").default("USD"),
+  cost_category: text("cost_category"), // accommodation, transportation, food, activities, shopping
+  split_between: integer("split_between").default(1), // Number of people splitting cost
+  is_paid: boolean("is_paid").default(false),
+  paid_by: integer("paid_by"), // User ID who paid
   provider: text("provider"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
@@ -195,6 +214,31 @@ export const bookings = pgTable("bookings", {
   cancellation_deadline: timestamp("cancellation_deadline"),
   notes: text("notes"),
   booking_details: jsonb("booking_details"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Group expense tracking for trip budget splits
+export const groupExpenses = pgTable("group_expenses", {
+  id: serial("id").primaryKey(),
+  trip_id: integer("trip_id").notNull(),
+  activity_id: integer("activity_id"), // Optional link to activity
+  description: text("description").notNull(),
+  total_amount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("USD"),
+  paid_by: integer("paid_by").notNull(), // User who paid
+  split_type: text("split_type").default("equal"), // equal, custom, percentage
+  split_details: jsonb("split_details").$type<Array<{
+    user_id: number;
+    amount: number;
+    percentage?: number;
+    is_settled: boolean;
+  }>>().notNull(),
+  category: text("category"), // food, transportation, accommodation, activities, shopping
+  receipt_url: text("receipt_url"),
+  notes: text("notes"),
+  is_settled: boolean("is_settled").default(false),
+  settled_at: timestamp("settled_at"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });

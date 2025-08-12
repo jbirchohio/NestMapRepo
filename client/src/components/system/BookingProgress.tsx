@@ -23,11 +23,11 @@ interface BookingProgressProps {
   onStepClick?: (stepId: string) => void;
 }
 
-export function BookingProgress({ 
-  steps, 
-  currentStep, 
+export function BookingProgress({
+  steps,
+  currentStep,
   tripDetails,
-  onStepClick 
+  onStepClick
 }: BookingProgressProps) {
   const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   const completedSteps = steps.filter(step => step.status === 'completed').length;
@@ -100,8 +100,8 @@ export function BookingProgress({
           <div className="space-y-4">
             <Progress value={progressPercentage} className="w-full" />
             <p className="text-sm text-muted-foreground">
-              {progressPercentage === 100 
-                ? 'Booking complete!' 
+              {progressPercentage === 100
+                ? 'Booking complete!'
                 : `${Math.round(progressPercentage)}% complete`}
             </p>
           </div>
@@ -121,8 +121,8 @@ export function BookingProgress({
                 className={`p-4 rounded-lg border transition-colors ${
                   getStepColor(step.status)
                 } ${
-                  onStepClick && step.status === 'completed' 
-                    ? 'cursor-pointer hover:opacity-80' 
+                  onStepClick && step.status === 'completed'
+                    ? 'cursor-pointer hover:opacity-80'
                     : ''
                 }`}
                 onClick={() => onStepClick && step.status === 'completed' && onStepClick(step.id)}
@@ -137,14 +137,14 @@ export function BookingProgress({
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {step.estimatedTime && step.status === 'pending' && (
                       <Badge variant="outline" className="text-xs">
                         ~{step.estimatedTime}
                       </Badge>
                     )}
-                    
+
                     {step.id === currentStep && (
                       <Badge className="text-xs">Current</Badge>
                     )}

@@ -3,16 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  MapPin, RefreshCw, Search, Globe, Calendar, Image, 
-  AlertCircle, CheckCircle, Loader2 
+import {
+  MapPin, RefreshCw, Search, Globe, Calendar, Image,
+  AlertCircle, CheckCircle, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -49,12 +49,11 @@ export default function DestinationManagement() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Failed to load destinations');
       const data = await response.json();
       setDestinations(data.destinations || []);
     } catch (error) {
-      console.error('Error loading destinations:', error);
       toast.error('Failed to load destinations');
     } finally {
       setLoading(false);
@@ -63,10 +62,10 @@ export default function DestinationManagement() {
 
   const handleRegenerate = async () => {
     if (!selectedDestination || regenerating) return;
-    
+
     const destination = destinations.find(d => d.slug === selectedDestination);
     if (!destination) return;
-    
+
     const confirmRegen = window.confirm(
       `Are you sure you want to regenerate content for ${destination.name}? This will:\n\n` +
       `• Generate new AI content\n` +
@@ -74,11 +73,11 @@ export default function DestinationManagement() {
       `• Update all text and FAQs\n\n` +
       `This action cannot be undone.`
     );
-    
+
     if (!confirmRegen) return;
-    
+
     setRegenerating(true);
-    
+
     try {
       const response = await fetch(`/api/destinations/${destination.slug}/regenerate`, {
         method: 'POST',
@@ -87,23 +86,21 @@ export default function DestinationManagement() {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) throw new Error('Failed to regenerate destination');
-      
+
       const result = await response.json();
       toast.success(result.message || `Successfully regenerated ${destination.name}`);
-      
+
       // Reload destinations to show updated data
       await loadDestinations();
       setSelectedDestination('');
     } catch (error) {
-      console.error('Error regenerating destination:', error);
       toast.error(`Failed to regenerate ${destination.name}`);
     } finally {
       setRegenerating(false);
     }
   };
-
 
   if (loading) {
     return (
@@ -143,7 +140,7 @@ export default function DestinationManagement() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <Button
             onClick={handleRegenerate}
             disabled={!selectedDestination || regenerating}

@@ -9,7 +9,7 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 // Check if token is the placeholder value
 if (MAPBOX_TOKEN === 'pk.your_mapbox_token' || !MAPBOX_TOKEN) {
-  console.warn('Mapbox token not configured. Please set VITE_MAPBOX_TOKEN in your .env file.');
+  // Mapbox token not configured. Please set VITE_MAPBOX_TOKEN in your .env file.
 }
 
 // Simple in-memory cache for geocoding results
@@ -30,7 +30,7 @@ export default function useMapbox() {
     try {
       // Check if token is available
       if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === '') {
-        console.error('Mapbox token not configured');
+        // Mapbox token not configured
         return;
       }
       
@@ -67,21 +67,14 @@ export default function useMapbox() {
         // Mapbox map initialized successfully
         
       } catch (mapboxError) {
-        console.error('Mapbox GL initialization failed:', mapboxError);
-        console.error('Error details:', {
-          message: (mapboxError as any)?.message || 'Unknown error',
-          stack: (mapboxError as any)?.stack || 'No stack trace',
-          center,
-          zoom,
-          containerExists: !!container
-        });
+        // Mapbox GL initialization failed
         // Don't throw - just return silently to prevent React crashes
         return;
       }
       
       // Add error handler for the map
       map.on('error', (e) => {
-        console.error('Mapbox GL error:', e.error);
+        // Mapbox GL error occurred
         // Don't throw - just log the error
       });
       
@@ -90,7 +83,7 @@ export default function useMapbox() {
         try {
           map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
         } catch (controlError) {
-          console.warn('Failed to add navigation controls:', controlError);
+          // Failed to add navigation controls
         }
       });
       
@@ -98,8 +91,7 @@ export default function useMapbox() {
       mapInstance.current = map;
       
     } catch (error) {
-      console.error('Error initializing Mapbox:', error);
-      console.error('Failed to initialize map:', error);
+      // Error initializing Mapbox
       // Don't throw - just return to prevent React crashes
       return;
     }
@@ -116,7 +108,7 @@ export default function useMapbox() {
     markers.forEach((markerData) => {
       if (typeof markerData.longitude !== 'number' || typeof markerData.latitude !== 'number' ||
           isNaN(markerData.longitude) || isNaN(markerData.latitude)) {
-        console.warn('Invalid marker coordinates, skipping:', markerData);
+        // Invalid marker coordinates, skipping
         return;
       }
 
@@ -204,7 +196,7 @@ export default function useMapbox() {
         });
       }
     } catch (error) {
-      console.warn('Error removing existing routes:', error);
+      // Error removing existing routes
     }
 
     // If no new routes, stop here (this clears all routes)
@@ -253,7 +245,7 @@ export default function useMapbox() {
           }
         });
       } catch (error) {
-        console.warn(`Error adding route ${index}:`, error);
+        // Error adding route
       }
     });
   }, []);
@@ -288,7 +280,7 @@ export default function useMapbox() {
     fullAddress: string;
   } | null> => {
     if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'pk.your_mapbox_token' || !searchQuery) {
-      console.warn('Mapbox geocoding unavailable: token not configured');
+      // Mapbox geocoding unavailable: token not configured
       return null;
     }
     
@@ -296,7 +288,7 @@ export default function useMapbox() {
     const cacheKey = `${searchQuery}:${options?.tripContext?.city || ''}`.toLowerCase();
     const cached = geocodeCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log('Geocoding cache hit:', cacheKey);
+      // Geocoding cache hit
       return cached.result;
     }
     
@@ -362,7 +354,7 @@ export default function useMapbox() {
           );
           // Roughly 0.5 degrees = ~50km
           if (distance > 0.5) {
-            console.warn(`Geocoded result seems far from trip location (${distance} degrees)`);
+            // Geocoded result seems far from trip location
           }
         }
         
@@ -380,7 +372,7 @@ export default function useMapbox() {
       
       return null;
     } catch (error) {
-      console.error('Geocoding error:', error);
+      // Geocoding error
       return null;
     }
   }, []);

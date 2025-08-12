@@ -10,14 +10,14 @@ import { logger } from '../utils/logger';
 export class QueryOptimizer {
   private batchQueue = new Map<string, any[]>();
   private batchTimers = new Map<string, NodeJS.Timeout>();
-  
+
   /**
    * Batch fetch templates with all related data in a single query
    * Eliminates N+1 queries completely
    */
   async getTemplatesWithAllData(templateIds: number[]) {
     if (templateIds.length === 0) return [];
-    
+
     // Single query with all joins
     const results = await db
       .select({
@@ -38,7 +38,7 @@ export class QueryOptimizer {
       .leftJoin(templateReviews, eq(templateReviews.template_id, templates.id))
       .where(inArray(templates.id, templateIds))
       .groupBy(templates.id, users.id, creatorProfiles.user_id);
-    
+
     return results.map(row => ({
       ...row.template,
       creator: row.user ? {
@@ -63,7 +63,7 @@ export class QueryOptimizer {
    */
   async getUserPurchasesOptimized(userId: number) {
     const query = sql`
-      SELECT 
+      SELECT
         tp.*,
         t.*,
         u.username as creator_username,
@@ -75,11 +75,11 @@ export class QueryOptimizer {
       INNER JOIN templates t ON tp.template_id = t.id
       LEFT JOIN users u ON t.user_id = u.id
       LEFT JOIN creator_profiles cp ON t.user_id = cp.user_id
-      WHERE tp.buyer_id = ${userId} 
+      WHERE tp.buyer_id = ${userId}
         AND tp.status = 'completed'
       ORDER BY tp.purchased_at DESC
     `;
-    
+
     const result = await db.execute(query);
     return result.rows;
   }
@@ -89,7 +89,7 @@ export class QueryOptimizer {
    */
   async getTripWithAllData(tripId: number) {
     const query = sql`
-      SELECT 
+      SELECT
         t.*,
         json_agg(
           json_build_object(
@@ -110,10 +110,10 @@ export class QueryOptimizer {
       WHERE t.id = ${tripId}
       GROUP BY t.id
     `;
-    
+
     const result = await db.execute(query);
     if (result.rows.length === 0) return null;
-    
+
     const trip = result.rows[0];
     trip.activities = trip.activities || [];
     return trip;
@@ -130,14 +130,14 @@ export class QueryOptimizer {
     foreignKey: string
   ): Promise<Map<number, T[]>> {
     if (ids.length === 0) return new Map();
-    
+
     const query = sql`
       SELECT * FROM ${sql.identifier(relatedTable)}
       WHERE ${sql.identifier(foreignKey)} = ANY(ARRAY[${sql.join(ids.map(id => sql`${id}`), sql`, `)}]::int[])
     `;
-    
+
     const result = await db.execute(query);
-    
+
     // Group by foreign key
     const grouped = new Map<number, T[]>();
     for (const row of result.rows) {
@@ -147,7 +147,7 @@ export class QueryOptimizer {
       }
       grouped.get(key)!.push(row as T);
     }
-    
+
     return grouped;
   }
 
@@ -164,14 +164,14 @@ export class QueryOptimizer {
     if (this.batchQueue.has(key)) {
       return this.batchQueue.get(key);
     }
-    
+
     // Create promise that will be shared by all callers
     const promise = new Promise<T>((resolve, reject) => {
       // Clear any existing timer
       if (this.batchTimers.has(key)) {
         clearTimeout(this.batchTimers.get(key)!);
       }
-      
+
       // Set timer to execute after batch delay
       const timer = setTimeout(async () => {
         try {
@@ -184,10 +184,10 @@ export class QueryOptimizer {
           this.batchTimers.delete(key);
         }
       }, batchDelayMs);
-      
+
       this.batchTimers.set(key, timer);
     });
-    
+
     this.batchQueue.set(key, promise);
     return promise;
   }
@@ -210,17 +210,17 @@ export class QueryOptimizer {
       .leftJoin(users, eq(templates.user_id, users.id))
       .leftJoin(creatorProfiles, eq(users.id, creatorProfiles.user_id))
       .where(eq(templates.status, 'published'));
-    
+
     // Add search conditions dynamically
     let query = baseQuery;
-    
+
     if (searchParams.search) {
       query = query.where(sql`
         to_tsvector('english', ${templates.title} || ' ' || COALESCE(${templates.description}, ''))
         @@ plainto_tsquery('english', ${searchParams.search})
       `);
     }
-    
+
     // Sort optimization
     switch (searchParams.sort) {
       case 'popular':
@@ -233,9 +233,9 @@ export class QueryOptimizer {
         query = query.orderBy(desc(templates.rating));
         break;
     }
-    
+
     const results = await query.limit(searchParams.limit || 20);
-    
+
     return results.map(row => ({
       ...row.template,
       creator: row.creator ? {
@@ -261,7 +261,7 @@ export class QueryOptimizer {
       popularDestinations: await this.getPopularDestinations(),
       featuredCreators: await this.getFeaturedCreators()
     };
-    
+
     return commonData;
   }
 
@@ -282,7 +282,7 @@ export class QueryOptimizer {
       ORDER BY count DESC
       LIMIT 20
     `;
-    
+
     const result = await db.execute(query);
     return result.rows;
   }

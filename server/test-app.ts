@@ -72,7 +72,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   name: 'remvana.sid',
-  cookie: { 
+  cookie: {
     secure: false, // Set to false for testing
     httpOnly: true,
     maxAge: 12 * 60 * 60 * 1000,
@@ -87,12 +87,10 @@ app.use('/api', apiRoutes);
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Test app error:', err.message);
-  
   if (res.headersSent) {
     return next(err);
   }
-  
+
   res.status(500).json({
     message: err.message || 'Internal server error'
   });
@@ -101,29 +99,24 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // Cleanup function for tests
 export const cleanupTestApp = async () => {
   try {
-    console.log('Starting test app cleanup...');
-
     // Clean up all intervals and timers
     try {
       const { stopBackupSchedule } = await import('./services/systemSettingsService');
       stopBackupSchedule();
     } catch (error) {
-      console.warn('Could not stop backup schedule:', error);
-    }
+      }
 
     try {
       const { stopAcmeCleanup } = await import('./acmeChallenge');
       stopAcmeCleanup();
     } catch (error) {
-      console.warn('Could not stop ACME cleanup:', error);
-    }
+      }
 
     try {
       const { stopPerformanceCleanup } = await import('./performance-monitor');
       stopPerformanceCleanup();
     } catch (error) {
-      console.warn('Could not stop performance cleanup:', error);
-    }
+      }
 
     // Clean up WebSocket server if it exists
     try {
@@ -132,27 +125,21 @@ export const cleanupTestApp = async () => {
         await collaborationWS.cleanup();
       }
     } catch (error) {
-      console.warn('Could not cleanup WebSocket server:', error);
-    }
+      }
 
     // Close session store connection
     if (sessionStore) {
-      console.log('Closing session store...');
       try {
         // PgSession store has a close method that returns void
         if (typeof sessionStore.close === 'function') {
           sessionStore.close();
-          console.log('Session store closed successfully');
-        }
+          }
       } catch (error) {
-        console.warn('Session store close warning:', error);
-      }
+        }
     }
 
-    console.log('Test app cleanup completed');
-  } catch (error) {
-    console.warn('Test app cleanup warning:', error);
-  }
+    } catch (error) {
+    }
 };
 
 export { app };

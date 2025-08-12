@@ -7,24 +7,22 @@ import { ClientActivity, ClientTrip } from "@/lib/types";
 export default function useActivities(tripId: string | number) {
   // Safeguard against objects being passed as tripId
   if (typeof tripId === 'object') {
-    console.error('useActivities: tripId is an object! This should never happen.', tripId);
-    console.error('Stack trace:', new Error().stack);
+    // tripId is an object! This should never happen.
     // Try to extract the ID if possible
     const extractedId = (tripId as any)?.id;
     if (extractedId && (typeof extractedId === 'string' || typeof extractedId === 'number')) {
       tripId = extractedId;
-      console.warn('useActivities: Extracted ID from object:', tripId);
+      // Extracted ID from object
     } else {
       // If we can't extract a valid ID, return early to avoid making bad API calls
-      console.error('useActivities: Could not extract valid ID from object, using empty string');
+      // Could not extract valid ID from object, using empty string
       tripId = '';
     }
   }
   
   // Additional check for '[object Object]' string
   if (tripId === '[object Object]') {
-    console.error('useActivities: tripId is the string "[object Object]"! This indicates an object was stringified.');
-    console.error('Stack trace:', new Error().stack);
+    // tripId is the string "[object Object]"! This indicates an object was stringified.
     tripId = '';
   }
   

@@ -7,11 +7,11 @@ interface AffiliateDisclosureProps {
   className?: string;
 }
 
-export default function AffiliateDisclosure({ 
+export default function AffiliateDisclosure({
   variant = 'inline',
-  className = '' 
+  className = ''
 }: AffiliateDisclosureProps) {
-  
+
   // Only show if monetization is enabled
   if (!isMonetizationEnabled()) {
     return null;
@@ -22,7 +22,7 @@ export default function AffiliateDisclosure({
       <div className={`text-center py-4 border-t ${className}`}>
         <p className="text-xs text-gray-500">
           <Info className="inline-block h-3 w-3 mr-1" />
-          We earn commission from bookings made through our affiliate links at no extra cost to you. 
+          We earn commission from bookings made through our affiliate links at no extra cost to you.
           This helps us maintain and improve our free trip planning service.
         </p>
       </div>
@@ -39,7 +39,7 @@ export default function AffiliateDisclosure({
               Affiliate Disclosure
             </p>
             <p className="text-xs text-gray-600 leading-relaxed">
-              When you book through our links, we may earn a commission from our partners. 
+              When you book through our links, we may earn a commission from our partners.
               This doesn't affect the price you pay and helps support our free service.
             </p>
           </div>

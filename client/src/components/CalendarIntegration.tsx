@@ -8,12 +8,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Calendar, 
-  CalendarDays, 
-  CheckCircle, 
-  ExternalLink, 
-  Download, 
+import {
+  Calendar,
+  CalendarDays,
+  CheckCircle,
+  ExternalLink,
+  Download,
   Upload,
   Settings,
   AlertCircle,
@@ -47,7 +47,7 @@ export default function CalendarIntegration() {
     setReminders: true,
     reminderMinutes: 15
   });
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -122,7 +122,7 @@ export default function CalendarIntegration() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast({
         title: "Calendar File Downloaded",
         description: "You can now import this file into any calendar app."
@@ -280,7 +280,7 @@ export default function CalendarIntegration() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm">Auto-sync</span>
@@ -288,11 +288,10 @@ export default function CalendarIntegration() {
                         checked={connection.syncEnabled}
                         onCheckedChange={(checked) => {
                           // Update sync setting
-                          console.log(`Toggle sync for ${connection.id}: ${checked}`);
-                        }}
+                          }}
                       />
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -301,7 +300,7 @@ export default function CalendarIntegration() {
                     >
                       Sync Now
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -315,9 +314,9 @@ export default function CalendarIntegration() {
               ))}
             </div>
           )}
-          
+
           <Separator />
-          
+
           {/* Add New Calendar */}
           <div>
             <h4 className="font-medium mb-3">Connect New Calendar</h4>
@@ -330,7 +329,7 @@ export default function CalendarIntegration() {
               >
                 🗓️ Google Calendar
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => connectCalendarMutation.mutate('outlook')}
@@ -339,7 +338,7 @@ export default function CalendarIntegration() {
               >
                 📅 Outlook
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => connectCalendarMutation.mutate('apple')}
@@ -416,7 +415,7 @@ export default function CalendarIntegration() {
             </select>
           </div>
 
-          <Button 
+          <Button
             onClick={() => {
               toast({
                 title: "Settings Saved",

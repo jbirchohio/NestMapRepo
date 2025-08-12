@@ -14,7 +14,7 @@ import { Link } from 'wouter';
 import { motion } from 'framer-motion';
 
 const POPULAR_DESTINATIONS = [
-  'Paris', 'Tokyo', 'New York', 'London', 'Rome', 
+  'Paris', 'Tokyo', 'New York', 'London', 'Rome',
   'Barcelona', 'Bali', 'Dubai', 'Amsterdam', 'Sydney'
 ];
 
@@ -44,7 +44,7 @@ export default function TemplateMarketplace() {
       params.append('maxPrice', priceRange[1].toString());
       if (duration) params.append('duration', duration.toString());
       params.append('sort', sortBy);
-      
+
       const response = await fetch(`/api/templates?${params}`);
       if (!response.ok) throw new Error('Failed to fetch templates');
       const data = await response.json();
@@ -61,7 +61,7 @@ export default function TemplateMarketplace() {
     setSortBy('popular');
   };
 
-  const hasFilters = search || selectedTag || selectedDestination || 
+  const hasFilters = search || selectedTag || selectedDestination ||
     priceRange[0] > 0 || priceRange[1] < 100 || duration;
 
   return (
@@ -79,7 +79,7 @@ export default function TemplateMarketplace() {
               {templates?.length ? 'Discover Perfect Trip Templates' : 'Be the First Creator'}
             </h1>
             <p className="text-xl text-purple-100 max-w-2xl mx-auto">
-              {templates?.length 
+              {templates?.length
                 ? 'Skip the planning, jump straight to exploring. Hand-crafted itineraries by fellow travelers.'
                 : 'Join our new creator marketplace. Share your travel experiences and earn from your adventures.'}
             </p>
@@ -277,8 +277,8 @@ export default function TemplateMarketplace() {
           {/* Templates Grid/List */}
           <div className="flex-1">
             {isLoading ? (
-              <div className={viewMode === 'grid' ? 
-                'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 
+              <div className={viewMode === 'grid' ?
+                'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' :
                 'space-y-4'
               }>
                 {[...Array(6)].map((_, i) => (
@@ -293,8 +293,8 @@ export default function TemplateMarketplace() {
                 ))}
               </div>
             ) : templates && templates.length > 0 ? (
-              <div className={viewMode === 'grid' ? 
-                'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 
+              <div className={viewMode === 'grid' ?
+                'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' :
                 'space-y-4'
               }>
                 {templates.map((template) => (
@@ -347,14 +347,14 @@ export default function TemplateMarketplace() {
                       </div>
                     </div>
                     <div className="flex gap-4 justify-center">
-                      <Button 
+                      <Button
                         size="lg"
                         onClick={() => window.location.href = '/trips'}
                       >
                         Create Your First Template
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="lg"
                         onClick={() => window.location.href = '/auth/register'}
                       >
@@ -373,11 +373,11 @@ export default function TemplateMarketplace() {
 }
 
 // Template Card Component
-function TemplateCard({ 
-  template, 
-  viewMode 
-}: { 
-  template: ClientTemplate; 
+function TemplateCard({
+  template,
+  viewMode
+}: {
+  template: ClientTemplate;
   viewMode: 'grid' | 'list';
 }) {
   const isGrid = viewMode === 'grid';
@@ -432,7 +432,7 @@ function TemplateCard({
             <h3 className="font-semibold text-lg mb-1 line-clamp-1">
               {template.title}
             </h3>
-            
+
             <p className="text-sm text-gray-600 mb-3 line-clamp-2">
               {template.description}
             </p>

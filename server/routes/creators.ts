@@ -22,21 +22,21 @@ const updateProfileSchema = z.object({
 router.get('/dashboard', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    
+
     // Get or create creator profile
     const profile = await storage.getOrCreateCreatorProfile(userId);
-    
+
     // Get balance
     const balance = await storage.getOrCreateCreatorBalance(userId);
-    
+
     // Get templates
     const templates = await storage.getTemplatesByUserId(userId);
-    
+
     // Calculate total metrics
     const totalViews = templates.reduce((sum, t) => sum + (t.view_count || 0), 0);
     const totalSales = templates.reduce((sum, t) => sum + (t.sales_count || 0), 0);
     const totalRevenue = parseFloat(balance.lifetime_earnings || '0');
-    
+
     // Get recent sales (last 10)
     const recentSales = [];
     for (const template of templates) {
@@ -49,13 +49,13 @@ router.get('/dashboard', requireAuth, async (req, res) => {
         });
       }
     }
-    recentSales.sort((a, b) => 
+    recentSales.sort((a, b) =>
       new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime()
     ).slice(0, 10);
-    
+
     // Monthly revenue (last 12 months)
     const monthlyRevenue = calculateMonthlyRevenue(recentSales);
-    
+
     res.json({
       profile,
       balance,
@@ -65,10 +65,10 @@ router.get('/dashboard', requireAuth, async (req, res) => {
         totalViews,
         totalSales,
         totalRevenue,
-        averagePrice: templates.length > 0 
+        averagePrice: templates.length > 0
           ? (templates.reduce((sum, t) => sum + parseFloat(t.price || '0'), 0) / templates.length).toFixed(2)
           : 0,
-        conversionRate: totalViews > 0 
+        conversionRate: totalViews > 0
           ? ((totalSales / totalViews) * 100).toFixed(2)
           : 0,
       },
@@ -87,7 +87,7 @@ router.get('/balance', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const balance = await storage.getOrCreateCreatorBalance(userId);
-    
+
     // Check payout eligibility
     const availableBalance = parseFloat(balance.available_balance || '0');
     const payoutThresholds = {
@@ -96,14 +96,14 @@ router.get('/balance', requireAuth, async (req, res) => {
       bank: 100,
       credits: 5,
     };
-    
+
     const eligibility = {
       paypal: availableBalance >= payoutThresholds.paypal,
       amazon: availableBalance >= payoutThresholds.amazon,
       bank: availableBalance >= payoutThresholds.bank,
       credits: availableBalance >= payoutThresholds.credits,
     };
-    
+
     res.json({
       ...balance,
       payoutThresholds,
@@ -122,22 +122,22 @@ router.get('/sales', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { startDate, endDate, templateId } = req.query;
-    
+
     // Get user's templates
     const templates = await storage.getTemplatesByUserId(userId);
     const templateIds = templates.map(t => t.id);
-    
+
     // Filter by specific template if requested
-    const targetIds = templateId 
+    const targetIds = templateId
       ? [parseInt(String(templateId))]
       : templateIds;
-    
+
     // Get all sales for user's templates
     const allSales = [];
     for (const id of targetIds) {
       const template = templates.find(t => t.id === id);
       if (!template) continue;
-      
+
       const purchases = await storage.getTemplatePurchases(id);
       for (const purchase of purchases) {
         allSales.push({
@@ -148,43 +148,43 @@ router.get('/sales', requireAuth, async (req, res) => {
         });
       }
     }
-    
+
     // Apply date filters
     let filteredSales = allSales;
     if (startDate) {
       const start = new Date(String(startDate));
-      filteredSales = filteredSales.filter(s => 
+      filteredSales = filteredSales.filter(s =>
         new Date(s.purchased_at) >= start
       );
     }
     if (endDate) {
       const end = new Date(String(endDate));
-      filteredSales = filteredSales.filter(s => 
+      filteredSales = filteredSales.filter(s =>
         new Date(s.purchased_at) <= end
       );
     }
-    
+
     // Sort by date descending
-    filteredSales.sort((a, b) => 
+    filteredSales.sort((a, b) =>
       new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime()
     );
-    
+
     // Calculate summary
     const summary = {
       totalSales: filteredSales.length,
-      totalRevenue: filteredSales.reduce((sum, s) => 
+      totalRevenue: filteredSales.reduce((sum, s) =>
         sum + parseFloat(s.seller_earnings || '0'), 0
       ),
-      totalPlatformFees: filteredSales.reduce((sum, s) => 
+      totalPlatformFees: filteredSales.reduce((sum, s) =>
         sum + parseFloat(s.platform_fee || '0'), 0
       ),
       averageSalePrice: filteredSales.length > 0
-        ? (filteredSales.reduce((sum, s) => 
+        ? (filteredSales.reduce((sum, s) =>
             sum + parseFloat(s.price || '0'), 0
           ) / filteredSales.length).toFixed(2)
         : 0,
     };
-    
+
     res.json({
       sales: filteredSales,
       summary,
@@ -200,13 +200,13 @@ router.put('/profile', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const validatedData = updateProfileSchema.parse(req.body);
-    
+
     // Ensure profile exists
     await storage.getOrCreateCreatorProfile(userId);
-    
+
     // Update profile
     const updated = await storage.updateCreatorProfile(userId, validatedData);
-    
+
     // Update payout info in balance if provided
     if (validatedData.payout_method || validatedData.payout_email) {
       await storage.getOrCreateCreatorBalance(userId);
@@ -219,13 +219,13 @@ router.put('/profile', requireAuth, async (req, res) => {
       }
       await storage.updateCreatorBalance(userId, 0, 'add'); // Just to trigger update
     }
-    
+
     res.json(updated);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: 'Invalid profile data', 
-        errors: error.errors 
+      return res.status(400).json({
+        message: 'Invalid profile data',
+        errors: error.errors
       });
     }
     logger.error('Error updating creator profile:', error);
@@ -238,25 +238,25 @@ router.post('/request-payout', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { method, amount } = req.body;
-    
+
     // Validate payout method
     if (!['paypal', 'amazon', 'bank', 'credits'].includes(method)) {
       return res.status(400).json({ message: 'Invalid payout method' });
     }
-    
+
     // Get balance
     const balance = await storage.getOrCreateCreatorBalance(userId);
     const availableBalance = parseFloat(balance.available_balance || '0');
-    
+
     // Validate amount
     const requestedAmount = parseFloat(amount);
     if (requestedAmount <= 0 || requestedAmount > availableBalance) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Invalid payout amount',
         availableBalance,
       });
     }
-    
+
     // Check minimum thresholds
     const minThresholds: Record<string, number> = {
       paypal: 10,
@@ -264,20 +264,20 @@ router.post('/request-payout', requireAuth, async (req, res) => {
       bank: 100,
       credits: 5,
     };
-    
+
     if (requestedAmount < minThresholds[method]) {
-      return res.status(400).json({ 
-        message: `Minimum payout for ${method} is $${minThresholds[method]}` 
+      return res.status(400).json({
+        message: `Minimum payout for ${method} is $${minThresholds[method]}`
       });
     }
-    
+
     // Check tax info for large payouts
     if (requestedAmount >= 600 && !balance.w9_on_file) {
-      return res.status(400).json({ 
-        message: 'Tax information required for payouts over $600' 
+      return res.status(400).json({
+        message: 'Tax information required for payouts over $600'
       });
     }
-    
+
     // TODO: Create payout record and process
     // For now, just return success message
     res.json({
@@ -296,7 +296,7 @@ router.post('/request-payout', requireAuth, async (req, res) => {
 router.get('/payouts/history', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    
+
     // TODO: Implement payout history from creatorPayouts table
     // For now, return empty array
     res.json({
@@ -317,27 +317,27 @@ router.get('/payouts/history', requireAuth, async (req, res) => {
 router.get('/:userId/public', async (req, res) => {
   try {
     const creatorId = parseInt(req.params.userId);
-    
+
     // Get creator profile
     const profile = await storage.getCreatorProfile(creatorId);
     if (!profile) {
       return res.status(404).json({ message: 'Creator not found' });
     }
-    
+
     // Get user info
     const user = await storage.getUserById(creatorId);
     if (!user) {
       return res.status(404).json({ message: 'Creator not found' });
     }
-    
+
     // Get published templates
     const templates = await storage.getTemplatesByUserId(creatorId);
     const publishedTemplates = templates.filter(t => t.status === 'published');
-    
+
     // Calculate stats
     const totalSales = publishedTemplates.reduce((sum, t) => sum + t.sales_count, 0);
     const averageRating = profile.average_rating || 0;
-    
+
     res.json({
       id: creatorId,
       username: user.username,
@@ -369,14 +369,14 @@ router.get('/:userId/public', async (req, res) => {
 function calculateMonthlyRevenue(sales: any[]): any[] {
   const months: Record<string, number> = {};
   const now = new Date();
-  
+
   // Initialize last 12 months
   for (let i = 0; i < 12; i++) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     months[key] = 0;
   }
-  
+
   // Sum revenue by month
   for (const sale of sales) {
     const date = new Date(sale.purchased_at);
@@ -385,7 +385,7 @@ function calculateMonthlyRevenue(sales: any[]): any[] {
       months[key] += parseFloat(sale.seller_earnings || '0');
     }
   }
-  
+
   // Convert to array
   return Object.entries(months)
     .map(([month, revenue]) => ({ month, revenue }))
@@ -400,15 +400,15 @@ function getEstimatedPayoutDate(method: string): string {
     bank: 5, // 5 business days
     credits: 0, // Instant
   };
-  
+
   const days = estimates[method] || 3;
   now.setDate(now.getDate() + days);
-  
+
   // Skip weekends
   while (now.getDay() === 0 || now.getDay() === 6) {
     now.setDate(now.getDate() + 1);
   }
-  
+
   return now.toISOString().split('T')[0];
 }
 

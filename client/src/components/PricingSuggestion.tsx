@@ -45,7 +45,7 @@ export default function PricingSuggestion({
 
   const fetchSuggestion = async () => {
     if (!duration || duration === 0) return;
-    
+
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -69,8 +69,7 @@ export default function PricingSuggestion({
         setSuggestion(data);
       }
     } catch (error) {
-      console.error('Failed to fetch price suggestion:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -154,14 +153,14 @@ export default function PricingSuggestion({
                 <span>Max: ${suggestion.maximum.toFixed(2)}</span>
               </div>
               <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="absolute h-full bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
                   style={{
                     left: `${((suggestion.minimum / suggestion.maximum) * 100)}%`,
                     right: `${(100 - ((suggestion.suggested / suggestion.maximum) * 100))}%`
                   }}
                 />
-                <div 
+                <div
                   className="absolute h-full w-1 bg-purple-600"
                   style={{
                     left: `${((suggestion.suggested / suggestion.maximum) * 100)}%`

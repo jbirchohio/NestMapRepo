@@ -16,7 +16,7 @@ export interface PatternConfig {
 
 export function parseAISuggestions(content: string): ParsedSuggestion[] {
   const suggestions: ParsedSuggestion[] = [];
-  
+
   const patterns: PatternConfig[] = [
     // Pattern 1: • Name - Description format
     {
@@ -47,15 +47,15 @@ export function parseAISuggestions(content: string): ParsedSuggestion[] {
       prefix: 'numbered-bold'
     }
   ];
-  
+
   patterns.forEach((pattern, patternIndex) => {
     const matches = Array.from(content.matchAll(pattern.regex));
-    
+
     matches.forEach((match, matchIndex) => {
       if (match[pattern.nameGroup] && match[pattern.descriptionGroup]) {
         const name = match[pattern.nameGroup].trim();
         const description = match[pattern.descriptionGroup].replace(/\s*-\s*/, '').trim();
-        
+
         suggestions.push({
           key: `${pattern.prefix}-${patternIndex}-${matchIndex}`,
           name,
@@ -65,6 +65,6 @@ export function parseAISuggestions(content: string): ParsedSuggestion[] {
       }
     });
   });
-  
+
   return suggestions;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/JWTAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import NewTripModalConsumer from '@/components/NewTripModalConsumer';
 import AuthModalSimple from '@/components/auth/AuthModalSimple';
-import { 
+import {
   User,
   LogOut,
   HelpCircle,
@@ -55,7 +55,6 @@ export default function MainNavigationConsumer() {
         setIsAdmin(data.isAdmin);
       }
     } catch (error) {
-      console.error('Admin check failed:', error);
       setIsAdmin(false);
     }
   };
@@ -85,7 +84,7 @@ export default function MainNavigationConsumer() {
   ];
 
   // Filter navigation based on auth state
-  const visibleNavigation = navigation.filter(item => 
+  const visibleNavigation = navigation.filter(item =>
     user || item.showWhenLoggedOut
   );
 
@@ -101,7 +100,7 @@ export default function MainNavigationConsumer() {
                   Remvana
                 </a>
               </Link>
-              
+
               {/* Navigation - responsive, no hamburger */}
               <div className="hidden sm:flex items-center space-x-1 sm:space-x-4">
                 {visibleNavigation.map((item) => (
@@ -114,8 +113,8 @@ export default function MainNavigationConsumer() {
                       <item.icon className="h-4 w-4 mr-1.5 sm:mr-2" />
                       <span className="hidden md:inline">{item.name}</span>
                       <span className="md:hidden">
-                        {item.name === 'Marketplace' ? 'Shop' : 
-                         item.name === 'Creator Hub' ? 'Create' : 
+                        {item.name === 'Marketplace' ? 'Shop' :
+                         item.name === 'Creator Hub' ? 'Create' :
                          item.name === 'Destinations' ? 'Places' :
                          'Trips'}
                       </span>
@@ -154,16 +153,16 @@ export default function MainNavigationConsumer() {
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      
+
                       {/* Mobile-only: New Trip option */}
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="sm:hidden"
                         onClick={() => setShowNewTripModal(true)}
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         New Trip
                       </DropdownMenuItem>
-                      
+
                       {/* Mobile-only: Navigation items */}
                       <div className="sm:hidden">
                         {navigation.map((item) => (
@@ -176,7 +175,7 @@ export default function MainNavigationConsumer() {
                         ))}
                         <DropdownMenuSeparator />
                       </div>
-                      
+
                       <Link href="/profile">
                         <DropdownMenuItem>
                           <User className="h-4 w-4 mr-2" />
@@ -216,11 +215,11 @@ export default function MainNavigationConsumer() {
                       <ShoppingBag className="h-4 w-4" />
                     </Button>
                   </Link>
-                  
+
                   {/* Auth buttons */}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setAuthView('login');
                       setShowAuthModal(true);
@@ -228,8 +227,8 @@ export default function MainNavigationConsumer() {
                   >
                     Log in
                   </Button>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
                     onClick={() => {
                       setAuthView('signup');
@@ -252,16 +251,13 @@ export default function MainNavigationConsumer() {
           isOpen={showNewTripModal}
           onClose={() => setShowNewTripModal(false)}
           onTripCreated={(trip) => {
-            console.log('MainNav - Trip created:', trip);
-            console.log('MainNav - Trip ID for navigation:', trip.id, 'type:', typeof trip.id);
             setShowNewTripModal(false);
-            
+
             // Make sure we have a valid ID before navigating
             if (trip && trip.id) {
               setLocation(`/trip/${trip.id}`);
             } else {
-              console.error('MainNav - Invalid trip object for navigation:', trip);
-            }
+              }
           }}
         />
       )}

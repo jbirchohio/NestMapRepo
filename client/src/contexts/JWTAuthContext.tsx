@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         // Get current auth state from JWT
         const currentUser = jwtAuth.getUser();
-        
+
         if (currentUser) {
           setUser(currentUser);
           setUserId(currentUser.id);
@@ -39,10 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setUserId(null);
         }
-        
+
         setAuthReady(true);
       } catch (error) {
-        console.error('Error loading user:', error);
         setError(error instanceof Error ? error.message : 'Failed to load user');
         setUser(null);
         setUserId(null);
@@ -71,23 +70,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const { user, error } = await jwtAuth.signIn(email, password);
-      
+
       if (error) {
         throw error;
       }
-      
+
       if (user) {
         setUser(user);
         setUserId(user.id);
-        
+
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully.",
         });
-        
+
         // Track successful login
         analytics.trackLogin('email');
       }
@@ -108,23 +107,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, username: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const { user, error } = await jwtAuth.signUp(email, password, username);
-      
+
       if (error) {
         throw error;
       }
-      
+
       if (user) {
         setUser(user);
         setUserId(user.id);
-        
+
         toast({
           title: "Account created!",
           description: "Your account has been created successfully.",
         });
-        
+
         // Track successful signup
         analytics.trackSignup('email');
       }
@@ -147,23 +146,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       jwtAuth.signOut();
       setUser(null);
       setUserId(null);
-      
+
       toast({
         title: "Signed out",
         description: "You have been signed out successfully.",
       });
-      
+
       // Redirect to home page after sign out
       window.location.href = '/';
     } catch (error) {
-      console.error('Error signing out:', error);
-    }
+      }
   };
 
   const signInWithProvider = async (provider: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // This would integrate with OAuth providers
       // For now, we'll show a message that it's not implemented

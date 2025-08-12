@@ -6,14 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
-import { 
-  MapPin, 
-  Navigation, 
-  Camera, 
-  Bell, 
-  Wifi, 
-  WifiOff, 
-  CheckCircle, 
+import {
+  MapPin,
+  Navigation,
+  Camera,
+  Bell,
+  Wifi,
+  WifiOff,
+  CheckCircle,
   Clock,
   Route,
   Star,
@@ -54,14 +54,14 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
     if (currentLocation && activities.length > 0) {
       const nearby = activities.filter(activity => {
         if (!activity.latitude || !activity.longitude) return false;
-        
+
         const distance = calculateDistance(
           currentLocation.latitude,
           currentLocation.longitude,
           parseFloat(activity.latitude),
           parseFloat(activity.longitude)
         );
-        
+
         return distance <= 0.5; // Within 500 meters
       }).sort((a, b) => {
         const distanceA = calculateDistance(
@@ -78,9 +78,9 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
         );
         return distanceA - distanceB;
       });
-      
+
       setNearbyActivities(nearby);
-      
+
       // Send notification for nearby activities
       if (nearby.length > 0 && isTravelMode) {
         const closestActivity = nearby && nearby.length > 0 ? nearby[0] : null;
@@ -103,9 +103,9 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
     const R = 6371; // Earth's radius in kilometers
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
+    const a =
       Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
@@ -113,7 +113,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
 
   const handleCheckIn = (activityId: number) => {
     setCheckedInActivities(prev => new Set([...prev, activityId]));
-    
+
     const activity = activities.find(a => a.id === activityId);
     if (activity) {
       sendNotification(
@@ -128,7 +128,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
       const photoData = await capturePhoto();
       if (photoData) {
         setTripPhotos(prev => [...prev, photoData]);
-        
+
         // Store photo with current location if available
         if (currentLocation) {
           const photoWithLocation = {
@@ -137,21 +137,20 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
             timestamp: Date.now(),
             activityId: currentActivity?.id
           };
-          
+
           // Save to localStorage for offline mode
           const savedPhotos = JSON.parse(localStorage.getItem('trip_photos') || '[]');
           savedPhotos.push(photoWithLocation);
           localStorage.setItem('trip_photos', JSON.stringify(savedPhotos));
         }
-        
+
         sendNotification(
           'Photo Captured!',
           'Your travel photo has been saved to this trip'
         );
       }
     } catch (error) {
-      console.error('Error capturing photo:', error);
-    }
+      }
   };
 
   const getNextActivity = () => {
@@ -245,7 +244,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
           </CardHeader>
           <CardContent>
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              Lat: {currentLocation.latitude.toFixed(6)}, 
+              Lat: {currentLocation.latitude.toFixed(6)},
               Lng: {currentLocation.longitude.toFixed(6)}
             </div>
             <div className="text-xs text-gray-500 mt-1">
@@ -272,7 +271,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
                   {nextActivity.time} • {nextActivity.locationName}
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 {nextActivity.latitude && nextActivity.longitude && (
                   <Button
@@ -289,7 +288,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
                     Navigate
                   </Button>
                 )}
-                
+
                 <Button
                   size="sm"
                   onClick={() => handleCheckIn(nextActivity.id)}
@@ -322,9 +321,9 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
                   parseFloat(activity.latitude),
                   parseFloat(activity.longitude)
                 ) : 0;
-                
+
                 const isCheckedIn = checkedInActivities.has(activity.id);
-                
+
                 return (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex-1">
@@ -375,7 +374,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
                 <div className="text-xs text-gray-500">Save to trip</div>
               </div>
             </Button>
-            
+
             <Button
               variant="outline"
               onClick={() => {

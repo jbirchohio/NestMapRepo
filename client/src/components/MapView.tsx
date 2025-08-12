@@ -51,11 +51,11 @@ export default function MapView({
     if (!mapContainer.current || !isMapReady) return;
 
     let resizeTimeout: NodeJS.Timeout;
-    
+
     const resizeObserver = new ResizeObserver(() => {
       // Clear previous timeout to debounce rapid resize events
       clearTimeout(resizeTimeout);
-      
+
       // Use requestAnimationFrame for better performance
       resizeTimeout = setTimeout(() => {
         requestAnimationFrame(() => {
@@ -104,9 +104,9 @@ export default function MapView({
 
         {/* Map Controls */}
         <div className="absolute top-4 right-4 flex flex-col space-y-2">
-          <Button 
-            variant="secondary" 
-            size="icon" 
+          <Button
+            variant="secondary"
+            size="icon"
             className="bg-white hover:bg-white dark:bg-[hsl(var(--card))] dark:hover:bg-[hsl(var(--card))] shadow-md rounded-full"
             onClick={handleZoomIn}
           >
@@ -114,8 +114,8 @@ export default function MapView({
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
           </Button>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             size="icon"
             className="bg-white hover:bg-white dark:bg-[hsl(var(--card))] dark:hover:bg-[hsl(var(--card))] shadow-md rounded-full"
             onClick={handleZoomOut}
@@ -124,8 +124,8 @@ export default function MapView({
               <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
             </svg>
           </Button>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             size="icon"
             className="bg-white hover:bg-white dark:bg-[hsl(var(--card))] dark:hover:bg-[hsl(var(--card))] shadow-md rounded-full"
             onClick={handleLocate}
@@ -144,7 +144,7 @@ export default function MapView({
                 <h3 className="font-medium">Route Overview</h3>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
                   {markers.length} stops
-                  {routes.length > 0 && routes[0]?.distance && 
+                  {routes.length > 0 && routes[0]?.distance &&
                     ` · ${(routes[0].distance / 1609.34).toFixed(1)} miles total`}
                 </p>
               </div>
@@ -160,8 +160,8 @@ export default function MapView({
 
         {/* Mobile Add Button (only shown on mobile) */}
         <div className="absolute bottom-20 right-4 md:hidden">
-          <Button 
-            className="bg-[hsl(var(--primary))] text-white p-4 rounded-full shadow-lg" 
+          <Button
+            className="bg-[hsl(var(--primary))] text-white p-4 rounded-full shadow-lg"
             size="icon"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

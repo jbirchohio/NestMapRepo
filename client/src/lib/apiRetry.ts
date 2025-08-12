@@ -36,18 +36,16 @@ export async function withRetry<T>(
       return await fn();
     } catch (error) {
       lastError = error;
-      
+
       // Check if we should retry
       if (attempt === opts.maxAttempts || !opts.retryCondition(error)) {
         throw error;
       }
 
       // Log retry attempt
-      console.log(`Retry attempt ${attempt}/${opts.maxAttempts} after ${delay}ms`);
-      
       // Wait before retrying
       await new Promise(resolve => setTimeout(resolve, delay));
-      
+
       // Calculate next delay with exponential backoff
       delay = Math.min(delay * opts.backoffMultiplier, opts.maxDelay);
     }
@@ -85,12 +83,12 @@ export async function fetchWithRetry(
   return withRetry(
     async () => {
       const response = await fetch(input, init);
-      
+
       // Throw error for non-ok responses to trigger retry logic
       if (!response.ok && response.status >= 500) {
         throw { response };
       }
-      
+
       return response;
     },
     options

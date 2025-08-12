@@ -10,7 +10,7 @@ export async function healthCheck(req: Request, res: Response) {
     // Check database connection
     const dbResult = await pool.query("SELECT 1");
     const dbConnected = dbResult.rowCount === 1;
-    
+
     // Basic application information
     const healthInfo = {
       status: "ok",
@@ -22,11 +22,9 @@ export async function healthCheck(req: Request, res: Response) {
       uptime: process.uptime(),
       memory: process.memoryUsage()
     };
-    
+
     return res.status(200).json(healthInfo);
   } catch (error) {
-    console.error("Health check failed:", error);
-    
     return res.status(500).json({
       status: "error",
       timestamp: new Date().toISOString(),

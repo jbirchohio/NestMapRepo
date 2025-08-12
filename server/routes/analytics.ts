@@ -13,7 +13,7 @@ router.get('/template/:id', requireAuth, async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     const { startDate, endDate } = req.query;
-    
+
     // TODO: Verify user owns this template
     const analytics = await analyticsService.getTemplateAnalytics(
       templateId,
@@ -39,7 +39,7 @@ router.get('/creator', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { startDate, endDate } = req.query;
-    
+
     const analytics = await analyticsService.getCreatorAnalytics(
       userId,
       startDate ? new Date(startDate as string) : undefined,
@@ -60,7 +60,7 @@ router.get('/marketplace', requireAuth, async (req, res) => {
   try {
     // TODO: Add admin check
     const { startDate, endDate } = req.query;
-    
+
     const analytics = await analyticsService.getMarketplaceAnalytics(
       startDate ? new Date(startDate as string) : undefined,
       endDate ? new Date(endDate as string) : undefined
@@ -80,9 +80,9 @@ router.get('/funnel/:templateId', requireAuth, async (req, res) => {
   try {
     const templateId = parseInt(req.params.templateId);
     const days = parseInt(req.query.days as string) || 30;
-    
+
     const funnel = await analyticsService.getConversionFunnel(templateId, days);
-    
+
     res.json(funnel);
   } catch (error) {
     logger.error('Error fetching conversion funnel:', error);
@@ -97,13 +97,13 @@ router.post('/track/view', async (req, res) => {
   try {
     const { templateId } = req.body;
     const userId = req.user?.id;
-    
+
     if (!templateId) {
       return res.status(400).json({ message: 'Template ID required' });
     }
-    
+
     await analyticsService.trackView(templateId, userId);
-    
+
     res.json({ success: true });
   } catch (error) {
     logger.error('Error tracking view:', error);
@@ -118,12 +118,12 @@ router.get('/audit/user', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { days } = req.query;
-    
+
     const summary = await auditService.getUserActivitySummary(
-      userId, 
+      userId,
       days ? parseInt(days as string) : 30
     );
-    
+
     res.json(summary);
   } catch (error) {
     logger.error('Error fetching audit logs:', error);
@@ -137,9 +137,9 @@ router.get('/audit/user', requireAuth, async (req, res) => {
 router.get('/audit/anomalies', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    
+
     const anomalies = await auditService.detectAnomalies(userId);
-    
+
     res.json(anomalies);
   } catch (error) {
     logger.error('Error detecting anomalies:', error);

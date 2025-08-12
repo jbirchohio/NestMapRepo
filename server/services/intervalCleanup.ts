@@ -75,7 +75,7 @@ class IntervalCleanupService {
    */
   clearAll(): number {
     const count = this.intervals.size;
-    
+
     for (const [name, tracked] of this.intervals) {
       clearInterval(tracked.id);
       logger.debug(`Clearing interval: ${name}`);
@@ -103,7 +103,7 @@ class IntervalCleanupService {
     created: string;
   }> {
     const now = Date.now();
-    
+
     return Array.from(this.intervals.entries()).map(([name, tracked]) => ({
       name,
       interval: tracked.interval,
@@ -137,7 +137,7 @@ class IntervalCleanupService {
   startMonitoring(checkIntervalMs: number = 60000): void {
     this.setInterval(() => {
       const active = this.intervals.size;
-      
+
       if (active > 50) {
         logger.warn(`High number of active intervals: ${active}`, {
           intervals: this.getActiveIntervals()
@@ -179,7 +179,7 @@ class IntervalCleanupService {
     ): NodeJS.Timeout {
       const id = originalSetInterval(callback, interval, ...args);
       self.globalIntervals.add(id);
-      
+
       // Wrap clearInterval to remove from tracking
       const originalClear = global.clearInterval;
       (global as any).clearInterval = function(id: NodeJS.Timeout) {

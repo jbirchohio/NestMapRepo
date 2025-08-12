@@ -18,12 +18,12 @@ interface PredictiveInsightsProps {
   activities: any[];
 }
 
-export default function PredictiveInsights({ 
-  tripId, 
-  destination, 
-  departureDate, 
+export default function PredictiveInsights({
+  tripId,
+  destination,
+  departureDate,
   returnDate,
-  activities 
+  activities
 }: PredictiveInsightsProps) {
   const [selectedTab, setSelectedTab] = useState('pricing');
 
@@ -223,7 +223,7 @@ function CrowdInsights({ data, activities }: { data: any; activities: any[] }) {
         <div className="flex items-center gap-2">
           {getCrowdIcon(crowdLevel)}
           <AlertDescription className="font-medium">
-            Expected crowd level: <strong>{crowdLevel.toUpperCase()}</strong> 
+            Expected crowd level: <strong>{crowdLevel.toUpperCase()}</strong>
             <span className="ml-2 text-sm">({Math.round(confidence * 100)}% confidence)</span>
           </AlertDescription>
         </div>
@@ -383,8 +383,8 @@ function OptimizationInsights({ data }: { data: any }) {
             <div className="text-sm text-gray-600 dark:text-gray-300">
               {Math.round(((budgetOptimization?.savings || 0) / (budgetOptimization?.originalCost || 1)) * 100)}% saved
             </div>
-            <Progress 
-              value={((budgetOptimization?.savings || 0) / (budgetOptimization?.originalCost || 1)) * 100} 
+            <Progress
+              value={((budgetOptimization?.savings || 0) / (budgetOptimization?.originalCost || 1)) * 100}
               className="mt-2"
             />
           </CardContent>
@@ -404,8 +404,8 @@ function OptimizationInsights({ data }: { data: any }) {
             <div className="text-sm text-gray-600 dark:text-gray-300">
               More efficient planning
             </div>
-            <Progress 
-              value={((timeOptimization?.timeSaved || 0) / (timeOptimization?.originalDuration || 1)) * 100} 
+            <Progress
+              value={((timeOptimization?.timeSaved || 0) / (timeOptimization?.originalDuration || 1)) * 100}
               className="mt-2"
             />
           </CardContent>
@@ -425,8 +425,8 @@ function OptimizationInsights({ data }: { data: any }) {
             <div className="text-sm text-gray-600 dark:text-gray-300">
               Satisfaction rating
             </div>
-            <Progress 
-              value={(experienceOptimization?.satisfactionScore || 0) * 10} 
+            <Progress
+              value={(experienceOptimization?.satisfactionScore || 0) * 10}
               className="mt-2"
             />
           </CardContent>

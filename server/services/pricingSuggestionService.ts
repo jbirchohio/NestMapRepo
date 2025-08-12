@@ -45,7 +45,7 @@ export class PricingSuggestionService {
     if (factors.hasHotels) comprehensiveBonus += 5;
     if (factors.hasMeals) comprehensiveBonus += 5;
     if (factors.hasTransportation) comprehensiveBonus += 5;
-    
+
     if (comprehensiveBonus > 0) {
       basePrice += comprehensiveBonus;
       reasoning.push(`+$${comprehensiveBonus} for comprehensive planning`);
@@ -60,7 +60,7 @@ export class PricingSuggestionService {
 
     // Premium tags bonus
     const premiumTags = ['luxury', 'honeymoon', 'business', 'exclusive', 'vip'];
-    const hasPremiumTag = factors.tags.some(tag => 
+    const hasPremiumTag = factors.tags.some(tag =>
       premiumTags.includes(tag.toLowerCase())
     );
     if (hasPremiumTag) {
@@ -76,12 +76,12 @@ export class PricingSuggestionService {
 
     // Market adjustment based on similar templates
     if (factors.similarTemplatesPrices && factors.similarTemplatesPrices.length > 0) {
-      const marketAvg = factors.similarTemplatesPrices.reduce((a, b) => a + b, 0) / 
+      const marketAvg = factors.similarTemplatesPrices.reduce((a, b) => a + b, 0) /
                        factors.similarTemplatesPrices.length;
-      
+
       // Adjust toward market average (weighted 30%)
       const marketAdjustedPrice = (basePrice * 0.7) + (marketAvg * 0.3);
-      
+
       if (Math.abs(marketAdjustedPrice - basePrice) > 5) {
         reasoning.push(`Adjusted ${marketAdjustedPrice > basePrice ? 'up' : 'down'} based on market`);
         basePrice = marketAdjustedPrice;

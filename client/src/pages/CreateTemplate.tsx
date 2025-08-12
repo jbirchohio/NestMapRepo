@@ -11,13 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  ArrowLeft, 
-  Save, 
-  Eye, 
-  Rocket, 
-  Plus, 
-  X, 
+import {
+  ArrowLeft,
+  Save,
+  Eye,
+  Rocket,
+  Plus,
+  X,
   Upload,
   MapPin,
   Calendar,
@@ -49,7 +49,7 @@ export default function CreateTemplate() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  
+
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -132,7 +132,7 @@ export default function CreateTemplate() {
     onSuccess: (data, publish) => {
       toast({
         title: publish ? 'Template Published!' : 'Template Saved!',
-        description: publish 
+        description: publish
           ? 'Your template is now live in the marketplace'
           : 'Your template has been saved as a draft',
       });
@@ -148,9 +148,9 @@ export default function CreateTemplate() {
   });
 
   const selectedTrip = trips?.find(t => t.id === selectedTripId);
-  
+
   // Calculate duration if trip is selected
-  const duration = selectedTrip 
+  const duration = selectedTrip
     ? Math.ceil((new Date(selectedTrip.endDate).getTime() - new Date(selectedTrip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
     : 0;
 
@@ -203,7 +203,7 @@ export default function CreateTemplate() {
         });
         return;
       }
-      
+
       setCoverImageFile(file);
       handleImageUpload(file);
     }
@@ -330,9 +330,9 @@ export default function CreateTemplate() {
                   <div className="mt-1 space-y-2">
                     {uploadedImageUrl ? (
                       <div className="relative w-full h-48 rounded-lg overflow-hidden border">
-                        <img 
-                          src={uploadedImageUrl} 
-                          alt="Cover" 
+                        <img
+                          src={uploadedImageUrl}
+                          alt="Cover"
                           className="w-full h-full object-cover"
                         />
                         <Button
@@ -478,7 +478,7 @@ export default function CreateTemplate() {
                     ))}
                   </div>
                 )}
-                
+
                 {/* Tag Selector */}
                 <Popover open={showTagSelector} onOpenChange={setShowTagSelector}>
                   <PopoverTrigger asChild>
@@ -508,8 +508,8 @@ export default function CreateTemplate() {
                                 onClick={() => handleAddTag(tag.value)}
                                 disabled={tags.includes(tag.value)}
                                 className={`text-left px-2 py-1 text-sm rounded hover:bg-gray-100 transition-colors ${
-                                  tags.includes(tag.value) 
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  tags.includes(tag.value)
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'hover:text-purple-600'
                                 }`}
                               >
@@ -522,7 +522,7 @@ export default function CreateTemplate() {
                     </div>
                   </PopoverContent>
                 </Popover>
-                
+
                 <p className="text-xs text-gray-500">
                   Choose tags that best describe your itinerary style and target audience
                 </p>
@@ -590,7 +590,7 @@ export default function CreateTemplate() {
                     <p className="text-gray-600">Include at least 3 activities per day</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <div className="h-5 w-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                     ✓
@@ -600,7 +600,7 @@ export default function CreateTemplate() {
                     <p className="text-gray-600">Provide context and tips for each activity</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <div className="h-5 w-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                     ✓
@@ -610,7 +610,7 @@ export default function CreateTemplate() {
                     <p className="text-gray-600">Verify locations, times, and prices</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <div className="h-5 w-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                     ✓
@@ -641,7 +641,7 @@ export default function CreateTemplate() {
                   <span>You Earn Per Sale</span>
                   <span className="text-green-600">${(parseFloat(price) * 0.7).toFixed(2)}</span>
                 </div>
-                
+
                 <div className="mt-4 pt-4 border-t space-y-1">
                   <p className="text-xs text-gray-500">Potential Monthly Earnings:</p>
                   <div className="text-xs space-y-1">

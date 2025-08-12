@@ -103,7 +103,6 @@ export class ViatorService {
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('Viator destination search error:', error);
       // Try fallback search
       return this.searchDestinationsFallback(query);
     }
@@ -137,7 +136,6 @@ export class ViatorService {
                parentName.includes(normalizedQuery);
       });
     } catch (error) {
-      console.error('Viator destination fallback search error:', error);
       return [];
     }
   }
@@ -152,7 +150,6 @@ export class ViatorService {
       // Check cache first
       const cached = this.destinationCache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
-        console.log(`Using cached destination ID for ${cityName}: ${cached.id}`);
         return cached.id;
       }
       
@@ -181,13 +178,11 @@ export class ViatorService {
           timestamp: Date.now()
         });
         
-        console.log(`Found destination ID for ${cityName}: ${destinationId}`);
         return destinationId;
       }
       
       return null;
     } catch (error) {
-      console.error('Error getting destination ID:', error);
       return null;
     }
   }
@@ -264,20 +259,8 @@ export class ViatorService {
       }
       
       // Don't slice here since we're already limiting in the API request
-      return filteredProducts.map((product: any, index: number) => {
-        // Log the first product to see its structure
-        if (index === 0) {
-          console.log('First Viator product structure:', {
-            hasTitle: !!product.title,
-            hasProductName: !!product.productName,
-            hasProductCode: !!product.productCode,
-            title: product.title,
-            productName: product.productName,
-            productCode: product.productCode
-          });
-        }
-        
-        const mappedProduct = {
+      return filteredProducts.map((product: any) => {
+        return {
           productCode: product.productCode || product.id || product.code || 'NO_CODE',
           productName: product.title || product.productName || 'Unnamed Activity',
           primaryImageURL: this.getImageUrl(product.images),
@@ -288,20 +271,8 @@ export class ViatorService {
           reviewCount: product.reviews?.totalReviews || product.reviewCount || 0,
           cancellationPolicy: product.flags?.includes('FREE_CANCELLATION') ? 'Free cancellation' : 'Check details'
         };
-        
-        // Log mapped product for first item
-        if (index === 0) {
-          console.log('Mapped Viator product:', {
-            productCode: mappedProduct.productCode,
-            productName: mappedProduct.productName,
-            hasProductName: !!mappedProduct.productName
-          });
-        }
-        
-        return mappedProduct;
       });
     } catch (error) {
-      console.error('Viator activity search error:', error);
       return [];
     }
   }
@@ -322,7 +293,6 @@ export class ViatorService {
 
       return response.json();
     } catch (error) {
-      console.error('Viator product details error:', error);
       throw error;
     }
   }
@@ -376,7 +346,6 @@ export class ViatorService {
         sortOrder: 'TRAVELER_RATING'
       });
     } catch (error) {
-      console.error('Location-based search error:', error);
       return [];
     }
   }

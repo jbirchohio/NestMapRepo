@@ -22,14 +22,14 @@ declare global {
  */
 export function correlationIdMiddleware(req: Request, res: Response, next: NextFunction) {
   // Check for existing correlation ID in headers
-  const existingCorrelationId = 
-    req.headers['x-correlation-id'] || 
+  const existingCorrelationId =
+    req.headers['x-correlation-id'] ||
     req.headers['x-request-id'] ||
     req.headers['correlation-id'] ||
     req.headers['request-id'];
 
   // Check for parent request ID (for tracing request chains)
-  const parentRequestId = 
+  const parentRequestId =
     req.headers['x-parent-request-id'] ||
     req.headers['parent-request-id'];
 
@@ -81,7 +81,7 @@ export function correlationIdMiddleware(req: Request, res: Response, next: NextF
   const originalEnd = res.end;
   res.end = function(...args: any[]) {
     const duration = Date.now() - startTime;
-    
+
     // Only log in development or for errors
     if (process.env.NODE_ENV === 'development' || res.statusCode >= 400) {
       logger.info('Request completed', {
@@ -153,13 +153,13 @@ export function requireCorrelationId(req: Request, res: Response, next: NextFunc
       path: req.path,
       headers: req.headers,
     });
-    
+
     return res.status(400).json({
       error: 'Missing correlation ID',
       message: 'This endpoint requires an X-Correlation-ID header',
     });
   }
-  
+
   next();
 }
 

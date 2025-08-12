@@ -55,15 +55,6 @@ export interface ErrorContext {
 
 export class ErrorHandler {
   static handle(error: Error, context: ErrorContext = {}) {
-    console.error('Error handled:', {
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      },
-      context,
-      timestamp: new Date().toISOString()
-    });
 
     // Show user-friendly error message
     if (error instanceof ApplicationError) {
@@ -74,7 +65,7 @@ export class ErrorHandler {
       });
     } else if (error instanceof TypeError) {
       toast({
-        title: "System Error", 
+        title: "System Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
@@ -120,7 +111,6 @@ export class ErrorHandler {
   private static reportError(error: Error, context: ErrorContext) {
     // Placeholder for production error reporting
     // Implementation would depend on chosen service (Sentry, LogRocket, etc.)
-    console.log('Would report to error service:', { error, context });
   }
 
   static createRetryWrapper<T>(
@@ -130,22 +120,22 @@ export class ErrorHandler {
   ) {
     return async (): Promise<T> => {
       let lastError: Error;
-      
+
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           return await operation();
         } catch (error) {
           lastError = error as Error;
-          
+
           if (attempt === maxRetries) {
             throw lastError;
           }
-          
+
           // Wait before retrying
           await new Promise(resolve => setTimeout(resolve, delay * attempt));
         }
       }
-      
+
       throw lastError!;
     };
   }

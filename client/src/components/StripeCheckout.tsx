@@ -32,7 +32,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>('');
-  
+
   // Calculate end date based on start date and duration
   const calculateEndDate = (start: string) => {
     if (!start) return '';
@@ -40,9 +40,9 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
     date.setDate(date.getDate() + templateDuration - 1);
     return date.toISOString().split('T')[0];
   };
-  
+
   const endDate = calculateEndDate(startDate);
-  
+
   // Set default start date to tomorrow
   useEffect(() => {
     const tomorrow = new Date();
@@ -61,9 +61,6 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
     setError(null);
 
     try {
-      console.log('Creating payment intent for template:', templateId, 'type:', typeof templateId);
-      console.log('Template title:', templateTitle);
-      
       // Step 1: Create payment intent on backend
       const response = await fetch('/api/checkout/create-payment-intent', {
         method: 'POST',
@@ -71,7 +68,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           template_id: templateId,
           start_date: startDate,
           end_date: endDate
@@ -122,15 +119,12 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
       }
 
       const purchaseData = await confirmResponse.json();
-      console.log('Purchase confirmation response:', purchaseData);
-
       // Success!
       toast({
         title: 'Payment successful!',
         description: `You've purchased "${templateTitle}"`,
       });
 
-      console.log('Calling onSuccess with:', purchaseData);
       onSuccess(purchaseData);
     } catch (err: any) {
       setError(err.message || 'An error occurred during payment');

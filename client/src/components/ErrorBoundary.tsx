@@ -27,10 +27,8 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
-    
+
     // Log error for debugging
-    console.error('Error Boundary caught an error:', error, errorInfo);
-    
     // Call custom error handler if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -74,7 +72,7 @@ class ErrorBoundary extends Component<Props, State> {
               <p className="text-gray-600 dark:text-gray-300 text-center">
                 We encountered an unexpected error. This has been logged and our team will investigate.
               </p>
-              
+
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
                   <summary className="font-medium cursor-pointer text-gray-700 dark:text-gray-300 mb-2">
@@ -86,9 +84,9 @@ class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 </details>
               )}
-              
+
               <div className="flex gap-2 pt-4">
-                <Button 
+                <Button
                   onClick={this.handleReset}
                   variant="outline"
                   className="flex-1"
@@ -96,7 +94,7 @@ class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Try Again
                 </Button>
-                <Button 
+                <Button
                   onClick={this.handleGoHome}
                   className="flex-1"
                 >

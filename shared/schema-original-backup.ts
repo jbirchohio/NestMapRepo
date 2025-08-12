@@ -105,8 +105,8 @@ export const tripCollaborators = pgTable("trip_collaborators", {
 export const insertUserSchema = createInsertSchema(users);
 
 // Authentication schema for registration (includes password field)
-export const registerUserSchema = insertUserSchema.omit({ 
-  password_hash: true 
+export const registerUserSchema = insertUserSchema.omit({
+  password_hash: true
 }).extend({
   password: z.string().min(8, "Password must be at least 8 characters")
 });
@@ -193,10 +193,10 @@ export const trips = pgTable("trips", {
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertTripSchema = z.object({
   title: z.string(),
-  start_date: z.string().or(z.date()).transform(val => 
+  start_date: z.string().or(z.date()).transform(val =>
     val instanceof Date ? val : new Date(val)
   ),
-  end_date: z.string().or(z.date()).transform(val => 
+  end_date: z.string().or(z.date()).transform(val =>
     val instanceof Date ? val : new Date(val)
   ),
   user_id: z.union([z.string(), z.number()]).transform(val =>
@@ -321,7 +321,7 @@ export const insertActivitySchema = z.object({
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(), // Multi-tenant isolation
   title: z.string(),
-  date: z.string().or(z.date()).transform(val => 
+  date: z.string().or(z.date()).transform(val =>
     val instanceof Date ? val : new Date(val)
   ),
   time: z.string(),
@@ -395,20 +395,20 @@ export const ORGANIZATION_PLANS = {
 export const ORGANIZATION_PERMISSIONS = {
   // Trip permissions
   VIEW_ALL_TRIPS: "view_all_trips",
-  EDIT_ALL_TRIPS: "edit_all_trips", 
+  EDIT_ALL_TRIPS: "edit_all_trips",
   CREATE_TRIPS: "create_trips",
   DELETE_TRIPS: "delete_trips",
-  
+
   // Team permissions
   INVITE_MEMBERS: "invite_members",
   MANAGE_MEMBERS: "manage_members",
   VIEW_MEMBERS: "view_members",
-  
+
   // Business permissions
   MANAGE_BUDGETS: "manage_budgets",
   EXPORT_DATA: "export_data",
   ACCESS_ANALYTICS: "access_analytics",
-  
+
   // Admin permissions
   MANAGE_ORGANIZATION: "manage_organization",
   BILLING_ACCESS: "billing_access"
@@ -495,8 +495,6 @@ export type InsertNote = z.infer<typeof insertNoteSchema>;
 
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
-
-
 
 // Move Corporate Card Management System to end of file
 // Corporate Card Management System
@@ -641,34 +639,34 @@ export const spendPolicies = pgTable("spend_policies", {
   target_departments: jsonb("target_departments"),
   target_users: jsonb("target_users"),
   target_roles: jsonb("target_roles"),
-  
+
   // Spending limits
   daily_limit: integer("daily_limit"),
   weekly_limit: integer("weekly_limit"),
   monthly_limit: integer("monthly_limit"),
   annual_limit: integer("annual_limit"),
-  
+
   // Category-specific limits
   category_limits: jsonb("category_limits"), // { "travel": 5000, "meals": 100 }
   merchant_restrictions: jsonb("merchant_restrictions"),
-  
+
   // Approval workflows
   requires_approval_over: integer("requires_approval_over"), // Amount requiring approval
   auto_approve_under: integer("auto_approve_under"), // Auto-approve small amounts
   approval_chain: jsonb("approval_chain"), // Multi-level approval process
-  
+
   // Receipt requirements
   receipt_required_over: integer("receipt_required_over"),
   business_purpose_required: boolean("business_purpose_required").default(false),
-  
+
   // Time restrictions
   allowed_days: jsonb("allowed_days"), // Days of week allowed
   allowed_hours: jsonb("allowed_hours"), // Time ranges allowed
-  
+
   // Geographic restrictions
   allowed_countries: jsonb("allowed_countries"),
   blocked_countries: jsonb("blocked_countries"),
-  
+
   created_by: integer("created_by").notNull(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
@@ -682,32 +680,32 @@ export const budgets = pgTable("budgets", {
   name: text("name").notNull(),
   description: text("description"),
   budget_type: text("budget_type").notNull(), // department, project, employee, category
-  
+
   // Budget scope
   department: text("department"),
   project_code: text("project_code"),
   employee_id: integer("employee_id"),
   expense_category: text("expense_category"),
-  
+
   // Budget amounts
   total_budget: integer("total_budget").notNull(), // Total budget in cents
   spent_amount: integer("spent_amount").default(0),
   committed_amount: integer("committed_amount").default(0), // Pending expenses
   remaining_amount: integer("remaining_amount").notNull(),
-  
+
   // Time period
   start_date: timestamp("start_date").notNull(),
   end_date: timestamp("end_date").notNull(),
   budget_period: text("budget_period"), // monthly, quarterly, annual
-  
+
   // Alerts and controls
   alert_thresholds: jsonb("alert_thresholds"), // { "50": ["email"], "80": ["email", "slack"] }
   auto_lock_at_limit: boolean("auto_lock_at_limit").default(false),
-  
+
   // Ownership
   owner_id: integer("owner_id").notNull(),
   approvers: jsonb("approvers"), // Who can approve budget changes
-  
+
   is_active: boolean("is_active").default(true),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
@@ -733,23 +731,23 @@ export const reimbursements = pgTable("reimbursements", {
   organization_id: integer("organization_id").notNull(),
   user_id: integer("user_id").notNull(),
   batch_id: text("batch_id"), // Group reimbursements together
-  
+
   // Reimbursement details
   total_amount: integer("total_amount").notNull(),
   currency: text("currency").default("USD"),
   expense_ids: jsonb("expense_ids").notNull(), // Array of expense IDs
-  
+
   // Payment details
   payment_method: text("payment_method"), // direct_deposit, check, payroll
   payment_status: text("payment_status").default("pending"), // pending, processing, paid, failed
   payment_reference: text("payment_reference"), // Bank reference number
   payment_date: timestamp("payment_date"),
-  
+
   // Banking information
   bank_account_id: text("bank_account_id"),
   routing_number: text("routing_number"),
   account_number_masked: text("account_number_masked"),
-  
+
   processed_by: integer("processed_by"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
@@ -949,8 +947,6 @@ export type InsertAdminAuditLog = typeof adminAuditLog.$inferInsert;
 
 // Using corporate card expenses table from above instead of this duplicate
 
-
-
 // Using corporate card expenses schema defined above
 
 // Calendar Integration Schema
@@ -967,8 +963,6 @@ export const calendarIntegrations = pgTable("calendar_integrations", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
-
 
 export const insertCalendarIntegrationSchema = createInsertSchema(calendarIntegrations).omit({
   id: true,
@@ -994,8 +988,6 @@ export const tripCollaborations = pgTable("trip_collaborations", {
   joinedAt: timestamp("joined_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
-
 
 // Organization Members Types
 export type OrganizationMember = typeof organizationMembers.$inferSelect;
@@ -1410,7 +1402,7 @@ export const travelPolicies = pgTable("travel_policies", {
   target_departments: jsonb("target_departments").$type<string[]>(),
   target_roles: jsonb("target_roles").$type<string[]>(),
   target_users: jsonb("target_users").$type<number[]>(),
-  
+
   // Flight policies
   flight_class_domestic: text("flight_class_domestic").default("economy"), // economy, premium_economy, business, first
   flight_class_international: text("flight_class_international").default("economy"),
@@ -1418,41 +1410,41 @@ export const travelPolicies = pgTable("travel_policies", {
   flight_price_limit_domestic: integer("flight_price_limit_domestic"), // Price limit in cents
   flight_price_limit_international: integer("flight_price_limit_international"),
   preferred_airlines: jsonb("preferred_airlines").$type<string[]>(),
-  
+
   // Hotel policies
   hotel_star_rating_max: integer("hotel_star_rating_max").default(4),
   hotel_price_limit_domestic: integer("hotel_price_limit_domestic"), // Per night in cents
   hotel_price_limit_international: integer("hotel_price_limit_international"),
   preferred_hotel_chains: jsonb("preferred_hotel_chains").$type<string[]>(),
-  
+
   // Ground transport policies
   ground_transport_types: jsonb("ground_transport_types").$type<string[]>(), // taxi, uber, rental_car, public_transport
   rental_car_class: text("rental_car_class").default("economy"),
   ride_share_max_class: text("ride_share_max_class").default("uberx"), // uberx, comfort, black
-  
+
   // Meal policies
   breakfast_limit: integer("breakfast_limit"), // In cents
   lunch_limit: integer("lunch_limit"),
   dinner_limit: integer("dinner_limit"),
   per_diem_domestic: integer("per_diem_domestic"),
   per_diem_international: jsonb("per_diem_international").$type<Record<string, number>>(), // By country
-  
+
   // Approval requirements
   requires_pre_approval: boolean("requires_pre_approval").default(false),
   auto_approve_in_policy: boolean("auto_approve_in_policy").default(true),
   approval_chain: jsonb("approval_chain").$type<Array<{level: number, approver_role: string, threshold?: number}>>(),
-  
+
   // Compliance settings
   require_business_purpose: boolean("require_business_purpose").default(true),
   require_cost_center: boolean("require_cost_center").default(false),
   require_project_code: boolean("require_project_code").default(false),
   allowed_expense_types: jsonb("allowed_expense_types").$type<string[]>(),
-  
+
   // Time restrictions
   advance_booking_required: integer("advance_booking_required"), // Days
   weekend_travel_allowed: boolean("weekend_travel_allowed").default(false),
   holiday_travel_allowed: boolean("holiday_travel_allowed").default(false),
-  
+
   created_by: integer("created_by").notNull(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
@@ -1467,7 +1459,7 @@ export const policyViolations = pgTable("policy_violations", {
   trip_id: integer("trip_id").references(() => trips.id),
   expense_id: integer("expense_id").references(() => expenses.id),
   booking_id: integer("booking_id").references(() => bookings.id),
-  
+
   violation_type: text("violation_type").notNull(), // over_budget, out_of_policy, no_approval, etc
   violation_details: jsonb("violation_details").$type<{
     rule: string;
@@ -1475,14 +1467,14 @@ export const policyViolations = pgTable("policy_violations", {
     actual: any;
     difference?: number;
   }>().notNull(),
-  
+
   severity: text("severity").default("medium"), // low, medium, high, critical
   status: text("status").default("pending"), // pending, approved, rejected, escalated
-  
+
   justification: text("justification"),
   approved_by: integer("approved_by").references(() => users.id),
   approval_notes: text("approval_notes"),
-  
+
   created_at: timestamp("created_at").defaultNow(),
   resolved_at: timestamp("resolved_at"),
 });
@@ -1492,11 +1484,11 @@ export const expenseReceipts = pgTable("expense_receipts", {
   id: serial("id").primaryKey(),
   expense_id: integer("expense_id").references(() => expenses.id).notNull(),
   organization_id: integer("organization_id").references(() => organizations.id).notNull(),
-  
+
   file_url: text("file_url").notNull(),
   file_type: text("file_type").notNull(), // image/jpeg, image/png, application/pdf
   file_size: integer("file_size"), // In bytes
-  
+
   // OCR Results
   ocr_status: text("ocr_status").default("pending"), // pending, processing, completed, failed
   ocr_confidence: decimal("ocr_confidence"), // 0-1 confidence score
@@ -1510,14 +1502,14 @@ export const expenseReceipts = pgTable("expense_receipts", {
     items?: Array<{name: string; quantity: number; price: number}>;
     payment_method?: string;
   }>(),
-  
+
   ocr_raw_text: text("ocr_raw_text"),
   ocr_processed_at: timestamp("ocr_processed_at"),
-  
+
   verification_status: text("verification_status").default("unverified"), // unverified, verified, flagged
   verified_by: integer("verified_by").references(() => users.id),
   verified_at: timestamp("verified_at"),
-  
+
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -1527,28 +1519,28 @@ export const mileageTracking = pgTable("mileage_tracking", {
   expense_id: integer("expense_id").references(() => expenses.id).notNull(),
   organization_id: integer("organization_id").references(() => organizations.id).notNull(),
   user_id: integer("user_id").references(() => users.id).notNull(),
-  
+
   trip_date: date("trip_date").notNull(),
   start_location: text("start_location").notNull(),
   end_location: text("end_location").notNull(),
-  
+
   // GPS Tracking
   start_latitude: decimal("start_latitude"),
   start_longitude: decimal("start_longitude"),
   end_latitude: decimal("end_latitude"),
   end_longitude: decimal("end_longitude"),
-  
+
   route_polyline: text("route_polyline"), // Encoded polyline for map display
-  
+
   distance_miles: decimal("distance_miles").notNull(),
   rate_per_mile: decimal("rate_per_mile").notNull(), // IRS or custom rate
   total_amount: integer("total_amount").notNull(), // In cents
-  
+
   purpose: text("purpose").notNull(),
   vehicle_type: text("vehicle_type").default("personal"), // personal, company, rental
-  
+
   tracking_method: text("tracking_method").default("manual"), // manual, gps, connected_car
-  
+
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -1558,16 +1550,16 @@ export const travelerTracking = pgTable("traveler_tracking", {
   organization_id: integer("organization_id").references(() => organizations.id).notNull(),
   user_id: integer("user_id").references(() => users.id).notNull(),
   trip_id: integer("trip_id").references(() => trips.id).notNull(),
-  
+
   current_location: text("current_location"),
   current_latitude: decimal("current_latitude"),
   current_longitude: decimal("current_longitude"),
   location_updated_at: timestamp("location_updated_at"),
-  
+
   check_in_status: text("check_in_status").default("pending"), // pending, checked_in, delayed, emergency
   last_check_in: timestamp("last_check_in"),
   next_check_in_due: timestamp("next_check_in_due"),
-  
+
   // Emergency Information
   emergency_contact_notified: boolean("emergency_contact_notified").default(false),
   local_emergency_numbers: jsonb("local_emergency_numbers").$type<{
@@ -1575,7 +1567,7 @@ export const travelerTracking = pgTable("traveler_tracking", {
     medical?: string;
     embassy?: string;
   }>(),
-  
+
   // Health & Safety
   travel_alerts: jsonb("travel_alerts").$type<Array<{
     type: string; // weather, political, health, security
@@ -1583,10 +1575,10 @@ export const travelerTracking = pgTable("traveler_tracking", {
     message: string;
     issued_at: Date;
   }>>(),
-  
+
   medical_info_on_file: boolean("medical_info_on_file").default(false),
   travel_insurance_policy: text("travel_insurance_policy"),
-  
+
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -1597,9 +1589,9 @@ export const travelRiskAssessments = pgTable("travel_risk_assessments", {
   organization_id: integer("organization_id").references(() => organizations.id).notNull(),
   destination_country: text("destination_country").notNull(),
   destination_city: text("destination_city"),
-  
+
   risk_level: text("risk_level").default("low"), // low, medium, high, extreme
-  
+
   // Risk Categories
   health_risk: text("health_risk").default("low"),
   health_details: jsonb("health_details").$type<{
@@ -1607,7 +1599,7 @@ export const travelRiskAssessments = pgTable("travel_risk_assessments", {
     vaccinations_required?: string[];
     medical_facilities_quality?: string;
   }>(),
-  
+
   security_risk: text("security_risk").default("low"),
   security_details: jsonb("security_details").$type<{
     crime_level?: string;
@@ -1615,7 +1607,7 @@ export const travelRiskAssessments = pgTable("travel_risk_assessments", {
     civil_unrest?: boolean;
     areas_to_avoid?: string[];
   }>(),
-  
+
   covid_risk: text("covid_risk").default("low"),
   covid_details: jsonb("covid_details").$type<{
     entry_requirements?: string[];
@@ -1623,14 +1615,14 @@ export const travelRiskAssessments = pgTable("travel_risk_assessments", {
     vaccination_required?: boolean;
     testing_required?: boolean;
   }>(),
-  
+
   travel_advisories: jsonb("travel_advisories").$type<Array<{
     source: string;
     level: string;
     message: string;
     updated_at: Date;
   }>>(),
-  
+
   last_updated: timestamp("last_updated").defaultNow(),
   expires_at: timestamp("expires_at"),
 });
@@ -1640,25 +1632,25 @@ export const corporateCardPolicies = pgTable("corporate_card_policies", {
   id: serial("id").primaryKey(),
   organization_id: integer("organization_id").references(() => organizations.id).notNull(),
   card_id: integer("card_id").references(() => corporateCards.id),
-  
+
   // Real-time controls
   merchant_category_restrictions: jsonb("merchant_category_restrictions").$type<{
     allowed?: string[];
     blocked?: string[];
   }>(),
-  
+
   time_restrictions: jsonb("time_restrictions").$type<{
     allowed_days?: number[]; // 0-6 (Sunday-Saturday)
     allowed_hours?: {start: string; end: string};
     timezone?: string;
   }>(),
-  
+
   geographic_restrictions: jsonb("geographic_restrictions").$type<{
     allowed_countries?: string[];
     blocked_countries?: string[];
     allowed_regions?: string[];
   }>(),
-  
+
   transaction_limits: jsonb("transaction_limits").$type<{
     single_transaction?: number;
     daily?: number;
@@ -1666,19 +1658,19 @@ export const corporateCardPolicies = pgTable("corporate_card_policies", {
     monthly?: number;
     per_merchant_category?: Record<string, number>;
   }>(),
-  
+
   // Automated actions
   auto_lock_rules: jsonb("auto_lock_rules").$type<Array<{
     condition: string;
     action: string;
   }>>(),
-  
+
   notification_settings: jsonb("notification_settings").$type<{
     transaction_alerts?: boolean;
     threshold_amount?: number;
     alert_channels?: string[]; // email, sms, push, slack
   }>(),
-  
+
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -1688,21 +1680,21 @@ export const accountingIntegrations = pgTable("accounting_integrations", {
   id: serial("id").primaryKey(),
   organization_id: integer("organization_id").references(() => organizations.id).notNull(),
   integration_type: text("integration_type").notNull(), // quickbooks, sap, netsuite, xero
-  
+
   connection_status: text("connection_status").default("disconnected"), // connected, disconnected, error
   last_sync: timestamp("last_sync"),
-  
+
   // Field Mappings
   expense_category_mappings: jsonb("expense_category_mappings").$type<Record<string, string>>(), // Our category -> Their account
   tax_code_mappings: jsonb("tax_code_mappings").$type<Record<string, string>>(),
   department_mappings: jsonb("department_mappings").$type<Record<string, string>>(),
   project_mappings: jsonb("project_mappings").$type<Record<string, string>>(),
-  
+
   // Sync Settings
   auto_sync_enabled: boolean("auto_sync_enabled").default(true),
   sync_frequency: text("sync_frequency").default("daily"), // realtime, hourly, daily, weekly
   sync_direction: text("sync_direction").default("one_way"), // one_way, two_way
-  
+
   // API Credentials (encrypted)
   api_credentials: jsonb("api_credentials").$type<{
     client_id?: string;
@@ -1711,7 +1703,7 @@ export const accountingIntegrations = pgTable("accounting_integrations", {
     refresh_token?: string;
     company_id?: string;
   }>(),
-  
+
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -1782,7 +1774,7 @@ export type InsertAccountingIntegration = z.infer<typeof insertAccountingIntegra
 // User roles constants
 export const USER_ROLES = {
   SUPERADMIN_OWNER: 'superadmin_owner',
-  SUPERADMIN_STAFF: 'superadmin_staff', 
+  SUPERADMIN_STAFF: 'superadmin_staff',
   SUPERADMIN_AUDITOR: 'superadmin_auditor',
   ADMIN: 'admin',
   MANAGER: 'manager',

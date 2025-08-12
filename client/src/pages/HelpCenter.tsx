@@ -10,13 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { motion } from 'framer-motion';
-import { 
-  HelpCircle, 
-  BookOpen, 
-  Users, 
-  CreditCard, 
-  Map, 
-  Brain, 
+import {
+  HelpCircle,
+  BookOpen,
+  Users,
+  CreditCard,
+  Map,
+  Brain,
   Shield,
   Search,
   Mail,
@@ -133,7 +133,7 @@ export default function HelpCenter() {
   const filteredFAQs = faqData.map(category => ({
     ...category,
     questions: category.questions.filter(
-      q => 
+      q =>
         q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
         q.answer.toLowerCase().includes(searchQuery.toLowerCase())
     )
@@ -141,13 +141,13 @@ export default function HelpCenter() {
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // In a real implementation, this would send the message via email or support system
     toast({
       title: "Message Sent",
       description: "We'll get back to you within 24 hours.",
     });
-    
+
     setContactForm({
       name: '',
       email: '',
@@ -168,7 +168,7 @@ export default function HelpCenter() {
           <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">
             Get help with Remvana and make the most of your travel planning
           </p>
-          
+
           {/* Search */}
           <div className="max-w-md mx-auto relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -374,7 +374,6 @@ export default function HelpCenter() {
                         </div>
                       </div>
                     </div>
-
 
                     <div className="flex items-center gap-3 p-3 rounded-lg border">
                       <Phone className="h-5 w-5 text-purple-600" />

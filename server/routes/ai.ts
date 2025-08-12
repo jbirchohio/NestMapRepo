@@ -39,7 +39,7 @@ router.post("/summarize-day", async (req, res) => {
   try {
     const validatedData = summarizeDaySchema.parse(req.body);
     const { trip_id, date } = validatedData;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
@@ -99,10 +99,9 @@ Provide a brief, engaging summary that highlights the key experiences and flow o
       activities_count: dayActivities.length
     });
   } catch (error) {
-    console.error("AI summarize-day error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to generate day summary" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate day summary"
     });
   }
 });
@@ -112,20 +111,19 @@ router.post("/suggest-food", async (req, res) => {
   try {
     const validatedData = suggestFoodSchema.parse(req.body);
     const { city, cuisine_type, budget_range } = validatedData;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     // Import cache service
     const { aiCache } = await import('../services/aiCacheService');
-    
+
     // Check cache first
     const cacheKey = aiCache.generateKey('food', city, { cuisine_type, budget_range });
     const cachedResult = aiCache.get(cacheKey);
-    
+
     if (cachedResult) {
-      console.log(`Returning cached food suggestions for: ${city}`);
       return res.json(cachedResult);
     }
 
@@ -135,7 +133,7 @@ router.post("/suggest-food", async (req, res) => {
 
     const cuisineText = cuisine_type ? ` specializing in ${cuisine_type} cuisine` : '';
 
-    const prompt = `Recommend 5 excellent restaurants in ${city}${cuisineText} with ${budgetText}. 
+    const prompt = `Recommend 5 excellent restaurants in ${city}${cuisineText} with ${budgetText}.
 
 For each restaurant, provide:
 - Name
@@ -178,16 +176,15 @@ Format as JSON with this structure:
       budget_range,
       ...result
     };
-    
+
     // Cache for 3 days (restaurant data is relatively stable)
     aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
-    
+
     res.json(responseData);
   } catch (error) {
-    console.error("AI suggest-food error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to generate food recommendations" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate food recommendations"
     });
   }
 });
@@ -197,7 +194,7 @@ router.post("/optimize-itinerary", async (req, res) => {
   try {
     const validatedData = optimizeItinerarySchema.parse(req.body);
     const { trip_id, preferences } = validatedData;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
@@ -287,7 +284,7 @@ Provide specific time optimizations in JSON format:
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
-    
+
     // Ensure the response has the expected structure
     const formattedResult = {
       optimizedActivities: result.optimizedActivities || [],
@@ -303,10 +300,9 @@ Provide specific time optimizations in JSON format:
       ...formattedResult
     });
   } catch (error) {
-    console.error("AI optimize-itinerary error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to optimize itinerary" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to optimize itinerary"
     });
   }
 });
@@ -315,25 +311,25 @@ Provide specific time optimizations in JSON format:
 router.post("/chat", async (req, res) => {
   try {
     const { messages } = req.body;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({
         success: false,
         error: "Messages array is required"
       });
     }
-    
+
     // Check if this looks like a trip creation request
     const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || "";
-    const isCreatingTrip = lastMessage.includes("create") || 
-                          lastMessage.includes("plan") || 
+    const isCreatingTrip = lastMessage.includes("create") ||
+                          lastMessage.includes("plan") ||
                           lastMessage.includes("itinerary") ||
                           lastMessage.includes("weekend");
-    
+
     // Add system prompt for trip planning context
     const systemMessage = {
       role: "system",
@@ -350,7 +346,7 @@ Include this EXACT format at the end of your response:
   "title": "Trip title here",
   "description": "Brief trip description",
   "startDate": "YYYY-MM-DD",
-  "endDate": "YYYY-MM-DD", 
+  "endDate": "YYYY-MM-DD",
   "city": "City name",
   "country": "Country name",
   "activities": [
@@ -376,7 +372,7 @@ CRITICAL: Use REAL, SPECIFIC places that actually exist. Examples:
 
 For NYC:
 - "Visit Empire State Building" at "350 5th Ave, New York, NY 10118"
-- "Lunch at Joe's Pizza" at "7 Carmine St, New York, NY 10014"  
+- "Lunch at Joe's Pizza" at "7 Carmine St, New York, NY 10014"
 - "See The Lion King on Broadway" at "Minskoff Theatre, 200 W 45th St, New York, NY"
 - "Walk the High Line" at "High Line Park, New York, NY 10011"
 - "Brunch at Jacob's Pickles" at "509 Amsterdam Ave, New York, NY 10024"
@@ -390,16 +386,16 @@ Make dates start from the next Friday if not specified.` : 'Do not include any J
 
 Keep your main response conversational and helpful.`
     };
-    
+
     const response = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages: [systemMessage, ...messages],
       temperature: 0.7,
       max_tokens: 1000  // Increased for detailed activities
     });
-    
+
     const aiResponse = response.choices[0].message.content || "";
-    
+
     // Extract trip JSON if present
     let tripSuggestion = null;
     const jsonMatch = aiResponse.match(/<TRIP_JSON>([\s\S]*?)<\/TRIP_JSON>/);
@@ -410,21 +406,21 @@ Keep your main response conversational and helpful.`
         const today = new Date();
         const startDate = new Date(tripSuggestion.startDate);
         const endDate = new Date(tripSuggestion.endDate);
-        
+
         // If dates are in the past, adjust them to the future
         if (startDate < today) {
           const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7;
           const nextFriday = new Date(today.getTime() + daysUntilFriday * 24 * 60 * 60 * 1000);
           const duration = endDate.getTime() - startDate.getTime();
-          
+
           tripSuggestion.startDate = nextFriday.toISOString().split('T')[0];
           tripSuggestion.endDate = new Date(nextFriday.getTime() + duration).toISOString().split('T')[0];
         }
-        
+
         // If we have activities, enrich them with geocoding
         if (tripSuggestion.activities && tripSuggestion.activities.length > 0) {
           const { geocodeLocation } = await import('../geocoding');
-          
+
           // Geocode each activity location
           for (const activity of tripSuggestion.activities) {
             if (activity.locationName) {
@@ -437,23 +433,21 @@ Keep your main response conversational and helpful.`
           }
         }
       } catch (e) {
-        console.error("Failed to parse trip JSON:", e);
         tripSuggestion = null;
       }
     }
-    
+
     // Remove the JSON block from the display message
     const displayMessage = aiResponse.replace(/<TRIP_JSON>[\s\S]*?<\/TRIP_JSON>/, '').trim();
-    
+
     res.json({
       success: true,
       message: displayMessage,
       tripSuggestion
     });
   } catch (error) {
-    console.error("AI chat error:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: "Failed to process chat message",
       details: error instanceof Error ? error.message : "Unknown error"
     });
@@ -464,27 +458,26 @@ Keep your main response conversational and helpful.`
 router.post("/suggest-activities", async (req, res) => {
   try {
     const { city, interests, duration } = req.body;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     if (!city) {
       return res.status(400).json({
         success: false,
         error: "City is required"
       });
     }
-    
+
     // Import cache service
     const { aiCache } = await import('../services/aiCacheService');
-    
+
     // Check cache first
     const cacheKey = aiCache.generateKey('activities', city, { interests, duration });
     const cachedResult = aiCache.get(cacheKey);
-    
+
     if (cachedResult) {
-      console.log(`Returning cached activity suggestions for: ${city}`);
       return res.json(cachedResult);
     }
 
@@ -537,16 +530,15 @@ Format as JSON:
       duration,
       ...result
     };
-    
+
     // Cache for 3 days (activity data is relatively stable)
     aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
-    
+
     res.json(responseData);
   } catch (error) {
-    console.error("AI suggest-activities error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to generate activity suggestions" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate activity suggestions"
     });
   }
 });
@@ -555,11 +547,11 @@ Format as JSON:
 router.post("/find-location", async (req, res) => {
   try {
     const { search_query, city_context } = req.body;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     if (!search_query) {
       return res.status(400).json({
         success: false,
@@ -569,13 +561,12 @@ router.post("/find-location", async (req, res) => {
 
     // Import cache service
     const { aiCache } = await import('../services/aiCacheService');
-    
+
     // Check cache first
     const cacheKey = aiCache.generateKey('location', search_query, city_context);
     const cachedResult = aiCache.get(cacheKey);
-    
+
     if (cachedResult) {
-      console.log(`Returning cached location search for: ${search_query}`);
       return res.json(cachedResult);
     }
 
@@ -629,16 +620,15 @@ Format as JSON:
       cityContext: city_context,
       ...result
     };
-    
+
     // Cache the result for 7 days (location searches are relatively stable)
     aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
-    
+
     res.json(responseData);
   } catch (error) {
-    console.error("AI find-location error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to find locations" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to find locations"
     });
   }
 });
@@ -647,11 +637,11 @@ Format as JSON:
 router.post("/translate-content", async (req, res) => {
   try {
     const { text, target_language } = req.body;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     if (!text || !target_language) {
       return res.status(400).json({
         success: false,
@@ -694,10 +684,9 @@ Provide the translation in JSON format:
       ...result
     });
   } catch (error) {
-    console.error("AI translate-content error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to translate content" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to translate content"
     });
   }
 });
@@ -709,27 +698,26 @@ router.post("/weather-activities", async (req, res) => {
     const location = req.body.location;
     const date = req.body.date;
     const weatherCondition = req.body.weather_condition;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     if (!location || !weatherCondition) {
       return res.status(400).json({
         success: false,
         error: "Location and weather condition are required"
       });
     }
-    
+
     // Import cache service
     const { aiCache } = await import('../services/aiCacheService');
-    
+
     // Check cache first (shorter TTL for weather-based suggestions)
     const cacheKey = aiCache.generateKey('weather-activities', location, { weatherCondition, date });
     const cachedResult = aiCache.get(cacheKey);
-    
+
     if (cachedResult) {
-      console.log(`Returning cached weather activities for: ${location}, ${weatherCondition}`);
       return res.json(cachedResult);
     }
 
@@ -770,16 +758,15 @@ Format as JSON:
       success: true,
       ...result
     };
-    
+
     // Cache for 1 day only (weather changes daily)
     aiCache.set(cacheKey, responseData, aiCache.DURATIONS.DAILY_SUMMARY);
-    
+
     res.json(responseData);
   } catch (error) {
-    console.error("AI weather-activities error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to get weather activity suggestions" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to get weather activity suggestions"
     });
   }
 });
@@ -791,27 +778,26 @@ router.post("/budget-options", async (req, res) => {
     const location = req.body.location;
     const budgetLevel = req.body.budget_level;
     const activityType = req.body.activity_type;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     if (!location || !budgetLevel) {
       return res.status(400).json({
         success: false,
         error: "Location and budget level are required"
       });
     }
-    
+
     // Import cache service
     const { aiCache } = await import('../services/aiCacheService');
-    
+
     // Check cache first
     const cacheKey = aiCache.generateKey('budget', location, { budgetLevel, activityType });
     const cachedResult = aiCache.get(cacheKey);
-    
+
     if (cachedResult) {
-      console.log(`Returning cached budget options for: ${location}, ${budgetLevel}`);
       return res.json(cachedResult);
     }
 
@@ -853,16 +839,15 @@ Format as JSON:
       success: true,
       ...result
     };
-    
+
     // Cache for 7 days (budget data is relatively stable)
     aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
-    
+
     res.json(responseData);
   } catch (error) {
-    console.error("AI budget-options error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to get budget suggestions" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to get budget suggestions"
     });
   }
 });
@@ -871,11 +856,11 @@ Format as JSON:
 router.post("/trip-assistant", async (req, res) => {
   try {
     const { trip_id, question, trip_context, conversation_history } = req.body;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
-    
+
     if (!question) {
       return res.status(400).json({
         success: false,
@@ -885,13 +870,13 @@ router.post("/trip-assistant", async (req, res) => {
 
     // Import the tripAssistant function from openai.ts
     const { tripAssistant } = await import("../openai");
-    
+
     // Call the trip assistant with context
     const result = await tripAssistant(question, {
       trip: trip_context,
       conversationHistory: conversation_history || []
     });
-    
+
     // Handle different response types
     if (typeof result === 'string') {
       res.json({
@@ -909,10 +894,9 @@ router.post("/trip-assistant", async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("AI trip-assistant error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to process your request" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to process your request"
     });
   }
 });
@@ -921,21 +905,21 @@ router.post("/trip-assistant", async (req, res) => {
 router.post("/recommend-tours", async (req, res) => {
   try {
     const { destination, startDate, endDate, interests } = req.body;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
     const prompt = `Recommend the top 5 must-do tours and activities for a trip to ${destination} from ${startDate} to ${endDate}.
     ${interests?.length > 0 ? `The traveler is interested in: ${interests.join(', ')}` : ''}
-    
+
     Focus on:
     1. Most iconic and popular attractions
     2. Unique local experiences
     3. Best value for money
     4. Activities suitable for the season
     5. Mix of culture, food, and adventure
-    
+
     Provide specific tour recommendations with brief descriptions.`;
 
     const response = await openai.chat.completions.create({
@@ -946,7 +930,7 @@ router.post("/recommend-tours", async (req, res) => {
     });
 
     const content = response.choices[0].message.content || "";
-    
+
     // Parse recommendations into array
     const recommendations = content
       .split('\n')
@@ -960,10 +944,9 @@ router.post("/recommend-tours", async (req, res) => {
       period: `${startDate} to ${endDate}`
     });
   } catch (error) {
-    console.error("AI recommend-tours error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to generate tour recommendations" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate tour recommendations"
     });
   }
 });
@@ -972,17 +955,17 @@ router.post("/recommend-tours", async (req, res) => {
 router.post("/generate-trip", async (req, res) => {
   try {
     const { prompt, conversation, tripId } = req.body;
-    
+
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
     // For now, generate trip inline since businessTripGenerator is for business trips
     // We'll create a consumer-focused generation instead
-    
+
     // Parse the prompt to extract trip requirements
     const promptLower = prompt.toLowerCase();
-    
+
     // Use AI to extract structured data from natural language prompt
     const extractionPrompt = `Extract trip details from this request and return as JSON:
 "${prompt}"
@@ -991,7 +974,7 @@ Return format:
 {
   "destination": "city name",
   "startDate": "YYYY-MM-DD",
-  "endDate": "YYYY-MM-DD", 
+  "endDate": "YYYY-MM-DD",
   "budget": number,
   "groupSize": number,
   "tripPurpose": "business/leisure/mixed",
@@ -1012,13 +995,13 @@ If any information is missing, use reasonable defaults or mark as null.`;
     });
 
     const extractedData = JSON.parse(extractionResponse.choices[0].message.content || "{}");
-    
+
     // Check if we need more information
     const missingFields = [];
     if (!extractedData.destination) missingFields.push("destination");
     if (!extractedData.startDate) missingFields.push("travel dates");
     if (!extractedData.budget) missingFields.push("budget");
-    
+
     if (missingFields.length > 0) {
       // Return questions to gather missing information
       const questions = `I'd love to help plan your trip! To create the perfect itinerary, could you provide:
@@ -1151,7 +1134,7 @@ Format as JSON with this structure:
     });
 
     const generatedTrip = JSON.parse(itineraryResponse.choices[0].message.content || "{}");
-    
+
     // Format activities for frontend consumption
     const formattedActivities = generatedTrip.activities.map((activity: any, index: number) => ({
       id: `ai-${index}`,
@@ -1170,7 +1153,7 @@ Format as JSON with this structure:
     if (tripId) {
       let defaultTimeIndex = 0;
       const defaultTimes = ['09:00', '11:00', '14:00', '16:00', '19:00', '21:00'];
-      
+
       for (const activity of formattedActivities) {
         // Ensure activity has a time, generate smart default if missing
         let activityTime = activity.time;
@@ -1178,7 +1161,7 @@ Format as JSON with this structure:
           // Check for meal times based on title/category
           const title = (activity.title || '').toLowerCase();
           const category = (activity.category || '').toLowerCase();
-          
+
           if (title.includes('breakfast') || category === 'breakfast') {
             activityTime = '08:00';
           } else if (title.includes('lunch') || category === 'lunch') {
@@ -1195,7 +1178,7 @@ Format as JSON with this structure:
             defaultTimeIndex++;
           }
         }
-        
+
         await db.insert(activities).values({
           trip_id: parseInt(tripId),
           title: activity.title,
@@ -1228,12 +1211,11 @@ Format as JSON with this structure:
       message: "Your personalized itinerary has been created!",
       savedToTrip: !!tripId
     });
-    
+
   } catch (error) {
-    console.error("AI generate-trip error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to generate trip itinerary" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate trip itinerary"
     });
   }
 });

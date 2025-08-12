@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
-import { 
-  X, Send, Sparkles, MapPin, Calendar, 
+import {
+  X, Send, Sparkles, MapPin, Calendar,
   Users, DollarSign, Loader2, Bot, User
 } from 'lucide-react';
 
@@ -77,8 +77,6 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       }
 
       const newTrip = await tripResponse.json();
-      console.log('Created trip:', newTrip);
-
       // Now create activities for the trip
       if (suggestion.activities && suggestion.activities.length > 0) {
         for (const activity of suggestion.activities) {
@@ -102,11 +100,9 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
             });
 
             if (!activityResponse.ok) {
-              console.error('Failed to create activity:', activity.title);
-            }
+              }
           } catch (error) {
-            console.error('Error creating activity:', error);
-          }
+            }
         }
       }
 
@@ -119,10 +115,9 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       // Navigate to the new trip
       setLocation(`/trips/${newTrip.id}`);
       onClose();
-      
+
       return newTrip;
     } catch (error) {
-      console.error('Error creating trip from suggestion:', error);
       throw error;
     }
   };
@@ -132,8 +127,8 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
 
     // Check if user is confirming trip creation
     const lowerText = text.toLowerCase();
-    const isConfirmingCreation = (lowerText.includes('yes') || 
-                                  lowerText.includes('create') || 
+    const isConfirmingCreation = (lowerText.includes('yes') ||
+                                  lowerText.includes('create') ||
                                   lowerText.includes('go ahead') ||
                                   lowerText.includes('do it') ||
                                   lowerText.includes('sure')) &&
@@ -154,7 +149,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       // If user is confirming, create the trip
       if (isConfirmingCreation) {
         const suggestion = (window as any).pendingTripSuggestion;
-        
+
         const creatingMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -164,7 +159,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
         setMessages(prev => [...prev, creatingMessage]);
 
         await createTripFromSuggestion(suggestion);
-        
+
         // Clear the pending suggestion
         delete (window as any).pendingTripSuggestion;
         return;
@@ -177,7 +172,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({
             role: m.role,
             content: m.content
@@ -190,7 +185,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       }
 
       const data = await response.json();
-      
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -209,24 +204,22 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
           content: `I've prepared a trip plan for "${data.tripSuggestion.title}". Would you like me to create this trip for you? Just say "yes" or "create it" to proceed, or we can keep refining the plan!`,
           timestamp: new Date()
         };
-        
+
         setMessages(prev => [...prev, confirmMessage]);
-        
+
         // Store the suggestion for later use
         (window as any).pendingTripSuggestion = data.tripSuggestion;
       }
     } catch (error) {
-      console.error('AI chat error:', error);
-      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: error instanceof Error && error.message.includes('create trip') 
+        content: error instanceof Error && error.message.includes('create trip')
           ? "I couldn't create the trip. Please try again or create it manually from the dashboard."
           : "I'm having trouble connecting right now. Please try again in a moment!",
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -280,8 +273,8 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
                 className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  message.role === 'assistant' 
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
+                  message.role === 'assistant'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600'
                     : 'bg-gray-200'
                 }`}>
                   {message.role === 'assistant' ? (
@@ -291,8 +284,8 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
                   )}
                 </div>
                 <div className={`max-w-[80%] ${
-                  message.role === 'user' 
-                    ? 'bg-gray-100 text-gray-900' 
+                  message.role === 'user'
+                    ? 'bg-gray-100 text-gray-900'
                     : 'bg-gradient-to-r from-purple-50 to-pink-50 text-gray-900'
                 } rounded-2xl px-4 py-3`}>
                   <p className="whitespace-pre-wrap">{message.content}</p>
@@ -302,7 +295,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
                 </div>
               </motion.div>
             ))}
-            
+
             {isLoading && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -317,7 +310,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
                 </div>
               </motion.div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 

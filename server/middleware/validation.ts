@@ -59,7 +59,6 @@ export function validateRequest(schema: {
 
       next();
     } catch (error) {
-      console.error('Validation middleware error:', error);
       res.status(500).json({
         message: 'Internal validation error'
       });
@@ -121,27 +120,11 @@ export function rateLimit(maxRequests: number, windowMs: number) {
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
   
-  // Log request without sensitive data
-  console.log({
-    method: req.method,
-    url: req.url,
-    ip: req.ip,
-    userAgent: req.get('user-agent'),
-    timestamp: new Date().toISOString()
-  });
-  
-  // Override res.end to log response
+  // Override res.end to track response time
   const originalEnd = res.end;
   res.end = function(chunk?: any, encoding?: any, cb?: any) {
     const duration = Date.now() - start;
-    console.log({
-      method: req.method,
-      url: req.url,
-      statusCode: res.statusCode,
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString()
-    });
-    
+    // Response time tracked
     return originalEnd.call(res, chunk, encoding, cb);
   } as any;
   

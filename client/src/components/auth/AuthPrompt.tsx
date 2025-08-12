@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { UserRound, MapPin } from "lucide-react";
 import AuthModal from "./AuthModal";
@@ -73,7 +73,7 @@ export default function AuthPrompt({
               <p className="text-xs text-muted-foreground">Access your trip plans from any device</p>
             </div>
           </div>
-          
+
           <div className="flex items-center">
             <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
@@ -87,8 +87,8 @@ export default function AuthPrompt({
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-3">
-          <Button 
-            className="w-full" 
+          <Button
+            className="w-full"
             onClick={handleSignUp}
           >
             {actionLabel}

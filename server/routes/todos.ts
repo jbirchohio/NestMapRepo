@@ -49,9 +49,9 @@ router.post('/', async (req, res) => {
       completed: req.body.completed,
       organizationId: req.body.organization_id
     };
-    
+
     const validatedData = createTodoSchema.parse(dataToValidate);
-    
+
     // Set organization ID from authenticated user if not provided
     if (!validatedData.organizationId && req.user?.organization_id) {
       validatedData.organizationId = req.user.organization_id;
@@ -78,7 +78,7 @@ router.put('/:id', async (req, res) => {
 
     const validatedData = updateTodoSchema.parse(req.body);
     const todo = await storage.updateTodo(todoId, validatedData);
-    
+
     if (!todo) {
       return res.status(404).json({ message: 'Todo not found' });
     }
@@ -102,7 +102,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     const success = await storage.deleteTodo(todoId);
-    
+
     if (!success) {
       return res.status(404).json({ message: 'Todo not found' });
     }

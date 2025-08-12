@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   MapPin, Globe, Users, Calendar, TrendingUp,
   Plane, Hotel, Camera, Utensils, Mountain, Building2, Sparkles
 } from 'lucide-react';
@@ -56,7 +56,7 @@ export default function Destinations() {
     const northAmerica = ['USA', 'Canada', 'Mexico'];
     const europe = ['France', 'UK', 'Spain', 'Italy', 'Germany'];
     const asia = ['Japan', 'Thailand', 'Singapore', 'China', 'India'];
-    
+
     if (northAmerica.includes(country)) return 'north-america';
     if (europe.includes(country)) return 'europe';
     if (asia.includes(country)) return 'asia';
@@ -81,13 +81,13 @@ export default function Destinations() {
               Popular Destinations
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Discover amazing places around the world. From bustling cities to serene beaches, 
+              Discover amazing places around the world. From bustling cities to serene beaches,
               find your perfect destination and start planning your next adventure.
             </p>
 
             {/* Enhanced Search Bar */}
             <div className="max-w-2xl mx-auto">
-              <DestinationSearch 
+              <DestinationSearch
                 placeholder="Search any city or destination worldwide..."
                 showTrending={true}
                 onSelect={(destination) => {

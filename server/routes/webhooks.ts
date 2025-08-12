@@ -22,7 +22,7 @@ if (!webhookSecret) {
   logger.warn('STRIPE_WEBHOOK_SECRET is not configured - webhooks will not be verified');
 }
 
-const stripe = stripeKey 
+const stripe = stripeKey
   ? new Stripe(stripeKey, { apiVersion: '2023-10-16' })
   : null;
 
@@ -42,7 +42,7 @@ router.post('/stripe', webhookRateLimit, async (req: Request, res: Response) => 
       logger.error('Webhook rejected - no webhook secret configured in production');
       return res.status(503).send('Webhook verification is required in production');
     }
-    
+
     if (webhookSecret) {
       // Raw body is required for signature verification
       const rawBody = (req as any).rawBody || req.body;
@@ -102,7 +102,7 @@ router.post('/stripe', webhookRateLimit, async (req: Request, res: Response) => 
  */
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   const { metadata } = paymentIntent;
-  
+
   if (!metadata.templateId || !metadata.buyerId || !metadata.sellerId) {
     logger.warn('Payment intent missing required metadata', { paymentIntentId: paymentIntent.id });
     return;
@@ -167,7 +167,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 
   // Update template sales count
   await db.update(templates)
-    .set({ 
+    .set({
       sales_count: sql`COALESCE(sales_count, 0) + 1`,
       last_sale_at: new Date()
     })
@@ -211,7 +211,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   try {
     const { templateCopyService } = await import('../services/templateCopyService');
     const newTripId = await templateCopyService.copyTemplateToTrip(templateId, buyerId);
-    
+
     logger.info(`Template ${templateId} copied to trip ${newTripId} for buyer ${buyerId}`);
   } catch (error) {
     logger.error(`Failed to copy template to trip for buyer ${buyerId}:`, error);
@@ -219,7 +219,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   }
 
   logger.info(`Purchase ${purchase.id} created successfully via webhook`);
-  
+
   // Audit log the successful payment
   await auditService.logPaymentEvent('payment.completed', paymentIntent.id, buyerId, {
     templateId,
@@ -234,7 +234,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
  */
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   const { metadata } = paymentIntent;
-  
+
   logger.warn(`Payment failed for template ${metadata.templateId}`, {
     buyerId: metadata.buyerId,
     error: paymentIntent.last_payment_error?.message
@@ -253,8 +253,8 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     return;
   }
 
-  const paymentIntentId = typeof charge.payment_intent === 'string' 
-    ? charge.payment_intent 
+  const paymentIntentId = typeof charge.payment_intent === 'string'
+    ? charge.payment_intent
     : charge.payment_intent.id;
 
   // Find the purchase
@@ -279,7 +279,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   // Decrease template sales count
   await db.update(templates)
-    .set({ 
+    .set({
       sales_count: sql`GREATEST(COALESCE(sales_count, 0) - 1, 0)`
     })
     .where(eq(templates.id, purchase.template_id));
@@ -300,13 +300,13 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     if (tripsToRevoke.length > 0) {
       // Option 1: Soft delete (mark as revoked)
       await db.update(trips)
-        .set({ 
+        .set({
           status: 'revoked',
           revoked_reason: 'Template purchase refunded',
           revoked_at: new Date()
         })
         .where(eq(trips.id, tripsToRevoke[0].id));
-      
+
       logger.info(`Revoked access to trip ${tripsToRevoke[0].id} due to refund`);
     }
   } catch (error) {
@@ -315,7 +315,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   // Adjust seller's balance
   const sellerEarnings = parseFloat(purchase.seller_earnings || '0');
-  
+
   await db.update(creatorBalances)
     .set({
       available_balance: sql`GREATEST(available_balance - ${sellerEarnings}, 0)`,
@@ -381,13 +381,13 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
 
     if (tripsToFreeze.length > 0) {
       await db.update(trips)
-        .set({ 
+        .set({
           status: 'frozen',
           frozen_reason: 'Template purchase disputed',
           frozen_at: new Date()
         })
         .where(eq(trips.id, tripsToFreeze[0].id));
-      
+
       logger.info(`Froze access to trip ${tripsToFreeze[0].id} due to dispute`);
     }
   } catch (error) {

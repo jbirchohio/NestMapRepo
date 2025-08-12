@@ -75,14 +75,12 @@ router.post("/", async (req: Request, res: Response) => {
     // Geocode location if coordinates are not provided
     if (activityData.location_name && (!activityData.latitude || !activityData.longitude)) {
       const geocodeResult = await geocodeLocation(activityData.location_name, trip.city || trip.location);
-      
+
       if (geocodeResult) {
         activityData.latitude = geocodeResult.latitude;
         activityData.longitude = geocodeResult.longitude;
-        console.log(`Geocoded "${activityData.location_name}" to ${geocodeResult.latitude}, ${geocodeResult.longitude}`);
-      } else {
-        console.log(`Failed to geocode "${activityData.location_name}"`);
-      }
+        } else {
+        }
     }
 
     const activity = await storage.createActivity(activityData);
@@ -135,27 +133,34 @@ router.put("/:id", async (req: Request, res: Response) => {
       tag: req.body.tag,
       assigned_to: req.body.assigned_to,
       order: req.body.order,
-      travel_mode: req.body.travel_mode
+      travel_mode: req.body.travel_mode,
+      // Cost tracking fields
+      price: req.body.price,
+      actual_cost: req.body.actual_cost,
+      cost_category: req.body.cost_category,
+      split_between: req.body.split_between,
+      is_paid: req.body.is_paid,
+      paid_by: req.body.paid_by,
+      currency: req.body.currency
     });
-    
+
     // If location name changed but no new coordinates, geocode the new location
-    if (updateData.location_name && 
+    if (updateData.location_name &&
         (!updateData.latitude || !updateData.longitude) &&
         updateData.location_name !== existingActivity.location_name) {
-      
+
       // Get trip to use city as context
       const trip = await storage.getTrip(existingActivity.trip_id);
       const geocodeResult = await geocodeLocation(updateData.location_name, trip?.city || trip?.location);
-      
+
       if (geocodeResult) {
         updateData.latitude = geocodeResult.latitude;
         updateData.longitude = geocodeResult.longitude;
-        console.log(`Geocoded updated location "${updateData.location_name}" to ${geocodeResult.latitude}, ${geocodeResult.longitude}`);
-      }
+        }
     }
-    
+
     const updatedActivity = await storage.updateActivity(activityId, updateData);
-    
+
     if (!updatedActivity) {
       return res.status(404).json({ message: "Activity not found" });
     }
@@ -212,7 +217,7 @@ router.put("/:id/order", async (req: Request, res: Response) => {
   try {
     const activityId = parseInt(req.params.id);
     const { order } = req.body;
-    
+
     if (isNaN(activityId) || typeof order !== 'number') {
       return res.status(400).json({ message: "Invalid activity ID or order" });
     }
@@ -235,7 +240,7 @@ router.put("/:id/order", async (req: Request, res: Response) => {
     }
 
     const updatedActivity = await storage.updateActivity(activityId, { order });
-    
+
     if (!updatedActivity) {
       return res.status(404).json({ message: "Activity not found" });
     }

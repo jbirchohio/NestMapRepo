@@ -54,37 +54,31 @@ const activitySchema = z.object({
 
 type ActivityFormValues = z.infer<typeof activitySchema>;
 
-export default function ActivityModal({ 
-  tripId, 
-  date, 
-  activity, 
-  onClose, 
-  onSave 
+export default function ActivityModal({
+  tripId,
+  date,
+  activity,
+  onClose,
+  onSave
 }: ActivityModalProps) {
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
   const { trip } = useTrip(tripId);
   const { activities } = useActivities(tripId);
-  
+
   // Debug hotel data
   useEffect(() => {
     if (trip) {
-      console.log("ActivityModal - Trip data:", {
-        id: trip.id,
-        hotel: trip.hotel,
-        hotelLatitude: trip.hotelLatitude,
-        hotelLongitude: trip.hotelLongitude,
-        hasHotelButton: !!(trip.hotel && trip.hotelLatitude && trip.hotelLongitude)
-      });
+      // Hotel data is available in trip object
     }
   }, [trip]);
-  
+
   // State variables for location search
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 1000); // 1 second delay
   const searchInProgress = useRef(false);
   const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
-  
+
   // Selected tag state
   const [selectedTag, setSelectedTag] = useState<string | undefined>(
     activity?.tag === null ? undefined : activity?.tag
@@ -94,7 +88,7 @@ export default function ActivityModal({
   const [selectedDate, setSelectedDate] = useState<string>(
     activity?.date ? new Date(activity.date).toISOString().split('T')[0] : date.toISOString().split('T')[0]
   );
-  
+
   // Format date to string in YYYY-MM-DD format for input
   const formatDateForInput = (date: Date): string => {
     return date.toISOString().split('T')[0];
@@ -103,43 +97,43 @@ export default function ActivityModal({
   // Set form default values
   // Check if travel mode is valid, if not default to walking
   const validTravelModes = ["walking", "driving", "transit"];
-  const travelMode = activity?.travelMode && validTravelModes.includes(activity.travelMode) 
-    ? activity.travelMode as "walking" | "driving" | "transit" 
+  const travelMode = activity?.travelMode && validTravelModes.includes(activity.travelMode)
+    ? activity.travelMode as "walking" | "driving" | "transit"
     : "walking";
-  
+
   // Smart time scheduling
   const getSmartDefaultTime = (): string => {
     if (activity?.time) return activity.time; // Keep existing time if editing
-    
+
     // Get activities for the selected date
     const activitiesForDate = activities.filter(a => {
       const actDate = new Date(a.date).toISOString().split('T')[0];
       const selectedDateStr = new Date(selectedDate).toISOString().split('T')[0];
       return actDate === selectedDateStr;
     });
-    
+
     // Get occupied times
     const occupiedTimes = activitiesForDate.map(a => a.time).filter(Boolean);
-    
+
     // Define ideal time slots throughout the day
     const timeSlots = [
       "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-      "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", 
+      "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
       "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
       "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
     ];
-    
+
     // Find first available slot
     for (const time of timeSlots) {
       if (!occupiedTimes.includes(time)) {
         return time;
       }
     }
-    
+
     // If all slots taken, default to 12:00
     return "12:00";
   };
-  
+
   const defaultFormValues: ActivityFormValues = {
     title: activity?.title || "",
     date: new Date(selectedDate),
@@ -152,19 +146,19 @@ export default function ActivityModal({
     assignedTo: activity?.assignedTo || "",
     travelMode: travelMode,
   };
-  
+
   // Initialize form
-  const { 
-    register, 
-    handleSubmit, 
-    setValue, 
-    watch, 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
     formState: { errors }
   } = useForm<ActivityFormValues>({
     resolver: zodResolver(activitySchema),
     defaultValues: defaultFormValues,
   });
-  
+
   // Process debounced search term
   useEffect(() => {
     if (debouncedSearchTerm && debouncedSearchTerm.length >= 3) {
@@ -172,7 +166,7 @@ export default function ActivityModal({
       setValue("locationName", debouncedSearchTerm);
     }
   }, [debouncedSearchTerm, setValue]);
-  
+
   const createActivity = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
       const order = activity?.order || 0;
@@ -182,13 +176,11 @@ export default function ActivityModal({
         order,
         travelMode: data.travelMode || "walking",
       };
-      
+
       // Check if this is guest mode by looking for trip in localStorage
       const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
-      
 
-      
       if (isGuestTrip) {
 
         // For guest mode, store in localStorage
@@ -197,17 +189,16 @@ export default function ActivityModal({
           id: Date.now(),
           date: data.date.toISOString(),
         };
-        
+
         // Get existing guest activities
         const existingActivities = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
 
         existingActivities.push(newActivity);
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(existingActivities));
 
-        
         return newActivity;
       }
-      
+
       // For authenticated users, use API
       const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, activityData);
       return res;
@@ -223,7 +214,6 @@ export default function ActivityModal({
       onClose();
     },
     onError: (error) => {
-      console.error("Error creating activity:", error);
       toast({
         title: "Error",
         description: "Could not create activity. Please try again.",
@@ -231,15 +221,15 @@ export default function ActivityModal({
       });
     },
   });
-  
+
   const updateActivity = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
       if (!activity) return null;
-      
+
       // Check if this is guest mode by looking for trip in localStorage
       const guestTripsData = localStorage.getItem("remvana_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
-      
+
       if (isGuestTrip) {
 
         // For guest mode, update in localStorage
@@ -255,18 +245,17 @@ export default function ActivityModal({
           tag: data.tag,
           travelMode: String(data.travelMode || 'walking')
         };
-        
+
         // Get existing guest activities and update the specific one
         const existingActivities: ClientActivity[] = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
-        const updatedActivities = existingActivities.map((act: ClientActivity) => 
+        const updatedActivities = existingActivities.map((act: ClientActivity) =>
           act.id === activity.id ? updatedActivity : act
         );
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(updatedActivities));
 
-        
         return updatedActivity;
       }
-      
+
       // For authenticated users, use API
       const updateData = {
         title: data.title,
@@ -280,11 +269,9 @@ export default function ActivityModal({
         assignedTo: data.assignedTo,
         tripId: tripId,
         order: activity.order,
-        travelMode: String(data.travelMode || 'walking')  
+        travelMode: String(data.travelMode || 'walking')
       };
-      
 
-      
       const res = await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, updateData);
       return res;
     },
@@ -298,7 +285,6 @@ export default function ActivityModal({
       onClose();
     },
     onError: (error) => {
-      console.error("Error updating activity:", error);
       toast({
         title: "Error",
         description: "Could not update activity. Please try again.",
@@ -306,7 +292,7 @@ export default function ActivityModal({
       });
     },
   });
-  
+
   const onSubmit = (data: ActivityFormValues) => {
     if (activity) {
       updateActivity.mutate(data);
@@ -314,7 +300,7 @@ export default function ActivityModal({
       createActivity.mutate(data);
     }
   };
-  
+
   // Handle tag selection
   const handleTagChange = (tag: string) => {
     setSelectedTag(tag);
@@ -326,7 +312,7 @@ export default function ActivityModal({
     setSelectedDate(dateString);
     setValue("date", new Date(dateString));
   };
-  
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-4 md:pt-16 md:items-center">
       <div className="bg-background rounded-lg w-full max-w-md max-h-[96vh] overflow-y-auto">
@@ -339,7 +325,7 @@ export default function ActivityModal({
               ✕
             </Button>
           </div>
-          
+
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <div className="mb-4">
@@ -353,7 +339,7 @@ export default function ActivityModal({
                   <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.title.message}</p>
                 )}
               </div>
-              
+
               {/* Trip Date Pills */}
               {trip?.startDate && trip?.endDate && (
                 <div className="mb-4">
@@ -369,7 +355,7 @@ export default function ActivityModal({
                   )}
                 </div>
               )}
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Time</label>
                 <Input
@@ -381,7 +367,7 @@ export default function ActivityModal({
                   <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.time.message}</p>
                 )}
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Location</label>
                 <div className="flex w-full space-x-2">
@@ -392,7 +378,7 @@ export default function ActivityModal({
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   {trip?.hotel && trip?.hotelLatitude && trip?.hotelLongitude && (
-                    <Button 
+                    <Button
                       type="button"
                       variant="outline"
                       className="whitespace-nowrap px-2 text-xs"
@@ -410,7 +396,7 @@ export default function ActivityModal({
                       🏨 Hotel
                     </Button>
                   )}
-                  <Button 
+                  <Button
                     type="button"
                     variant="outline"
                     className="whitespace-nowrap px-3"
@@ -418,18 +404,16 @@ export default function ActivityModal({
                       // Force use the current input value (not the debounced one)
                       const locationName = searchTerm || watch("locationName");
                       if (!locationName) return;
-                      
+
                       // Show what we're actually searching for in the logs
 
-                      
                       try {
                         // Clear existing location results
                         setLocationResults([]);
-                        
+
                         // Step 1: Use our AI-powered location API to get structured data with trip city context
                         // Print full trip object to debug
 
-                        
                         // Extract city from trip - try multiple properties
                         let cityContext = "New York City"; // Default
                         if (trip?.city && trip.city !== "") {
@@ -441,53 +425,51 @@ export default function ActivityModal({
                         } else {
 
                         }
-                        
+
                         const aiResponse = await fetch("/api/ai/find-location", {
                           method: "POST",
                           headers: {
                             "Content-Type": "application/json",
                           },
-                          body: JSON.stringify({ 
+                          body: JSON.stringify({
                             searchQuery: locationName,
                             cityContext
                           })
                         });
-                        
+
                         if (!aiResponse.ok) {
                           throw new Error("Error searching for location");
                         }
-                        
+
                         // Parse the AI response
                         const aiData = await aiResponse.json();
 
-                        
                         // Remove hardcoded location - let AI handle all location searches
-                        
+
                         // Process the multiple locations returned by the API
                         if (aiData.locations && Array.isArray(aiData.locations)) {
                           const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-                          
+
                           // Process each location to get coordinates
                           const processedLocations = await Promise.all(
                             aiData.locations.map(async (loc: LocationResult) => {
                               try {
                                 // Format address for geocoding
-                                const fullAddress = (loc.address || loc.name) + ", " + 
-                                                 (loc.city || "New York City") + ", " + 
+                                const fullAddress = (loc.address || loc.name) + ", " +
+                                                 (loc.city || "New York City") + ", " +
                                                  (loc.region || "NY");
-                                
+
                                 // Try geocoding with Mapbox
                                 const mapboxResponse = await fetch(
                                   `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`
                                 );
-                                
+
                                 if (mapboxResponse.ok) {
                                   const mapboxData = await mapboxResponse.json();
 
-                                  
                                   if (mapboxData.features && mapboxData.features.length > 0) {
                                     const feature = mapboxData.features[0];
-                                    
+
                                     // Check if center exists and is an array with at least 2 elements
                                     if (feature.center && Array.isArray(feature.center) && feature.center.length >= 2) {
                                       // Return location with coordinates
@@ -499,21 +481,20 @@ export default function ActivityModal({
                                     }
                                   }
                                 }
-                                
+
                                 // Return the original location without valid coordinates
                                 return loc;
                               } catch (e) {
-                                console.error("Error geocoding location:", e);
                                 return loc;
                               }
                             })
                           );
-                          
+
                           // Filter out locations without coordinates
-                          const validLocations = processedLocations.filter(loc => 
+                          const validLocations = processedLocations.filter(loc =>
                             loc.latitude && loc.longitude
                           );
-                          
+
                           if (validLocations.length > 0) {
                             setLocationResults(validLocations);
                             toast({
@@ -530,16 +511,16 @@ export default function ActivityModal({
                               latitude: "",  // No default coordinates
                               longitude: ""
                             }]);
-                            
+
                             toast({
                               title: "Location added",
                               description: "Using approximate coordinates",
                             });
                           }
-                          
+
                           return;
                         }
-                        
+
                         // Fallback for old API response format or errors
 
                         setLocationResults([{
@@ -552,15 +533,13 @@ export default function ActivityModal({
                           latitude: "",
                           longitude: ""
                         }]);
-                        
+
                         toast({
                           title: "Location added",
                           description: aiData.name || locationName,
                         });
-                        
+
                       } catch (error) {
-                        console.error("Error in location search:", error);
-                        
                         // Handle common NYC locations as fallback
                         if (locationName.toLowerCase().includes("empire")) {
                           setValue("locationName", "Empire State Building", { shouldValidate: true });
@@ -570,7 +549,7 @@ export default function ActivityModal({
                             title: "Location found",
                             description: "Empire State Building, New York",
                           });
-                        } 
+                        }
                         else if (locationName.toLowerCase().includes("central park")) {
                           setValue("locationName", "Central Park", { shouldValidate: true });
                           setValue("latitude", "40.7812");
@@ -594,7 +573,7 @@ export default function ActivityModal({
                           setValue("locationName", locationName, { shouldValidate: true });
                           setValue("latitude", "");
                           setValue("longitude", "");
-                          
+
                           toast({
                             title: "Location added",
                             description: "Added without coordinates - will not appear on map",
@@ -611,14 +590,14 @@ export default function ActivityModal({
                 {errors.locationName && (
                   <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.locationName.message}</p>
                 )}
-                
+
                 {/* Location search results */}
                 {locationResults.length > 0 && (
                   <div className="mt-2 bg-muted rounded-md max-h-[250px] overflow-y-auto">
                     <h4 className="px-3 pt-2 text-sm font-medium">Select a location:</h4>
                     <div className="p-2 space-y-1">
                       {locationResults.map((location, i) => (
-                        <div 
+                        <div
                           key={i}
                           className="p-2 rounded-md text-sm cursor-pointer hover:bg-accent"
                           onClick={() => {
@@ -626,10 +605,10 @@ export default function ActivityModal({
                             setValue("locationName", location.name, { shouldValidate: true });
                             setValue("latitude", location.latitude || "");
                             setValue("longitude", location.longitude || "");
-                            
+
                             // Clear results after selection
                             setLocationResults([]);
-                            
+
                             toast({
                               title: "Location selected",
                               description: location.name
@@ -651,18 +630,18 @@ export default function ActivityModal({
                   </div>
                 )}
               </div>
-              
+
               <div className="mb-4">
                 <input type="hidden" {...register("latitude")} />
                 <input type="hidden" {...register("longitude")} />
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Notes</label>
-                <Textarea 
+                <Textarea
                   {...register("notes")}
                   placeholder="Add any details or special instructions"
                   className="min-h-[100px]"
                 />
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Type</label>
                 <div className="flex flex-wrap gap-2">
@@ -681,7 +660,7 @@ export default function ActivityModal({
                 </div>
                 <input type="hidden" {...register("tag")} value={selectedTag} />
               </div>
-              
+
               {/* Travel Mode Selection */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Travel Mode (to this location)</label>
@@ -731,8 +710,6 @@ export default function ActivityModal({
                     longitude={watch("longitude")}
                     onBook={(product) => {
                       // Track booking click
-                      console.log('User clicked book for:', product);
-                      
                       // Optionally add booking info to notes
                       const currentNotes = watch("notes") || "";
                       const bookingNote = `\n\n📍 Bookable tour: ${product.productName} (from $${product.fromPrice})`;
@@ -744,7 +721,7 @@ export default function ActivityModal({
                 </div>
               )}
             </div>
-            
+
             <div className="flex justify-end gap-2 mt-6">
               <Button
                 type="button"

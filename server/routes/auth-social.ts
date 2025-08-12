@@ -21,7 +21,7 @@ function createAuthToken(user: any): string {
     username: user.username,
     exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
   };
-  
+
   return jwt.sign(payload, process.env.JWT_SECRET || 'fallback_dev_secret');
 }
 
@@ -29,7 +29,7 @@ function createAuthToken(user: any): string {
 router.post('/google', async (req: Request, res: Response) => {
   try {
     const { credential } = req.body;
-    
+
     if (!credential) {
       return res.status(400).json({ message: 'Google credential is required' });
     }
@@ -39,7 +39,7 @@ router.post('/google', async (req: Request, res: Response) => {
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    
+
     const payload = ticket.getPayload();
     if (!payload) {
       return res.status(401).json({ message: 'Invalid Google token' });
@@ -53,7 +53,7 @@ router.post('/google', async (req: Request, res: Response) => {
     if (!user) {
       // Create new user
       const username = name?.replace(/\s+/g, '').toLowerCase() || email!.split('@')[0];
-      
+
       [user] = await db.insert(users).values({
         auth_id: `google_${googleId}`,
         email: email!,
@@ -65,7 +65,7 @@ router.post('/google', async (req: Request, res: Response) => {
         role_type: 'consumer',
         created_at: new Date(),
       }).returning();
-      
+
       logger.info(`New user registered via Google: ${email}`);
     } else {
       // Update user info if needed
@@ -95,18 +95,17 @@ router.post('/google', async (req: Request, res: Response) => {
   }
 });
 
-
 // GET /api/auth/social/providers - Get enabled social providers
 router.get('/providers', (req: Request, res: Response) => {
   const providers = [];
-  
+
   if (process.env.GOOGLE_CLIENT_ID) {
     providers.push({
       name: 'google',
       clientId: process.env.GOOGLE_CLIENT_ID,
     });
   }
-  
+
   res.json({ providers });
 });
 

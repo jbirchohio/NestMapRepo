@@ -65,12 +65,12 @@ export function globalErrorHandler(err: any, req: Request, res: Response, next: 
 
   // Default server error
   res.status(err.status || 500).json({
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
+    message: process.env.NODE_ENV === 'production'
+      ? 'Internal server error'
       : err.message,
-    ...(process.env.NODE_ENV === 'development' && { 
+    ...(process.env.NODE_ENV === 'development' && {
       stack: err.stack,
-      details: err.details 
+      details: err.details
     })
   });
 }
@@ -90,7 +90,7 @@ export function asyncHandler(fn: Function) {
 export class OrganizationAccessError extends Error {
   status = 403;
   name = 'OrganizationAccessError';
-  
+
   constructor(message = 'Access denied: Organization permission required') {
     super(message);
   }
@@ -103,7 +103,7 @@ export class ValidationError extends Error {
   status = 400;
   name = 'ValidationError';
   details: any;
-  
+
   constructor(message: string, details?: any) {
     super(message);
     this.details = details;

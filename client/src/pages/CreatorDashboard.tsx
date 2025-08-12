@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { 
-  DollarSign, TrendingUp, Users, Eye, Package, 
+import {
+  DollarSign, TrendingUp, Users, Eye, Package,
   ArrowUpRight, ArrowDownRight, Download, CreditCard,
   Gift, Building, Wallet, AlertCircle, Check, X,
   BarChart3, PieChart, Calendar, Plus, Edit2, Trash2,
@@ -17,14 +17,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogFooter 
+  DialogFooter
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ClientCreatorDashboard, ClientTemplate } from '@/lib/types';
@@ -344,7 +344,7 @@ export default function CreatorDashboard() {
                           )}
                         </div>
                         <p className="text-gray-600 mb-4">{template.description}</p>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                           <div>
                             <p className="text-gray-500">Price</p>
@@ -379,7 +379,7 @@ export default function CreatorDashboard() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2 ml-4">
                         <Button variant="outline" size="sm">
                           <Edit2 className="h-4 w-4" />
@@ -563,7 +563,7 @@ export default function CreatorDashboard() {
                     className="mt-1"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="specialties">Specialties</Label>
                   <Input
@@ -657,7 +657,7 @@ export default function CreatorDashboard() {
               Available balance: ${availableBalance.toFixed(2)}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div>
               <Label htmlFor="amount">Amount</Label>
@@ -708,12 +708,12 @@ export default function CreatorDashboard() {
               Cancel
             </Button>
             <Button
-              onClick={() => payoutMutation.mutate({ 
-                method: payoutMethod, 
-                amount: payoutAmount 
+              onClick={() => payoutMutation.mutate({
+                method: payoutMethod,
+                amount: payoutAmount
               })}
               disabled={
-                !payoutAmount || 
+                !payoutAmount ||
                 parseFloat(payoutAmount) < payoutThresholds[payoutMethod as keyof typeof payoutThresholds] ||
                 parseFloat(payoutAmount) > availableBalance ||
                 payoutMutation.isPending
@@ -761,8 +761,8 @@ function MetricCard({
           </div>
           {trend && (
             <div className={`flex items-center text-sm ${
-              trend === 'up' ? 'text-green-600' : 
-              trend === 'down' ? 'text-red-600' : 
+              trend === 'up' ? 'text-green-600' :
+              trend === 'down' ? 'text-red-600' :
               'text-gray-600'
             }`}>
               {trend === 'up' && <ArrowUpRight className="h-4 w-4" />}

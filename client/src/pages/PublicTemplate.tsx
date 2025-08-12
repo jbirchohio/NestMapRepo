@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import { 
+import {
   MapPin, Calendar, Clock, Star, Users, Globe,
   Check, TrendingUp, Shield, ChevronRight
 } from 'lucide-react';
@@ -75,21 +75,21 @@ export default function PublicTemplate() {
       <Helmet>
         <title>{template.title} - Travel Template | Remvana</title>
         <meta name="description" content={template.description || `${template.duration}-day trip template to ${template.destinations.join(', ')}`} />
-        
+
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="product" />
         <meta property="og:url" content={`https://remvana.com/t/${shareCode}`} />
         <meta property="og:title" content={template.title} />
         <meta property="og:description" content={template.description} />
         <meta property="og:image" content={template.coverImage || 'https://remvana.com/og-default.jpg'} />
-        
+
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content={`https://remvana.com/t/${shareCode}`} />
         <meta property="twitter:title" content={template.title} />
         <meta property="twitter:description" content={template.description} />
         <meta property="twitter:image" content={template.coverImage || 'https://remvana.com/og-default.jpg'} />
-        
+
         {/* Structured Data */}
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
@@ -121,7 +121,7 @@ export default function PublicTemplate() {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-          
+
           {/* Content Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="max-w-7xl mx-auto">
@@ -148,11 +148,11 @@ export default function PublicTemplate() {
                     </Badge>
                   ))}
                 </div>
-                
+
                 <h1 className="text-4xl md:text-6xl font-bold mb-4">
                   {template.title}
                 </h1>
-                
+
                 <p className="text-xl text-white/90 max-w-3xl mb-6">
                   {template.description}
                 </p>
@@ -202,7 +202,7 @@ export default function PublicTemplate() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-3">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
                         <Clock className="h-5 w-5 text-purple-600" />
@@ -214,7 +214,7 @@ export default function PublicTemplate() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-3">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
                         <Shield className="h-5 w-5 text-purple-600" />
@@ -226,7 +226,7 @@ export default function PublicTemplate() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-3">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
                         <Check className="h-5 w-5 text-purple-600" />
@@ -260,7 +260,7 @@ export default function PublicTemplate() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-4 p-4 rounded-lg bg-purple-50">
                       <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                         <span className="font-bold text-purple-600">1PM</span>
@@ -272,7 +272,7 @@ export default function PublicTemplate() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-4 p-4 rounded-lg bg-purple-50">
                       <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                         <span className="font-bold text-purple-600">6PM</span>
@@ -285,7 +285,7 @@ export default function PublicTemplate() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <p className="text-center text-sm text-gray-600 mt-6">
                     + {((template.tripData?.activities?.length || 15) - 3)} more amazing activities
                   </p>
@@ -319,7 +319,7 @@ export default function PublicTemplate() {
                           "This template saved me hours of planning! Every recommendation was spot on."
                         </p>
                       </div>
-                      
+
                       <p className="text-center">
                         <Button variant="link" className="text-purple-600">
                           Read all {template.reviewCount} reviews
@@ -366,16 +366,16 @@ export default function PublicTemplate() {
                     </div>
                   </div>
 
-                  <Button 
-                    className="w-full mb-3" 
+                  <Button
+                    className="w-full mb-3"
                     size="lg"
                     onClick={() => window.location.href = `/templates/${template.slug}`}
                   >
                     Get This Template
                   </Button>
 
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full"
                     onClick={() => window.location.href = '/marketplace'}
                   >
@@ -423,8 +423,8 @@ export default function PublicTemplate() {
             <p className="text-xl text-purple-100 mb-8">
               Skip the planning, jump straight to exploring
             </p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               variant="secondary"
               className="bg-white text-purple-600 hover:bg-gray-100"
               onClick={() => window.location.href = `/templates/${template.slug}`}

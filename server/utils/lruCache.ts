@@ -31,7 +31,7 @@ export class LRUCache<K = any, V = any> {
     const LRUCacheClass = await getLRUCache();
     this.cache = new LRUCacheClass(options);
     this.initialized = true;
-    
+
     // Process any pending operations
     this.pendingOps.forEach(op => op());
     this.pendingOps = [];
@@ -41,7 +41,7 @@ export class LRUCache<K = any, V = any> {
     if (this.initialized) {
       return callback();
     }
-    
+
     // Queue the operation
     return new Promise((resolve) => {
       this.pendingOps.push(() => resolve(callback()));

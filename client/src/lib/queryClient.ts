@@ -4,116 +4,92 @@ import { jwtAuth } from "./jwtAuth";
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    throw new Error(`Request failed: ${text}`);
   }
 }
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<any> {
+const defaultQueryFn: QueryFunction = async ({ queryKey }) => {
+  const [baseUrl, ...params] = queryKey as string[];
+  
+  let url = baseUrl;
+  if (params.length > 0) {
+    url = `${baseUrl}/${params.join('/')}`;
+  }
+  
+  const token = jwtAuth.getToken();
+  
   try {
-    // Check for bad URLs containing [object Object]
-    if (url.includes('[object Object]')) {
-      console.error('ERROR: Attempting to make request with [object Object] in URL!');
-      console.error('URL:', url);
-      console.error('Stack trace:', new Error().stack);
-      throw new Error('Invalid URL: contains [object Object]');
-    }
-    
-    // Get JWT token
-    const token = jwtAuth.getToken();
-
-    const headers: Record<string, string> = {
-      ...(data ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-    };
-
-    console.log(`Making ${method} request to ${url}`, data ? data : '');
-
     const res = await fetch(url, {
-      method,
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
-    });
-
-    console.log(`Response status: ${res.status}`);
-    console.log(`Response headers:`, res.headers);
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`API Error: ${res.status} - ${errorText}`);
-      let errorMessage;
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.message || errorJson.error || 'Request failed';
-      } catch {
-        errorMessage = errorText || `HTTP ${res.status}`;
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
       }
-      throw new Error(errorMessage);
-    }
-
-    const contentType = res.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const jsonResponse = await res.json();
-      console.log(`JSON response:`, jsonResponse);
-      return jsonResponse;
-    }
-
-    const textResponse = await res.text();
-    console.log(`Text response:`, textResponse);
-    return textResponse;
+    });
+    
+    throwIfResNotOk(res);
+    return res.json();
   } catch (error) {
-    // Handle network errors, timeouts, and other fetch failures
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error('Network error:', error);
-      throw new Error('Network connection failed. Please check your internet connection.');
+    // If it's a network error or something else, try to extract a meaningful message
+    let errorMessage = 'An error occurred';
+    
+    if (error instanceof Error) {
+      const errorText = error.message;
+      // Try to parse the error message if it's JSON
+      try {
+        const errorData = JSON.parse(errorText.replace('Request failed: ', ''));
+        errorMessage = errorData.message || errorData.error || errorText;
+      } catch {
+        errorMessage = errorText || 'Network error';
+      }
     }
     
-    // Re-throw API errors as-is
-    throw error;
+    throw new Error(errorMessage);
   }
-}
-
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    // Get JWT token
-    const token = jwtAuth.getToken();
-
-    const headers: Record<string, string> = {
-      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-    };
-
-    const res = await fetch(queryKey[0] as string, {
-      headers,
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
-
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+};
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
-    },
-    mutations: {
-      retry: false,
+      queryFn: defaultQueryFn,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: (failureCount, error) => {
+        // Don't retry on 401 or 403
+        if (error instanceof Error) {
+          if (error.message.includes('401') || error.message.includes('403')) {
+            return false;
+          }
+        }
+        return failureCount < 2;
+      },
     },
   },
 });
+
+// Export an API request function for manual requests
+export async function apiRequest(method: string, url: string, data?: any) {
+  const token = jwtAuth.getToken();
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
+  };
+  
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+  
+  const res = await fetch(url, options);
+  throwIfResNotOk(res);
+  
+  const text = await res.text();
+  if (!text) return null;
+  
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}

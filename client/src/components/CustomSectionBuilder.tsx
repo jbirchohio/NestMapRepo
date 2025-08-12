@@ -32,7 +32,7 @@ export default function CustomSectionBuilder({ sections, onChange }: CustomSecti
     const newSection: CustomSection = {
       id: `section_${Date.now()}`,
       title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Section`,
-      content: type === 'list' ? '• Item 1\n• Item 2\n• Item 3' : 
+      content: type === 'list' ? '• Item 1\n• Item 2\n• Item 3' :
                type === 'table' ? 'Header 1 | Header 2 | Header 3\n--- | --- | ---\nRow 1 Col 1 | Row 1 Col 2 | Row 1 Col 3' :
                'Enter your content here...',
       type,
@@ -44,7 +44,7 @@ export default function CustomSectionBuilder({ sections, onChange }: CustomSecti
   };
 
   const updateSection = (id: string, updates: Partial<CustomSection>) => {
-    onChange(sections.map(section => 
+    onChange(sections.map(section =>
       section.id === id ? { ...section, ...updates } : section
     ));
   };
@@ -298,10 +298,10 @@ function SectionPreview({ section }: { section: CustomSection }) {
       case 'table':
         const lines = section.content.split('\n').filter(line => line.trim());
         if (lines.length < 2) return <div className="text-gray-500">Invalid table format</div>;
-        
+
         const headers = lines[0].split('|').map(h => h.trim());
         const rows = lines.slice(2).map(line => line.split('|').map(cell => cell.trim()));
-        
+
         return (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">

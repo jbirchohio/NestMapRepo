@@ -14,16 +14,16 @@ interface FullScreenModalProps {
 }
 
 const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
-  ({ 
-    children, 
-    isOpen, 
-    onClose, 
+  ({
+    children,
+    isOpen,
+    onClose,
     title,
     className,
     showCloseButton = true,
     backdrop = "blur"
   }, ref) => {
-    
+
     // Prevent body scroll when modal is open
     useEffect(() => {
       if (isOpen) {
@@ -31,7 +31,7 @@ const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
       } else {
         document.body.style.overflow = 'unset';
       }
-      
+
       return () => {
         document.body.style.overflow = 'unset';
       };
@@ -56,14 +56,14 @@ const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
     };
 
     const overlayVariants = {
-      hidden: { 
+      hidden: {
         opacity: 0,
         transition: {
           duration: 0.2,
           ease: "easeInOut"
         }
       },
-      visible: { 
+      visible: {
         opacity: 1,
         transition: {
           duration: 0.3,
@@ -73,7 +73,7 @@ const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
     };
 
     const modalVariants = {
-      hidden: { 
+      hidden: {
         y: "100%",
         opacity: 0,
         scale: 0.95,
@@ -84,7 +84,7 @@ const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
           duration: 0.3
         }
       },
-      visible: { 
+      visible: {
         y: 0,
         opacity: 1,
         scale: 1,
@@ -151,7 +151,7 @@ const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
                     {title}
                   </h2>
                 )}
-                
+
                 {showCloseButton && (
                   <motion.button
                     onClick={onClose}
@@ -168,8 +168,8 @@ const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
               <div className="flex-1 overflow-y-auto">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ 
-                    opacity: 1, 
+                  animate={{
+                    opacity: 1,
                     y: 0,
                     transition: { delay: 0.2, duration: 0.3 }
                   }}

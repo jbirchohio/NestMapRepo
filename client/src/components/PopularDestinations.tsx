@@ -103,7 +103,7 @@ export default function PopularDestinations() {
                       <h3 className="font-semibold text-lg mb-1 line-clamp-1">
                         {destination.name}
                       </h3>
-                      
+
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                         {destination.description}
                       </p>

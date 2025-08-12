@@ -5,16 +5,16 @@ export default function EmergencyLogout() {
   const handleEmergencyLogout = () => {
     // Clear all localStorage
     localStorage.clear();
-    
+
     // Clear all sessionStorage
     sessionStorage.clear();
-    
+
     // Force reload to clear all state
     window.location.href = '/';
   };
 
   return (
-    <Button 
+    <Button
       onClick={handleEmergencyLogout}
       variant="destructive"
       size="sm"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { 
+import {
   Twitter, Facebook, Instagram, Link, Mail, MessageCircle,
   Copy, Check, Share2, QrCode, Download, X, MessageSquare,
   Send, Linkedin, Phone
@@ -37,14 +37,14 @@ export default function ShareModalSimple({
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Generate share URL
-  const shareUrl = customShareUrl || 
+  const shareUrl = customShareUrl ||
     (template ? `${window.location.origin}/templates/${template.slug}` :
      tripId ? `${window.location.origin}/share/${tripId}` :
      window.location.href);
 
   // Generate share content
   const title = customTitle || template?.title || 'Check out this amazing trip!';
-  const description = customDescription || template?.description || 
+  const description = customDescription || template?.description ||
     'I found this incredible travel itinerary on Remvana. Take a look!';
 
   // Generate QR code on mount
@@ -94,7 +94,7 @@ export default function ShareModalSimple({
     const encodedUrl = encodeURIComponent(shareUrl);
     const encodedTitle = encodeURIComponent(title);
     const encodedDescription = encodeURIComponent(description);
-    
+
     const shareUrls: Record<string, string> = {
       twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
@@ -134,7 +134,7 @@ export default function ShareModalSimple({
   if (!isOpen) return null;
 
   const modalContent = (
-    <div 
+    <div
       style={{
         position: 'fixed',
         top: 0,
@@ -150,7 +150,7 @@ export default function ShareModalSimple({
       }}
       onClick={handleBackdropClick}
     >
-      <div 
+      <div
         ref={modalRef}
         style={{
           position: 'relative',
@@ -192,7 +192,7 @@ export default function ShareModalSimple({
               <TabsTrigger value="social">Social</TabsTrigger>
               <TabsTrigger value="qr">QR Code</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="link" className="space-y-4">
               <div className="flex gap-2">
                 <Input
@@ -212,7 +212,7 @@ export default function ShareModalSimple({
                 Share this link with friends to show them your trip
               </p>
             </TabsContent>
-            
+
             <TabsContent value="social" className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <Button
@@ -281,7 +281,7 @@ export default function ShareModalSimple({
                 </Button>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="qr" className="space-y-4">
               {qrCodeUrl && (
                 <div className="flex flex-col items-center space-y-4">

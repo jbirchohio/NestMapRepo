@@ -25,10 +25,10 @@ interface RateLimitBucket {
 class ComprehensiveRateLimit {
   private buckets = new Map<string, RateLimitBucket>();
   private blockedIPs = new Set<string>();
-  
+
   // Disable rate limiting in development
   private readonly isDevelopment = process.env.NODE_ENV === 'development';
-  
+
   // Tiered rate limiting configurations
   private readonly configs: Record<string, RateLimitConfig> = {
     // Global limits per IP
@@ -37,14 +37,14 @@ class ComprehensiveRateLimit {
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 50, // 50 requests in 1 minute burst
     },
-    
+
     // Authentication endpoints - reasonable limits for consumer app
     'auth': {
       requests: 100, // Increased from 20
       windowMs: 15 * 60 * 1000, // 15 minutes
       burstLimit: 20, // Increased from 5 - allows multiple sign-in attempts
     },
-    
+
     // API endpoints by organization tier
     'free': {
       requests: 500,
@@ -61,7 +61,7 @@ class ComprehensiveRateLimit {
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 500,
     },
-    
+
     // Special endpoints with custom limits
     'analytics': {
       requests: 50,
@@ -87,7 +87,7 @@ class ComprehensiveRateLimit {
     retryAfter?: number;
   } {
     const now = Date.now();
-    
+
     const bucket = this.buckets.get(key) || {
       tokens: config.requests,
       lastRefill: now,
@@ -135,7 +135,7 @@ class ComprehensiveRateLimit {
         retryAfter: undefined
       };
     }
-    
+
     // For auth endpoints, check if we should use relaxed limits
     if (configType === 'auth' && process.env.RELAX_AUTH_LIMIT === 'true') {
       const relaxedConfig = {
@@ -145,10 +145,10 @@ class ComprehensiveRateLimit {
       };
       return this.checkLimitWithConfig(key, relaxedConfig);
     }
-    
+
     const config = this.configs[configType] || this.configs['global'];
     const now = Date.now();
-    
+
     // Check if IP is globally blocked
     if (this.blockedIPs.has(key.split(':')[0])) {
       return {
@@ -179,7 +179,7 @@ class ComprehensiveRateLimit {
     // Refill tokens based on time elapsed
     const timePassed = now - bucket.lastRefill;
     const tokensToAdd = Math.floor(timePassed * (config.requests / config.windowMs));
-    
+
     bucket.tokens = Math.min(config.requests, bucket.tokens + tokensToAdd);
     bucket.lastRefill = now;
 
@@ -192,7 +192,7 @@ class ComprehensiveRateLimit {
     if (bucket.burstTokens <= 0) {
       bucket.violations++;
       this.handleViolation(key, bucket, config);
-      
+
       return {
         allowed: false,
         remaining: bucket.tokens,
@@ -208,7 +208,7 @@ class ComprehensiveRateLimit {
         bucket.violations++;
         this.handleViolation(key, bucket, config);
       }
-      
+
       const resetTime = now + config.windowMs;
       return {
         allowed: false,
@@ -222,7 +222,7 @@ class ComprehensiveRateLimit {
     bucket.tokens--;
     bucket.burstTokens--;
     bucket.violations = Math.max(0, bucket.violations - 0.1); // Gradual violation recovery
-    
+
     this.buckets.set(key, bucket);
 
     return {
@@ -298,18 +298,18 @@ export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
   if (process.env.NODE_ENV === 'test') {
     return next();
   }
-  
+
   const ip = req.ip || req.connection.remoteAddress || 'unknown';
   const userId = req.user?.id || 'anonymous';
   const key = `global:${ip}:${userId}`;
-  
+
   const result = comprehensiveRateLimit.checkLimit(key, 'global');
-  
+
   // Set rate limit headers
   res.setHeader('X-RateLimit-Limit', '1000');
   res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
   res.setHeader('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
-  
+
   if (!result.allowed) {
     res.setHeader('Retry-After', result.retryAfter?.toString() || '3600');
     return res.status(429).json({
@@ -318,7 +318,7 @@ export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
       retryAfter: result.retryAfter
     });
   }
-  
+
   next();
 }
 
@@ -330,19 +330,19 @@ export function authRateLimit(req: Request, res: Response, next: NextFunction) {
   if (process.env.NODE_ENV === 'test') {
     return next();
   }
-  
+
   const ip = req.ip || req.connection.remoteAddress || 'unknown';
   const key = `auth:${ip}`;
-  
+
   const result = comprehensiveRateLimit.checkLimit(key, 'auth');
-  
+
   res.setHeader('X-RateLimit-Limit', '20');
   res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
   res.setHeader('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
-  
+
   if (!result.allowed) {
     res.setHeader('Retry-After', result.retryAfter?.toString() || '900');
-    
+
     // Log suspicious authentication attempts
     logger.warn('AUTH_RATE_LIMIT_EXCEEDED:', {
       ip,
@@ -350,14 +350,14 @@ export function authRateLimit(req: Request, res: Response, next: NextFunction) {
       userAgent: req.headers['user-agent'],
       timestamp: new Date().toISOString()
     });
-    
+
     return res.status(429).json({
       error: 'Authentication rate limit exceeded',
       message: 'Too many authentication attempts. Please try again later.',
       retryAfter: result.retryAfter
     });
   }
-  
+
   next();
 }
 
@@ -369,7 +369,7 @@ export function organizationRateLimit(req: Request, res: Response, next: NextFun
   if (process.env.NODE_ENV === 'test') {
     return next();
   }
-  
+
   if (!req.user?.organization_id) {
     // No organization context, apply free tier limits
     return tieredRateLimit('free')(req, res, next);
@@ -388,15 +388,15 @@ export function tieredRateLimit(tier: string) {
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
     const orgId = req.user?.organization_id || 'none';
     const key = `tier:${tier}:${orgId}:${ip}`;
-    
+
     const result = comprehensiveRateLimit.checkLimit(key, tier);
-    
+
     const config = (comprehensiveRateLimit as any).configs[tier] || (comprehensiveRateLimit as any).configs['free'];
     res.setHeader('X-RateLimit-Limit', config.requests.toString());
     res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
     res.setHeader('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
     res.setHeader('X-RateLimit-Tier', tier);
-    
+
     if (!result.allowed) {
       res.setHeader('Retry-After', result.retryAfter?.toString() || '3600');
       return res.status(429).json({
@@ -406,7 +406,7 @@ export function tieredRateLimit(tier: string) {
         retryAfter: result.retryAfter
       });
     }
-    
+
     next();
   };
 }
@@ -419,15 +419,15 @@ export function endpointRateLimit(endpointType: string) {
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
     const userId = req.user?.id || 'anonymous';
     const key = `endpoint:${endpointType}:${ip}:${userId}`;
-    
+
     const result = comprehensiveRateLimit.checkLimit(key, endpointType);
-    
+
     const config = (comprehensiveRateLimit as any).configs[endpointType] || (comprehensiveRateLimit as any).configs['global'];
     res.setHeader('X-RateLimit-Limit', config.requests.toString());
     res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
     res.setHeader('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
     res.setHeader('X-RateLimit-Endpoint', endpointType);
-    
+
     if (!result.allowed) {
       res.setHeader('Retry-After', result.retryAfter?.toString() || '3600');
       return res.status(429).json({
@@ -437,7 +437,7 @@ export function endpointRateLimit(endpointType: string) {
         retryAfter: result.retryAfter
       });
     }
-    
+
     next();
   };
 }

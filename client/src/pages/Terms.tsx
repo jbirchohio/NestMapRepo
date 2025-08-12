@@ -16,8 +16,8 @@ export function TermsPage() {
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Agreement to Terms</h2>
             <p className="text-gray-700 leading-relaxed">
-              By using Remvana ("we," "our," or "us"), you agree to these Terms of Service. 
-              If you don't agree, please don't use our services. We may update these terms, 
+              By using Remvana ("we," "our," or "us"), you agree to these Terms of Service.
+              If you don't agree, please don't use our services. We may update these terms,
               and your continued use means you accept the changes.
             </p>
           </section>
@@ -28,7 +28,7 @@ export function TermsPage() {
               <Users className="h-6 w-6 text-purple-600" />
               Your Account
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>When you create an account, you agree to:</p>
               <ul className="list-disc pl-6 space-y-2">
@@ -38,7 +38,7 @@ export function TermsPage() {
                 <li>Notify us immediately of unauthorized access</li>
                 <li>Be at least 13 years old</li>
               </ul>
-              
+
               <div className="bg-yellow-50 p-4 rounded-lg mt-4">
                 <p className="font-semibold">One account per person - no sharing allowed!</p>
               </div>
@@ -51,7 +51,7 @@ export function TermsPage() {
               <Scale className="h-6 w-6 text-purple-600" />
               Acceptable Use
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>You may use Remvana to:</p>
               <ul className="list-disc pl-6 space-y-2 text-green-700">
@@ -82,7 +82,7 @@ export function TermsPage() {
               <CreditCard className="h-6 w-6 text-purple-600" />
               Template Marketplace Terms
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">For Creators</h3>
@@ -110,7 +110,7 @@ export function TermsPage() {
 
               <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-700">
-                  <strong>Commission from Bookings:</strong> If you book activities through templates, 
+                  <strong>Commission from Bookings:</strong> If you book activities through templates,
                   creators may earn a small commission from our partners (at no extra cost to you).
                 </p>
               </div>
@@ -120,7 +120,7 @@ export function TermsPage() {
           {/* Content & Privacy */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Content</h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>When you create content on Remvana:</p>
               <ul className="list-disc pl-6 space-y-2">
@@ -136,7 +136,7 @@ export function TermsPage() {
           {/* Payment Terms */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Payments & Billing</h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <ul className="list-disc pl-6 space-y-2">
                 <li>All payments are processed securely through Stripe</li>
@@ -155,7 +155,7 @@ export function TermsPage() {
               <AlertTriangle className="h-6 w-6 text-yellow-600" />
               Disclaimers & Limitations
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <p className="font-semibold mb-2">Service Provided "As Is"</p>
@@ -173,8 +173,8 @@ export function TermsPage() {
               <div className="mt-4">
                 <p className="font-semibold mb-2">Limitation of Liability</p>
                 <p>
-                  To the maximum extent permitted by law, Remvana won't be liable for any indirect, 
-                  incidental, special, consequential, or punitive damages. Our total liability is 
+                  To the maximum extent permitted by law, Remvana won't be liable for any indirect,
+                  incidental, special, consequential, or punitive damages. Our total liability is
                   limited to the amount you've paid us in the past 12 months.
                 </p>
               </div>
@@ -182,7 +182,7 @@ export function TermsPage() {
               <div className="mt-4">
                 <p className="font-semibold mb-2">Travel Disclaimer</p>
                 <p>
-                  We're a planning tool, not a travel agency. Always verify information independently. 
+                  We're a planning tool, not a travel agency. Always verify information independently.
                   We're not responsible for issues with bookings, cancellations, or travel disruptions.
                 </p>
               </div>
@@ -195,7 +195,7 @@ export function TermsPage() {
               <Ban className="h-6 w-6 text-red-600" />
               Account Termination
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>We may suspend or terminate your account if you:</p>
               <ul className="list-disc pl-6 space-y-2">
@@ -204,7 +204,7 @@ export function TermsPage() {
                 <li>Harm other users or our platform</li>
                 <li>Haven't logged in for 2+ years</li>
               </ul>
-              
+
               <p className="mt-4">
                 You can delete your account anytime. Upon termination:
               </p>
@@ -221,8 +221,8 @@ export function TermsPage() {
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Indemnification</h2>
             <p className="text-gray-700">
-              You agree to defend, indemnify, and hold Remvana harmless from any claims, 
-              damages, or expenses arising from your use of our services, violation of these 
+              You agree to defend, indemnify, and hold Remvana harmless from any claims,
+              damages, or expenses arising from your use of our services, violation of these
               terms, or infringement of any rights.
             </p>
           </section>
@@ -233,11 +233,11 @@ export function TermsPage() {
               <Globe className="h-6 w-6 text-purple-600" />
               Governing Law & Disputes
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>
-                These terms are governed by the laws of Ohio, USA. Any disputes will be 
-                resolved through binding arbitration in Ohio, except for 
+                These terms are governed by the laws of Ohio, USA. Any disputes will be
+                resolved through binding arbitration in Ohio, except for
                 small claims court matters.
               </p>
               <p>
@@ -250,8 +250,8 @@ export function TermsPage() {
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to Terms</h2>
             <p className="text-gray-700">
-              We may update these terms anytime. We'll notify you of significant changes via 
-              email or in-app notification. Continued use after changes means you accept the 
+              We may update these terms anytime. We'll notify you of significant changes via
+              email or in-app notification. Continued use after changes means you accept the
               new terms. If you don't agree, stop using Remvana and close your account.
             </p>
           </section>
@@ -276,7 +276,7 @@ export function TermsPage() {
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Entire Agreement</h2>
             <p className="text-gray-700">
-              These Terms of Service, along with our Privacy Policy, constitute the entire 
+              These Terms of Service, along with our Privacy Policy, constitute the entire
               agreement between you and Remvana. They supersede any prior agreements or understandings.
             </p>
           </section>

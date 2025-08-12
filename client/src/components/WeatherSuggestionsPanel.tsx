@@ -146,7 +146,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
         description: "Couldn't auto-detect weather. You can still use manual selection.",
         variant: "destructive",
       });
-      console.error("Error getting auto weather:", error);
+      // Error getting auto weather
     },
   });
 
@@ -170,7 +170,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
         description: "Could not get weather-based suggestions. Please try again.",
         variant: "destructive",
       });
-      console.error("Error getting weather suggestions:", error);
+      // Error getting weather suggestions
     },
   });
 
@@ -190,7 +190,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
         description: "Could not get activity suggestions. Please try again.",
         variant: "destructive",
       });
-      console.error("Error getting general suggestions:", error);
+      // Error getting general suggestions
     },
   });
 
@@ -267,13 +267,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
         ...pendingActivityTimes
       ];
       
-      console.log('Weather activity scheduling:', {
-        selectedDate,
-        existingActivitiesCount: existingActivitiesForDate.length,
-        pendingCount: pendingActivityTimes.length,
-        occupiedTimes,
-        activityTitle: activitySuggestion.title || activitySuggestion.name
-      });
+      // Weather activity scheduling
       
       // Determine appropriate time based on activity type and avoid conflicts
       let defaultTime = "10:00"; // Default morning time
@@ -322,11 +316,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
         }
       }
       
-      console.log('Selected time for activity:', {
-        idealTimes,
-        finalTime: defaultTime,
-        wasConflict: occupiedTimes.includes(defaultTime)
-      });
+      // Selected time for activity
       
       // Determine tag based on activity
       let tag = 'event';
@@ -368,7 +358,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
         description: "Failed to add activity to your itinerary.",
         variant: "destructive",
       });
-      console.error("Error adding activity:", error);
+      // Error adding activity
     }
   };
 

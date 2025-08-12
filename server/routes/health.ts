@@ -1,4 +1,7 @@
 import { Router, Request, Response } from 'express';
+import { db } from '../db-connection';
+import { sql } from 'drizzle-orm';
+import os from 'os';
 
 const router = Router();
 
@@ -30,7 +33,7 @@ export function trackEndpointHealth(endpoint: string, duration: number, statusCo
 
   existing.requestCount++;
   existing.avgResponseTime = ((existing.avgResponseTime * (existing.requestCount - 1)) + duration) / existing.requestCount;
-  
+
   if (statusCode >= 400 || error) {
     existing.errorCount++;
     existing.lastError = error || `HTTP ${statusCode}`;
@@ -51,7 +54,31 @@ export function trackEndpointHealth(endpoint: string, duration: number, statusCo
   healthMetrics.set(endpoint, existing);
 }
 
-// GET /api/health - Get overall API health status
+/**
+ * GET /api/health/live - Liveness probe (for k8s/monitoring)
+ */
+router.get('/live', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'alive', timestamp: new Date().toISOString() });
+});
+
+/**
+ * GET /api/health/ready - Readiness probe with database check
+ */
+router.get('/ready', async (req: Request, res: Response) => {
+  try {
+    // Check database connectivity
+    await db.execute(sql`SELECT 1`);
+    res.status(200).json({ status: 'ready', timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'not ready', 
+      reason: 'Database unavailable',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/health - Get comprehensive health status
 router.get('/', async (req: Request, res: Response) => {
   try {
     const now = new Date();
@@ -74,18 +101,61 @@ router.get('/', async (req: Request, res: Response) => {
       overallStatus = 'degraded';
     }
 
-    const avgResponseTime = recentMetrics.length > 0 
-      ? recentMetrics.reduce((sum, m) => sum + m.avgResponseTime, 0) / recentMetrics.length 
+    const avgResponseTime = recentMetrics.length > 0
+      ? recentMetrics.reduce((sum, m) => sum + m.avgResponseTime, 0) / recentMetrics.length
       : 0;
 
     const overallErrorRate = recentMetrics.length > 0
       ? recentMetrics.reduce((sum, m) => sum + m.errorRate, 0) / recentMetrics.length
       : 0;
 
+    // Check database health
+    let dbStatus = 'healthy';
+    let dbLatency = 0;
+    try {
+      const dbStart = Date.now();
+      await db.execute(sql`SELECT 1`);
+      dbLatency = Date.now() - dbStart;
+      if (dbLatency > 1000) dbStatus = 'degraded';
+    } catch (error) {
+      dbStatus = 'unhealthy';
+      overallStatus = 'unhealthy';
+    }
+
+    // Check memory usage
+    const memUsage = process.memoryUsage();
+    const totalMem = os.totalmem();
+    const usedMem = memUsage.heapUsed + memUsage.external;
+    const memPercentage = (usedMem / totalMem) * 100;
+    
+    let memStatus = 'healthy';
+    if (memPercentage > 90) {
+      memStatus = 'critical';
+      overallStatus = 'unhealthy';
+    } else if (memPercentage > 70) {
+      memStatus = 'warning';
+      if (overallStatus === 'healthy') overallStatus = 'degraded';
+    }
+
     const response = {
       status: overallStatus,
       uptime: process.uptime(),
       timestamp: now,
+      system: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        environment: process.env.NODE_ENV || 'development',
+        memory: {
+          status: memStatus,
+          used: Math.round(usedMem / 1024 / 1024), // MB
+          total: Math.round(totalMem / 1024 / 1024), // MB
+          percentage: Math.round(memPercentage)
+        }
+      },
+      database: {
+        status: dbStatus,
+        latency: dbLatency
+      },
       endpoints: {
         total: totalEndpoints,
         healthy: healthyEndpoints,
@@ -109,8 +179,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json(response);
   } catch (error) {
-    console.error('Error fetching API health:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'unhealthy',
       error: 'Health check failed',
       timestamp: new Date()

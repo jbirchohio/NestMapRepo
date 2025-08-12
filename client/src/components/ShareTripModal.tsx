@@ -46,13 +46,13 @@ export default function ShareTripModal({
       setIsPublic(trip.isPublic || false);
       setSharingEnabled(trip.sharingEnabled || false);
       setSharePermission((trip.sharePermission as "read-only" | "edit") || "read-only");
-      
+
       // Generate share link with permission parameter
       const baseUrl = window.location.origin;
       const shareCode = trip.shareCode || '';
       const permission = trip.sharePermission || "read-only";
       setShareLink(`${baseUrl}/share/${shareCode}?permission=${permission}`);
-      
+
       // Set collaborators
       setCollaborators([]);
     }
@@ -70,7 +70,7 @@ export default function ShareTripModal({
   const handleToggleSharing = async () => {
     const newValue = !sharingEnabled;
     setSharingEnabled(newValue);
-    
+
     if (newValue && trip) {
       // Generate a share code if sharing is enabled and none exists
       const shareCode = trip.shareCode || generateShareCode();
@@ -88,7 +88,6 @@ export default function ShareTripModal({
           description: "Your trip can now be shared with others.",
         });
       } catch (error) {
-        console.error("Error updating share settings:", error);
         toast({
           title: "Error",
           description: "Failed to update sharing settings",
@@ -109,7 +108,6 @@ export default function ShareTripModal({
         setTimeout(() => setCopied(false), 2000);
       },
       (err) => {
-        console.error("Could not copy link: ", err);
         toast({
           title: "Error",
           description: "Could not copy link to clipboard",
@@ -155,11 +153,11 @@ export default function ShareTripModal({
     if (!trip) return;
 
     setSharePermission(newPermission);
-    
+
     try {
       // Ensure we have a share code - generate one if missing
       const shareCode = trip.shareCode || generateShareCode();
-      
+
       await onSave(trip.id, {
         sharePermission: newPermission,
         shareCode: shareCode,
@@ -169,7 +167,7 @@ export default function ShareTripModal({
       // Update the share link with new permission and guaranteed share code
       const baseUrl = window.location.origin;
       setShareLink(`${baseUrl}/share/${shareCode}?permission=${newPermission}`);
-      
+
       toast({
         title: "Permission updated",
         description: `Share link now grants ${newPermission === 'edit' ? 'editing' : 'read-only'} access.`,
@@ -185,7 +183,7 @@ export default function ShareTripModal({
 
   const handleAddCollaborator = () => {
     if (!collaboratorEmail) return;
-    
+
     // Simple email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(collaboratorEmail)) {
@@ -196,12 +194,12 @@ export default function ShareTripModal({
       });
       return;
     }
-    
+
     if (!collaborators.includes(collaboratorEmail)) {
       const newCollaborators = [...collaborators, collaboratorEmail];
       setCollaborators(newCollaborators);
       setCollaboratorEmail("");
-      
+
       if (trip) {
         // Save to database
         // Collaborators are handled separately, not part of trip model
@@ -219,7 +217,7 @@ export default function ShareTripModal({
   const handleRemoveCollaborator = (email: string) => {
     const newCollaborators = collaborators.filter(c => c !== email);
     setCollaborators(newCollaborators);
-    
+
     if (trip) {
       // Collaborators are handled separately, not part of trip model
       // onSave(trip.id, { collaborators: newCollaborators });
@@ -228,26 +226,25 @@ export default function ShareTripModal({
 
   const handleSave = async () => {
     if (!trip) return;
-    
+
     setIsLoading(true);
     try {
       // Only generate a share code if sharing is enabled and no code exists
       const shareCode = sharingEnabled && !trip.shareCode ? generateShareCode() : trip.shareCode;
-      
+
       await onSave(trip.id, {
         isPublic,
         sharingEnabled,
         shareCode: sharingEnabled ? shareCode : undefined
       });
-      
+
       toast({
         title: "Settings saved",
         description: "Sharing settings have been updated",
       });
-      
+
       onClose();
     } catch (error) {
-      console.error("Error saving share settings:", error);
       toast({
         title: "Error",
         description: "Failed to save sharing settings",
@@ -273,26 +270,26 @@ export default function ShareTripModal({
             <TabsTrigger value="link">Share Link</TabsTrigger>
             <TabsTrigger value="collaborators">Collaborators</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="link" className="space-y-4">
             <div className="flex items-center justify-between space-x-2">
               <Label htmlFor="public" className="flex-1">Make trip public</Label>
-              <Switch 
-                id="public" 
-                checked={isPublic} 
-                onCheckedChange={handleTogglePublic} 
+              <Switch
+                id="public"
+                checked={isPublic}
+                onCheckedChange={handleTogglePublic}
               />
             </div>
-            
+
             <div className="flex items-center justify-between space-x-2">
               <Label htmlFor="sharing" className="flex-1">Enable sharing via link</Label>
-              <Switch 
-                id="sharing" 
-                checked={sharingEnabled} 
-                onCheckedChange={handleToggleSharing} 
+              <Switch
+                id="sharing"
+                checked={sharingEnabled}
+                onCheckedChange={handleToggleSharing}
               />
             </div>
-            
+
             {sharingEnabled && (
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -316,7 +313,7 @@ export default function ShareTripModal({
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {sharePermission === "edit" 
+                    {sharePermission === "edit"
                       ? "Recipients can add activities and make changes to your trip."
                       : "Recipients can view your itinerary but cannot make changes."
                     }
@@ -327,10 +324,10 @@ export default function ShareTripModal({
                   <Label htmlFor="shareLink">Share link</Label>
                   <div className="flex items-center space-x-2">
                     <div className="relative flex-1">
-                      <Input 
-                        id="shareLink" 
-                        value={shareLink} 
-                        readOnly 
+                      <Input
+                        id="shareLink"
+                        value={shareLink}
+                        readOnly
                         disabled={!sharingEnabled}
                       />
                       {copied && (
@@ -350,7 +347,7 @@ export default function ShareTripModal({
                 </div>
 
                 <div className="pt-2">
-                  <Button 
+                  <Button
                     onClick={handleNativeShare}
                     disabled={!shareLink}
                     className="w-full"
@@ -367,18 +364,18 @@ export default function ShareTripModal({
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="collaborators" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="collaborator">Add collaborator by email</Label>
               <div className="flex items-center space-x-2">
-                <Input 
-                  id="collaborator" 
+                <Input
+                  id="collaborator"
                   placeholder="Email address"
                   value={collaboratorEmail}
                   onChange={(e) => setCollaboratorEmail(e.target.value)}
                 />
-                <Button 
+                <Button
                   type="button"
                   onClick={handleAddCollaborator}
                 >
@@ -386,7 +383,7 @@ export default function ShareTripModal({
                 </Button>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label>Current collaborators</Label>
               {collaborators.length === 0 ? (
@@ -394,17 +391,17 @@ export default function ShareTripModal({
               ) : (
                 <div className="space-y-2">
                   {collaborators.map((email) => (
-                    <div 
-                      key={email} 
+                    <div
+                      key={email}
                       className="flex items-center justify-between bg-secondary p-2 rounded-md"
                     >
                       <div className="flex items-center space-x-2">
                         <Link className="h-4 w-4 text-muted-foreground" />
                         <span>{email}</span>
                       </div>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
+                      <Button
+                        type="button"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleRemoveCollaborator(email)}
                       >

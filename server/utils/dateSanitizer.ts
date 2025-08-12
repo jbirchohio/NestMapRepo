@@ -1,19 +1,19 @@
 // Helper to sanitize dates in objects to prevent "Invalid time value" errors
 export function sanitizeDates(obj: any): any {
   if (obj === null || obj === undefined) return obj;
-  
+
   // Handle arrays
   if (Array.isArray(obj)) {
     return obj.map(item => sanitizeDates(item));
   }
-  
+
   // Handle objects
   if (typeof obj === 'object') {
     const sanitized: any = {};
-    
+
     for (const key in obj) {
       const value = obj[key];
-      
+
       // Check if this looks like a date field
       if (key.includes('_at') || key.includes('At') || key === 'date' || key === 'Date') {
         // Try to validate the date
@@ -35,10 +35,10 @@ export function sanitizeDates(obj: any): any {
         sanitized[key] = value;
       }
     }
-    
+
     return sanitized;
   }
-  
+
   return obj;
 }
 

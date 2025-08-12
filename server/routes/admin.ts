@@ -13,7 +13,7 @@ const requireAdmin = (req: any, res: any, next: any) => {
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
   const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
   const allAdminEmails = [...adminEmails, superAdminEmail].filter(Boolean);
-  
+
   if (!req.user || !allAdminEmails.includes(req.user.email)) {
     return res.status(403).json({ message: 'Admin access required' });
   }
@@ -68,15 +68,15 @@ router.post('/templates/:id/approve', async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     const { notes } = req.body;
-    
+
     // Update template status to published
     await db.update(templates)
-      .set({ 
+      .set({
         status: 'published',
         updated_at: new Date()
       })
       .where(eq(templates.id, templateId));
-    
+
     logger.info(`Admin approved template ${templateId}`);
     res.json({ message: 'Template approved successfully' });
   } catch (error) {
@@ -90,19 +90,19 @@ router.post('/templates/:id/reject', async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     const { reason, notes } = req.body;
-    
+
     if (!reason) {
       return res.status(400).json({ message: 'Rejection reason is required' });
     }
-    
+
     // Update template status to archived
     await db.update(templates)
-      .set({ 
+      .set({
         status: 'archived',
         updated_at: new Date()
       })
       .where(eq(templates.id, templateId));
-    
+
     logger.info(`Admin rejected template ${templateId}: ${reason}`);
     res.json({ message: 'Template rejected' });
   } catch (error) {
@@ -150,11 +150,11 @@ router.get('/users', async (req, res) => {
   try {
     const { page = 1, limit = 20, role, creator_status: creatorStatus } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
-    
+
     // Build query
     let query = db.select()
       .from(users);
-    
+
     // Apply filters
     const conditions = [];
     if (role) {
@@ -163,16 +163,16 @@ router.get('/users', async (req, res) => {
     if (creatorStatus) {
       conditions.push(eq(users.creator_status, creatorStatus as string));
     }
-    
+
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
-    
+
     const allUsers = await query
       .orderBy(desc(users.created_at))
       .limit(Number(limit))
       .offset(offset);
-    
+
     // Get template counts and revenue for each user
     const usersWithStats = await Promise.all(
       allUsers.map(async (user) => {
@@ -182,7 +182,7 @@ router.get('/users', async (req, res) => {
         })
         .from(templates)
         .where(eq(templates.user_id, user.id));
-        
+
         // Get total revenue
         const [revenue] = await db.select({
           total: sql<number>`COALESCE(SUM(seller_earnings), 0)`
@@ -190,7 +190,7 @@ router.get('/users', async (req, res) => {
         .from(templatePurchases)
         .innerJoin(templates, eq(templates.id, templatePurchases.template_id))
         .where(eq(templates.user_id, user.id));
-        
+
         return {
           ...user,
           template_count: Number(templateCount?.count || 0),
@@ -198,12 +198,12 @@ router.get('/users', async (req, res) => {
         };
       })
     );
-    
+
     // Get total count
     const [{ count }] = await db.select({
       count: sql<number>`count(*)`
     }).from(users);
-    
+
     res.json({
       users: usersWithStats,
       pagination: {
@@ -223,7 +223,7 @@ router.get('/users', async (req, res) => {
 router.post('/users/:id/verify', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    
+
     await db.update(users)
       .set({
         creator_status: 'verified',
@@ -231,7 +231,7 @@ router.post('/users/:id/verify', async (req, res) => {
         creator_verified_at: new Date()
       })
       .where(eq(users.id, userId));
-    
+
     logger.info(`Admin verified creator ${userId}`);
     res.json({ message: 'Creator verified successfully' });
   } catch (error) {
@@ -245,18 +245,18 @@ router.post('/users/:id/suspend', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { reason } = req.body;
-    
+
     await db.update(users)
       .set({
         creator_status: 'suspended',
       })
       .where(eq(users.id, userId));
-    
+
     // Also unpublish all their templates
     await db.update(templates)
       .set({ status: 'draft' })
       .where(eq(templates.user_id, userId));
-    
+
     logger.info(`Admin suspended creator ${userId}: ${reason}`);
     res.json({ message: 'Creator suspended' });
   } catch (error) {
@@ -269,11 +269,11 @@ router.post('/users/:id/suspend', async (req, res) => {
 router.post('/users/:id/make-admin', requireSuperAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    
+
     await db.update(users)
       .set({ role: 'admin' })
       .where(eq(users.id, userId));
-    
+
     logger.info(`Super admin granted admin privileges to user ${userId}`);
     res.json({ message: 'User granted admin privileges' });
   } catch (error) {
@@ -286,16 +286,16 @@ router.post('/users/:id/make-admin', requireSuperAdmin, async (req, res) => {
 router.post('/users/:id/remove-admin', requireSuperAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    
+
     // Don't allow removing your own admin status
     if (userId === req.user!.id) {
       return res.status(400).json({ message: 'Cannot remove your own admin privileges' });
     }
-    
+
     await db.update(users)
       .set({ role: 'user' })
       .where(eq(users.id, userId));
-    
+
     logger.info(`Super admin removed admin privileges from user ${userId}`);
     res.json({ message: 'Admin privileges removed' });
   } catch (error) {
@@ -307,7 +307,7 @@ router.post('/users/:id/remove-admin', requireSuperAdmin, async (req, res) => {
 // GET /api/admin/check - Check if current user is admin
 router.get('/check', async (req, res) => {
   // If we got here, user is admin (middleware checked)
-  res.json({ 
+  res.json({
     isAdmin: true,
     isSuperAdmin: (req as any).isSuperAdmin || false,
     user: {
@@ -418,11 +418,11 @@ router.get('/financials/transactions', requireSuperAdmin, async (req, res) => {
     const countQuery = db.select({
       count: sql<number>`count(*)`
     }).from(templatePurchases);
-    
+
     if (conditions.length > 0) {
       countQuery.where(and(...conditions));
     }
-    
+
     const [{ count }] = await countQuery;
 
     res.json({
@@ -570,7 +570,7 @@ router.get('/destinations', async (req, res) => {
       })
       .from(destinations)
       .orderBy(destinations.name);
-    
+
     // Convert snake_case to camelCase for frontend
     const formattedDestinations = allDestinations.map(dest => ({
       id: dest.id,
@@ -586,7 +586,7 @@ router.get('/destinations', async (req, res) => {
       lastRegenerated: dest.lastRegenerated,
       aiGenerated: dest.aiGenerated
     }));
-    
+
     res.json({ destinations: formattedDestinations });
   } catch (error) {
     logger.error('Error fetching destinations:', error);
@@ -598,16 +598,16 @@ router.get('/destinations', async (req, res) => {
 router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { template_id, user_id: targetUserId } = req.body;
-    
+
     // Use provided userId or the current user
     const buyerId = targetUserId || req.user!.id;
-    
+
     // Get template
     const template = await storage.getTemplate(template_id);
     if (!template) {
       return res.status(404).json({ message: 'Template not found' });
     }
-    
+
     // Check if already recorded
     const existing = await db.select()
       .from(templatePurchases)
@@ -618,24 +618,24 @@ router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
         )
       )
       .limit(1);
-      
+
     if (existing.length > 0) {
       // If purchase exists but user doesn't have the trip, just copy it
       const { templateCopyService } = await import('../services/templateCopyService');
       const newTripId = await templateCopyService.copyTemplateToTrip(template_id, buyerId);
-      
+
       return res.json({
         message: 'Purchase already recorded, created new trip copy',
         purchaseId: existing[0].id,
         tripId: newTripId
       });
     }
-    
+
     // Record purchase
     const price = parseFloat(template.price || '0');
     const platformFee = price * 0.30;
     const sellerEarnings = price - platformFee;
-    
+
     const [purchase] = await db.insert(templatePurchases)
       .values({
         template_id: template_id,
@@ -650,18 +650,18 @@ router.post('/manual-purchase', requireAuth, requireAdmin, async (req, res) => {
         payout_status: 'pending',
       })
       .returning();
-      
+
     // Update template sales
     await db.update(templates)
       .set({ sales_count: sql`COALESCE(sales_count, 0) + 1` })
       .where(eq(templates.id, template_id));
-      
+
     // Copy template to trips
     const { templateCopyService } = await import('../services/templateCopyService');
     const newTripId = await templateCopyService.copyTemplateToTrip(template_id, buyerId);
-    
+
     logger.info(`Manual purchase recorded for template ${template_id} by user ${buyerId}`);
-    
+
     res.json({
       message: 'Purchase recorded successfully',
       purchaseId: purchase.id,
@@ -678,7 +678,7 @@ router.get('/cache/stats', async (req, res) => {
   try {
     const geocodeStats = geocodeCacheService.getStats();
     const aiStats = aiCache.getStats();
-    
+
     res.json({
       geocode: geocodeStats,
       ai: aiStats,
@@ -699,18 +699,18 @@ router.get('/cache/stats', async (req, res) => {
 router.post('/cache/clear', requireSuperAdmin, async (req, res) => {
   try {
     const { type } = req.body; // 'geocode', 'ai', or 'all'
-    
+
     if (type === 'geocode' || type === 'all') {
       geocodeCacheService.clear();
       logger.info('Geocode cache cleared by admin');
     }
-    
+
     if (type === 'ai' || type === 'all') {
       aiCache.clear();
       logger.info('AI cache cleared by admin');
     }
-    
-    res.json({ 
+
+    res.json({
       message: `Cache cleared successfully: ${type}`,
       timestamp: new Date().toISOString()
     });
@@ -724,11 +724,11 @@ router.post('/cache/clear', requireSuperAdmin, async (req, res) => {
 router.post('/templates/check-city', async (req, res) => {
   try {
     const { city, country } = req.body;
-    
+
     if (!city) {
       return res.status(400).json({ message: 'City name is required' });
     }
-    
+
     // Check if templates exist for this city
     const existingTemplates = await db.select({
       id: templates.id,
@@ -739,13 +739,13 @@ router.post('/templates/check-city', async (req, res) => {
       sql`LOWER(${templates.destinations}::text) LIKE ${`%${city.toLowerCase()}%`}`
     )
     .limit(10);
-    
+
     const exists = existingTemplates.length > 0;
-    
+
     res.json({
       exists,
       templateCount: existingTemplates.length,
-      message: exists 
+      message: exists
         ? `Found ${existingTemplates.length} template(s) for ${city}`
         : `No templates found for ${city}. You can generate a new one!`
     });
@@ -758,12 +758,12 @@ router.post('/templates/check-city', async (req, res) => {
 // POST /api/admin/templates/generate - Generate new template for a city
 router.post('/templates/generate', async (req, res) => {
   try {
-    const { city, price } = req.body;
-    
+    const { city, price, includeBudget, budgetLevel, dailyBudget } = req.body;
+
     if (!city || !price) {
       return res.status(400).json({ message: 'City and price are required' });
     }
-    
+
     // Auto-determine duration based on price
     let duration: number;
     if (price <= 30) {
@@ -777,13 +777,13 @@ router.post('/templates/generate', async (req, res) => {
     } else {
       duration = 14;
     }
-    
+
     // Find or create Remvana user
     let remvanaUser = await db.select()
       .from(users)
       .where(eq(users.username, 'Remvana'))
       .limit(1);
-    
+
     if (remvanaUser.length === 0) {
       // Create Remvana user
       const [newUser] = await db.insert(users)
@@ -801,14 +801,14 @@ router.post('/templates/generate', async (req, res) => {
         .returning();
       remvanaUser = [newUser];
     }
-    
+
     const remvanaUserId = remvanaUser[0].id;
-    
+
     // Detect country from city if possible
     const cityLower = city.toLowerCase();
     let country = '';
     let tags = ['adventure', 'culture', 'food'];
-    
+
     // Common city-country mappings
     if (cityLower.includes('paris')) country = 'France';
     else if (cityLower.includes('tokyo')) country = 'Japan';
@@ -820,30 +820,80 @@ router.post('/templates/generate', async (req, res) => {
     else if (cityLower.includes('dubai')) country = 'UAE';
     else if (cityLower.includes('singapore')) country = 'Singapore';
     else if (cityLower.includes('sydney') || cityLower.includes('melbourne')) country = 'Australia';
-    
+
     // Auto-generate title based on city and duration
     const cityName = city.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     const title = `Ultimate ${duration}-Day ${cityName} ${duration <= 3 ? 'City Break' : duration <= 7 ? 'Adventure' : 'Journey'}`;
-    
+
     // Generate AI itinerary using the existing AI service
     const openaiClient = (await import('../services/openaiClient')).default;
+
+    // Calculate budget if requested
+    let budgetInstructions = '';
+    let totalBudget = 0;
     
+    if (includeBudget) {
+      // Determine daily budget based on level or custom amount
+      let calculatedDailyBudget: number;
+      if (dailyBudget && dailyBudget > 0) {
+        calculatedDailyBudget = dailyBudget;
+      } else {
+        // Use preset budget levels
+        switch (budgetLevel) {
+          case 'budget':
+            calculatedDailyBudget = 50; // $30-80 average
+            break;
+          case 'mid':
+            calculatedDailyBudget = 140; // $80-200 average
+            break;
+          case 'luxury':
+            calculatedDailyBudget = 350; // $200+ average
+            break;
+          default:
+            calculatedDailyBudget = 140;
+        }
+      }
+      
+      totalBudget = calculatedDailyBudget * duration;
+      
+      budgetInstructions = `
+    
+    IMPORTANT: Include detailed budget information:
+    - Total trip budget: $${totalBudget} USD (${duration} days × $${calculatedDailyBudget}/day)
+    - Budget level: ${budgetLevel}
+    - For EACH activity, provide an estimated cost in USD
+    - Include budget breakdown by categories (accommodation, food, activities, transport)
+    - Add money-saving tips specific to ${city}
+    - Include free activity suggestions
+    - Provide budget vs splurge recommendations`;
+    }
+
     const prompt = `Create a detailed ${duration}-day travel itinerary for ${city}${country ? `, ${country}` : ''}.
-    
+
     The itinerary should include:
     - A mix of must-see attractions, local experiences, and hidden gems
     - At least 4-5 activities per day
     - Suggested times for each activity
     - Detailed descriptions for each activity (at least 2-3 sentences)
     - Restaurant recommendations integrated into the daily schedule
-    - Morning, afternoon and evening activities
-    
+    - Morning, afternoon and evening activities${budgetInstructions}
+
     Format the response as a JSON object with this structure:
     {
       "tripSummary": {
         "overview": "Comprehensive overview of the trip (3-4 sentences)",
-        "highlights": ["highlight1", "highlight2", "highlight3", "highlight4", "highlight5"]
-      },
+        "highlights": ["highlight1", "highlight2", "highlight3", "highlight4", "highlight5"]${includeBudget ? `,
+        "totalBudget": ${totalBudget},
+        "dailyBudget": ${calculatedDailyBudget || 0},
+        "budgetLevel": "${budgetLevel}"` : ''}
+      },${includeBudget ? `
+      "budgetBreakdown": {
+        "accommodation": ${Math.round(totalBudget * 0.35)},
+        "food": ${Math.round(totalBudget * 0.25)},
+        "activities": ${Math.round(totalBudget * 0.25)},
+        "transportation": ${Math.round(totalBudget * 0.10)},
+        "shopping": ${Math.round(totalBudget * 0.05)}
+      },` : ''}
       "activities": [
         {
           "day": 1,
@@ -854,7 +904,9 @@ router.post('/templates/generate', async (req, res) => {
           "description": "Detailed activity description (2-3 sentences minimum)",
           "duration": "2 hours",
           "tips": "Practical tips for this activity",
-          "category": "sightseeing|dining|shopping|entertainment|culture|nature"
+          "category": "sightseeing|dining|shopping|entertainment|culture|nature"${includeBudget ? `,
+          "estimatedCost": 25,
+          "costNotes": "Ticket price, optional audio guide extra"` : ''}
         }
       ],
       "recommendations": {
@@ -862,11 +914,14 @@ router.post('/templates/generate', async (req, res) => {
         "gettingAround": "Specific transportation tips for this city",
         "whereToStay": "Specific neighborhood recommendations with reasons",
         "localTips": ["specific tip 1", "specific tip 2", "specific tip 3", "specific tip 4"],
-        "budgetTips": ["money saving tip 1", "money saving tip 2"],
-        "foodSpecialties": ["local dish 1", "local dish 2", "local dish 3"]
+        "budgetTips": ["money saving tip 1", "money saving tip 2", "money saving tip 3"],
+        "foodSpecialties": ["local dish 1", "local dish 2", "local dish 3"]${includeBudget ? `,
+        "freeActivities": ["free activity 1", "free activity 2", "free activity 3"],
+        "splurgeWorthy": ["splurge item 1", "splurge item 2"],
+        "moneySavingTips": ["specific money tip 1", "specific money tip 2", "specific money tip 3"]` : ''}
       }
     }`;
-    
+
     const response = await openaiClient.chat.completions.create({
       model: 'gpt-4o',  // Use GPT-4 for better quality
       messages: [
@@ -882,31 +937,31 @@ router.post('/templates/generate', async (req, res) => {
       temperature: 0.8,
       max_tokens: 4000,
     });
-    
+
     const generatedItinerary = JSON.parse(response.choices[0].message.content || '{}');
-    
+
     // Create slug from title
     const slug = title.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '') + '-' + Date.now();
-    
+
     // Generate a professional description
-    const description = generatedItinerary.tripSummary.overview || 
+    const description = generatedItinerary.tripSummary.overview ||
       `Discover the best of ${cityName} with this expertly crafted ${duration}-day itinerary. ` +
       `From iconic landmarks to hidden local gems, experience everything this incredible destination has to offer. ` +
       `Perfect for travelers seeking a comprehensive, well-planned adventure.`;
-    
+
     // Determine tags based on duration and price
     if (duration <= 3) tags = ['city-break', 'weekend', 'short-trip'];
     else if (duration <= 7) tags = ['week-long', 'adventure', 'culture'];
     else tags = ['extended-stay', 'immersive', 'complete-guide'];
-    
+
     // Add cuisine tags based on location
     if (country === 'Italy' || country === 'France') tags.push('food-lovers');
     if (country === 'Japan' || country === 'Thailand') tags.push('asian-cuisine');
-    
+
     // Format trip data for storage - structure it like existing templates
-    const tripData = {
+    const tripData: any = {
       title,
       description,
       city,
@@ -925,13 +980,34 @@ router.post('/templates/generate', async (req, res) => {
         notes: activity.tips,
         tag: activity.category || 'sightseeing',
         order: index,
+        // Include cost information if budget was generated
+        ...(includeBudget && activity.estimatedCost ? {
+          price: activity.estimatedCost,
+          cost_notes: activity.costNotes || '',
+        } : {}),
       })),
       recommendations: generatedItinerary.recommendations,
       highlights: generatedItinerary.tripSummary.highlights,
-      budget_estimate: price * 20, // Rough budget estimate
+      budget_estimate: includeBudget ? totalBudget : price * 20, // Use calculated budget or rough estimate
       generatedAt: new Date().toISOString(),
     };
     
+    // Add budget information if it was generated
+    if (includeBudget && generatedItinerary.budgetBreakdown) {
+      tripData.budget = {
+        total: totalBudget,
+        daily: generatedItinerary.tripSummary.dailyBudget,
+        level: budgetLevel,
+        breakdown: generatedItinerary.budgetBreakdown,
+        currency: 'USD',
+        tips: {
+          moneySaving: generatedItinerary.recommendations.moneySavingTips || [],
+          freeActivities: generatedItinerary.recommendations.freeActivities || [],
+          splurgeWorthy: generatedItinerary.recommendations.splurgeWorthy || [],
+        }
+      };
+    }
+
     // Fetch an image for the city using Unsplash (if available)
     let coverImage = null;
     try {
@@ -952,7 +1028,7 @@ router.post('/templates/generate', async (req, res) => {
     } catch (error) {
       logger.warn(`Failed to fetch image for ${city}:`, error);
     }
-    
+
     // Create the template
     const [newTemplate] = await db.insert(templates)
       .values({
@@ -974,9 +1050,9 @@ router.post('/templates/generate', async (req, res) => {
         sales_count: 0,
       })
       .returning();
-    
+
     logger.info(`Admin generated template for ${city}: ${newTemplate.id}`);
-    
+
     res.json({
       message: `Successfully generated template for ${city}!`,
       templateId: newTemplate.id,

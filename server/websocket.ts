@@ -27,13 +27,13 @@ export class CollaborationWebSocketServer {
   private cleanupInterval: NodeJS.Timeout;
 
   constructor(server: Server) {
-    this.wss = new WebSocketServer({ 
-      server, 
+    this.wss = new WebSocketServer({
+      server,
       path: '/ws/collaboration'
     });
 
     this.wss.on('connection', this.handleConnection.bind(this));
-    
+
     // Clean up inactive connections every 30 seconds
     this.cleanupInterval = setInterval(() => this.cleanupInactiveConnections(), 30000);
   }
@@ -48,16 +48,16 @@ export class CollaborationWebSocketServer {
         return;
       }
 
-      // Verify JWT token
-      const decoded = jwt.verify(token, process.env.SESSION_SECRET || 'dev-secret') as any;
+      // Verify JWT token - FIX: Should use JWT_SECRET not SESSION_SECRET
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.SESSION_SECRET || 'dev-secret') as any;
       ws.user_id = decoded.user_id;
       ws.organization_id = decoded.organization_id;
 
-      console.log(`WebSocket connected: User ${ws.user_id} from org ${ws.organization_id}`);
-
       ws.on('message', (data) => this.handleMessage(ws, data));
       ws.on('close', () => this.handleDisconnect(ws));
-      ws.on('error', (error) => console.error('WebSocket error:', error));
+      ws.on('error', (error) => {
+        // Handle WebSocket error silently
+      });
 
       // Send welcome message
       ws.send(JSON.stringify({
@@ -67,7 +67,6 @@ export class CollaborationWebSocketServer {
       }));
 
     } catch (error) {
-      console.error('WebSocket authentication failed:', error);
       ws.close(1008, 'Invalid token');
     }
   }
@@ -75,7 +74,7 @@ export class CollaborationWebSocketServer {
   private handleMessage(ws: AuthenticatedWebSocket, data: any) {
     try {
       const message: WebSocketMessage = JSON.parse(data.toString());
-      
+
       switch (message.type) {
         case 'join_trip':
           this.handleJoinTrip(ws, message.trip_id!);
@@ -109,7 +108,7 @@ export class CollaborationWebSocketServer {
           break;
       }
     } catch (error) {
-      console.error('Error handling WebSocket message:', error);
+      // Handle message parsing error silently
     }
   }
 
@@ -117,10 +116,10 @@ export class CollaborationWebSocketServer {
     if (!this.tripRooms.has(tripId)) {
       this.tripRooms.set(tripId, new Set());
     }
-    
+
     this.tripRooms.get(tripId)!.add(ws);
     ws.trip_id = tripId;
-    
+
     // Update user presence
     this.userPresence.set(ws.user_id!, {
       userId: ws.user_id!,
@@ -133,8 +132,6 @@ export class CollaborationWebSocketServer {
       userId: ws.user_id,
       organizationId: ws.organization_id
     }, ws);
-
-    console.log(`User ${ws.user_id} joined trip ${tripId}`);
   }
 
   private handleLeaveTrip(ws: AuthenticatedWebSocket, tripId: number) {
@@ -153,19 +150,16 @@ export class CollaborationWebSocketServer {
     }, ws);
 
     ws.trip_id = undefined;
-    console.log(`User ${ws.user_id} left trip ${tripId}`);
   }
 
   private handleDisconnect(ws: AuthenticatedWebSocket) {
     if (ws.trip_id) {
       this.handleLeaveTrip(ws, ws.trip_id);
     }
-    
+
     if (ws.user_id) {
       this.userPresence.delete(ws.user_id);
     }
-    
-    console.log(`User ${ws.user_id} disconnected`);
   }
 
   private updateUserPresence(ws: AuthenticatedWebSocket, tripId: number) {
@@ -187,14 +181,14 @@ export class CollaborationWebSocketServer {
     if (!room) return;
 
     const messageString = JSON.stringify(message);
-    
+
     room.forEach(client => {
       if (client !== sender && client.readyState === WebSocket.OPEN) {
         // Verify client still belongs to same organization
         if (sender?.organization_id && client.organization_id !== sender.organization_id) {
           return; // Skip cross-organization broadcasts
         }
-        
+
         client.send(messageString);
       }
     });
@@ -213,13 +207,13 @@ export class CollaborationWebSocketServer {
     // Remove closed connections from rooms
     this.tripRooms.forEach((room, tripId) => {
       const activeClients = new Set<AuthenticatedWebSocket>();
-      
+
       room.forEach(client => {
         if (client.readyState === 1) { // OPEN state
           activeClients.add(client);
         }
       });
-      
+
       if (activeClients.size === 0) {
         this.tripRooms.delete(tripId);
       } else {
@@ -242,7 +236,7 @@ export class CollaborationWebSocketServer {
   public getActiveTripUsers(tripId: number): number[] {
     const room = this.tripRooms.get(tripId);
     if (!room) return [];
-    
+
     return Array.from(room)
       .filter(client => client.readyState === WebSocket.OPEN)
       .map(client => client.user_id!)
@@ -279,9 +273,7 @@ export class CollaborationWebSocketServer {
         });
       });
 
-      console.log('WebSocket server cleaned up successfully');
     } catch (error) {
-      console.error('Error cleaning up WebSocket server:', error);
       throw error;
     }
   }
@@ -303,20 +295,19 @@ export const WebSocketService = {
   setInstance: (instance: CollaborationWebSocketServer) => {
     wsInstance = instance;
   },
-  
+
   broadcast: (organizationId: number, data: any) => {
     if (!wsInstance) {
-      console.warn('WebSocket instance not initialized');
       return;
     }
-    
+
     // Get all clients for this organization
     const message = JSON.stringify({
       type: 'broadcast',
       organizationId,
       data
     });
-    
+
     wsInstance.broadcastToAll(message);
   }
 };

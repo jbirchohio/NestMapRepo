@@ -1,6 +1,6 @@
 import React from 'react';
-import { 
-  HelpCircle, Search, BookOpen, Users, CreditCard, Map, 
+import {
+  HelpCircle, Search, BookOpen, Users, CreditCard, Map,
   Share2, ShoppingBag, Settings, Shield, ChevronDown, ChevronRight,
   Plane, Hotel, Calendar, Navigation, Star, DollarSign
 } from 'lucide-react';
@@ -226,7 +226,7 @@ export function HelpPage() {
   const filteredCategories = searchQuery
     ? categories.map(cat => ({
         ...cat,
-        faqs: cat.faqs.filter(faq => 
+        faqs: cat.faqs.filter(faq =>
           faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
           faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
         )
@@ -242,7 +242,7 @@ export function HelpPage() {
           <p className="text-xl text-gray-600 mb-8">
             Find answers to common questions or contact our support team
           </p>
-          
+
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -332,8 +332,8 @@ export function HelpPage() {
                 <p className="text-xs text-gray-500">We'll respond within 24 hours</p>
               </div>
               <div className="pt-4">
-                <a 
-                  href="/contact" 
+                <a
+                  href="/contact"
                   className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-purple-600 text-white hover:bg-purple-700 h-10 px-4 py-2"
                 >
                   Contact Support

@@ -54,8 +54,7 @@ export default function FoodSuggestionsPanel({ trip, onAddActivity }: FoodSugges
         description: "Could not get food suggestions. Please try again.",
         variant: "destructive",
       });
-      console.error("Error getting food suggestions:", error);
-    },
+      },
   });
 
   const handleGetSuggestions = () => {
@@ -75,7 +74,7 @@ export default function FoodSuggestionsPanel({ trip, onAddActivity }: FoodSugges
       };
 
       await onAddActivity(formattedActivity);
-      
+
       toast({
         title: "Added to trip!",
         description: `${suggestion.name} has been added to your itinerary.`,
@@ -96,9 +95,9 @@ export default function FoodSuggestionsPanel({ trip, onAddActivity }: FoodSugges
         <p className="text-sm text-muted-foreground mb-4">
           Get personalized restaurant and cafe suggestions for {trip.city || trip.location || trip.title}
         </p>
-        
-        <Button 
-          onClick={handleGetSuggestions} 
+
+        <Button
+          onClick={handleGetSuggestions}
           disabled={foodMutation.isPending}
           className="w-full"
         >
@@ -121,7 +120,7 @@ export default function FoodSuggestionsPanel({ trip, onAddActivity }: FoodSugges
           <h4 className="font-medium text-sm text-muted-foreground">
             Found {suggestions.length} recommendations:
           </h4>
-          
+
           {suggestions.map((suggestion, index) => (
             <Card key={index} className="border">
               <CardHeader className="pb-3">
@@ -138,7 +137,7 @@ export default function FoodSuggestionsPanel({ trip, onAddActivity }: FoodSugges
                 <p className="text-sm text-muted-foreground mb-3">
                   {suggestion.description}
                 </p>
-                
+
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
                   <div className="flex items-center">
                     <DollarSign className="h-3 w-3 mr-1" />
@@ -149,10 +148,10 @@ export default function FoodSuggestionsPanel({ trip, onAddActivity }: FoodSugges
                     {suggestion.distance}
                   </div>
                 </div>
-                
-                <Button 
+
+                <Button
                   onClick={() => handleAddFood(suggestion)}
-                  variant="outline" 
+                  variant="outline"
                   size="sm"
                   className="w-full"
                 >

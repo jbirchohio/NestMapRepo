@@ -36,7 +36,6 @@ function snakeToCamel(obj: any): any {
   if (obj instanceof Date) {
     // Check if date is valid before converting
     if (isNaN(obj.getTime())) {
-      console.warn('Invalid date encountered in case conversion:', obj);
       return null;
     }
     return obj.toISOString().split('T')[0];
@@ -45,12 +44,11 @@ function snakeToCamel(obj: any): any {
   const converted: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-    
+
     // Special handling for date fields - convert Date objects to ISO date strings
     if (value instanceof Date) {
       // Check if date is valid before converting
       if (isNaN(value.getTime())) {
-        console.warn('Invalid date encountered in case conversion for key:', camelKey);
         converted[camelKey] = null;
       } else {
         converted[camelKey] = value.toISOString().split('T')[0];
@@ -71,17 +69,17 @@ export function convertRequestToSnakeCase(req: Request, res: Response, next: Nex
     // Preserve auth-related fields in their original format
     const preservedFields = ['auth_id', 'authId', 'access_token', 'refresh_token'];
     const preserved: any = {};
-    
+
     // Extract preserved fields
     for (const field of preservedFields) {
       if (req.body[field] !== undefined) {
         preserved[field] = req.body[field];
       }
     }
-    
+
     // Convert the rest to snake_case
     req.body = camelToSnake(req.body);
-    
+
     // Restore preserved fields
     Object.assign(req.body, preserved);
   }
@@ -98,23 +96,21 @@ export function convertResponseToCamelCase(req: Request, res: Response, next: Ne
     return next();
   }
   const originalJson = res.json;
-  
+
   res.json = function(body: any) {
     if (body && typeof body === 'object') {
       // Convert to camelCase for frontend
       const convertedBody = snakeToCamel(body);
-      
+
       // Log transformation for debugging trip creation
       if (req.method === 'POST' && req.path === '/api/trips') {
-        console.log('Case conversion - Original trip:', body);
-        console.log('Case conversion - Converted trip:', convertedBody);
-      }
-      
+        }
+
       return originalJson.call(this, convertedBody);
     }
     return originalJson.call(this, body);
   };
-  
+
   next();
 }
 

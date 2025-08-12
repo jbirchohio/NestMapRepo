@@ -45,7 +45,7 @@ const DESCRIPTION_TEMPLATES = {
 export function generateMetadata(type: keyof typeof TITLE_TEMPLATES, params?: any): SEOMetadata {
   let title = TITLE_TEMPLATES[type];
   let description = DESCRIPTION_TEMPLATES[type];
-  
+
   // Replace placeholders with actual values
   if (params) {
     if (params.destination) {
@@ -64,16 +64,16 @@ export function generateMetadata(type: keyof typeof TITLE_TEMPLATES, params?: an
       description = description.replace(/%s/g, params.competitor);
     }
   }
-  
+
   // Generate keywords based on page type
   const keywords = generateKeywords(type, params);
-  
+
   // Generate canonical URL
   const canonicalUrl = generateCanonicalUrl(type, params);
-  
+
   // Generate structured data
   const structuredData = generateStructuredData(type, params);
-  
+
   return {
     title,
     description,
@@ -87,7 +87,7 @@ export function generateMetadata(type: keyof typeof TITLE_TEMPLATES, params?: an
 // Generate relevant keywords for each page type
 function generateKeywords(type: string, params?: any): string[] {
   const baseKeywords = ['travel planning', 'trip planner', 'vacation packages', 'AI travel'];
-  
+
   switch (type) {
     case 'destination':
       return [
@@ -150,7 +150,7 @@ function generateStructuredData(type: string, params?: any): any {
       "https://instagram.com/remvana"
     ]
   };
-  
+
   switch (type) {
     case 'home':
       return {
@@ -173,7 +173,7 @@ function generateStructuredData(type: string, params?: any): any {
           }
         ]
       };
-      
+
     case 'destination':
       return {
         "@context": "https://schema.org",
@@ -187,7 +187,7 @@ function generateStructuredData(type: string, params?: any): any {
           "reviewCount": params.reviewCount || 100
         } : undefined
       };
-      
+
     case 'package':
       return {
         "@context": "https://schema.org",
@@ -203,7 +203,7 @@ function generateStructuredData(type: string, params?: any): any {
           }
         }
       };
-      
+
     default:
       return baseOrganization;
   }

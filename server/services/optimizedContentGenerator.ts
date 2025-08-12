@@ -139,7 +139,7 @@ export class OptimizedContentGenerator {
     try {
       // Use Unsplash API to search for destination photos
       const imageResult = await unsplashService.searchDestinationPhotos(destination);
-      
+
       return {
         coverImage: imageResult.coverImage,
         thumbnailImage: imageResult.thumbnailImage,
@@ -167,10 +167,10 @@ export class OptimizedContentGenerator {
    * Generate FAQs
    */
   private async generateFAQs(destination: string): Promise<any[]> {
-    const prompt = `Create 5 detailed FAQs for travelers visiting ${destination}. 
-    
+    const prompt = `Create 5 detailed FAQs for travelers visiting ${destination}.
+
     For each FAQ, provide ACTUAL answers with real information about ${destination}, not placeholder text.
-    
+
     Return a JSON object:
     {
       "faqs": [
@@ -196,7 +196,7 @@ export class OptimizedContentGenerator {
         }
       ]
     }
-    
+
     IMPORTANT: Replace all text in square brackets with REAL, SPECIFIC information about ${destination}. Do NOT return placeholder text or instructions as the answer.`;
 
     try {
@@ -206,22 +206,22 @@ export class OptimizedContentGenerator {
         model: 'gpt-3.5-turbo',
         response_format: { type: "json_object" }
       });
-      
+
       const parsed = JSON.parse(response);
       return parsed.faqs || [];
     } catch (error) {
       logger.error('FAQs generation failed:', error);
       // Return detailed fallback FAQs
       return [
-        { 
+        {
           question: `What is the best time of year to visit ${destination}?`,
           answer: `Spring (March-May) and fall (September-November) typically offer the most pleasant weather in ${destination}, with mild temperatures and fewer crowds. Summer can be peak tourist season with higher prices, while winter may offer unique seasonal activities.`
         },
-        { 
+        {
           question: `How much should I budget for a trip to ${destination}?`,
           answer: `Budget travelers can expect to spend $50-80 per day in ${destination}, mid-range travelers $100-200 per day, and luxury travelers $250+ per day. This includes accommodation, meals, local transportation, and some activities.`
         },
-        { 
+        {
           question: `How many days do I need to explore ${destination}?`,
           answer: `A minimum of 3-4 days is recommended to see the main highlights of ${destination}. For a more relaxed pace and to explore beyond the tourist areas, 5-7 days would be ideal.`
         },
@@ -282,7 +282,7 @@ export class OptimizedContentGenerator {
       return content;
     } catch (error) {
       logger.error(`Optimized generation failed for ${destination}:`, error);
-      
+
       // Return basic fallback content
       return {
         title: `${destination} Travel Guide`,

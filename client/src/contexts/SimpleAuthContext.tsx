@@ -48,7 +48,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const response = await apiRequest('POST', '/api/auth/login', { email, password });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Invalid credentials');
@@ -57,7 +57,6 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       setUser(data.user);
     } catch (error: any) {
-      console.error('Error signing in:', error);
       throw error;
     }
   };
@@ -67,7 +66,6 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       await apiRequest('POST', '/api/auth/logout');
       setUser(null);
     } catch (error) {
-      console.error('Error signing out:', error);
       // Clear user state even if logout fails
       setUser(null);
     }

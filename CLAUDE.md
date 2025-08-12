@@ -149,6 +149,19 @@ Optional API Keys:
 - **Memory Limits**: Railway has 512MB limit - cache service is optimized for this
 - **WebSocket Rooms**: Based on trip IDs for collaboration
 
+## Revenue Model
+
+**IMPORTANT**: Remvana generates revenue exclusively through:
+1. **Template Marketplace**: Users purchase trip/budget templates created by creators and admins
+   - Platform takes 30% commission on template sales
+   - Creators receive 70% of template sales
+   - Templates range from $10-100+ depending on complexity and duration
+2. **Viator Commissions**: Affiliate commissions from activity bookings through Viator integration
+   - Standard 8% commission on bookings
+   - Cookie duration: 30 days
+
+**Note**: There are NO subscription fees, premium features, or paid add-ons. All app features (budget tracking, AI planning, collaboration) are free to use. Revenue comes solely from template sales and activity booking commissions.
+
 ## Known Issues & TODOs
 
 1. **AI Model Inconsistency**: OpenAI client uses GPT-3.5 but routes use GPT-4o

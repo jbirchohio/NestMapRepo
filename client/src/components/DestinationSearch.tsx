@@ -23,7 +23,7 @@ interface DestinationSearchProps {
   className?: string;
 }
 
-export default function DestinationSearch({ 
+export default function DestinationSearch({
   placeholder = "Search any city or destination...",
   onSelect,
   showTrending = true,
@@ -64,8 +64,7 @@ export default function DestinationSearch({
           setShowResults(true);
         }
       } catch (error) {
-        console.error('Search error:', error);
-      } finally {
+        } finally {
         setIsLoading(false);
       }
     };
@@ -115,7 +114,7 @@ export default function DestinationSearch({
     setQuery('');
     setShowResults(false);
     setSelectedIndex(-1);
-    
+
     if (onSelect) {
       onSelect(destination);
     } else {
@@ -191,7 +190,7 @@ export default function DestinationSearch({
                 </button>
               ))}
             </div>
-            
+
             {/* Create New Destination */}
             {query.length >= 2 && (
               <button

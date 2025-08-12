@@ -16,9 +16,9 @@ interface AuthModalProps {
   redirectPath?: string;
 }
 
-export default function AuthModalSimple({ 
-  isOpen, 
-  onClose, 
+export default function AuthModalSimple({
+  isOpen,
+  onClose,
   initialView = "login",
   redirectPath = "/"
 }: AuthModalProps) {
@@ -27,7 +27,7 @@ export default function AuthModalSimple({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -82,7 +82,7 @@ export default function AuthModalSimple({
   if (!isOpen) return null;
 
   const modalContent = (
-    <div 
+    <div
       style={{
         position: 'fixed',
         top: 0,
@@ -98,7 +98,7 @@ export default function AuthModalSimple({
       }}
       onClick={handleBackdropClick}
     >
-      <div 
+      <div
         ref={modalRef}
         style={{
           position: 'relative',
@@ -139,8 +139,8 @@ export default function AuthModalSimple({
               {view === 'login' ? 'Welcome back!' : 'Join Remvana'}
             </CardTitle>
             <CardDescription>
-              {view === 'login' 
-                ? 'Sign in to continue planning trips' 
+              {view === 'login'
+                ? 'Sign in to continue planning trips'
                 : 'Start planning amazing trips in seconds'}
             </CardDescription>
           </CardHeader>
@@ -153,7 +153,7 @@ export default function AuthModalSimple({
 
             {/* Google Sign In */}
             <div className="space-y-3">
-              <GoogleSignIn 
+              <GoogleSignIn
                 onSuccess={() => {
                   onClose();
                   if (redirectPath) {
@@ -162,7 +162,7 @@ export default function AuthModalSimple({
                 }}
                 onError={(error) => setError(error)}
               />
-              
+
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -223,8 +223,8 @@ export default function AuthModalSimple({
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
               >
-                {isLoading 
-                  ? (view === 'login' ? 'Signing in...' : 'Creating account...') 
+                {isLoading
+                  ? (view === 'login' ? 'Signing in...' : 'Creating account...')
                   : (view === 'login' ? 'Sign In' : 'Create Free Account')}
               </Button>
 

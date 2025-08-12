@@ -53,7 +53,7 @@ export default function PlacesSearch({
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=1`
       );
       const data = await response.json();
-      
+
       if (data.features && data.features.length > 0) {
         const [lng, lat] = data.features[0].center;
         return [lat, lng]; // Return as [lat, lng] for consistency
@@ -72,7 +72,7 @@ export default function PlacesSearch({
       if (!debouncedSearchTerm || debouncedSearchTerm.length < 3) {
         return null;
       }
-      
+
       const response = await fetch("/api/ai/find-location", {
         method: "POST",
         headers: {
@@ -80,11 +80,11 @@ export default function PlacesSearch({
         },
         body: JSON.stringify({ searchQuery: debouncedSearchTerm })
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to find location");
       }
-      
+
       return await response.json() as AILocationResponse;
     },
     enabled: debouncedSearchTerm.length >= 3,
@@ -95,19 +95,19 @@ export default function PlacesSearch({
     const getLocationDetails = async () => {
       if (data && !data.error && !isLoading) {
         // Build full address from data parts
-        const fullAddress = data.address || 
-                           (data.name + ", " + 
-                           (data.city || "New York City") + ", " + 
+        const fullAddress = data.address ||
+                           (data.name + ", " +
+                           (data.city || "New York City") + ", " +
                            (data.region || "NY"));
-        
+
         // Looking up coordinates for location
-        
+
         // Get coordinates for the resolved address
         const coords = await getCoordinates(fullAddress);
-        
+
         if (coords) {
           const [lat, lng] = coords;
-          
+
           // Create a Place object from the AI and Mapbox data
           const place: Place = {
             name: data.name,
@@ -117,13 +117,13 @@ export default function PlacesSearch({
               lng
             }
           };
-          
+
           onPlaceSelected(place);
           setShowResults(false);
         }
       }
     };
-    
+
     if (showResults && data && !isLoading) {
       getLocationDetails();
     }
@@ -133,14 +133,14 @@ export default function PlacesSearch({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
-        resultsRef.current && 
+        resultsRef.current &&
         !resultsRef.current.contains(event.target as Node) &&
         !inputRef.current?.contains(event.target as Node)
       ) {
         setShowResults(false);
       }
     }
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -198,7 +198,7 @@ export default function PlacesSearch({
 
       {/* Loading Indicator and Results */}
       {showResults && (
-        <div 
+        <div
           ref={resultsRef}
           className="absolute z-10 mt-1 w-full rounded-md border border-input bg-background shadow-md"
         >
@@ -215,7 +215,7 @@ export default function PlacesSearch({
                 Couldn't find that location. Try adding more details.
               </div>
             ) : (
-              <div 
+              <div
                 className="p-3 flex items-start cursor-pointer hover:bg-muted"
                 onClick={() => refetch()}
               >

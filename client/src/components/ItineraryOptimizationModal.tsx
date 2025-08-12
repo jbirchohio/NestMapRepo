@@ -44,7 +44,7 @@ export function ItineraryOptimizationModal({
     try {
       const result = await optimizeItinerary.mutateAsync(trip.id);
       setOptimizationResult(result);
-      
+
       // Auto-apply if enabled
       if (autoApply && onApplyOptimization) {
         onApplyOptimization(result.optimizedActivities);
@@ -101,7 +101,7 @@ export function ItineraryOptimizationModal({
                   Analyze {activities.length} activities across {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} days
                 </p>
               </div>
-              
+
               <Button
                 onClick={handleOptimize}
                 disabled={optimizeItinerary.isPending || activities.length === 0}
@@ -221,7 +221,7 @@ export function ItineraryOptimizationModal({
                   <Button variant="outline" onClick={() => onOpenChange(false)}>
                     Cancel
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleApplyChanges}
                     className="bg-green-600 hover:bg-green-700"
                   >

@@ -20,8 +20,7 @@ export function log(message: string, source = "express") {
     hour12: true,
   });
 
-  console.log(`${formattedTime} [${source}] ${message}`);
-}
+  }
 
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
@@ -59,7 +58,6 @@ export async function setupVite(app: Express, server: Server) {
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e: any) {
       vite.ssrFixStacktrace(e);
-      console.error(e);
       res.status(500).end(e.message);
     }
   });
@@ -67,7 +65,7 @@ export async function setupVite(app: Express, server: Server) {
 
 export function serveStatic(app: Express) {
   const staticPath = path.resolve(process.cwd(), "dist", "public");
-  
+
   if (fs.existsSync(staticPath)) {
     app.use(express.static(staticPath, {
       maxAge: "1d",

@@ -19,7 +19,7 @@ export function verifyPassword(password: string, hashedPassword: string): boolea
   try {
     const [salt, hash] = hashedPassword.split(':');
     if (!salt || !hash) return false;
-    
+
     const verifyHash = crypto.pbkdf2Sync(password, salt, CONFIG.BCRYPT_SALT_ROUNDS * 1000, 64, 'sha512');
     return hash === verifyHash.toString('hex');
   } catch (error) {
@@ -32,7 +32,7 @@ export function verifyPassword(password: string, hashedPassword: string): boolea
 export async function authenticateUser(email: string, password: string) {
   try {
     // Log authentication attempts (production-safe)
-    
+
     // Find user by email
     const [user] = await db
       .select()
@@ -47,10 +47,10 @@ export async function authenticateUser(email: string, password: string) {
     }
 
     // Secure password validation with proper hashing
-    const isValidPassword = user.password_hash ? 
-      verifyPassword(password, user.password_hash) : 
+    const isValidPassword = user.password_hash ?
+      verifyPassword(password, user.password_hash) :
       false; // Remove development bypass for security
-    
+
     if (!isValidPassword) {
       logger.info('Authentication failed: Invalid credentials', { userId: user.id });
       return null;

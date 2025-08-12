@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 import fs from 'fs/promises';
 import path from 'path';
 
-export type AuditEventType = 
+export type AuditEventType =
   | 'template.created'
   | 'template.published'
   | 'template.purchased'
@@ -142,7 +142,7 @@ export class AuditService {
       const logFile = this.currentLogFile;
       const content = await fs.readFile(logFile, 'utf-8');
       const lines = content.trim().split('\n').filter(Boolean);
-      
+
       let events: AuditEvent[] = lines.map(line => {
         try {
           return JSON.parse(line);
@@ -155,23 +155,23 @@ export class AuditService {
       if (filters.eventType) {
         events = events.filter(e => e.eventType === filters.eventType);
       }
-      
+
       if (filters.userId !== undefined) {
         events = events.filter(e => e.userId === filters.userId);
       }
-      
+
       if (filters.startDate) {
         const start = filters.startDate.getTime();
         events = events.filter(e => new Date(e.timestamp).getTime() >= start);
       }
-      
+
       if (filters.endDate) {
         const end = filters.endDate.getTime();
         events = events.filter(e => new Date(e.timestamp).getTime() <= end);
       }
 
       // Sort by timestamp descending
-      events.sort((a, b) => 
+      events.sort((a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
 
@@ -270,7 +270,7 @@ export class AuditService {
     revenueEvents: number;
   }> {
     const events = await this.queryLogs({ startDate, endDate });
-    
+
     const eventBreakdown: Record<string, number> = {};
     const userEventCount: Map<number, number> = new Map();
     let securityEvents = 0;
@@ -279,17 +279,17 @@ export class AuditService {
     for (const event of events) {
       // Count by type
       eventBreakdown[event.eventType] = (eventBreakdown[event.eventType] || 0) + 1;
-      
+
       // Count by user
       if (event.userId) {
         userEventCount.set(event.userId, (userEventCount.get(event.userId) || 0) + 1);
       }
-      
+
       // Count security events
       if (event.eventType.startsWith('security.')) {
         securityEvents++;
       }
-      
+
       // Count revenue events
       if (event.eventType.startsWith('payment.') || event.eventType === 'template.purchased') {
         revenueEvents++;
@@ -376,13 +376,13 @@ export class AuditService {
     try {
       const files = await fs.readdir(this.auditDir);
       const cutoff = Date.now() - (daysToKeep * 24 * 60 * 60 * 1000);
-      
+
       for (const file of files) {
         if (!file.startsWith('audit-') || !file.endsWith('.jsonl')) continue;
-        
+
         const filePath = path.join(this.auditDir, file);
         const stats = await fs.stat(filePath);
-        
+
         if (stats.mtime.getTime() < cutoff) {
           await fs.unlink(filePath);
           logger.info(`Deleted old audit log: ${file}`);

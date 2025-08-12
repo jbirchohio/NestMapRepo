@@ -68,12 +68,12 @@ export const formatDate = (date: Date): string => {
 export const getDaysBetweenDates = (startDate: Date, endDate: Date): Date[] => {
   const days: Date[] = [];
   const currentDate = new Date(startDate);
-  
+
   while (currentDate <= endDate) {
     days.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
   }
-  
+
   return days;
 };
 
@@ -85,7 +85,7 @@ export const getTripDayPills = (startDate: Date, endDate: Date): Array<{
   value: string;
 }> => {
   const days = getDaysBetweenDates(startDate, endDate);
-  
+
   return days.map((date, index) => ({
     dayNumber: index + 1,
     date,

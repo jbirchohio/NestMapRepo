@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -22,15 +22,15 @@ interface RenameTripDialogProps {
   trip: ClientTrip | null;
 }
 
-export default function RenameTripDialog({ 
-  isOpen, 
-  onClose, 
-  trip 
+export default function RenameTripDialog({
+  isOpen,
+  onClose,
+  trip
 }: RenameTripDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
-  
+
   // Reset the title whenever the dialog opens with a new trip
   // We use a separate flag to prevent infinite render loops
   const titleSetRef = useRef(false);
@@ -38,26 +38,26 @@ export default function RenameTripDialog({
     setTitle(trip.title);
     titleSetRef.current = true;
   }
-  
+
   // Reset the flag when dialog closes
   if (!isOpen && titleSetRef.current) {
     titleSetRef.current = false;
   }
-  
+
   const renameTrip = useMutation({
     mutationFn: async () => {
       if (!trip) throw new Error("No trip to rename");
-      
+
       const response = await apiRequest(
-        "PUT", 
-        `${API_ENDPOINTS.TRIPS}/${trip.id}`, 
+        "PUT",
+        `${API_ENDPOINTS.TRIPS}/${trip.id}`,
         { title }
       );
-      
+
       if (!response.ok) {
         throw new Error("Failed to rename trip");
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {
@@ -76,14 +76,14 @@ export default function RenameTripDialog({
       });
     }
   });
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
       renameTrip.mutate();
     }
   };
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -93,7 +93,7 @@ export default function RenameTripDialog({
             Enter a new name for your trip.
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -106,7 +106,7 @@ export default function RenameTripDialog({
               />
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button
               type="button"

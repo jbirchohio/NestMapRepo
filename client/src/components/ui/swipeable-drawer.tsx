@@ -16,10 +16,10 @@ interface SwipeableDrawerProps {
 }
 
 const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
-  ({ 
-    children, 
-    isOpen, 
-    onClose, 
+  ({
+    children,
+    isOpen,
+    onClose,
     title,
     className,
     snapPoints = [0.3, 0.6, 0.9],
@@ -27,7 +27,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
     showHandle = true,
     showCloseButton = true
   }, ref) => {
-    
+
     const [currentSnapPoint, setCurrentSnapPoint] = useState(defaultSnapPoint);
     const [isDragging, setIsDragging] = useState(false);
 
@@ -38,7 +38,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
       } else {
         document.body.style.overflow = 'unset';
       }
-      
+
       return () => {
         document.body.style.overflow = 'unset';
       };
@@ -58,23 +58,23 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
 
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       setIsDragging(false);
-      
+
       const velocity = info.velocity.y;
       const offset = info.offset.y;
-      
+
       // Close if dragged down significantly or with high velocity
       if (offset > 150 || velocity > 500) {
         onClose();
         return;
       }
-      
+
       // Find closest snap point
       const windowHeight = window.innerHeight;
       const currentPosition = (windowHeight - (windowHeight * currentSnapPoint + offset)) / windowHeight;
-      
+
       let closestSnapPoint = snapPoints[0];
       let minDistance = Math.abs(currentPosition - snapPoints[0]);
-      
+
       snapPoints.forEach(point => {
         const distance = Math.abs(currentPosition - point);
         if (distance < minDistance) {
@@ -82,19 +82,19 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
           closestSnapPoint = point;
         }
       });
-      
+
       setCurrentSnapPoint(closestSnapPoint);
     };
 
     const overlayVariants = {
-      hidden: { 
+      hidden: {
         opacity: 0,
         transition: {
           duration: 0.2,
           ease: "easeInOut"
         }
       },
-      visible: { 
+      visible: {
         opacity: 1,
         transition: {
           duration: 0.3,
@@ -104,7 +104,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
     };
 
     const drawerVariants = {
-      hidden: { 
+      hidden: {
         y: "100%",
         transition: {
           type: "spring",
@@ -112,7 +112,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
           damping: 30
         }
       },
-      visible: { 
+      visible: {
         y: `${(1 - currentSnapPoint) * 100}%`,
         transition: {
           type: "spring",
@@ -166,7 +166,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
               {/* Drag handle */}
               {showHandle && (
                 <div className="flex justify-center py-3 cursor-grab active:cursor-grabbing">
-                  <motion.div 
+                  <motion.div
                     className="w-10 h-1.5 bg-gray-300 dark:bg-navy-600 rounded-full"
                     whileHover={{ scale: 1.1, backgroundColor: "#6D5DFB" }}
                     transition={{ duration: 0.2 }}
@@ -181,7 +181,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
                     {title}
                   </h2>
                 )}
-                
+
                 <div className="flex items-center space-x-2">
                   {/* Snap point indicators */}
                   <div className="flex space-x-1">
@@ -191,8 +191,8 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
                         onClick={() => setCurrentSnapPoint(point)}
                         className={cn(
                           "w-2 h-2 rounded-full transition-colors",
-                          currentSnapPoint === point 
-                            ? "bg-electric-500" 
+                          currentSnapPoint === point
+                            ? "bg-electric-500"
                             : "bg-gray-300 dark:bg-navy-600"
                         )}
                         whileHover={{ scale: 1.2 }}
@@ -200,7 +200,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
                       />
                     ))}
                   </div>
-                  
+
                   {showCloseButton && (
                     <motion.button
                       onClick={onClose}
@@ -218,8 +218,8 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
               <div className="flex-1 overflow-y-auto">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ 
-                    opacity: 1, 
+                  animate={{
+                    opacity: 1,
                     y: 0,
                     transition: { delay: 0.2, duration: 0.3 }
                   }}

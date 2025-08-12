@@ -21,23 +21,23 @@ const isLocal = dbUrl.hostname === 'localhost' || dbUrl.hostname === '127.0.0.1'
 // Optimized pool configuration for maximum performance
 const poolConfig: PoolConfig = {
   connectionString: DB_CONFIG.url,
-  
+
   // Connection pool sizing (tuned for Railway/Heroku)
   max: process.env.DB_POOL_MAX ? parseInt(process.env.DB_POOL_MAX) : 20, // Maximum connections
   min: process.env.DB_POOL_MIN ? parseInt(process.env.DB_POOL_MIN) : 2,   // Minimum connections
-  
+
   // Connection lifecycle
   idleTimeoutMillis: 30000,          // Close idle connections after 30 seconds
   connectionTimeoutMillis: 3000,      // Fail fast on connection attempts
-  
+
   // Statement optimization
   statement_timeout: 30000,            // Kill queries running longer than 30 seconds
   query_timeout: 30000,               // Alternative timeout
-  
+
   // Keep alive for persistent connections
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
-  
+
   // Application name for monitoring
   application_name: 'remvana-api',
 };
@@ -61,16 +61,16 @@ let connectionErrors = 0;
 pool.on('connect', (client) => {
   activeConnections++;
   totalConnections++;
-  
+
   // Set optimal connection parameters
   client.query('SET statement_timeout = 30000'); // 30 seconds
   client.query('SET lock_timeout = 10000');      // 10 seconds
   client.query('SET idle_in_transaction_session_timeout = 60000'); // 1 minute
-  
+
   // Enable query optimization
   client.query('SET random_page_cost = 1.1');    // Optimize for SSD
   client.query('SET effective_cache_size = "256MB"'); // Hint about available memory
-  
+
   if (process.env.NODE_ENV === 'development') {
     logger.debug(`Database connection established (${activeConnections}/${poolConfig.max})`);
   }
@@ -89,7 +89,7 @@ pool.on('error', (err) => {
 });
 
 // Create Drizzle ORM instance with optimizations
-export const db = drizzle(pool, { 
+export const db = drizzle(pool, {
   schema,
   logger: process.env.NODE_ENV === 'development' // Only log in dev
 });
@@ -137,15 +137,15 @@ export async function queryWithRetry<T>(
   maxRetries = 2
 ): Promise<T> {
   let lastError: any;
-  
+
   for (let i = 0; i <= maxRetries; i++) {
     try {
       return await queryFn();
     } catch (error: any) {
       lastError = error;
-      
+
       // Only retry on connection errors
-      if (error.code === 'ECONNREFUSED' || 
+      if (error.code === 'ECONNREFUSED' ||
           error.code === 'ETIMEDOUT' ||
           error.code === 'ENOTFOUND') {
         logger.warn(`Query failed, retrying (${i + 1}/${maxRetries + 1}):`, error.message);
@@ -155,7 +155,7 @@ export async function queryWithRetry<T>(
       }
     }
   }
-  
+
   throw lastError;
 }
 
@@ -173,12 +173,12 @@ export async function closePool() {
 if (process.env.NODE_ENV === 'production') {
   setInterval(() => {
     const stats = getPoolStats();
-    
+
     // Log warning if pool is exhausted
     if (stats.active >= (poolConfig.max! * 0.8)) {
       logger.warn('Database pool near capacity', stats);
     }
-    
+
     // Log error if too many waiting connections
     if (stats.waiting > 5) {
       logger.error('Database pool has waiting connections', stats);
@@ -200,7 +200,7 @@ export const query = {
     try {
       const result = await pool.query(sql, params);
       const duration = Date.now() - start;
-      
+
       // Log slow queries
       if (duration > 1000) {
         logger.warn('Slow query detected', {
@@ -208,14 +208,14 @@ export const query = {
           sql: sql.substring(0, 100)
         });
       }
-      
+
       return result.rows as T;
     } catch (error) {
       logger.error('Query execution failed', { sql: sql.substring(0, 100), error });
       throw error;
     }
   },
-  
+
   /**
    * Execute query in transaction
    */

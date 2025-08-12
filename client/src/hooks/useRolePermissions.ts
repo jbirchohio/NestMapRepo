@@ -53,29 +53,29 @@ export function useRolePermissions() {
     canManageOrganization: true,
     canAccessAdmin: true
   };
-  
+
   const rolePermissions: RolePermissions = {
     // Trip Management - use object properties directly
     canViewAllTrips: permissions.canViewTrips || permissions.canViewAnalytics || false,
     canEditTeamTrips: permissions.canEditTrips || false,
     canCreateTrips: permissions.canCreateTrips || false,
     canDeleteTrips: permissions.canDeleteTrips || false,
-    
+
     // Team Management
     canManageTeam: permissions.canManageOrganization || false,
     canInviteMembers: permissions.canManageOrganization || false,
-    
+
     // Financial Access
     canAccessBilling: permissions.canAccessAdmin || false,
     canIssueCards: permissions.canAccessAdmin || false,
     canFreezeCards: permissions.canAccessAdmin || false,
     canViewTransactions: permissions.canViewAnalytics || false,
     canApproveExpenses: permissions.canAccessAdmin || false,
-    
+
     // Analytics & Reporting
     canAccessAnalytics: permissions.canViewAnalytics || false,
     canExportData: permissions.canAccessAdmin || false,
-    
+
     // Organization Management
     canManageOrganization: permissions.canManageOrganization || false,
     canAccessWhiteLabel: permissions.canAccessAdmin || false,
@@ -85,7 +85,7 @@ export function useRolePermissions() {
     permissions: rolePermissions,
     isLoading,
     hasPermission: (permission: keyof RolePermissions) => rolePermissions[permission],
-    hasAnyPermission: (permissionList: (keyof RolePermissions)[]) => 
+    hasAnyPermission: (permissionList: (keyof RolePermissions)[]) =>
       permissionList.some(permission => rolePermissions[permission])
   };
 }
@@ -101,17 +101,17 @@ interface RoleGateProps {
   fallback?: React.ReactNode;
 }
 
-export function RoleGate({ 
-  children, 
-  requiredPermissions = [], 
-  requireAll = false, 
-  fallback = null 
+export function RoleGate({
+  children,
+  requiredPermissions = [],
+  requireAll = false,
+  fallback = null
 }: RoleGateProps) {
   const { permissions, isLoading } = useRolePermissions();
 
   if (isLoading) {
-    return React.createElement('div', { 
-      className: 'animate-pulse bg-gray-200 dark:bg-gray-700 h-8 rounded' 
+    return React.createElement('div', {
+      className: 'animate-pulse bg-gray-200 dark:bg-gray-700 h-8 rounded'
     });
   }
 
@@ -123,7 +123,7 @@ export function RoleGate({
     ? requiredPermissions.every(permission => permissions[permission])
     : requiredPermissions.some(permission => permissions[permission]);
 
-  return hasAccess 
+  return hasAccess
     ? React.createElement(React.Fragment, null, children)
     : React.createElement(React.Fragment, null, fallback);
 }

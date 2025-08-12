@@ -23,7 +23,7 @@ export const requireAdmin = async (
     }
 
     const userId = req.user.id;
-    
+
     // Get user from database
     const [user] = await db.select()
       .from(users)
@@ -35,10 +35,10 @@ export const requireAdmin = async (
 
     // Check admin status
     const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
-    const isAdmin = isSuperAdmin || 
-                   user.role === 'admin' || 
+    const isAdmin = isSuperAdmin ||
+                   user.role === 'admin' ||
                    ADDITIONAL_ADMIN_EMAILS.includes(user.email);
-    
+
     if (!isAdmin) {
       logger.warn(`Non-admin user ${user.email} attempted to access admin route`);
       return res.status(403).json({ message: 'Admin access required' });
@@ -64,7 +64,7 @@ export const isUserAdmin = async (userId: number): Promise<boolean> => {
       .where(eq(users.id, userId));
 
     if (!user) return false;
-    
+
     const ADMIN_EMAILS = [SUPER_ADMIN_EMAIL, ...ADDITIONAL_ADMIN_EMAILS];
     return user.role === 'admin' || ADMIN_EMAILS.includes(user.email);
   } catch (error) {
@@ -79,7 +79,7 @@ export const makeUserAdmin = async (email: string): Promise<boolean> => {
     const result = await db.update(users)
       .set({ role: 'admin' })
       .where(eq(users.email, email));
-    
+
     logger.info(`User ${email} granted admin privileges`);
     return true;
   } catch (error) {

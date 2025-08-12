@@ -20,7 +20,7 @@ export default function ShareRedirectHandler() {
   // Handle edit redirect at the routing level, before component renders
   useEffect(() => {
     if (permission === 'edit' && sharedTrip && (sharedTrip as any).id) {
-      console.log('Redirecting to edit mode for trip:', (sharedTrip as any).id);
+      // Redirect to edit mode for this trip
       window.location.replace(`/trip/${(sharedTrip as any).id}`);
     }
   }, [permission, sharedTrip]);

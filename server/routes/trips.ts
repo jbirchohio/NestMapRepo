@@ -21,7 +21,7 @@ router.use(fieldTransformMiddleware);
 router.get("/", async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
     }
@@ -34,7 +34,7 @@ router.get("/", async (req: Request, res: Response) => {
     // Get trips with pagination
     const trips = await storage.getTripsByUserIdPaginated(userId, limit, offset);
     const totalCount = await storage.getTripsCountByUserId(userId);
-    
+
     res.json({
       trips,
       pagination: {
@@ -54,14 +54,14 @@ router.get("/", async (req: Request, res: Response) => {
 router.get('/corporate', async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(400).json({ message: "User ID required" });
     }
 
     // Corporate endpoint removed - just return user's trips
     const trips = await storage.getTripsByUserId(userId);
-    
+
     // Transform database field names to match frontend expectations and add user details
     const tripsWithUserDetails = await Promise.all(
       trips.map(async (trip) => {
@@ -96,15 +96,13 @@ router.get('/corporate', async (req: Request, res: Response) => {
 // Get todos for a specific trip
 router.get("/:id/todos", async (req: Request, res: Response) => {
   try {
-    console.log('GET todos - params.id:', req.params.id, 'type:', typeof req.params.id);
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
-      console.error('Invalid trip ID for todos:', req.params.id);
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
     }
@@ -138,7 +136,7 @@ router.get("/:id/notes", async (req: Request, res: Response) => {
     }
 
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
     }
@@ -172,7 +170,7 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
     }
 
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
     }
@@ -203,13 +201,6 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   req.skipCaseConversion = true;
   try {
     const tripId = parseInt(req.params.id);
-    console.log('Trip GET request:', { 
-      tripId, 
-      userId: req.user?.id, 
-      orgId: req.user?.organization_id,
-      isDemo: req.isDemo 
-    });
-    
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -228,13 +219,6 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
     if (trip.user_id !== req.user?.id) {
       return res.status(403).json({ message: "Access denied: You don't have permission to access this trip" });
     }
-    
-    console.log('Trip from database:', {
-      id: trip.id,
-      city: trip.city,
-      city_latitude: trip.city_latitude,
-      city_longitude: trip.city_longitude
-    });
 
     // Manual transformation to ensure dates are properly formatted as ISO date strings
     const transformedTrip = {
@@ -277,42 +261,18 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 // Create new trip with organization context and subscription limits
 router.post("/", async (req: Request, res: Response) => {
   try {
-    console.log('Trip POST request:', {
-      body: req.body,
-      userId: req.user?.id,
-      orgId: req.user?.organization_id,
-      isDemo: req.isDemo,
-      // Debug coordinate fields
-      cityLat: req.body.city_latitude,
-      cityLng: req.body.city_longitude
-    });
-    
     let tripData;
     try {
       tripData = insertTripSchema.parse({
         ...req.body,
         user_id: req.user?.id
       });
-      
-      console.log('Parsed trip data to save:', {
-        city: tripData.city,
-        city_latitude: tripData.city_latitude,
-        city_longitude: tripData.city_longitude,
-        fullTripData: tripData
-      });
-    } catch (parseError) {
-      console.error('Schema parsing error:', parseError);
+
+      } catch (parseError) {
       throw parseError;
     }
 
     const trip = await storage.createTrip(tripData);
-    console.log('Created trip with coordinates:', {
-      id: trip.id,
-      city: trip.city,
-      cityLat: trip.city_latitude,
-      cityLng: trip.city_longitude
-    });
-    console.log('Returning trip object:', trip);
     res.status(201).json(trip);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -387,7 +347,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Could not delete trip" });
   }
 });
-
 
 // Generate AI-powered trip proposal
 router.post("/:tripId/proposal", async (req: Request, res: Response) => {
@@ -582,10 +541,10 @@ router.post("/:id/add-hotel", async (req: Request, res: Response) => {
       booking_reference: trackingId
     });
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       trip: updatedTrip,
-      message: "Hotel added to your trip!" 
+      message: "Hotel added to your trip!"
     });
   } catch (error) {
     logger.error("Error adding hotel to trip:", error);
@@ -638,7 +597,7 @@ router.put("/:id/travelers/:travelerId", async (req: Request, res: Response) => 
   try {
     const tripId = parseInt(req.params.id);
     const travelerId = parseInt(req.params.travelerId);
-    
+
     if (isNaN(tripId) || isNaN(travelerId)) {
       return res.status(400).json({ message: "Invalid trip or traveler ID" });
     }
@@ -647,7 +606,7 @@ router.put("/:id/travelers/:travelerId", async (req: Request, res: Response) => 
     if (!updatedTraveler) {
       return res.status(404).json({ message: "Traveler not found" });
     }
-    
+
     res.json(updatedTraveler);
   } catch (error) {
     logger.error("Error updating trip traveler:", error);
@@ -660,7 +619,7 @@ router.delete("/:id/travelers/:travelerId", async (req: Request, res: Response) 
   try {
     const tripId = parseInt(req.params.id);
     const travelerId = parseInt(req.params.travelerId);
-    
+
     if (isNaN(tripId) || isNaN(travelerId)) {
       return res.status(400).json({ message: "Invalid trip or traveler ID" });
     }

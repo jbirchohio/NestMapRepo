@@ -36,10 +36,10 @@ interface ForecastResponse {
  */
 function getTemperatureUnit(location: string): 'metric' | 'imperial' {
   const locationLower = location.toLowerCase();
-  
+
   // Countries that primarily use Fahrenheit
   const fahrenheitCountries = ['united states', 'usa', 'us', 'america', 'belize', 'cayman islands', 'palau'];
-  
+
   // US states and common US location indicators
   const usStates = [
     'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware',
@@ -50,17 +50,17 @@ function getTemperatureUnit(location: string): 'metric' | 'imperial' {
     'rhode island', 'south carolina', 'south dakota', 'tennessee', 'texas', 'utah', 'vermont',
     'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming'
   ];
-  
+
   // Check for direct country mentions
   if (fahrenheitCountries.some(country => locationLower.includes(country))) {
     return 'imperial';
   }
-  
+
   // Check for US states
   if (usStates.some(state => locationLower.includes(state))) {
     return 'imperial';
   }
-  
+
   // Default to Celsius for most of the world
   return 'metric';
 }
@@ -72,7 +72,6 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
   try {
     const apiKey = process.env.OPENWEATHERMAP_API_KEY;
     if (!apiKey) {
-      console.error("OpenWeatherMap API key not found");
       return null;
     }
 
@@ -83,17 +82,16 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
     );
 
     if (!response.ok) {
-      console.error("Weather API response not ok:", response.status);
       return null;
     }
 
     const data: OpenWeatherResponse = await response.json();
-    
+
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    
+
     return {
       date: `${year}-${month}-${day}`,
       condition: data.weather[0].main.toLowerCase(),
@@ -104,7 +102,6 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
       unit: 'F' as const
     };
   } catch (error) {
-    console.error("Error fetching current weather:", error);
     return null;
   }
 }
@@ -116,28 +113,26 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
   try {
     const apiKey = process.env.OPENWEATHERMAP_API_KEY;
     if (!apiKey) {
-      console.error("OpenWeatherMap API key not found");
       return [];
     }
 
     // Always use imperial units (Fahrenheit) as requested
     const units = 'imperial';
-    
+
     // Get 5-day forecast (OpenWeatherMap free tier provides up to 5 days)
     const response = await fetch(
       `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(location)}&appid=${apiKey}&units=${units}`
     );
 
     if (!response.ok) {
-      console.error("Weather forecast API response not ok:", response.status);
       return [];
     }
 
     const data: ForecastResponse = await response.json();
-    
+
     // Group forecast data by date and get daily summaries
     const dailyForecasts = new Map<string, OpenWeatherResponse[]>();
-    
+
     data.list.forEach(item => {
       // Convert Unix timestamp to local date
       const dateObj = new Date(item.dt * 1000);
@@ -145,7 +140,7 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
       const date = `${year}-${month}-${day}`;
-      
+
       if (!dailyForecasts.has(date)) {
         dailyForecasts.set(date, []);
       }
@@ -153,13 +148,13 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
     });
 
     const weatherData: WeatherData[] = [];
-    
+
     // Get weather for each requested date
     for (const requestedDate of dates) {
       // Always return weather data for the requested dates
       // Check if we have actual forecast data for this date
       const forecastsForDate = dailyForecasts.get(requestedDate);
-      
+
       if (forecastsForDate && forecastsForDate.length > 0) {
         // We have actual forecast data for this date
         const middayForecast = forecastsForDate.reduce((closest: any, current: any) => {
@@ -184,7 +179,7 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
           // Add some variation based on how far in the future the date is
           const daysFromNow = Math.floor((new Date(requestedDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
           const tempVariation = Math.floor(Math.random() * 10 - 5) + (daysFromNow > 30 ? Math.floor(Math.random() * 10 - 5) : 0);
-          
+
           weatherData.push({
             ...currentWeather,
             date: requestedDate,
@@ -199,7 +194,6 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
 
     return weatherData;
   } catch (error) {
-    console.error("Error fetching weather forecast:", error);
     return [];
   }
 }
@@ -209,7 +203,7 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
  */
 export function getWeatherCategory(condition: string): string {
   const conditionLower = condition.toLowerCase();
-  
+
   if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
     return 'rainy';
   }
@@ -225,6 +219,6 @@ export function getWeatherCategory(condition: string): string {
   if (conditionLower.includes('wind')) {
     return 'windy';
   }
-  
+
   return 'mild';
 }

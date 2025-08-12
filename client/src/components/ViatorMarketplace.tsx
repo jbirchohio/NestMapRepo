@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { apiRequest } from '@/lib/queryClient';
-import { 
+import {
   MapPin,
   Clock,
   DollarSign,
@@ -84,17 +84,16 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
         startDate: dates.start.toISOString(),
         endDate: dates.end.toISOString(),
       });
-      
+
       // Transform and enrich the data
       const enrichedExperiences = response.activities.map((activity: any) => ({
         ...activity,
         commission: calculateCommission(activity.price),
         bookingUrl: generateAffiliateUrl(activity.id)
       }));
-      
+
       setExperiences(enrichedExperiences);
     } catch (error) {
-      console.error('Failed to fetch Viator experiences:', error);
       // Use mock data as fallback
       setExperiences(getMockExperiences());
     } finally {
@@ -122,14 +121,14 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(exp => 
+      filtered = filtered.filter(exp =>
         exp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         exp.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Price filter
-    filtered = filtered.filter(exp => 
+    filtered = filtered.filter(exp =>
       exp.price >= priceRange[0] && exp.price <= priceRange[1]
     );
 
@@ -239,7 +238,7 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
       {/* Header with search and filters */}
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
         <h2 className="text-2xl font-bold mb-4">Discover Experiences in {destination}</h2>
-        
+
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -251,7 +250,7 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-          
+
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
@@ -322,7 +321,7 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
                   }`}
                 />
               </button>
-              
+
               {experience.instantConfirmation && (
                 <div className="absolute top-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded">
                   Instant Confirmation
@@ -332,7 +331,7 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
 
             <div className="p-4">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">{experience.title}</h3>
-              
+
               <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 text-yellow-500 fill-current" />
@@ -370,7 +369,7 @@ export default function ViatorMarketplace({ destination, dates, onBookExperience
                   <span className="text-2xl font-bold">${experience.price}</span>
                   <span className="text-sm text-gray-600 ml-1">per person</span>
                 </div>
-                
+
                 <Button
                   onClick={() => handleBooking(experience)}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"

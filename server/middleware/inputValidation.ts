@@ -16,37 +16,37 @@ const PATTERNS = {
 // Input sanitization functions
 export function sanitizeText(input: string): string {
   if (!input || typeof input !== 'string') return '';
-  
+
   // Remove null bytes and control characters
   let sanitized = input.replace(/[\x00-\x1F\x7F]/g, '');
-  
+
   // Sanitize HTML
-  sanitized = DOMPurify.sanitize(sanitized, { 
-    ALLOWED_TAGS: [], 
-    ALLOWED_ATTR: [] 
+  sanitized = DOMPurify.sanitize(sanitized, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: []
   });
-  
+
   // Remove SQL injection patterns
   sanitized = sanitized.replace(/(union|select|insert|update|delete|drop|create|alter|exec|execute)/gi, '');
-  
+
   // Remove script injection patterns
   sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   sanitized = sanitized.replace(/javascript:/gi, '');
   sanitized = sanitized.replace(/on\w+\s*=/gi, '');
-  
+
   return sanitized.trim();
 }
 
 export function sanitizeEmail(input: string): string {
   if (!input || typeof input !== 'string') return '';
-  
+
   const sanitized = sanitizeText(input).toLowerCase();
   return PATTERNS.EMAIL.test(sanitized) ? sanitized : '';
 }
 
 export function sanitizeUrl(input: string): string {
   if (!input || typeof input !== 'string') return '';
-  
+
   const sanitized = sanitizeText(input);
   try {
     const url = new URL(sanitized);
@@ -184,7 +184,7 @@ export function validateAndSanitizeBody(schema: z.ZodSchema) {
 
       // Validate against schema
       const validationResult = schema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         return res.status(400).json({
           error: 'Validation failed',
@@ -199,7 +199,6 @@ export function validateAndSanitizeBody(schema: z.ZodSchema) {
       req.body = validationResult.data;
       next();
     } catch (error) {
-      console.error('Validation middleware error:', error);
       res.status(500).json({ error: 'Internal validation error' });
     }
   };
@@ -208,23 +207,23 @@ export function validateAndSanitizeBody(schema: z.ZodSchema) {
 // Recursive object sanitization
 function sanitizeObject(obj: any): any {
   if (obj === null || obj === undefined) return obj;
-  
+
   if (typeof obj === 'string') {
     return sanitizeText(obj);
   }
-  
+
   if (typeof obj === 'number') {
     return isNaN(obj) || !isFinite(obj) ? null : obj;
   }
-  
+
   if (typeof obj === 'boolean') {
     return obj;
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => sanitizeObject(item)).filter(item => item !== null);
   }
-  
+
   if (typeof obj === 'object') {
     const sanitized: any = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -235,7 +234,7 @@ function sanitizeObject(obj: any): any {
     }
     return sanitized;
   }
-  
+
   return obj;
 }
 
@@ -244,7 +243,7 @@ export function validateQueryParams(allowedParams: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       const sanitizedQuery: any = {};
-      
+
       for (const param of allowedParams) {
         if (req.query[param] !== undefined) {
           const value = req.query[param];
@@ -257,18 +256,16 @@ export function validateQueryParams(allowedParams: string[]) {
           }
         }
       }
-      
+
       // Check for suspicious parameters
       for (const key of Object.keys(req.query)) {
         if (!allowedParams.includes(key)) {
-          console.warn(`Unexpected query parameter: ${key}`);
-        }
+          }
       }
-      
+
       req.query = sanitizedQuery;
       next();
     } catch (error) {
-      console.error('Query validation error:', error);
       res.status(400).json({ error: 'Invalid query parameters' });
     }
   };
@@ -283,23 +280,23 @@ export function contentCreationRateLimit() {
   return (req: Request, res: Response, next: NextFunction) => {
     const identifier = req.ip || 'unknown';
     const now = Date.now();
-    
+
     let userAttempts = attempts.get(identifier);
-    
+
     if (!userAttempts || now > userAttempts.resetTime) {
       userAttempts = { count: 0, resetTime: now + WINDOW };
     }
-    
+
     if (userAttempts.count >= LIMIT) {
       return res.status(429).json({
         error: 'Content creation rate limit exceeded',
         retryAfter: Math.ceil((userAttempts.resetTime - now) / 1000)
       });
     }
-    
+
     userAttempts.count++;
     attempts.set(identifier, userAttempts);
-    
+
     next();
   };
 }
@@ -308,30 +305,30 @@ export function contentCreationRateLimit() {
 export function validateContentLength(maxSize: number = 1024 * 1024) { // 1MB default
   return (req: Request, res: Response, next: NextFunction) => {
     const contentLength = req.get('content-length');
-    
+
     if (contentLength && parseInt(contentLength) > maxSize) {
       return res.status(413).json({
         error: 'Content too large',
         maxSize: maxSize
       });
     }
-    
+
     next();
   };
 }
 
-// File upload validation for images and documents  
+// File upload validation for images and documents
 export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 * 1024 * 1024) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.file) {
       return next();
     }
-    
+
     const files = [req.file];
-    
+
     for (const file of files) {
       if (!file) continue;
-      
+
       // Check file size
       if (file.size > maxSize) {
         return res.status(413).json({
@@ -340,7 +337,7 @@ export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 *
           fileName: file.originalname
         });
       }
-      
+
       // Check file type
       if (!allowedTypes.includes(file.mimetype)) {
         return res.status(400).json({
@@ -349,13 +346,13 @@ export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 *
           fileName: file.originalname
         });
       }
-      
+
       // Sanitize filename
       if (file.originalname) {
         file.originalname = sanitizeText(file.originalname);
       }
     }
-    
+
     next();
   };
 }

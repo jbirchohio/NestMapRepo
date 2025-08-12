@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  MapPin, Calendar, Clock, Star, Users, 
+import {
+  MapPin, Calendar, Clock, Star, Users,
   DollarSign, Sparkles, Heart, Plus,
   ExternalLink, Check, TrendingUp, Sun,
   Mountain, Utensils, Music, Camera,
@@ -88,13 +88,12 @@ export default function SmartTourRecommendations({
         setAiRecommendations(data.recommendations || []);
       }
     } catch (error) {
-      console.error('Failed to get AI recommendations:', error);
-    }
+      }
   };
 
   const fetchTours = async (category: string) => {
     setIsLoading(true);
-    
+
     try {
       // Map category to search query
       const categoryQueries: Record<string, string> = {
@@ -123,21 +122,20 @@ export default function SmartTourRecommendations({
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Add category and booking URL to tours
         const enrichedTours = (data.activities || []).map((tour: ViatorTour) => ({
           ...tour,
           category,
           bookingUrl: `https://www.viator.com/tours/${tour.productCode}`
         }));
-        
+
         setTours(enrichedTours);
       } else {
         // Fallback to mock data if API fails
         setTours(getMockTours(category));
       }
     } catch (error) {
-      console.error('Failed to fetch tours:', error);
       // Use mock data as fallback
       setTours(getMockTours(category));
     } finally {
@@ -220,13 +218,12 @@ export default function SmartTourRecommendations({
           title: "Tour Added!",
           description: `${tour.productName} has been added to your itinerary`,
         });
-        
+
         if (onTourAdded) {
           onTourAdded(tour);
         }
       }
     } catch (error) {
-      console.error('Failed to add tour:', error);
       toast({
         title: "Error",
         description: "Failed to add tour to trip",
@@ -250,7 +247,6 @@ export default function SmartTourRecommendations({
       window.open(data.affiliateLink, '_blank');
     })
     .catch(error => {
-      console.error('Failed to generate affiliate link:', error);
       window.open(tour.bookingUrl, '_blank');
     });
 
@@ -308,8 +304,8 @@ export default function SmartTourRecommendations({
               size="sm"
               onClick={() => setActiveCategory(category.id)}
               className={`flex-shrink-0 ${
-                activeCategory === category.id 
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-0 text-white' 
+                activeCategory === category.id
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-0 text-white'
                   : ''
               }`}
             >
@@ -348,8 +344,8 @@ export default function SmartTourRecommendations({
                 >
                   <Card className="overflow-hidden hover:shadow-xl transition-all">
                     <div className="relative h-48">
-                      <img 
-                        src={tour.primaryImageURL || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400'} 
+                      <img
+                        src={tour.primaryImageURL || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400'}
                         alt={tour.productName}
                         className="w-full h-full object-cover"
                       />
@@ -364,7 +360,7 @@ export default function SmartTourRecommendations({
                         {activeCategory}
                       </Badge>
                     </div>
-                    
+
                     <CardContent className="p-4 space-y-3">
                       <div>
                         <h3 className="font-semibold line-clamp-2">{tour.productName}</h3>

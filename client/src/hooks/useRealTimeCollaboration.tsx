@@ -44,10 +44,10 @@ const PRESENCE_COLORS = [
   '#0891b2', '#c2410c', '#be123c', '#4338ca', '#0d9488'
 ];
 
-export function useRealTimeCollaboration({ 
-  tripId, 
-  organizationId, 
-  userId 
+export function useRealTimeCollaboration({
+  tripId,
+  organizationId,
+  userId
 }: UseRealTimeCollaborationProps) {
   const [collaborators, setCollaborators] = useState<CollaboratorPresence[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -63,7 +63,7 @@ export function useRealTimeCollaboration({
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws/collaboration`;
-    
+
     try {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -71,7 +71,7 @@ export function useRealTimeCollaboration({
       ws.onopen = () => {
         setIsConnected(true);
         setConnectionError(null);
-        
+
         // Join trip collaboration room
         ws.send(JSON.stringify({
           type: 'join_trip',
@@ -97,8 +97,7 @@ export function useRealTimeCollaboration({
           const data = JSON.parse(event.data);
           handleWebSocketMessage(data);
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
+          }
       };
 
       ws.onclose = () => {
@@ -110,8 +109,7 @@ export function useRealTimeCollaboration({
 
       ws.onerror = (error) => {
         setConnectionError('Connection failed');
-        console.error('WebSocket error:', error);
-      };
+        };
 
     } catch (error) {
       setConnectionError('Failed to connect');
@@ -156,7 +154,7 @@ export function useRealTimeCollaboration({
           const collaborator = data.collaborator as CollaboratorData;
           const existing = prev.find(c => c.userId === collaborator.userId);
           if (existing) return prev;
-          
+
           return [...prev, {
             ...collaborator,
             lastSeen: new Date(collaborator.lastSeen),
@@ -166,7 +164,7 @@ export function useRealTimeCollaboration({
         break;
 
       case 'collaborator_left':
-        setCollaborators(prev => 
+        setCollaborators(prev =>
           prev.filter(c => c.userId !== (data.userId as number))
         );
         break;
@@ -238,8 +236,8 @@ export function useRealTimeCollaboration({
   };
 
   // Get active collaborators (excluding current user and inactive ones)
-  const activeCollaborators = collaborators.filter(c => 
-    c.userId !== userId && 
+  const activeCollaborators = collaborators.filter(c =>
+    c.userId !== userId &&
     c.isActive &&
     new Date().getTime() - new Date(c.lastSeen).getTime() < 60000 // Active within last minute
   );

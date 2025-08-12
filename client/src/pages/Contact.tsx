@@ -15,15 +15,15 @@ export function ContactPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     toast({
       title: "Message sent!",
       description: "We'll get back to you within 24 hours.",
     });
-    
+
     // Reset form
     (e.target as HTMLFormElement).reset();
     setIsSubmitting(false);
@@ -79,19 +79,19 @@ export function ContactPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input 
-                    id="firstName" 
-                    name="firstName" 
-                    required 
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    required
                     placeholder="John"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input 
-                    id="lastName" 
-                    name="lastName" 
-                    required 
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    required
                     placeholder="Doe"
                   />
                 </div>
@@ -99,11 +99,11 @@ export function ContactPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  name="email" 
-                  type="email" 
-                  required 
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
                   placeholder="john@example.com"
                 />
               </div>
@@ -128,18 +128,18 @@ export function ContactPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="message">Message</Label>
-                <Textarea 
-                  id="message" 
-                  name="message" 
-                  required 
+                <Textarea
+                  id="message"
+                  name="message"
+                  required
                   placeholder="Tell us more about how we can help..."
                   rows={5}
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}

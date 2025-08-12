@@ -7,15 +7,15 @@ const originalFetch = window.fetch;
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   // Convert input to string URL
   const url = input instanceof Request ? input.url : input.toString();
-  
+
   // Only add auth header to API requests
   if (url.startsWith('/api/')) {
     const token = jwtAuth.getToken();
-    
+
     if (token) {
       init = init || {};
       init.headers = init.headers || {};
-      
+
       if (init.headers instanceof Headers) {
         init.headers.set('Authorization', `Bearer ${token}`);
       } else if (Array.isArray(init.headers)) {
@@ -28,7 +28,7 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Res
       }
     }
   }
-  
+
   return originalFetch(input, init);
 };
 

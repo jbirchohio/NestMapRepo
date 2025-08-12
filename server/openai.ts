@@ -14,9 +14,9 @@ export async function summarizeDay(activities: any[]): Promise<string> {
 
     const prompt = `
     Please summarize the following daily itinerary concisely while highlighting key activities, time allocations, and travel information:
-    
+
     ${JSON.stringify(activities, null, 2)}
-    
+
     Include a brief overview of what the day looks like, the main attractions/activities, meal plans if any, and overall travel distance if available.
     `;
 
@@ -27,7 +27,6 @@ export async function summarizeDay(activities: any[]): Promise<string> {
 
     return response.choices[0].message.content || "Unable to generate summary.";
   } catch (error) {
-    console.error("Error in summarizeDay:", error);
     return "Error generating summary. Please try again later.";
   }
 }
@@ -61,7 +60,6 @@ export async function suggestNearbyFood(location: string, foodType: string = "fo
     const result = JSON.parse(response.choices[0].message.content || "{}");
     return result;
   } catch (error) {
-    console.error("Error in suggestNearbyFood:", error);
     return { suggestions: [] };
   }
 }
@@ -76,11 +74,11 @@ export async function detectTimeConflicts(activities: any[]): Promise<any> {
     }
 
     const prompt = `
-    Please analyze the following daily itinerary and identify any time conflicts, 
+    Please analyze the following daily itinerary and identify any time conflicts,
     tight connections, or logistical issues. Consider travel times between locations and the duration of activities:
-    
+
     ${JSON.stringify(activities, null, 2)}
-    
+
     Respond with a JSON object with the following structure:
     {
       "conflicts": [
@@ -93,7 +91,7 @@ export async function detectTimeConflicts(activities: any[]): Promise<any> {
         }
       ]
     }
-    
+
     If there are no conflicts, return an empty array for "conflicts".
     `;
 
@@ -106,7 +104,6 @@ export async function detectTimeConflicts(activities: any[]): Promise<any> {
     const result = JSON.parse(response.choices[0].message.content || "{}");
     return result;
   } catch (error) {
-    console.error("Error in detectTimeConflicts:", error);
     return { conflicts: [] };
   }
 }
@@ -115,14 +112,14 @@ export async function detectTimeConflicts(activities: any[]): Promise<any> {
  * Generates a themed itinerary suggestion
  */
 export async function generateThemedItinerary(
-  location: string, 
-  theme: string, 
+  location: string,
+  theme: string,
   duration: string
 ): Promise<any> {
   try {
     const prompt = `
     Please create a ${duration} itinerary with the theme "${theme}" in ${location}.
-    
+
     Respond with a JSON object with the following structure:
     {
       "title": "Catchy title for the itinerary",
@@ -148,11 +145,10 @@ export async function generateThemedItinerary(
     const result = JSON.parse(response.choices[0].message.content || "{}");
     return result;
   } catch (error) {
-    console.error("Error in generateThemedItinerary:", error);
-    return { 
+    return {
       title: "Error generating itinerary",
       description: "Could not generate themed itinerary",
-      activities: [] 
+      activities: []
     };
   }
 }
@@ -170,12 +166,7 @@ export async function optimizeItinerary(activities: any[], tripContext: any): Pr
     }
 
     // Debug: Activities count for optimization
-    // console.log("DEBUG: Activities being sent to AI for optimization:", JSON.stringify(activities.map(a => ({
-    //   id: a.id,
-    //   title: a.title,
-    //   time: a.time,
-    //   location_name: a.location_name
-    // })), null, 2));
+    // ), null, 2));
 
     const prompt = `CRITICAL SCHEDULING CONFLICT RESOLVER
 
@@ -217,7 +208,7 @@ You MUST provide an optimization for EVERY activity. If no change needed, sugges
   "optimizedActivities": [
 ${activities.map(a => `    {
       "id": "${a.id}",
-      "suggestedTime": "HH:MM", 
+      "suggestedTime": "HH:MM",
       "suggestedDay": 1,
       "reason": "Explanation for ${a.title} (ID: ${a.id})"
     }`).join(',\n')}
@@ -236,16 +227,15 @@ ${activities.map(a => `    {
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
-    
+
     // Debug: Log the AI's optimization response
     // AI optimization completed successfully
-    
+
     return {
       optimizedActivities: result.optimizedActivities || [],
       recommendations: result.recommendations || ["Unable to generate optimization recommendations."]
     };
   } catch (error) {
-    console.error("Error optimizing itinerary:", error);
     return {
       optimizedActivities: [],
       recommendations: ["Unable to optimize itinerary at this time. Please try again later."]
@@ -283,21 +273,21 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
       const endDate = new Date(trip.end_date);
       const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const baseHotel = PRICING.hotel * nights;
-      
+
       let cost = baseFlight + baseHotel;
-      
+
       // Weekend surcharge
       const startDay = startDate.getDay();
       if (startDay === 5 || startDay === 6) cost *= (1 + PRICING.weekendSurcharge);
-      
+
       // Group discount for overlapping trips
       if (adjustments.hasGroupBooking) cost *= (1 - PRICING.groupDiscount);
-      
+
       // Advance booking discount
       const now = new Date();
       const daysFromNow = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
       if (daysFromNow > 30) cost *= (1 - PRICING.advanceBookingDiscount);
-      
+
       return Math.round(cost);
     };
 
@@ -305,18 +295,18 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     const detectConflicts = (trips: any[]) => {
       const conflicts = [];
       const opportunities = [];
-      
+
       for (let i = 0; i < trips.length; i++) {
         for (let j = i + 1; j < trips.length; j++) {
           const trip1 = trips[i];
           const trip2 = trips[j];
-          
+
           // Date overlap check
           const start1 = new Date(trip1.start_date);
           const end1 = new Date(trip1.end_date);
           const start2 = new Date(trip2.start_date);
           const end2 = new Date(trip2.end_date);
-          
+
           if (start1 <= end2 && start2 <= end1) {
             conflicts.push({
               trips: [trip1.id, trip2.id],
@@ -325,7 +315,7 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
               departments: [trip1.department, trip2.department]
             });
           }
-          
+
           // Geo-clustering opportunity
           if (trip1.city === trip2.city && Math.abs(start1.getTime() - start2.getTime()) <= 7 * 24 * 60 * 60 * 1000) {
             opportunities.push({
@@ -337,14 +327,14 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
           }
         }
       }
-      
+
       return { conflicts, opportunities };
     };
 
     // AI analysis prompt
     const prompt = `
     Analyze these corporate trips for optimization opportunities:
-    
+
     ${JSON.stringify(trips.map(t => ({
       id: t.id,
       destination: t.city,
@@ -353,20 +343,20 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
       budget: t.budget,
       travelMode: t.travelMode || 'flight'
     })), null, 2)}
-    
+
     Provide optimization recommendations focusing on:
     1. Date adjustments to avoid conflicts and reduce costs
     2. Travel mode optimization (flight vs train vs drive)
     3. Group booking opportunities
     4. Resource allocation improvements
-    
+
     Respond with JSON:
     {
       "optimizations": [
         {
           "tripId": "trip_id",
           "currentDates": "current range",
-          "suggestedDates": "optimized range", 
+          "suggestedDates": "optimized range",
           "reasoning": "why this change helps",
           "estimatedSavings": 0,
           "conflictResolution": "what conflict this resolves"
@@ -394,7 +384,7 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     const optimizedTrips = trips.map(trip => {
       const originalCost = calculateTripCost(trip);
       const optimization = aiResult.optimizations?.find((opt: any) => opt.trip_id === trip.id);
-      
+
       if (optimization) {
         const hasGroupBooking = opportunities.some(opp => opp.trips.includes(trip.id));
         const optimizedCost = calculateTripCost({
@@ -448,7 +438,6 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     };
 
   } catch (error) {
-    console.error("Error in optimizeCorporateTrips:", error);
     return {
       optimizedTrips: trips,
       savings: { totalMoneySaved: 0, totalTimeSaved: 0, conflictsResolved: 0 },
@@ -468,11 +457,11 @@ export async function suggestWeatherBasedActivities(
   try {
     const prompt = `
     You are a travel planning assistant recommending activities based on weather conditions.
-    
+
     Location: ${location}
     Date: ${date}
     Weather Condition: ${weatherCondition}
-    
+
     Please provide activity recommendations appropriate for the weather conditions.
     Respond with a JSON object with the following structure:
     {
@@ -501,13 +490,12 @@ export async function suggestWeatherBasedActivities(
     const result = JSON.parse(response.choices[0].message.content || "{}");
     return result;
   } catch (error) {
-    console.error("Error in suggestWeatherBasedActivities:", error);
-    return { 
+    return {
       weather: {
         condition: "Unknown weather condition",
         recommendation: "Could not generate weather-based recommendations"
       },
-      activities: [] 
+      activities: []
     };
   }
 }
@@ -523,11 +511,11 @@ export async function suggestBudgetOptions(
   try {
     const prompt = `
     You are a budget-conscious travel planning assistant.
-    
+
     Location: ${location}
     Budget Level: ${budgetLevel}
     ${activityType ? `Activity Type: ${activityType}` : ''}
-    
+
     Please suggest a variety of budget-friendly options for this trip.
     Respond with a JSON object with the following structure:
     {
@@ -557,14 +545,13 @@ export async function suggestBudgetOptions(
     const result = JSON.parse(response.choices[0].message.content || "{}");
     return result;
   } catch (error) {
-    console.error("Error in suggestBudgetOptions:", error);
-    return { 
+    return {
       budgetInfo: {
         level: budgetLevel,
         estimatedDailyBudget: "Unknown",
         savingTips: ["Could not generate budget recommendations"]
       },
-      suggestions: [] 
+      suggestions: []
     };
   }
 }
@@ -572,38 +559,38 @@ export async function suggestBudgetOptions(
 export async function tripAssistant(question: string, tripContext: any): Promise<string | { answer: string, activities?: any[] }> {
   try {
     // Check if user is explicitly requesting to import an itinerary
-    const isExplicitImportRequest = 
-      question.toLowerCase().includes("import my itinerary") || 
+    const isExplicitImportRequest =
+      question.toLowerCase().includes("import my itinerary") ||
       question.toLowerCase().includes("add these activities") ||
       question.toLowerCase().includes("add this schedule") ||
       question.toLowerCase().includes("create activities from") ||
       question.toLowerCase().includes("parse this itinerary");
-    
+
     // Check if this looks like a pasted itinerary - look for multiple time patterns
     const hasTimePatterns = (question.match(/\d{1,2}[\s]*[:-][\s]*\d{2}/g) || []).length > 2 ||  // 9:30, 10-30 formats
                            (question.match(/\d{1,2}[\s]*[AP]M/g) || []).length > 2;  // 9AM, 10 PM formats
-    
-    const hasDayPatterns = question.includes("Day") || 
-                          question.includes("Monday") || question.includes("Tuesday") || 
-                          question.includes("Wednesday") || question.includes("Thursday") || 
-                          question.includes("Friday") || question.includes("Saturday") || 
+
+    const hasDayPatterns = question.includes("Day") ||
+                          question.includes("Monday") || question.includes("Tuesday") ||
+                          question.includes("Wednesday") || question.includes("Thursday") ||
+                          question.includes("Friday") || question.includes("Saturday") ||
                           question.includes("Sunday");
-                          
+
     const hasMultipleLines = question.split('\n').length > 5;
-    
+
     // Check for activity-like patterns
-    const hasActivityPatterns = 
+    const hasActivityPatterns =
       (question.match(/visit|museum|park|breakfast|lunch|dinner|check[ -]in|arrive|leave|drive|walk/gi) || []).length > 3;
-    
+
     // Detect itineraries with multiple time entries and sufficient length
-    const isItinerary = (isExplicitImportRequest || 
-                         (hasTimePatterns && hasMultipleLines && hasActivityPatterns)) && 
+    const isItinerary = (isExplicitImportRequest ||
+                         (hasTimePatterns && hasMultipleLines && hasActivityPatterns)) &&
                         question.length > 100;
-    
+
     if (isItinerary) {
       return await parseItinerary(question, tripContext);
     }
-    
+
     // Detect weather-related queries
     const isWeatherQuery = question.toLowerCase().includes("weather") ||
                           question.toLowerCase().includes("rain") ||
@@ -612,7 +599,7 @@ export async function tripAssistant(question: string, tripContext: any): Promise
                           question.toLowerCase().includes("cold") ||
                           question.toLowerCase().includes("temperature") ||
                           question.toLowerCase().includes("forecast");
-                          
+
     // Detect budget-related queries
     const isBudgetQuery = question.toLowerCase().includes("budget") ||
                          question.toLowerCase().includes("cheap") ||
@@ -622,14 +609,14 @@ export async function tripAssistant(question: string, tripContext: any): Promise
                          question.toLowerCase().includes("affordable") ||
                          question.toLowerCase().includes("save") ||
                          question.toLowerCase().includes("price");
-    
+
     const prompt = `
     You are a travel assistant helping with trip planning. You have access to the following trip information:
-    
+
     ${JSON.stringify(tripContext, null, 2)}
-    
+
     Question: ${question}
-    
+
     Please provide a helpful, concise response to the user's question based on the trip information.
     If the question is about weather, provide weather-appropriate activities.
     If the question is about budget, suggest budget-friendly options.
@@ -643,7 +630,6 @@ export async function tripAssistant(question: string, tripContext: any): Promise
 
     return response.choices[0].message.content || "I couldn't process that question. Could you try rephrasing it?";
   } catch (error) {
-    console.error("Error in tripAssistant:", error);
     return "I'm having trouble answering that question right now. Please try again later.";
   }
 }
@@ -655,22 +641,22 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
   try {
     // Get the location context from the trip
     const city = tripContext.trip?.city || "New York City";
-    
+
     // Get trip date range to help with date inference
     const tripStartDate = tripContext.trip?.start_date ? new Date(tripContext.trip.start_date) : new Date();
     const tripEndDate = tripContext.trip?.end_date ? new Date(tripContext.trip.end_date) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
+
     const prompt = `
     You are an expert itinerary parser and ACTIVITY CREATOR for a travel planning app. The user wants you to CREATE ACTUAL ACTIVITIES from their pasted itinerary.
-    
+
     Trip Information:
     - City: ${city}
     - Trip Start Date: ${tripStartDate.toISOString().split('T')[0]}
     - Trip End Date: ${tripEndDate.toISOString().split('T')[0]}
-    
+
     Itinerary Text:
     ${itineraryText}
-    
+
     EXTREMELY IMPORTANT INSTRUCTIONS:
     1. You MUST create structured activities that will be ADDED TO THE DATABASE. This is NOT just a summary - these will become real activities in the app.
     2. EACH activity needs a specific date, time, title and real location name that can be found on a map.
@@ -678,12 +664,12 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
     4. Extract START times only (not time ranges) and convert to 24-hour format (e.g., "14:30" not "2:30 PM").
     5. For location names, use OFFICIAL, PRECISE names as they appear on maps (e.g., "The Metropolitan Museum of Art" not "the art museum").
     6. Every activity MUST have a date and time.
-    
+
     DO NOT:
     - Do not just summarize or rephrase the itinerary
     - Do not use vague location names - be VERY specific
     - Do not skip activities or combine multiple activities
-    
+
     Format your response as a JSON object with:
     1. A brief "answer" explaining that you are CREATING ACTUAL ACTIVITIES, not just summarizing
     2. An "activities" array with objects containing:
@@ -693,9 +679,9 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
        - locationName (string, required): EXACT, searchable location name
        - notes (string): Any additional details
        - tag (string): One of: "Food", "Culture", "Shop", "Rest", "Transport", "Event"
-    
+
     DOUBLE-CHECK that each activity has a proper date and time, and that location names are specific enough to be found on a map.
-    
+
     This is CREATING REAL DATABASE ENTRIES, not just a summary. The system will take your response and create actual activities in the app.
     `;
 
@@ -711,25 +697,25 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
             items: {
               type: "object",
               properties: {
-                date: { 
-                  type: "string", 
+                date: {
+                  type: "string",
                   description: "Date of activity in YYYY-MM-DD format. If day of week is given, calculate the actual date based on trip start date."
                 },
-                time: { 
-                  type: "string", 
+                time: {
+                  type: "string",
                   description: "Time of the activity in 24-hour format (14:30). Extract only start time if a range is given."
                 },
-                title: { 
-                  type: "string", 
-                  description: "Clear title of the activity" 
+                title: {
+                  type: "string",
+                  description: "Clear title of the activity"
                 },
-                locationName: { 
-                  type: "string", 
-                  description: "Exact location name as it would appear on a map search" 
+                locationName: {
+                  type: "string",
+                  description: "Exact location name as it would appear on a map search"
                 },
-                notes: { 
-                  type: "string", 
-                  description: "Any extra details or instructions" 
+                notes: {
+                  type: "string",
+                  description: "Any extra details or instructions"
                 },
                 tag: {
                   type: "string",
@@ -743,13 +729,13 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
         required: ["activities"]
       }
     };
-    
+
     // Using GPT-3.5 for 80% cost savings
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
-        { 
-          role: "system", 
+        {
+          role: "system",
           content: `You are a travel assistant that converts freeform pasted itineraries into a list of structured activities.
 
 DO NOT summarize or paraphrase. Instead, extract each activity into a structured format with date, time, title, location, and optional notes.
@@ -777,9 +763,9 @@ Expected output activities:
 
 IMPORTANT: Each activity MUST have a specific locationName that can be found on a map, a date in YYYY-MM-DD format, and a time in 24-hour format.`
         },
-        { 
-          role: "user", 
-          content: itineraryText 
+        {
+          role: "user",
+          content: itineraryText
         }
       ],
       functions: [parseItineraryFunction],
@@ -789,7 +775,7 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
     // Handle the function call response format
     let activities = [];
     let answer = "I've processed your itinerary and extracted activities.";
-    
+
     // Parse the function call arguments
     if (response.choices[0].message.function_call) {
       try {
@@ -797,9 +783,8 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
         activities = functionArgs.activities || [];
         // Extracted activities from itinerary using function call
       } catch (error) {
-        console.error("Error parsing function call arguments:", error);
-      }
-    } 
+        }
+    }
     // Fallback to old format if function call isn't available
     else if (response.choices[0].message.content) {
       try {
@@ -808,56 +793,53 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
         answer = result.answer || answer;
         // Extracted activities from itinerary using content parsing
       } catch (error) {
-        console.error("Error parsing content:", error);
-      }
+        }
     }
-    
+
     // Create a result object with both the answer and activities
     const result = {
       answer,
       activities
     };
-    
+
     // Itinerary parsing completed
-    
+
     // Process locations to get coordinates where possible
     if (result.activities && Array.isArray(result.activities)) {
       // For each activity location, try to get coordinates
       for (let i = 0; i < result.activities.length; i++) {
         const activity = result.activities[i];
-        
+
         // Skip if no location
         if (!activity.location_name) continue;
-        
+
         try {
           // Try to find the location
           const locationResult = await findLocation(activity.location_name, city);
           // Location search completed for activity
-          
+
           // If we have location results, use the first one
           if (locationResult.locations && locationResult.locations.length > 0) {
             const firstLocation = locationResult.locations[0];
-            
+
             // Add location details to the activity
             result.activities[i].location_name = firstLocation.name;
-            
+
             // We need to geocode this location to get coordinates
             // This would use our existing geocoding function, but for now we'll skip it
             // as it would require importing additional modules
           }
         } catch (locError) {
-          console.error(`Error finding location for "${activity.location_name}":`, locError);
-        }
+          }
       }
     }
-    
+
     return {
       answer: result.answer || "I've processed your itinerary and extracted the activities.",
       activities: result.activities || []
     };
   } catch (error) {
-    console.error("Error in parseItinerary:", error);
-    return { 
+    return {
       answer: "I had trouble parsing your itinerary. Please check the format and try again.",
       activities: []
     };
@@ -885,7 +867,6 @@ export async function callOpenAI(prompt: string, options: any = {}): Promise<str
 
     return response.choices[0].message.content || "";
   } catch (error) {
-    console.error("Error calling OpenAI:", error);
     throw error;
   }
 }

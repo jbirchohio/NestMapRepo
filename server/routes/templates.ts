@@ -6,8 +6,8 @@ import { z } from "zod";
 import { templateQualityService } from "../services/templateQualityService";
 import { sanitizeResponseDates } from "../utils/dateSanitizer";
 import { db } from "../db-connection";
-import { templatePurchases } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { templatePurchases, templates } from "@shared/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { searchRateLimit, templateCreationRateLimit, paymentRateLimit } from "../middleware/rateLimiting";
 import { optimizedQueries } from "../storage-consumer-optimized";
 import { auditService } from "../services/auditService";
@@ -54,14 +54,14 @@ router.get("/", searchRateLimit, async (req, res) => {
       page: parseInt(String(page)),
       limit: parseInt(String(limit)),
     });
-    
+
     let templates = result.templates;
-    
+
     // Batch fetch creator profiles to avoid N+1 queries
     if (templates.length > 0) {
       const templateIds = templates.map(t => t.id);
       const templatesWithCreators = await optimizedQueries.getTemplatesWithCreators(templateIds);
-      
+
       // Map creator data back to templates
       const creatorMap = new Map(templatesWithCreators.map(t => [t.id, t.creator]));
       templates = templates.map(template => ({
@@ -159,15 +159,15 @@ router.get("/purchased", requireAuth, async (req, res) => {
     // Batch fetch all templates at once to avoid N+1 queries
     const templateIds = purchases.map(p => p.template_id);
     const templatesWithCreators = await optimizedQueries.getTemplatesWithCreators(templateIds);
-    
+
     // Create a map for quick lookup
     const templateMap = new Map(templatesWithCreators.map(t => [t.id, t]));
-    
+
     // Combine purchase data with template data
     const templates = purchases.map(purchase => {
       const template = templateMap.get(purchase.template_id);
       if (!template) return null;
-      
+
       return {
         ...template,
         purchaseDate: purchase.purchased_at,
@@ -207,7 +207,7 @@ router.get("/:slug", async (req, res) => {
           eq(templatePurchases.template_id, template.id)
         ))
         .limit(1);
-      
+
       if (purchases.length > 0) {
         purchaseStatus = purchases[0].status;
         // Only consider it purchased if status is completed (not refunded/disputed)
@@ -299,7 +299,7 @@ router.post("/", requireAuth, templateCreationRateLimit, async (req, res) => {
       price: template.price,
       status: template.status
     });
-    
+
     res.status(201).json(template);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -385,7 +385,7 @@ router.post("/from-trip/:tripId", requireAuth, async (req, res) => {
     // Enhanced anti-piracy check using multiple detection methods
     const { antiPiracyService } = await import("../services/antiPiracyService");
     const { antiPiracyServiceV2 } = await import("../services/antiPiracyServiceV2");
-    
+
     // First check user behavior patterns
     const behaviorAnalysis = await antiPiracyServiceV2.trackUserBehavior(userId);
     if (behaviorAnalysis.riskScore >= 70) {
@@ -395,7 +395,7 @@ router.post("/from-trip/:tripId", requireAuth, async (req, res) => {
         flags: behaviorAnalysis.flags
       });
     }
-    
+
     const piracyCheck = await antiPiracyService.detectPiratedContent(
       parseInt(tripId),
       userId,
@@ -718,47 +718,69 @@ router.post("/:id/purchase", requireAuth, paymentRateLimit, async (req, res) => 
     const templateId = parseInt(req.params.id);
     const { paymentIntentId } = req.body;
 
-    // Get template
-    const template = await storage.getTemplate(templateId);
-    if (!template || template.status !== "published") {
-      return res
-        .status(404)
-        .json({ message: "Template not found or not available" });
-    }
+    // Use database transaction to prevent race conditions
+    const result = await db.transaction(async (tx) => {
+      // Get template within transaction
+      const [template] = await tx.select()
+        .from(templates)
+        .where(eq(templates.id, templateId))
+        .limit(1)
+        .for('update'); // Lock the row to prevent concurrent purchases
 
-    // Check if already purchased
-    const alreadyPurchased = await storage.hasUserPurchasedTemplate(
-      buyerId,
-      templateId,
-    );
-    if (alreadyPurchased) {
-      return res.status(400).json({ message: "Template already purchased" });
-    }
+      if (!template || template.status !== "published") {
+        throw new Error("Template not found or not available");
+      }
 
-    // Calculate fees - Industry standard: deduct Stripe fees first
-    const grossPrice = parseFloat(template.price || "0");
-    // Stripe fees: 2.9% + $0.30 per transaction
-    const stripeFee = grossPrice * 0.029 + 0.3;
-    const netRevenue = grossPrice - stripeFee;
+      // Check if already purchased within transaction
+      const [existingPurchase] = await tx.select()
+        .from(templatePurchases)
+        .where(and(
+          eq(templatePurchases.buyer_id, buyerId),
+          eq(templatePurchases.template_id, templateId),
+          eq(templatePurchases.status, "completed")
+        ))
+        .limit(1);
 
-    // Split net revenue: 70% to creator, 30% to platform
-    const sellerEarnings = netRevenue * 0.7;
-    const platformFee = netRevenue * 0.3;
+      if (existingPurchase) {
+        throw new Error("Template already purchased");
+      }
 
-    // Create purchase record
-    const purchase = await storage.createTemplatePurchase({
-      template_id: templateId,
-      buyer_id: buyerId,
-      seller_id: template.user_id,
-      price: grossPrice.toFixed(2),
-      platform_fee: platformFee.toFixed(2),
-      seller_earnings: sellerEarnings.toFixed(2),
-      stripe_fee: stripeFee.toFixed(2),
-      stripe_payment_intent_id: paymentIntentId,
-      status: "completed",
+      // Calculate fees - Industry standard: deduct Stripe fees first
+      const grossPrice = parseFloat(template.price || "0");
+      // Stripe fees: 2.9% + $0.30 per transaction
+      const stripeFee = grossPrice * 0.029 + 0.3;
+      const netRevenue = grossPrice - stripeFee;
+
+      // Split net revenue: 70% to creator, 30% to platform
+      const sellerEarnings = netRevenue * 0.7;
+      const platformFee = netRevenue * 0.3;
+
+      // Create purchase record within transaction
+      const [purchase] = await tx.insert(templatePurchases).values({
+        template_id: templateId,
+        buyer_id: buyerId,
+        seller_id: template.user_id,
+        price: grossPrice.toFixed(2),
+        platform_fee: platformFee.toFixed(2),
+        seller_earnings: sellerEarnings.toFixed(2),
+        stripe_fee: stripeFee.toFixed(2),
+        stripe_payment_intent_id: paymentIntentId,
+        status: "completed",
+        purchased_at: new Date()
+      }).returning();
+
+      // Update template sales count atomically
+      await tx.update(templates)
+        .set({ 
+          sales_count: sql`${templates.sales_count} + 1`,
+          last_sale_at: new Date()
+        })
+        .where(eq(templates.id, templateId));
+
+      return { purchase, template };
     });
 
-    // Copy template to user's trips
+    // Copy template to user's trips (outside transaction for performance)
     const { templateCopyService } = await import(
       "../services/templateCopyService"
     );
@@ -769,11 +791,19 @@ router.post("/:id/purchase", requireAuth, paymentRateLimit, async (req, res) => 
 
     res.json({
       message: "Template purchased successfully",
-      purchase,
+      purchase: result.purchase,
       tripId: newTripId,
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Error purchasing template:", error);
+    
+    // Return appropriate error message
+    if (error.message === "Template already purchased") {
+      return res.status(400).json({ message: error.message });
+    } else if (error.message === "Template not found or not available") {
+      return res.status(404).json({ message: error.message });
+    }
+    
     res.status(500).json({ message: "Failed to purchase template" });
   }
 });

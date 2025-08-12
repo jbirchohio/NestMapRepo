@@ -44,16 +44,22 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
   const [showBooking, setShowBooking] = useState(false);
   const [bookableItems, setBookableItems] = useState<any[]>([]);
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
-  
+
   // Edit mode state
   const isEditMode = !!activity;
   const [editFormData, setEditFormData] = useState(() => ({
     title: activity?.title || '',
     time: activity?.time || '',
     locationName: activity?.locationName || '',
-    notes: activity?.notes || ''
+    notes: activity?.notes || '',
+    // Budget tracking fields
+    estimatedCost: activity?.price || 0,
+    actualCost: activity?.actualCost || 0,
+    costCategory: activity?.costCategory || '',
+    isPaid: activity?.isPaid || false,
+    splitBetween: activity?.splitBetween || 1
   }));
-  
+
   // Update form data when activity changes
   useEffect(() => {
     if (activity) {
@@ -61,7 +67,12 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
         title: activity.title || '',
         time: activity.time || '',
         locationName: activity.locationName || '',
-        notes: activity.notes || ''
+        notes: activity.notes || '',
+        estimatedCost: activity.price || 0,
+        actualCost: activity.actualCost || 0,
+        costCategory: activity.costCategory || '',
+        isPaid: activity.isPaid || false,
+        splitBetween: activity.splitBetween || 1
       });
     }
   }, [activity]);
@@ -78,33 +89,32 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
     try {
       const searchQuery = customSearch || selectedCategory?.search || "";
       const cityContext = trip?.city || "current location";
-      
+
       // Call AI to find places
       const token = localStorage.getItem("token");
       const response = await fetch("/api/ai/find-location", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           searchQuery: searchQuery,
           cityContext: cityContext,
           limit: 6
         })
       });
-      
+
       if (!response.ok) {
-        console.error("Search API error:", response.status, response.statusText);
         throw new Error(`Search failed: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.locations && Array.isArray(data.locations)) {
         // Enrich with coordinates using Mapbox
         const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-        
+
         const enrichedPlaces = await Promise.all(
           data.locations.map(async (loc: any) => {
             try {
@@ -112,7 +122,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
               const mapboxResponse = await fetch(
                 `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`
               );
-              
+
               if (mapboxResponse.ok) {
                 const mapboxData = await mapboxResponse.json();
                 if (mapboxData.features?.[0]?.center) {
@@ -129,14 +139,13 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
             }
           })
         );
-        
+
         setSuggestedPlaces(enrichedPlaces);
       }
     } catch (error) {
-      console.error("Error searching places:", error);
       // Fallback suggestions based on category
       const fallbackPlaces = [];
-      
+
       if (selectedCategory) {
         // Provide generic suggestions based on category
         fallbackPlaces.push({
@@ -146,12 +155,12 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
           longitude: trip?.cityLongitude ? parseFloat(trip.cityLongitude) : 0
         });
       }
-      
+
       // Don't add coordinates for custom location - let geocoding handle it
       fallbackPlaces.push(
         { name: "Custom location", address: "Enter your own", latitude: null as any, longitude: null as any }
       );
-      
+
       setSuggestedPlaces(fallbackPlaces);
     } finally {
       setLoading(false);
@@ -164,14 +173,14 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
 
   const handleSave = () => {
     if (!selectedPlace) return;
-    
-    const activityTime = customSearch ? "12:00" : 
+
+    const activityTime = customSearch ? "12:00" :
       convertTo24Hour(selectedCategory?.time || "12:00 PM");
-    
+
     // Only send coordinates if they're valid (not null, not 0,0)
-    const hasValidCoords = selectedPlace.latitude && selectedPlace.longitude && 
+    const hasValidCoords = selectedPlace.latitude && selectedPlace.longitude &&
       (selectedPlace.latitude !== 0 || selectedPlace.longitude !== 0);
-    
+
     onSave({
       title: customSearch || selectedCategory?.text || "Activity",
       locationName: selectedPlace.name,
@@ -187,10 +196,10 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
     const [time, period] = time12.split(' ');
     let [hours, minutes] = time.split(':');
     let hour = parseInt(hours);
-    
+
     if (period === 'PM' && hour !== 12) hour += 12;
     if (period === 'AM' && hour === 12) hour = 0;
-    
+
     return `${hour.toString().padStart(2, '0')}:${minutes || '00'}`;
   };
 
@@ -206,21 +215,21 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
     try {
       const response = await fetch("/api/ai/suggest-activities", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           city: trip?.city || "current location",
           interests: ["popular attractions", "local favorites"],
           duration: 1
         })
       });
-      
+
       if (!response.ok) throw new Error("Failed to get suggestions");
-      
+
       const data = await response.json();
-      
+
       if (data.activities && Array.isArray(data.activities)) {
         // Convert AI suggestions to quick options format
         const aiOptions = data.activities.slice(0, 8).map((activity: any, idx: number) => ({
@@ -229,14 +238,13 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
           search: activity.title,
           time: activity.best_time || "10:00 AM"
         }));
-        
+
         // Replace quick options temporarily
         quickOptions.splice(0, quickOptions.length, ...aiOptions);
         setShowAiSuggestions(false);
       }
     } catch (error) {
-      console.error("Error getting AI suggestions:", error);
-    } finally {
+      } finally {
       setLoading(false);
       setShowAiSuggestions(false);
     }
@@ -257,7 +265,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
       alert('Please enter a location');
       return;
     }
-    
+
     const updatedActivity = {
       ...editFormData,
       date: date || new Date(activity.date),
@@ -295,7 +303,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
                   placeholder="Activity name"
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">Time</label>
                 <input
@@ -305,7 +313,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">Location</label>
                 <input
@@ -316,7 +324,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
                   placeholder="Where is this activity?"
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">Notes (optional)</label>
                 <textarea
@@ -327,7 +335,84 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
                   placeholder="Any additional details..."
                 />
               </div>
-              
+
+              {/* Cost Tracking Section */}
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">💰 Cost Tracking (optional)</h3>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">Estimated Cost</label>
+                    <input
+                      type="number"
+                      value={editFormData.estimatedCost}
+                      onChange={(e) => setEditFormData({...editFormData, estimatedCost: parseFloat(e.target.value) || 0})}
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">Actual Cost</label>
+                    <input
+                      type="number"
+                      value={editFormData.actualCost}
+                      onChange={(e) => setEditFormData({...editFormData, actualCost: parseFloat(e.target.value) || 0})}
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">Category</label>
+                    <select
+                      value={editFormData.costCategory}
+                      onChange={(e) => setEditFormData({...editFormData, costCategory: e.target.value})}
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="">Select category</option>
+                      <option value="accommodation">🏨 Accommodation</option>
+                      <option value="transportation">🚗 Transportation</option>
+                      <option value="food">🍔 Food</option>
+                      <option value="activities">🎟️ Activities</option>
+                      <option value="shopping">🛍️ Shopping</option>
+                      <option value="other">📦 Other</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">Split Between</label>
+                    <input
+                      type="number"
+                      value={editFormData.splitBetween}
+                      onChange={(e) => setEditFormData({...editFormData, splitBetween: parseInt(e.target.value) || 1})}
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="1"
+                      min="1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-3">
+                  <input
+                    type="checkbox"
+                    id="isPaid"
+                    checked={editFormData.isPaid}
+                    onChange={(e) => setEditFormData({...editFormData, isPaid: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <label htmlFor="isPaid" className="text-sm text-gray-700">
+                    Mark as paid
+                  </label>
+                </div>
+              </div>
+
               <div className="flex gap-2 pt-4">
                 <Button
                   onClick={handleEditSubmit}
@@ -368,7 +453,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
                   AI Suggestions
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {quickOptions.map((option) => (
                   <button
@@ -433,8 +518,8 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
                       key={index}
                       onClick={() => handlePlaceSelect(place)}
                       className={`w-full p-4 rounded-xl text-left transition-all ${
-                        selectedPlace?.name === place.name 
-                          ? 'bg-blue-50 border-2 border-blue-500' 
+                        selectedPlace?.name === place.name
+                          ? 'bg-blue-50 border-2 border-blue-500'
                           : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
                       }`}
                     >

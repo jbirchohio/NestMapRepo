@@ -3,8 +3,8 @@ import { storage } from "../storage";
 import { insertTripSchema } from "@shared/schema";
 import { z } from "zod";
 import { logger } from '../utils/logger';
-import { 
-  validateAndSanitizeBody, 
+import {
+  validateAndSanitizeBody,
   validateContentLength,
   contentCreationRateLimit,
   validationSchemas
@@ -16,19 +16,19 @@ import {
 export async function getTrips(req: Request, res: Response) {
   try {
     const userId = req.query.user_id as string;
-    
+
     // All demo data removed - system uses authentic database queries only
-    
+
     const numericUserId = Number(userId);
     if (isNaN(numericUserId)) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
-    
+
     // Log organization access for audit
     // Organization logging removed for consumer app
-    
+
     const trips = await storage.getTripsByUserId(numericUserId);
-    
+
     // Organization filtering removed for consumer app
     res.json(trips);
   } catch (error) {
@@ -40,30 +40,30 @@ export async function getTrips(req: Request, res: Response) {
 export async function getTripById(req: Request, res: Response) {
   try {
     const tripIdParam = req.params.id;
-    
+
     // All demo data removed - system uses authentic database queries only
-    
+
     const tripId = Number(tripIdParam);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
-    
+
     // CRITICAL SECURITY FIX: Add organization filtering to prevent cross-tenant data access
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    
+
     const trip = await storage.getTrip(tripId);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
-    
+
     // CRITICAL: Verify user can access this trip's organization
     const userOrgId = req.user.organization_id || null;
     if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
-    
+
     res.json(trip);
   } catch (error) {
     logger.error("Error fetching trip", { error: error instanceof Error ? error.message : 'Unknown error' });
@@ -74,13 +74,13 @@ export async function getTripById(req: Request, res: Response) {
 export async function createTrip(req: Request, res: Response) {
   try {
     // Validate and process trip data
-    
+
     // Validate user_id is numeric
-    if (req.body.user_id && typeof req.body.user_id === 'string' && 
+    if (req.body.user_id && typeof req.body.user_id === 'string' &&
         (req.body.user_id.startsWith('demo-corp-') || req.body.user_id.startsWith('demo-agency-'))) {
       return res.status(400).json({ message: "Demo users are not supported. Please use a real user account." });
     }
-    
+
     // Handle both camelCase and snake_case field names from frontend
     const normalizedBody = {
       ...req.body,
@@ -101,16 +101,16 @@ export async function createTrip(req: Request, res: Response) {
     };
 
     const tripData = insertTripSchema.parse(normalizedBody);
-    
+
     // Ensure the location fields are properly included
     if (req.body.city) tripData.city = req.body.city;
     if (req.body.country) tripData.country = req.body.country;
     if (req.body.location) tripData.location = req.body.location;
-    
+
     // Organization context removed for consumer app
-    
+
     const trip = await storage.createTrip(tripData);
-    
+
     // If this trip was created through the booking workflow with hotel information,
     // automatically create a hotel activity
     if (req.body.selectedHotel) {
@@ -129,7 +129,7 @@ export async function createTrip(req: Request, res: Response) {
           completed: false,
           order: 1
         });
-        
+
         // Create check-out activity for multi-day trips
         if (trip.end_date > trip.start_date) {
           await storage.createActivity({
@@ -151,7 +151,7 @@ export async function createTrip(req: Request, res: Response) {
         // Don't fail the trip creation if activity creation fails
       }
     }
-    
+
     res.status(201).json(trip);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -168,24 +168,24 @@ export async function updateTrip(req: Request, res: Response) {
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
-    
+
     // CRITICAL SECURITY FIX: Verify authentication
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    
+
     // CRITICAL: Get existing trip to verify organization access
     const existingTrip = await storage.getTrip(tripId);
     if (!existingTrip) {
       return res.status(404).json({ message: "Trip not found" });
     }
-    
+
     // CRITICAL: Verify user can access this trip's organization
     const userOrgId = req.user.organization_id || null;
     if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
-    
+
     // Create a partial schema with the same date transformation
     const partialTripSchema = z.object({
       title: z.string().optional(),
@@ -207,22 +207,22 @@ export async function updateTrip(req: Request, res: Response) {
       hotel: z.string().optional(),
       status: z.string().optional()
     });
-    
+
     const updateData = partialTripSchema.parse(req.body);
-    
+
     // Filter out null values to avoid type conflicts
     const filteredUpdateData = Object.fromEntries(
       Object.entries(updateData).filter(([_, value]) => value !== null)
     );
-    
+
     // Log organization access for audit
     // Organization logging removed for consumer app
-    
+
     const trip = await storage.updateTrip(tripId, filteredUpdateData);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
-    
+
     res.json(trip);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -239,32 +239,32 @@ export async function deleteTrip(req: Request, res: Response) {
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
-    
+
     // CRITICAL SECURITY FIX: Verify authentication
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    
+
     // CRITICAL: Get existing trip to verify organization access
     const existingTrip = await storage.getTrip(tripId);
     if (!existingTrip) {
       return res.status(404).json({ message: "Trip not found" });
     }
-    
+
     // CRITICAL: Verify user can access this trip's organization
     const userOrgId = req.user.organization_id || null;
     if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
     }
-    
+
     // Log organization access for audit
     // Organization logging removed for consumer app
-    
+
     const success = await storage.deleteTrip(tripId);
     if (!success) {
       return res.status(404).json({ message: "Trip not found" });
     }
-    
+
     res.json({ message: "Trip deleted successfully" });
   } catch (error) {
     logger.error("Error deleting trip", { error: error instanceof Error ? error.message : 'Unknown error' });

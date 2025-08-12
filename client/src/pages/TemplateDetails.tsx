@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { 
-  MapPin, Calendar, Clock, Star, Users, Share2, Heart, 
+import {
+  MapPin, Calendar, Clock, Star, Users, Share2, Heart,
   ShoppingCart, Check, Info, Globe, Instagram, Twitter,
   ChevronRight, Tag, TrendingUp, Shield, RefreshCw
 } from 'lucide-react';
@@ -57,9 +57,9 @@ export default function TemplateDetails() {
       setShowAuthModal(true);
       return;
     }
-    
+
     if (!template) return;
-    
+
     // If user already owns this template, show reuse dialog
     // Otherwise show Stripe payment dialog
     if (template.hasPurchased) {
@@ -73,35 +73,28 @@ export default function TemplateDetails() {
 
   // Handle successful payment
   const handlePaymentSuccess = (data: any) => {
-    console.log('Payment success data received:', data);
-    console.log('Data type:', typeof data);
-    console.log('Data.tripId:', data.tripId, 'type:', typeof data.tripId);
-    
     setShowPaymentDialog(false);
     toast({
       title: 'Purchase successful!',
       description: 'The template has been added to your trips.',
     });
     refetch();
-    
+
     // Track template purchase
     if (template) {
       analytics.trackTemplatePurchase(
-        template.id, 
-        template.price || 0, 
+        template.id,
+        template.price || 0,
         template.title
       );
     }
-    
+
     // Navigate to the new trip
     // The backend returns tripId in the response
     const tripId = data.tripId || data.trip_id;
-    console.log('Final tripId for navigation:', tripId);
-    
     if (tripId) {
       navigate(`/trip/${tripId}`);
     } else {
-      console.warn('No tripId found in response, navigating to trips list');
       navigate('/trips');
     }
   };
@@ -164,7 +157,7 @@ export default function TemplateDetails() {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        
+
         {/* Title Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="max-w-7xl mx-auto">
@@ -186,11 +179,11 @@ export default function TemplateDetails() {
                   </Badge>
                 ))}
               </div>
-              
+
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                 {template.title}
               </h1>
-              
+
               <p className="text-xl text-white/90 max-w-3xl">
                 {template.description}
               </p>
@@ -231,6 +224,104 @@ export default function TemplateDetails() {
               </CardContent>
             </Card>
 
+            {/* Budget Breakdown (if available) */}
+            {template.tripData?.budget && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    💰 Budget Breakdown
+                    <Badge variant="outline" className="ml-2">
+                      {template.tripData.budget.level === 'budget' ? 'Budget' : 
+                       template.tripData.budget.level === 'mid' ? 'Mid-Range' : 'Luxury'} Trip
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Total Budget */}
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">Total Trip Budget</span>
+                        <span className="text-2xl font-bold text-purple-600">
+                          ${template.tripData.budget.total} {template.tripData.budget.currency || 'USD'}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        ~${template.tripData.budget.daily}/day for {template.duration} days
+                      </div>
+                    </div>
+
+                    {/* Category Breakdown */}
+                    {template.tripData.budget.breakdown && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-sm text-gray-700">Budget by Category</h4>
+                        {Object.entries(template.tripData.budget.breakdown).map(([category, amount]) => (
+                          <div key={category} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm capitalize">{category}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">${amount as number}</span>
+                              <span className="text-xs text-gray-500">
+                                ({Math.round(((amount as number) / template.tripData.budget.total) * 100)}%)
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Budget Tips */}
+                    {template.tripData.budget.tips && (
+                      <>
+                        {/* Free Activities */}
+                        {template.tripData.budget.tips.freeActivities && template.tripData.budget.tips.freeActivities.length > 0 && (
+                          <div className="border-t pt-3">
+                            <h4 className="font-medium text-sm text-gray-700 mb-2">🎯 Free Activities</h4>
+                            <ul className="space-y-1">
+                              {template.tripData.budget.tips.freeActivities.slice(0, 3).map((activity: string, idx: number) => (
+                                <li key={idx} className="text-sm text-gray-600 flex items-start gap-1">
+                                  <span className="text-green-600">•</span> {activity}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Money Saving Tips */}
+                        {template.tripData.budget.tips.moneySaving && template.tripData.budget.tips.moneySaving.length > 0 && (
+                          <div className="border-t pt-3">
+                            <h4 className="font-medium text-sm text-gray-700 mb-2">💡 Money-Saving Tips</h4>
+                            <ul className="space-y-1">
+                              {template.tripData.budget.tips.moneySaving.slice(0, 3).map((tip: string, idx: number) => (
+                                <li key={idx} className="text-sm text-gray-600 flex items-start gap-1">
+                                  <span className="text-blue-600">•</span> {tip}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Splurge-Worthy */}
+                        {template.tripData.budget.tips.splurgeWorthy && template.tripData.budget.tips.splurgeWorthy.length > 0 && (
+                          <div className="border-t pt-3">
+                            <h4 className="font-medium text-sm text-gray-700 mb-2">✨ Worth the Splurge</h4>
+                            <ul className="space-y-1">
+                              {template.tripData.budget.tips.splurgeWorthy.slice(0, 2).map((item: string, idx: number) => (
+                                <li key={idx} className="text-sm text-gray-600 flex items-start gap-1">
+                                  <span className="text-purple-600">•</span> {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Itinerary Tabs */}
             <Card>
               <CardHeader>
@@ -245,7 +336,7 @@ export default function TemplateDetails() {
                       </TabsTrigger>
                     ))}
                   </TabsList>
-                  
+
                   {dayGroups.map((dayActivities, index) => (
                     <TabsContent key={index} value={`day-${index}`} className="space-y-4">
                       {dayActivities.length > 0 ? (
@@ -279,6 +370,18 @@ export default function TemplateDetails() {
                                       <p className="text-sm text-gray-700 mt-2">
                                         {activity.notes}
                                       </p>
+                                    )}
+                                    {(activity.price || activity.estimatedCost) && (
+                                      <div className="flex items-center gap-2 mt-2">
+                                        <span className="text-sm font-medium text-green-600">
+                                          💰 ${activity.price || activity.estimatedCost}
+                                        </span>
+                                        {activity.costNotes && (
+                                          <span className="text-xs text-gray-500">
+                                            ({activity.costNotes})
+                                          </span>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                   {activity.tag && (
@@ -337,8 +440,8 @@ export default function TemplateDetails() {
 
                 {template.hasPurchased ? (
                   <div className="space-y-3">
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       size="lg"
                       onClick={handlePurchaseClick}
                       variant="default"
@@ -346,8 +449,8 @@ export default function TemplateDetails() {
                       <RefreshCw className="h-5 w-5 mr-2" />
                       Use Template Again
                     </Button>
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       size="lg"
                       onClick={() => navigate('/trips')}
                       variant="outline"
@@ -360,8 +463,8 @@ export default function TemplateDetails() {
                     </p>
                   </div>
                 ) : (
-                  <Button 
-                    className="w-full mb-4" 
+                  <Button
+                    className="w-full mb-4"
                     size="lg"
                     onClick={handlePurchaseClick}
                   >
@@ -476,8 +579,8 @@ export default function TemplateDetails() {
                     )}
                   </div>
 
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full mt-4"
                     onClick={() => navigate(`/creators/${template.creator?.userId}`)}
                   >
@@ -497,8 +600,8 @@ export default function TemplateDetails() {
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {template.tags.map((tag) => (
-                      <Badge 
-                        key={tag} 
+                      <Badge
+                        key={tag}
                         variant="outline"
                         className="cursor-pointer hover:bg-purple-50"
                         onClick={() => navigate(`/marketplace?tag=${tag}`)}
@@ -600,11 +703,11 @@ function ReviewCard({ review }: { review: ClientTemplateReview }) {
               {format(new Date(review.createdAt), 'MMM d, yyyy')}
             </span>
           </div>
-          
+
           {review.review && (
             <p className="text-gray-700">{review.review}</p>
           )}
-          
+
           {review.creatorResponse && (
             <div className="mt-3 p-3 bg-purple-50 rounded-lg">
               <p className="text-sm font-medium text-purple-900 mb-1">

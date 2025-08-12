@@ -18,9 +18,9 @@ interface AuthModalProps {
   onSuccess?: () => void;
 }
 
-export default function AuthModal({ 
-  isOpen, 
-  onClose, 
+export default function AuthModal({
+  isOpen,
+  onClose,
   initialView,
   defaultView,
   redirectPath = "/",
@@ -31,7 +31,7 @@ export default function AuthModal({
   const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -84,8 +84,8 @@ export default function AuthModal({
               {view === 'login' ? 'Welcome back!' : 'Join Remvana'}
             </CardTitle>
             <CardDescription>
-              {view === 'login' 
-                ? 'Sign in to continue planning trips' 
+              {view === 'login'
+                ? 'Sign in to continue planning trips'
                 : 'Start planning amazing trips in seconds'}
             </CardDescription>
           </CardHeader>
@@ -98,7 +98,7 @@ export default function AuthModal({
 
             {/* Google Sign In */}
             <div className="space-y-3">
-              <GoogleSignIn 
+              <GoogleSignIn
                 onSuccess={() => {
                   onClose();
                   if (onSuccess) {
@@ -110,7 +110,7 @@ export default function AuthModal({
                 }}
                 onError={(error) => setError(error)}
               />
-              
+
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -171,8 +171,8 @@ export default function AuthModal({
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 text-white"
               >
-                {isLoading 
-                  ? (view === 'login' ? 'Signing in...' : 'Creating account...') 
+                {isLoading
+                  ? (view === 'login' ? 'Signing in...' : 'Creating account...')
                   : (view === 'login' ? 'Sign In' : 'Create Free Account')}
               </Button>
 

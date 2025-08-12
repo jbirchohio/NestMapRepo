@@ -72,7 +72,7 @@ class UnsplashService {
       // Try different search queries until we find a good photo
       for (const query of searchQueries) {
         const searchUrl = `${this.baseUrl}/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`;
-        
+
         const response = await fetch(searchUrl, {
           headers: {
             'Authorization': `Client-ID ${this.accessKey}`,
@@ -86,7 +86,7 @@ class UnsplashService {
         }
 
         const data = await response.json() as any;
-        
+
         if (data.results && data.results.length > 0) {
           photo = data.results[0];
           break;

@@ -15,7 +15,7 @@ export function PrivacyPage() {
           {/* Introduction */}
           <section className="mb-8">
             <p className="text-gray-700 leading-relaxed">
-              At Remvana, we take your privacy seriously. This policy explains what information we collect, 
+              At Remvana, we take your privacy seriously. This policy explains what information we collect,
               how we use it, and your rights regarding your personal data.
             </p>
           </section>
@@ -26,7 +26,7 @@ export function PrivacyPage() {
               <Database className="h-6 w-6 text-purple-600" />
               Information We Collect
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Account Information</h3>
@@ -75,7 +75,7 @@ export function PrivacyPage() {
               <Eye className="h-6 w-6 text-purple-600" />
               How We Use Your Information
             </h2>
-            
+
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li>To provide and improve our trip planning services</li>
               <li>To enable trip sharing and collaboration features</li>
@@ -93,7 +93,7 @@ export function PrivacyPage() {
               <Globe className="h-6 w-6 text-purple-600" />
               When We Share Your Information
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>We only share your information in these situations:</p>
               <ul className="list-disc pl-6 space-y-2">
@@ -114,7 +114,7 @@ export function PrivacyPage() {
               <UserCheck className="h-6 w-6 text-purple-600" />
               Your Rights & Choices
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>You have control over your information:</p>
               <ul className="list-disc pl-6 space-y-2">
@@ -134,7 +134,7 @@ export function PrivacyPage() {
               <Lock className="h-6 w-6 text-purple-600" />
               Data Security
             </h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>We protect your information with:</p>
               <ul className="list-disc pl-6 space-y-2">
@@ -150,7 +150,7 @@ export function PrivacyPage() {
           {/* Cookies */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Cookies & Tracking</h2>
-            
+
             <div className="space-y-4 text-gray-700">
               <p>We use cookies to:</p>
               <ul className="list-disc pl-6 space-y-2">
@@ -169,7 +169,7 @@ export function PrivacyPage() {
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Children's Privacy</h2>
             <p className="text-gray-700">
-              Remvana is not intended for children under 13. We don't knowingly collect information 
+              Remvana is not intended for children under 13. We don't knowingly collect information
               from children under 13. If you believe we have, please contact us immediately.
             </p>
           </section>
@@ -178,7 +178,7 @@ export function PrivacyPage() {
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">International Data Transfers</h2>
             <p className="text-gray-700">
-              Your information may be transferred to and processed in countries other than your own. 
+              Your information may be transferred to and processed in countries other than your own.
               We ensure appropriate safeguards are in place to protect your data in accordance with this policy.
             </p>
           </section>
@@ -190,8 +190,8 @@ export function PrivacyPage() {
               Changes to This Policy
             </h2>
             <p className="text-gray-700">
-              We may update this policy from time to time. We'll notify you of significant changes 
-              via email or a prominent notice on our platform. Continued use after changes means 
+              We may update this policy from time to time. We'll notify you of significant changes
+              via email or a prominent notice on our platform. Continued use after changes means
               you accept the updated policy.
             </p>
           </section>

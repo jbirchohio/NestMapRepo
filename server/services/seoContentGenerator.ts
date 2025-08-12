@@ -41,16 +41,16 @@ export class SEOContentGenerator {
   async generateDestinationContent(destination: string): Promise<DestinationContent> {
     const cacheKey = `destination:${destination}`;
     const cached = contentCache.get(cacheKey);
-    
+
     if (cached && cached.timestamp > Date.now() - CACHE_DURATION) {
       return cached.content;
     }
-    
+
     // Skip AI generation if no OpenAI key
     if (!process.env.OPENAI_API_KEY) {
       return this.getFallbackDestinationContent(destination);
     }
-    
+
     // Try to generate AI content with a reasonable timeout
     try {
       const prompt = `Create a travel guide for ${destination}. Return ONLY a JSON object with these exact fields:
@@ -71,47 +71,47 @@ export class SEOContentGenerator {
           {"question": "Is ${destination} safe?", "answer": "Safety info"}
         ]
       }`;
-      
+
       // Give AI sufficient time to generate quality content
       const response = await callOpenAI(prompt, {
         temperature: 0.7,
         max_tokens: 2000, // Balanced for content quality and speed
         response_format: { type: "json_object" }
       });
-      
+
       // No timeout - let OpenAI complete the request
-      
+
       const content = JSON.parse(response);
-      
+
       // Cache the content
       contentCache.set(cacheKey, {
         content,
         timestamp: Date.now()
       });
-      
+
       return content;
     } catch (error) {
       logger.error(`Error generating content for ${destination}:`, error);
-      
+
       // Return fallback content
       return this.getFallbackDestinationContent(destination);
     }
   }
-  
+
   /**
    * Generate activity-specific content
    */
   async generateActivityContent(activity: string, destination: string): Promise<ActivityContent> {
     const cacheKey = `activity:${activity}:${destination}`;
     const cached = contentCache.get(cacheKey);
-    
+
     if (cached && cached.timestamp > Date.now() - CACHE_DURATION) {
       return cached.content;
     }
-    
+
     try {
       const prompt = `Generate detailed content for "${activity}" in ${destination}.
-      
+
       Return a JSON object with:
       {
         "title": "SEO-optimized title for the activity",
@@ -122,27 +122,27 @@ export class SEOContentGenerator {
         "notIncluded": ["What's not included"],
         "tips": ["3-5 practical tips for this activity"]
       }`;
-      
+
       const response = await callOpenAI(prompt, {
         temperature: 0.7,
         max_tokens: 1000,
         response_format: { type: "json_object" }
       });
-      
+
       const content = JSON.parse(response);
-      
+
       contentCache.set(cacheKey, {
         content,
         timestamp: Date.now()
       });
-      
+
       return content;
     } catch (error) {
       logger.error(`Error generating activity content:`, error);
       return this.getFallbackActivityContent(activity, destination);
     }
   }
-  
+
   /**
    * Generate comparison content for competitor pages
    */
@@ -159,7 +159,7 @@ export class SEOContentGenerator {
       'Free to Use',
       'No Ads'
     ];
-    
+
     return {
       title: `Remvana vs ${competitor}: Which Travel Planner is Better?`,
       metaDescription: `Compare Remvana and ${competitor} for travel planning. See features, pricing, and user reviews to choose the best trip planner for you.`,
@@ -174,7 +174,7 @@ export class SEOContentGenerator {
       cta: 'Try Remvana free and see the difference yourself.'
     };
   }
-  
+
   /**
    * Generate blog post ideas for content marketing
    */
@@ -191,19 +191,19 @@ export class SEOContentGenerator {
       'Where to Stay in [Destination]: Neighborhood Guide',
       '[Destination] Food Guide: What to Eat & Where'
     ];
-    
+
     const destinations = ['Paris', 'Tokyo', 'New York', 'Bali', 'London', 'Dubai', 'Rome', 'Barcelona'];
     const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
     const travelerTypes = ['Families', 'Couples', 'Solo Travelers', 'Budget Travelers', 'Luxury Seekers'];
-    
+
     const topics: string[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const template = templates[Math.floor(Math.random() * templates.length)];
       const destination = destinations[Math.floor(Math.random() * destinations.length)];
       const season = seasons[Math.floor(Math.random() * seasons.length)];
       const travelerType = travelerTypes[Math.floor(Math.random() * travelerTypes.length)];
-      
+
       let topic = template
         .replace('[Destination]', destination)
         .replace('[Year]', new Date().getFullYear().toString())
@@ -211,13 +211,13 @@ export class SEOContentGenerator {
         .replace('[Season]', season)
         .replace('[Traveler Type]', travelerType)
         .replace('[Activity]', ['Beach Vacation', 'City Break', 'Adventure Travel'][Math.floor(Math.random() * 3)]);
-      
+
       topics.push(topic);
     }
-    
+
     return [...new Set(topics)]; // Remove duplicates
   }
-  
+
   /**
    * Fallback content when AI generation fails
    */
@@ -228,8 +228,8 @@ export class SEOContentGenerator {
     // Don't await this - let it run in background
     (async () => {
       try {
-        const prompt = `Generate comprehensive travel guide content for ${destination}. 
-        
+        const prompt = `Generate comprehensive travel guide content for ${destination}.
+
         Return a JSON object with the following structure:
         {
           "title": "Engaging title for ${destination} travel guide",
@@ -246,21 +246,21 @@ export class SEOContentGenerator {
             {"question": "Common question about ${destination}", "answer": "Helpful answer"}
           ]
         }`;
-        
+
         const response = await callOpenAI(prompt, {
           temperature: 0.7,
           max_tokens: 2000,
           response_format: { type: "json_object" }
         });
-        
+
         const content = JSON.parse(response);
-        
+
         // Cache the content
         contentCache.set(cacheKey, {
           content,
           timestamp: Date.now()
         });
-        
+
         logger.info(`Background generation completed for ${destination}`);
       } catch (error) {
         logger.error(`Background generation failed for ${destination}:`, error);
@@ -308,7 +308,7 @@ export class SEOContentGenerator {
       ]
     };
   }
-  
+
   private getFallbackActivityContent(activity: string, destination: string): ActivityContent {
     return {
       title: `${activity} in ${destination} - Book Your Experience`,
@@ -340,7 +340,7 @@ export class SEOContentGenerator {
       ]
     };
   }
-  
+
   private getFeatureStatus(app: string, feature: string): boolean {
     // Remvana features
     if (app === 'remvana') {
@@ -355,11 +355,11 @@ export class SEOContentGenerator {
       ];
       return remvanaFeatures.includes(feature);
     }
-    
+
     // Simplified competitor features (in reality, research each)
     return Math.random() > 0.5;
   }
-  
+
   private determineWinner(feature: string, competitor: string): string {
     // Features where Remvana excels
     const remvanaStrengths = [
@@ -368,11 +368,11 @@ export class SEOContentGenerator {
       'No Ads',
       'Free to Use'
     ];
-    
+
     if (remvanaStrengths.includes(feature)) {
       return 'remvana';
     }
-    
+
     // Fair comparison for other features
     return Math.random() > 0.6 ? 'remvana' : competitor;
   }

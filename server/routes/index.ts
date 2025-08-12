@@ -20,6 +20,7 @@ import webhookRoutes from './webhooks';
 // import analyticsRoutes from './analytics'; // Enterprise feature
 import monitoringRoutes from './monitoring';
 import geocodeRoutes from './geocode';
+import budgetRoutes from './budget';
 
 const router = Router();
 
@@ -44,6 +45,7 @@ router.use('/webhooks', webhookRoutes);
 // router.use('/analytics', analyticsRoutes); // Enterprise feature
 router.use('/monitoring', monitoringRoutes);
 router.use('/geocode', geocodeRoutes);
+router.use('/budget', budgetRoutes);
 
 // User permissions endpoint - simplified for consumer app
 router.get('/user/permissions', async (req, res) => {
@@ -54,14 +56,13 @@ router.get('/user/permissions', async (req, res) => {
 
     // Simple consumer permissions
     const permissions = ['manage_trips', 'view_trips', 'create_activities'];
-    
-    res.json({ 
+
+    res.json({
       permissions,
       role: 'user',
       userId: req.user.id
     });
   } catch (error) {
-    console.error('Permissions error:', error);
     res.status(500).json({ message: 'Failed to get permissions' });
   }
 });
@@ -100,7 +101,7 @@ router.post('/locations/airport-code', async (req, res) => {
     // Use AI to find the nearest major airport
     try {
       const { callOpenAI } = await import('../openai');
-      
+
       const prompt = `Find the closest major commercial airport to ${cityName}. Consider:
 1. If it's a major city with multiple airports, return the main international airport
 2. If it's a smaller city, return the nearest major airport with good flight connections
@@ -112,30 +113,26 @@ Return ONLY the 3-letter IATA airport code (e.g., LAX, JFK, ORD). Nothing else.`
 
       const aiResponse = await callOpenAI(prompt, { temperature: 0.1, max_tokens: 10 });
       const airportCode = aiResponse.trim().toUpperCase().replace(/[^A-Z]/g, '');
-      
+
       // Validate it's a 3-letter code
       if (/^[A-Z]{3}$/.test(airportCode)) {
-        console.log(`AI found airport code for ${cityName}: ${airportCode}`);
         return res.json({ airportCode });
       } else {
-        console.error(`Invalid airport code from AI: ${aiResponse}`);
-      }
+        }
     } catch (aiError) {
-      console.error('AI airport lookup failed:', aiError);
-    }
+      }
 
     // Fallback
     res.json({ airportCode: 'LAX' }); // Default to LAX
   } catch (error) {
-    console.error('Airport code conversion error:', error);
     res.status(500).json({ error: 'Failed to convert city to airport code' });
   }
 });
 
 // Health check endpoint
 router.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     service: 'remvana-api'
   });

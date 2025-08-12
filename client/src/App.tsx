@@ -36,9 +36,9 @@ const Destinations = lazy(() => import("@/pages/Destinations"));
 function NavigationWrapper() {
   const { user } = useAuth();
   const [location] = useLocation();
-  
+
   const isAuthPage = location === '/login' || location === '/signup';
-  
+
   if (!isAuthPage) {
     return <MainNavigationConsumer />;
   }
@@ -53,36 +53,36 @@ function HomePage() {
 
 function LoginRedirect() {
   const [, setLocation] = useLocation();
-  
+
   useEffect(() => {
     // Use history API to update URL without reload
     window.history.pushState({}, '', '/?auth=login');
     setLocation('/');
   }, [setLocation]);
-  
+
   return <Explore />;
 }
 
 function SignupRedirect() {
   const [, setLocation] = useLocation();
-  
+
   useEffect(() => {
     // Use history API to update URL without reload
     window.history.pushState({}, '', '/?auth=signup');
     setLocation('/');
   }, [setLocation]);
-  
+
   return <Explore />;
 }
 
 function Router() {
   const [location] = useLocation();
-  
+
   // Track page views
   useEffect(() => {
     analytics.trackPageView(location);
   }, [location]);
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-white to-pink-50">
       <NavigationWrapper />
@@ -97,21 +97,21 @@ function Router() {
           <Route path="/trip-planner/:id" component={TripPlanner} />
           <Route path="/trip-planner" component={TripPlanner} />
           <Route path="/share/:shareCode" component={SimpleShare} />
-          
+
           {/* Travel features */}
           <Route path="/ai-generator" component={AITripGeneratorPage} />
           <Route path="/optimizer" component={TripOptimizer} />
-          
+
           {/* Creator Economy */}
           <Route path="/marketplace" component={TemplateMarketplace} />
           <Route path="/templates/create" component={CreateTemplate} />
           <Route path="/templates/:slug" component={TemplateDetails} />
           <Route path="/t/:shareCode" component={PublicTemplate} />
           <Route path="/creator/dashboard" component={CreatorDashboard} />
-          
+
           {/* Admin */}
           <Route path="/admin" component={AdminDashboard} />
-          
+
           {/* SEO Destination Pages */}
           <Route path="/destinations">
             {() => (
@@ -121,16 +121,16 @@ function Router() {
             )}
           </Route>
           <Route path="/destinations/:destination" component={DestinationGuide} />
-          
+
           {/* User account */}
           <Route path="/profile" component={ProfileSettings} />
           <Route path="/help" component={HelpPage} />
-          
+
           {/* Static Pages */}
           <Route path="/contact" component={ContactPage} />
           <Route path="/privacy" component={PrivacyPage} />
           <Route path="/terms" component={TermsPage} />
-          
+
           {/* 404 */}
           <Route component={NotFound} />
         </Switch>

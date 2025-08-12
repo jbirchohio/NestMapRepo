@@ -17,6 +17,7 @@ import {
   creatorProfiles,
   viatorCommissions,
   templateCollections,
+  groupExpenses,
   insertTripSchema,
   insertActivitySchema,
   insertNoteSchema,
@@ -54,6 +55,7 @@ import {
 import { hashPassword } from "./auth";
 import { nanoid } from "nanoid";
 import { logger } from "./utils/logger";
+import { QUERY_LIMITS, applyLimit } from "./config/queryLimits";
 
 // Simple storage interface for consumer app
 export interface IStorage {
@@ -178,6 +180,19 @@ export interface IStorage {
   incrementShareClicks(shareCode: string): Promise<void>;
   trackShareConversion(shareCode: string): Promise<void>;
   getTemplateByShareCode(shareCode: string): Promise<Template | undefined>;
+
+  // Budget management
+  updateTripBudget(tripId: number, budgetData: any): Promise<Trip | undefined>;
+  getTripBudgetSummary(tripId: number): Promise<any>;
+  updateActivityCost(activityId: number, costData: any): Promise<Activity | undefined>;
+  
+  // Group expenses
+  createGroupExpense(expenseData: any): Promise<any>;
+  getGroupExpensesByTripId(tripId: number): Promise<any[]>;
+  updateGroupExpense(id: number, updates: any): Promise<any | undefined>;
+  deleteGroupExpense(id: number): Promise<boolean>;
+  settleGroupExpense(id: number): Promise<any | undefined>;
+  getTripExpenseSummary(tripId: number): Promise<any>;
 }
 
 // Consumer-focused database storage implementation
@@ -298,12 +313,13 @@ export class ConsumerDatabaseStorage implements IStorage {
     userId: number,
     organizationId?: number | null,
   ): Promise<Trip[]> {
-    // Get trips where user is owner or collaborator
+    // Get trips where user is owner or collaborator (with limit)
     const ownTrips = await db
       .select()
       .from(trips)
       .where(eq(trips.user_id, userId))
-      .orderBy(desc(trips.start_date));
+      .orderBy(desc(trips.start_date))
+      .limit(QUERY_LIMITS.TRIPS.MAX);
 
     const collaboratingTrips = await db
       .select()
@@ -315,7 +331,8 @@ export class ConsumerDatabaseStorage implements IStorage {
           eq(tripCollaborators.status, "accepted"),
         ),
       )
-      .orderBy(desc(trips.start_date));
+      .orderBy(desc(trips.start_date))
+      .limit(QUERY_LIMITS.TRIPS.MAX);
 
     const allTrips = [...ownTrips, ...collaboratingTrips.map((t) => t.trips)];
     return allTrips.sort(
@@ -344,7 +361,7 @@ export class ConsumerDatabaseStorage implements IStorage {
       .select({ count: sql<number>`count(*)::int` })
       .from(trips)
       .where(eq(trips.user_id, userId));
-    
+
     return result[0]?.count || 0;
   }
 
@@ -435,7 +452,8 @@ export class ConsumerDatabaseStorage implements IStorage {
       .select()
       .from(activities)
       .where(eq(activities.trip_id, tripId))
-      .orderBy(activities.date, activities.order);
+      .orderBy(activities.date, activities.order)
+      .limit(QUERY_LIMITS.ACTIVITIES.MAX);
   }
 
   async updateActivity(
@@ -658,7 +676,8 @@ export class ConsumerDatabaseStorage implements IStorage {
       .select()
       .from(templates)
       .where(eq(templates.user_id, userId))
-      .orderBy(desc(templates.created_at));
+      .orderBy(desc(templates.created_at))
+      .limit(QUERY_LIMITS.TEMPLATES.MAX);
   }
 
   async getPublishedTemplates(): Promise<Template[]> {
@@ -666,7 +685,8 @@ export class ConsumerDatabaseStorage implements IStorage {
       .select()
       .from(templates)
       .where(eq(templates.status, "published"))
-      .orderBy(desc(templates.created_at));
+      .orderBy(desc(templates.created_at))
+      .limit(QUERY_LIMITS.TEMPLATES.MAX);
   }
 
   async searchTemplates(params: {
@@ -683,7 +703,7 @@ export class ConsumerDatabaseStorage implements IStorage {
     // No sanitization needed - Drizzle ORM handles parameterization
     const { search, tag, destination, sort } = params;
     const { minPrice, maxPrice, duration } = params;
-    
+
     // Pagination parameters with defaults
     const page = Math.max(1, params.page || 1);
     const limit = Math.min(100, Math.max(1, params.limit || 20)); // Cap at 100 items
@@ -746,10 +766,10 @@ export class ConsumerDatabaseStorage implements IStorage {
     const [countResult] = await db.select({ count: sql`count(*)::integer` })
       .from(templates)
       .where(where!);
-    
+
     const total = Number(countResult?.count) || 0;
     const totalPages = Math.ceil(total / limit);
-    
+
     // Get paginated results
     const templateResults = await db.select()
       .from(templates)
@@ -757,7 +777,7 @@ export class ConsumerDatabaseStorage implements IStorage {
       .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
-    
+
     return {
       templates: templateResults,
       total,
@@ -836,7 +856,6 @@ export class ConsumerDatabaseStorage implements IStorage {
     userId: number,
     templateId: number,
   ): Promise<boolean> {
-    console.log(`Checking if user ${userId} purchased template ${templateId}`);
     const purchases = await db
       .select()
       .from(templatePurchases)
@@ -851,11 +870,7 @@ export class ConsumerDatabaseStorage implements IStorage {
       )
       .limit(1);
 
-    console.log(
-      `Purchase check - User: ${userId}, Template: ${templateId}, Found: ${purchases.length > 0}`,
-    );
     if (purchases.length > 0) {
-      console.log("Found existing purchase:", purchases[0]);
       // Double-check status for security
       const purchase = purchases[0];
       if (purchase.status !== 'completed' || purchase.refunded_at || purchase.disputed_at) {
@@ -1119,6 +1134,229 @@ export class ConsumerDatabaseStorage implements IStorage {
       .update(creatorProfiles)
       .set({ total_templates: sql`${creatorProfiles.total_templates} + 1` })
       .where(eq(creatorProfiles.user_id, userId));
+  }
+
+  // Budget management methods
+  async updateTripBudget(tripId: number, budgetData: any): Promise<Trip | undefined> {
+    const [updated] = await db
+      .update(trips)
+      .set({
+        budget: budgetData.budget,
+        currency: budgetData.currency || "USD",
+        budget_categories: budgetData.budget_categories,
+        budget_alert_threshold: budgetData.budget_alert_threshold || 80,
+        updated_at: new Date(),
+      })
+      .where(eq(trips.id, tripId))
+      .returning();
+    return updated;
+  }
+
+  async getTripBudgetSummary(tripId: number): Promise<any> {
+    // Get trip with budget info
+    const [trip] = await db
+      .select()
+      .from(trips)
+      .where(eq(trips.id, tripId))
+      .limit(1);
+    
+    if (!trip) return null;
+
+    // Get all activities with costs
+    const activityList = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.trip_id, tripId));
+
+    // Calculate spending by category
+    const spendingByCategory: Record<string, number> = {};
+    let totalSpent = 0;
+
+    for (const activity of activityList) {
+      if (activity.is_paid) {
+        const cost = Number(activity.actual_cost || activity.price || 0);
+        const perPersonCost = cost / (activity.split_between || 1);
+        totalSpent += perPersonCost;
+        
+        const category = activity.cost_category || 'uncategorized';
+        spendingByCategory[category] = (spendingByCategory[category] || 0) + perPersonCost;
+      }
+    }
+
+    // Get group expenses
+    const groupExpensesList = await db
+      .select()
+      .from(groupExpenses)
+      .where(eq(groupExpenses.trip_id, tripId));
+
+    return {
+      tripId,
+      budget: Number(trip.budget || 0),
+      currency: trip.currency || "USD",
+      totalSpent,
+      remaining: Number(trip.budget || 0) - totalSpent,
+      percentUsed: trip.budget ? (totalSpent / Number(trip.budget)) * 100 : 0,
+      spendingByCategory,
+      budgetCategories: trip.budget_categories || {},
+      alertThreshold: trip.budget_alert_threshold || 80,
+      groupExpensesCount: groupExpensesList.length,
+      startDate: trip.start_date,
+      endDate: trip.end_date,
+    };
+  }
+
+  async updateActivityCost(activityId: number, costData: any): Promise<Activity | undefined> {
+    const [updated] = await db
+      .update(activities)
+      .set({
+        price: costData.estimated_cost,
+        actual_cost: costData.actual_cost,
+        cost_category: costData.category,
+        split_between: costData.split_between || 1,
+        is_paid: costData.is_paid || false,
+        paid_by: costData.paid_by,
+        currency: costData.currency || "USD",
+        updated_at: new Date(),
+      })
+      .where(eq(activities.id, activityId))
+      .returning();
+    return updated;
+  }
+
+  // Group expense methods
+  async createGroupExpense(expenseData: any): Promise<any> {
+    const [expense] = await db
+      .insert(groupExpenses)
+      .values({
+        trip_id: expenseData.trip_id,
+        activity_id: expenseData.activity_id,
+        description: expenseData.description,
+        total_amount: expenseData.total_amount,
+        currency: expenseData.currency || "USD",
+        paid_by: expenseData.paid_by,
+        split_type: expenseData.split_type || "equal",
+        split_details: expenseData.split_details,
+        category: expenseData.category,
+        receipt_url: expenseData.receipt_url,
+        notes: expenseData.notes,
+      })
+      .returning();
+    return expense;
+  }
+
+  async getGroupExpensesByTripId(tripId: number): Promise<any[]> {
+    const expenses = await db
+      .select({
+        expense: groupExpenses,
+        paidByUser: users,
+      })
+      .from(groupExpenses)
+      .leftJoin(users, eq(groupExpenses.paid_by, users.id))
+      .where(eq(groupExpenses.trip_id, tripId))
+      .orderBy(desc(groupExpenses.created_at));
+    
+    return expenses.map(e => ({
+      ...e.expense,
+      paid_by_user: e.paidByUser ? {
+        id: e.paidByUser.id,
+        username: e.paidByUser.username,
+        display_name: e.paidByUser.display_name,
+      } : null,
+    }));
+  }
+
+  async updateGroupExpense(id: number, updates: any): Promise<any | undefined> {
+    const [updated] = await db
+      .update(groupExpenses)
+      .set({
+        ...updates,
+        updated_at: new Date(),
+      })
+      .where(eq(groupExpenses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteGroupExpense(id: number): Promise<boolean> {
+    const result = await db
+      .delete(groupExpenses)
+      .where(eq(groupExpenses.id, id));
+    return result.rowCount > 0;
+  }
+
+  async settleGroupExpense(id: number): Promise<any | undefined> {
+    const [updated] = await db
+      .update(groupExpenses)
+      .set({
+        is_settled: true,
+        settled_at: new Date(),
+        updated_at: new Date(),
+      })
+      .where(eq(groupExpenses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getTripExpenseSummary(tripId: number): Promise<any> {
+    const expenses = await this.getGroupExpensesByTripId(tripId);
+    
+    // Calculate who owes whom
+    const balances: Record<number, number> = {};
+    const transactions: Array<{ from: number; to: number; amount: number }> = [];
+
+    for (const expense of expenses) {
+      if (!expense.is_settled) {
+        // Add what the payer is owed
+        balances[expense.paid_by] = (balances[expense.paid_by] || 0) + Number(expense.total_amount);
+        
+        // Subtract what each person owes
+        for (const split of expense.split_details) {
+          balances[split.user_id] = (balances[split.user_id] || 0) - Number(split.amount);
+        }
+      }
+    }
+
+    // Calculate simplified transactions
+    const creditors = Object.entries(balances)
+      .filter(([_, amount]) => amount > 0)
+      .sort((a, b) => b[1] - a[1]);
+    
+    const debtors = Object.entries(balances)
+      .filter(([_, amount]) => amount < 0)
+      .sort((a, b) => a[1] - b[1]);
+
+    let i = 0, j = 0;
+    while (i < creditors.length && j < debtors.length) {
+      const creditorId = Number(creditors[i][0]);
+      const debtorId = Number(debtors[j][0]);
+      const creditAmount = creditors[i][1];
+      const debtAmount = Math.abs(debtors[j][1]);
+      
+      const settleAmount = Math.min(creditAmount, debtAmount);
+      
+      if (settleAmount > 0.01) { // Ignore tiny amounts
+        transactions.push({
+          from: debtorId,
+          to: creditorId,
+          amount: settleAmount,
+        });
+      }
+      
+      creditors[i][1] -= settleAmount;
+      debtors[j][1] += settleAmount;
+      
+      if (creditors[i][1] < 0.01) i++;
+      if (Math.abs(debtors[j][1]) < 0.01) j++;
+    }
+
+    return {
+      tripId,
+      totalExpenses: expenses.length,
+      unsettledExpenses: expenses.filter(e => !e.is_settled).length,
+      totalAmount: expenses.reduce((sum, e) => sum + Number(e.total_amount), 0),
+      balances,
+      suggestedTransactions: transactions,
+    };
   }
 }
 

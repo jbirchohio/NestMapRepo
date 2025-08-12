@@ -11,47 +11,46 @@ interface ActivityTimelineProps {
   onActivityUpdated: () => void;
 }
 
-export default function ActivityTimeline({ 
-  activities, 
-  date, 
-  tripId, 
-  onActivityUpdated 
+export default function ActivityTimeline({
+  activities,
+  date,
+  tripId,
+  onActivityUpdated
 }: ActivityTimelineProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ClientActivity | null>(null);
-  
+
   const handleAddActivity = () => {
     setSelectedActivity(null);
     setIsModalOpen(true);
   };
-  
+
   const handleEditActivity = (activity: ClientActivity) => {
     setSelectedActivity(activity);
     setIsModalOpen(true);
   };
-  
+
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedActivity(null);
   };
-  
+
   const handleActivitySaved = () => {
     setIsModalOpen(false);
     onActivityUpdated();
   };
-  
-  
+
   // Sort activities by time
   const sortedActivities = [...activities].sort((a, b) => {
     return a.time.localeCompare(b.time);
   });
-  
+
   return (
     <div className="space-y-6 relative timeline-container">
       {sortedActivities.length === 0 ? (
         <div className="py-6 text-center">
           <p className="text-[hsl(var(--muted-foreground))] mb-4">No activities planned for this day.</p>
-          <Button 
+          <Button
             onClick={handleAddActivity}
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary hover:bg-primary/90 h-10 px-4 py-2 btn-primary text-[#0f172a]"
           >
@@ -60,16 +59,16 @@ export default function ActivityTimeline({
         </div>
       ) : (
         sortedActivities.map((activity) => (
-          <ActivityItem 
-            key={activity.id} 
-            activity={activity} 
-            onClick={handleEditActivity} 
+          <ActivityItem
+            key={activity.id}
+            activity={activity}
+            onClick={handleEditActivity}
             onDelete={onActivityUpdated}
           />
         ))
       )}
       {/* Always show the Add Activity button - but make it bigger when no activities */}
-      <Button 
+      <Button
         variant="default"
         size={sortedActivities.length === 0 ? "lg" : "sm"}
         className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary hover:bg-primary/90 h-11 rounded-md px-8 w-full mt-4 text-[#0f172a]"

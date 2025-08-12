@@ -13,18 +13,18 @@ interface PrimaryButtonProps extends Omit<HTMLMotionProps<"button">, "children">
 }
 
 const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
-  ({ 
-    children, 
-    variant = "primary", 
-    size = "md", 
-    loading = false, 
+  ({
+    children,
+    variant = "primary",
+    size = "md",
+    loading = false,
     disabled = false,
-    className, 
-    ...props 
+    className,
+    ...props
   }, ref) => {
-    
+
     const baseStyles = "relative overflow-hidden font-medium rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-electric-500/20 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
-    
+
     const variants = {
       primary: "bg-electric-500 hover:bg-electric-600 text-white border-electric-500 hover:border-electric-600 shadow-glow hover:shadow-glow-lg",
       secondary: "bg-white dark:bg-navy-800 hover:bg-soft-100 dark:hover:bg-navy-700 text-navy-900 dark:text-white border-gray-200 dark:border-navy-600 hover:border-electric-300 dark:hover:border-electric-400 shadow-soft",
@@ -40,11 +40,11 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
     };
 
     const motionVariants = {
-      initial: { 
+      initial: {
         scale: 1,
         filter: variant === "primary" ? "brightness(1)" : "brightness(1)"
       },
-      hover: { 
+      hover: {
         scale: 1.02,
         filter: variant === "primary" ? "brightness(1.1)" : "brightness(1.05)",
         transition: {
@@ -53,7 +53,7 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
           damping: 25
         }
       },
-      tap: { 
+      tap: {
         scale: 0.98,
         filter: "brightness(0.95)",
         transition: {
@@ -86,10 +86,10 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
         {variant === "primary" && (
           <div className="absolute inset-0 bg-gradient-to-r from-electric-400 to-electric-600 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-200" />
         )}
-        
+
         {/* Inner highlight */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-xl pointer-events-none" />
-        
+
         {/* Content */}
         <div className="relative flex items-center justify-center space-x-2">
           {loading && (

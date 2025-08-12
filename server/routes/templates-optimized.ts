@@ -17,10 +17,10 @@ const router = Router();
 router.get("/", searchRateLimit, httpCache('templateList'), async (req, res) => {
   try {
     const queryParams = req.query;
-    
+
     // Generate cache key from query params
     const cacheKey = `templates:${JSON.stringify(queryParams)}`;
-    
+
     // Try to get from cache first
     const cached = await superCache.getQuery(cacheKey, async () => {
       // Use optimized search that does everything in one query
@@ -34,10 +34,10 @@ router.get("/", searchRateLimit, httpCache('templateList'), async (req, res) => 
         sort: queryParams.sort as string || 'popular',
         limit: parseInt(String(queryParams.limit || '20'))
       });
-      
+
       return templates;
     }, 60); // Cache for 60 seconds
-    
+
     res.json(cached);
   } catch (error) {
     logger.error("Error fetching templates:", error);
@@ -49,25 +49,25 @@ router.get("/", searchRateLimit, httpCache('templateList'), async (req, res) => 
 router.get("/:id", httpCache('template'), async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
-    
+
     // Use cache-through pattern
     const template = await superCache.getTemplate(templateId, async () => {
       // Fetch template with all related data in one optimized query
       const templates = await queryOptimizer.getTemplatesWithAllData([templateId]);
       return templates[0];
     });
-    
+
     if (!template) {
       return res.status(404).json({ message: "Template not found" });
     }
-    
+
     // Increment view count asynchronously (don't wait)
     setImmediate(() => {
-      storage.incrementTemplateViews(templateId).catch(err => 
+      storage.incrementTemplateViews(templateId).catch(err =>
         logger.error('Failed to increment views:', err)
       );
     });
-    
+
     res.json(template);
   } catch (error) {
     logger.error("Error fetching template:", error);
@@ -79,14 +79,14 @@ router.get("/:id", httpCache('template'), async (req, res) => {
 router.get("/purchased", requireAuth, httpCache('user'), async (req, res) => {
   try {
     const userId = req.user!.id;
-    
+
     // Cache user's purchases
     const cacheKey = `user-purchases:${userId}`;
-    
+
     const purchases = await superCache.getQuery(cacheKey, async () => {
       return queryOptimizer.getUserPurchasesOptimized(userId);
     }, 300); // Cache for 5 minutes
-    
+
     res.json(purchases);
   } catch (error) {
     logger.error("Error fetching purchased templates:", error);
@@ -98,7 +98,7 @@ router.get("/purchased", requireAuth, httpCache('user'), async (req, res) => {
 router.get("/popular", httpCache('template'), async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
-    
+
     // This is accessed frequently, cache aggressively
     const popular = await superCache.getQuery('popular-templates', async () => {
       return queryOptimizer.searchTemplatesOptimized({
@@ -106,7 +106,7 @@ router.get("/popular", httpCache('template'), async (req, res) => {
         limit
       });
     }, 600); // Cache for 10 minutes
-    
+
     res.json(popular);
   } catch (error) {
     logger.error("Error fetching popular templates:", error);
@@ -122,7 +122,7 @@ router.get("/destinations", httpCache('static'), async (req, res) => {
       const result = await queryOptimizer.preloadCommonData();
       return result.popularDestinations;
     }, 3600); // Cache for 1 hour
-    
+
     res.json(destinations);
   } catch (error) {
     logger.error("Error fetching destinations:", error);
@@ -134,19 +134,19 @@ router.get("/destinations", httpCache('static'), async (req, res) => {
 router.post("/", requireAuth, templateCreationRateLimit, async (req, res) => {
   try {
     const userId = req.user!.id;
-    
+
     // Create template
     const template = await storage.createTemplate({
       ...req.body,
       user_id: userId,
       status: "draft"
     });
-    
+
     // Invalidate relevant caches
     superCache.invalidatePattern('templates:');
     superCache.invalidatePattern('popular-templates');
     superCache.invalidateUser(userId);
-    
+
     res.status(201).json(template);
   } catch (error) {
     logger.error("Error creating template:", error);
@@ -159,21 +159,21 @@ router.put("/:id", requireAuth, async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     const userId = req.user!.id;
-    
+
     // Verify ownership
     const template = await storage.getTemplate(templateId);
     if (!template || template.user_id !== userId) {
       return res.status(404).json({ message: "Template not found or access denied" });
     }
-    
+
     // Update template
     const updated = await storage.updateTemplate(templateId, req.body);
-    
+
     // Invalidate caches
     superCache.invalidateTemplate(templateId);
     superCache.invalidatePattern('templates:');
     superCache.invalidateUser(userId);
-    
+
     res.json(updated);
   } catch (error) {
     logger.error("Error updating template:", error);
@@ -185,22 +185,22 @@ router.put("/:id", requireAuth, async (req, res) => {
 setTimeout(async () => {
   try {
     logger.info('Warming up template cache...');
-    
+
     // Preload popular templates
     await queryOptimizer.searchTemplatesOptimized({
       sort: 'popular',
       limit: 50
     });
-    
+
     // Preload newest templates
     await queryOptimizer.searchTemplatesOptimized({
       sort: 'newest',
       limit: 20
     });
-    
+
     // Preload common data
     await queryOptimizer.preloadCommonData();
-    
+
     logger.info('Template cache warmed up successfully');
   } catch (error) {
     logger.error('Failed to warm up cache:', error);

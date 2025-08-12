@@ -8,10 +8,10 @@ import { format } from "date-fns";
 
 export default function SimpleShare() {
   const { shareCode } = useParams<{ shareCode: string }>();
-  
+
   // Get permission directly from URL
   const permission = new URLSearchParams(window.location.search).get('permission') || 'read-only';
-  
+
   const { data: trip, isLoading, error } = useQuery({
     queryKey: [`/api/share/${shareCode}`],
     enabled: !!shareCode,
@@ -39,12 +39,12 @@ export default function SimpleShare() {
               {format(new Date((trip as any).startDate), 'MMM d')} - {format(new Date((trip as any).endDate), 'MMM d, yyyy')}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Badge variant={permission === 'edit' ? 'default' : 'secondary'}>
               {permission === 'edit' ? 'Editable' : 'Read Only'}
             </Badge>
-            
+
             {permission === 'edit' && (
               <Button
                 onClick={() => window.location.href = `/trip/${(trip as any).id}`}

@@ -33,7 +33,6 @@ router.post('/search', async (req, res) => {
 
     res.json({ activities });
   } catch (error) {
-    console.error('Viator search error:', error);
     res.status(500).json({ error: 'Failed to search activities' });
   }
 });
@@ -47,7 +46,6 @@ router.get('/product/:productCode', async (req, res) => {
     const details = await viatorService.getProductDetails(productCode);
     res.json(details);
   } catch (error) {
-    console.error('Product details error:', error);
     res.status(500).json({ error: 'Failed to get product details' });
   }
 });
@@ -61,7 +59,6 @@ router.post('/affiliate-link', async (req, res) => {
     const link = viatorService.generateAffiliateLink(productCode);
     res.json({ affiliateLink: link });
   } catch (error) {
-    console.error('Affiliate link error:', error);
     res.status(500).json({ error: 'Failed to generate affiliate link' });
   }
 });
@@ -109,7 +106,6 @@ router.get('/search/city/:cityName', async (req, res) => {
       totalFound: activitiesWithLinks.length
     });
   } catch (error) {
-    console.error('City activities search error:', error);
     res.status(500).json({ 
       error: 'Failed to search city activities',
       message: 'Unable to fetch activities at this time. Please try again later.'
@@ -137,18 +133,10 @@ router.post('/save-activity', async (req, res) => {
     const activityDate = req.body.date;
     const activityTime = req.body.time;
     
-    // Debug logging
-    console.log('Save activity request:', {
-      productCode,
-      productName, 
-      date: activityDate,
-      time: activityTime,
-      tripId
-    });
+    // Validate required fields
     
     // Validate required fields
     if (!productName || !productCode) {
-      console.error('Missing required fields:', { productName, productCode, body: req.body });
       return res.status(400).json({ error: 'Activity name and product code are required' });
     }
     
@@ -178,7 +166,7 @@ router.post('/save-activity', async (req, res) => {
       const locationQuery = `${productName}, ${cleanCity}`;
       activityCoords = await geocodingService.geocodeLocation(locationQuery, cleanCity);
     } catch (error) {
-      console.log('Could not geocode activity location:', error);
+      // Could not geocode activity location
     }
     
     // Use provided time or determine a reasonable default based on activity type/duration
@@ -231,14 +219,6 @@ router.post('/save-activity', async (req, res) => {
       })
       .returning();
     
-    console.log('Activity saved successfully:', {
-      id: activity.id,
-      title: activity.title,
-      date: activity.date,
-      time: activity.time,
-      tripId: activity.trip_id
-    });
-    
     res.json({ 
       success: true, 
       activityId: activity.id,
@@ -246,8 +226,6 @@ router.post('/save-activity', async (req, res) => {
       message: 'Activity saved to your trip!'
     });
   } catch (error) {
-    console.error('Error saving activity:', error);
-    console.error('Request body:', req.body);
     res.status(500).json({ 
       error: 'Failed to save activity',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -266,15 +244,6 @@ router.post('/track-click', async (req, res) => {
     const city = req.body.city;
     const userId = req.user?.id || null;
     
-    // Log the click for analytics (you could save this to a database table)
-    console.log('Viator affiliate click tracked:', {
-      productCode,
-      productName,
-      city,
-      userId,
-      timestamp: new Date().toISOString()
-    });
-    
     // You could create a viator_clicks table to track this data:
     // await db.insert(viatorClicks).values({
     //   product_code: productCode,
@@ -286,7 +255,6 @@ router.post('/track-click', async (req, res) => {
     
     res.json({ success: true });
   } catch (error) {
-    console.error('Error tracking click:', error);
     res.status(500).json({ error: 'Failed to track click' });
   }
 });
