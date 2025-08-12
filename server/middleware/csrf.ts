@@ -83,13 +83,19 @@ class CSRFProtection {
         return next();
       }
 
-      // Skip for API routes that use different auth
-      if (req.path.startsWith('/api/webhooks/')) {
+      // Get the full path for checking
+      const fullPath = req.originalUrl || req.path;
+
+      // Skip for webhook routes
+      if (fullPath.includes('/webhooks/')) {
         return next();
       }
 
-      // Skip for auth endpoints
-      if (req.path.startsWith('/api/auth/')) {
+      // Skip for auth endpoints - login and register don't need CSRF
+      if (fullPath.includes('/auth/login') || 
+          fullPath.includes('/auth/register') ||
+          fullPath.includes('/auth/csrf-token')) {
+        logger.debug('Skipping CSRF for auth endpoint', { fullPath });
         return next();
       }
 
