@@ -113,7 +113,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       });
 
       // Navigate to the new trip
-      setLocation(`/trips/${newTrip.id}`);
+      setLocation(`/trip/${newTrip.id}`);
       onClose();
 
       return newTrip;
@@ -158,10 +158,26 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
         };
         setMessages(prev => [...prev, creatingMessage]);
 
-        await createTripFromSuggestion(suggestion);
+        const trip = await createTripFromSuggestion(suggestion);
 
         // Clear the pending suggestion
         delete (window as any).pendingTripSuggestion;
+        
+        // Success message
+        const successMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          role: 'assistant',
+          content: `Your trip has been created successfully! Redirecting you to your itinerary... 🚀`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, successMessage]);
+        
+        // Redirect to the new trip after a short delay
+        setTimeout(() => {
+          onClose();
+          setLocation(`/trip/${trip.id}`);
+        }, 1500);
+        
         return;
       }
 
