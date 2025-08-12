@@ -15,9 +15,6 @@ export function transformRequestFields(req: Request, res: Response, next: NextFu
   if (req.user && typeof req.user === 'object') {
     // Keep camelCase for frontend compatibility, add snake_case for database operations
     const userWithAliases = req.user as any;
-    if (userWithAliases.organizationId) {
-      req.user.organization_id = userWithAliases.organizationId;
-    }
     if (userWithAliases.userId) {
       userWithAliases.user_id = userWithAliases.userId;
     }

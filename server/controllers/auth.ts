@@ -55,26 +55,8 @@ export async function getUserPermissions(req: Request, res: Response) {
 
     if (targetUserId !== req.user!.id) {
       // Requesting another user's permissions
-      if (req.user!.role === 'super_admin') {
-        // Super admins can view any user's permissions
-      } else if (req.user!.role === 'admin' || req.user!.role === 'manager') {
-        // Admins/managers can only view users in their organization
-        if (!user[0] || user[0].organization_id !== req.user!.organization_id) {
-          logger.warn('PERMISSIONS_ACCESS_DENIED: Cross-organization access attempt', {
-            requesterId: req.user!.id,
-            requesterOrgId: req.user!.organization_id,
-            targetUserId: targetUserId,
-            targetUserOrgId: user[0]?.organization_id,
-            endpoint: '/api/user/permissions',
-            timestamp: new Date().toISOString()
-          });
-          return res.status(403).json({
-            error: "Access denied",
-            message: "Cannot view permissions for users outside your organization"
-          });
-        }
-      } else {
-        // Regular users can only view their own permissions
+      // Regular users can only view their own permissions
+      if (req.user!.role !== 'admin' && req.user!.id !== targetUserId) {
         return res.status(403).json({
           error: "Access denied",
           message: "Can only view your own permissions"
@@ -89,8 +71,7 @@ export async function getUserPermissions(req: Request, res: Response) {
     return res.json({
       permissions,
       role: userRole,
-      userId: targetUserId,
-      organizationId: user[0].organization_id
+      userId: targetUserId
     });
   } catch (error) {
     logger.error("Error fetching user permissions:", error);

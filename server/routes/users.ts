@@ -15,8 +15,7 @@ router.get('/auth/:id', async (req: Request, res: Response) => {
       id: users.id,
       email: users.email,
       username: users.username,
-      role: users.role,
-      organization_id: users.organization_id
+      role: users.role
     })
     .from(users)
     .where(eq(users.id, userId))

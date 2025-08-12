@@ -29,7 +29,7 @@ export class SuperCache {
     this.templateCache = createLRUCache({
       max: 2000, // ~2000 templates
       ttl: 1000 * 60 * 60 * 24, // 24 hours
-      sizeCalculation: (value) => JSON.stringify(value).length,
+      sizeCalculation: (value: any) => JSON.stringify(value).length,
       maxSize: 150 * 1024 * 1024, // 150MB
       dispose: () => this.stats.evictions++
     });
@@ -38,7 +38,7 @@ export class SuperCache {
     this.queryCache = createLRUCache({
       max: 5000,
       ttl: 1000 * 60 * 5, // 5 minutes for dynamic queries
-      sizeCalculation: (value) => JSON.stringify(value).length,
+      sizeCalculation: (value: any) => JSON.stringify(value).length,
       maxSize: 100 * 1024 * 1024,
       dispose: () => this.stats.evictions++
     });
@@ -47,7 +47,7 @@ export class SuperCache {
     this.userCache = createLRUCache({
       max: 10000,
       ttl: 1000 * 60 * 30, // 30 minutes
-      sizeCalculation: (value) => JSON.stringify(value).length,
+      sizeCalculation: (value: any) => JSON.stringify(value).length,
       maxSize: 50 * 1024 * 1024,
       dispose: () => this.stats.evictions++
     });
@@ -56,7 +56,7 @@ export class SuperCache {
     this.geoCache = createLRUCache({
       max: 50000,
       ttl: 1000 * 60 * 60 * 24 * 30, // 30 days - geocoding doesn't change
-      sizeCalculation: (value) => JSON.stringify(value).length,
+      sizeCalculation: (value: any) => JSON.stringify(value).length,
       maxSize: 50 * 1024 * 1024,
       dispose: () => this.stats.evictions++
     });
@@ -65,7 +65,7 @@ export class SuperCache {
     this.staticCache = createLRUCache({
       max: 1000,
       ttl: 1000 * 60 * 60 * 24 * 7, // 1 week
-      sizeCalculation: (value) => JSON.stringify(value).length,
+      sizeCalculation: (value: any) => JSON.stringify(value).length,
       maxSize: 50 * 1024 * 1024,
       dispose: () => this.stats.evictions++
     });
@@ -131,7 +131,7 @@ export class SuperCache {
    */
   async batchGet<T>(
     keys: string[],
-    cache: LRUCache<string, T>,
+    cache: any,
     fetcher: (missingKeys: string[]) => Promise<Map<string, T>>
   ): Promise<Map<string, T>> {
     const results = new Map<string, T>();

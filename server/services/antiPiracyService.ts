@@ -118,6 +118,7 @@ export class AntiPiracyService {
       if (!template || parseFloat(template.price || '0') === 0) continue;
 
       // Check if trip was created within 24 hours of purchase
+      if (!purchase.purchasedAt || !trip.created_at) continue;
       const purchaseTime = new Date(purchase.purchasedAt).getTime();
       const tripCreationTime = new Date(trip.created_at).getTime();
       const hoursDiff = (tripCreationTime - purchaseTime) / (1000 * 60 * 60);

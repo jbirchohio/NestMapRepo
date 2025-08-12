@@ -163,6 +163,15 @@ class JWTAuth {
   async refreshUser(): Promise<void> {
     await this.checkAuthStatus();
   }
+
+  // Set auth data directly (for social auth)
+  setAuth(token: string, user: User): void {
+    // Token is stored in httpOnly cookie by the server
+    // We just need to update the user state
+    this.user = user;
+    this.isLoading = false;
+    this.notifyListeners();
+  }
 }
 
 export const jwtAuth = new JWTAuth();

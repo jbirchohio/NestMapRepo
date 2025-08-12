@@ -65,6 +65,9 @@ export const queryClient = new QueryClient({
   },
 });
 
+// Export the default query function for use in components
+export const getQueryFn = defaultQueryFn;
+
 // Export an API request function for manual requests
 export async function apiRequest(method: string, url: string, data?: any) {
   const token = jwtAuth.getToken();

@@ -3,6 +3,9 @@ import { storage } from '../storage';
 import { requireAuth } from '../middleware/jwtAuth';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
+import { db } from '../db-connection';
+import { templates, templatePurchases } from '@shared/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -49,9 +52,11 @@ router.get('/dashboard', requireAuth, async (req, res) => {
         });
       }
     }
-    recentSales.sort((a, b) =>
-      new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime()
-    ).slice(0, 10);
+    recentSales.sort((a, b) => {
+      const dateA = a.purchased_at ? new Date(a.purchased_at).getTime() : 0;
+      const dateB = b.purchased_at ? new Date(b.purchased_at).getTime() : 0;
+      return dateB - dateA;
+    }).slice(0, 10);
 
     // Monthly revenue (last 12 months)
     const monthlyRevenue = calculateMonthlyRevenue(recentSales);
@@ -154,20 +159,22 @@ router.get('/sales', requireAuth, async (req, res) => {
     if (startDate) {
       const start = new Date(String(startDate));
       filteredSales = filteredSales.filter(s =>
-        new Date(s.purchased_at) >= start
+        s.purchased_at ? new Date(s.purchased_at) >= start : false
       );
     }
     if (endDate) {
       const end = new Date(String(endDate));
       filteredSales = filteredSales.filter(s =>
-        new Date(s.purchased_at) <= end
+        s.purchased_at ? new Date(s.purchased_at) <= end : false
       );
     }
 
     // Sort by date descending
-    filteredSales.sort((a, b) =>
-      new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime()
-    );
+    filteredSales.sort((a, b) => {
+      const dateA = a.purchased_at ? new Date(a.purchased_at).getTime() : 0;
+      const dateB = b.purchased_at ? new Date(b.purchased_at).getTime() : 0;
+      return dateB - dateA;
+    });
 
     // Calculate summary
     const summary = {
@@ -297,14 +304,61 @@ router.get('/payouts/history', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
 
-    // TODO: Implement payout history from creatorPayouts table
-    // For now, return empty array
+    // Get all template purchases for this creator's templates
+    const creatorTemplates = await db
+      .select({ id: templates.id })
+      .from(templates)
+      .where(eq(templates.user_id, userId));
+    
+    const templateIds = creatorTemplates.map(t => t.id);
+    
+    if (templateIds.length === 0) {
+      return res.json({
+        payouts: [],
+        summary: {
+          totalPaidOut: 0,
+          lastPayoutDate: null,
+          pendingPayouts: 0,
+        },
+      });
+    }
+
+    // Get payout history from template purchases
+    const payoutHistory = await db
+      .select({
+        id: templatePurchases.id,
+        templateId: templatePurchases.template_id,
+        amount: templatePurchases.seller_earnings,
+        status: templatePurchases.payout_status,
+        initiatedAt: templatePurchases.payout_initiated_at,
+        completedAt: templatePurchases.payout_completed_at,
+        method: templatePurchases.payout_method,
+        transactionId: templatePurchases.payout_transaction_id,
+        purchasedAt: templatePurchases.purchased_at
+      })
+      .from(templatePurchases)
+      .where(sql`${templatePurchases.template_id} = ANY(${templateIds})`)
+      .orderBy(desc(templatePurchases.purchased_at));
+
+    // Calculate summary
+    const totalPaidOut = payoutHistory
+      .filter(p => p.status === 'completed')
+      .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
+    
+    const pendingPayouts = payoutHistory
+      .filter(p => p.status === 'pending' || p.status === 'processing')
+      .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
+    
+    const lastPayout = payoutHistory
+      .filter(p => p.status === 'completed' && p.completedAt)
+      .sort((a, b) => (b.completedAt?.getTime() || 0) - (a.completedAt?.getTime() || 0))[0];
+
     res.json({
-      payouts: [],
+      payouts: payoutHistory,
       summary: {
-        totalPaidOut: 0,
-        lastPayoutDate: null,
-        pendingPayouts: 0,
+        totalPaidOut,
+        lastPayoutDate: lastPayout?.completedAt || null,
+        pendingPayouts,
       },
     });
   } catch (error) {
@@ -335,8 +389,8 @@ router.get('/:userId/public', async (req, res) => {
     const publishedTemplates = templates.filter(t => t.status === 'published');
 
     // Calculate stats
-    const totalSales = publishedTemplates.reduce((sum, t) => sum + t.sales_count, 0);
-    const averageRating = profile.average_rating || 0;
+    const totalSales = publishedTemplates.reduce((sum, t) => sum + (t.sales_count || 0), 0);
+    const averageRating = 0; // TODO: Calculate from template reviews
 
     res.json({
       id: creatorId,
@@ -345,10 +399,10 @@ router.get('/:userId/public', async (req, res) => {
       avatarUrl: user.avatar_url,
       bio: profile.bio,
       specialties: profile.specialties,
-      socialTwitter: profile.social_twitter,
-      socialInstagram: profile.social_instagram,
-      socialYoutube: profile.social_youtube,
-      websiteUrl: profile.website_url,
+      socialTwitter: profile.social_links?.twitter || null,
+      socialInstagram: profile.social_links?.instagram || null,
+      socialYoutube: profile.social_links?.youtube || null,
+      websiteUrl: profile.website || null,
       verified: profile.verified,
       featured: profile.featured,
       stats: {

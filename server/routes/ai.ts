@@ -120,7 +120,7 @@ router.post("/suggest-food", async (req, res) => {
     const { aiCache } = await import('../services/aiCacheService');
 
     // Check cache first
-    const cacheKey = aiCache.generateKey('food', city, { cuisine_type, budget_range });
+    const cacheKey = aiCache.generateKey('food', city, `${cuisine_type || 'any'}_${budget_range || 'any'}`);
     const cachedResult = aiCache.get(cacheKey);
 
     if (cachedResult) {
@@ -224,7 +224,7 @@ router.post("/optimize-itinerary", async (req, res) => {
 
     // Create optimization prompt with activity details including times
     const activitiesText = tripActivities
-      .map(activity => `- ID: ${activity.id}, Title: "${activity.title}", Date: ${activity.date.toISOString().split('T')[0]}, Time: ${activity.time || 'No time set'}, Location: ${activity.location_name}`)
+      .map(activity => `- ID: ${activity.id}, Title: "${activity.title}", Date: ${activity.date || 'No date'}, Time: ${activity.time || 'No time set'}, Location: ${activity.location_name}`)
       .join('\n');
 
     const travelStyle = preferences?.travel_style || 'balanced';
@@ -234,7 +234,7 @@ router.post("/optimize-itinerary", async (req, res) => {
 
 Trip: ${trip.title}
 Location: ${trip.city || trip.country || 'Unknown location'}
-Duration: ${trip.start_date.toISOString().split('T')[0]} to ${trip.end_date.toISOString().split('T')[0]}
+Duration: ${trip.start_date} to ${trip.end_date}
 Travel Style: ${travelStyle}
 Interests: ${interests}
 
@@ -474,7 +474,7 @@ router.post("/suggest-activities", async (req, res) => {
     const { aiCache } = await import('../services/aiCacheService');
 
     // Check cache first
-    const cacheKey = aiCache.generateKey('activities', city, { interests, duration });
+    const cacheKey = aiCache.generateKey('activities', city, `${interests || 'general'}_${duration || 'any'}`);
     const cachedResult = aiCache.get(cacheKey);
 
     if (cachedResult) {
@@ -654,13 +654,36 @@ Include 4-6 activities per day for ${destination}.`;
       // Geocoding is optional, continue without it
     }
 
+    // Save activities to database
+    const savedActivities = [];
+    for (const activity of enrichedActivities) {
+      const result = await db
+        .insert(activities)
+        .values({
+          trip_id: activity.trip_id,
+          title: activity.title,
+          date: activity.date,
+          time: activity.time,
+          location_name: activity.locationName,
+          notes: activity.notes,
+          tag: activity.tag,
+          latitude: activity.latitude?.toString() || null,
+          longitude: activity.longitude?.toString() || null,
+          order: activity.order
+        })
+        .returning();
+      if (Array.isArray(result) && result.length > 0) {
+        savedActivities.push(result[0]);
+      }
+    }
+
     res.json({
       success: true,
       trip_id,
       destination,
       duration,
-      activities: enrichedActivities,
-      message: `Generated ${enrichedActivities.length} activities for your weekend in ${destination}!`
+      activities: savedActivities,
+      message: `Generated ${savedActivities.length} activities for your weekend in ${destination}!`
     });
   } catch (error) {
     res.status(500).json({
@@ -841,7 +864,7 @@ router.post("/weather-activities", async (req, res) => {
     const { aiCache } = await import('../services/aiCacheService');
 
     // Check cache first (shorter TTL for weather-based suggestions)
-    const cacheKey = aiCache.generateKey('weather-activities', location, { weatherCondition, date });
+    const cacheKey = aiCache.generateKey('weather-activities', location, `${weatherCondition || 'any'}_${date || 'any'}`);
     const cachedResult = aiCache.get(cacheKey);
 
     if (cachedResult) {
@@ -887,7 +910,7 @@ Format as JSON:
     };
 
     // Cache for 1 day only (weather changes daily)
-    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.DAILY_SUMMARY);
+    aiCache.set(cacheKey, responseData, 86400); // 1 day in seconds
 
     res.json(responseData);
   } catch (error) {
@@ -921,7 +944,7 @@ router.post("/budget-options", async (req, res) => {
     const { aiCache } = await import('../services/aiCacheService');
 
     // Check cache first
-    const cacheKey = aiCache.generateKey('budget', location, { budgetLevel, activityType });
+    const cacheKey = aiCache.generateKey('budget', location, `${budgetLevel || 'any'}_${activityType || 'any'}`);
     const cachedResult = aiCache.get(cacheKey);
 
     if (cachedResult) {
@@ -1309,13 +1332,12 @@ Format as JSON with this structure:
         await db.insert(activities).values({
           trip_id: parseInt(tripId),
           title: activity.title,
-          description: activity.description,
-          date: new Date(activity.date),
+          notes: activity.description,
+          date: activity.date || null,
           time: activityTime,
-          duration: activity.duration,
-          location: activity.location,
+          location_name: activity.location,
           category: activity.category,
-          price: activity.price,
+          price: activity.price ? activity.price.toString() : undefined,
           booking_url: activity.bookingUrl,
           created_at: new Date(),
           updated_at: new Date()

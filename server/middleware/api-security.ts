@@ -73,64 +73,15 @@ function encryptSensitiveFields(obj: any, fields: string[]): any {
 /**
  * API key management middleware
  */
+// API key management not used in consumer app
 class ApiKeyManager {
-  private keys = new Map<string, {
-    name: string;
-    organizationId: number;
-    permissions: string[];
-    rateLimit: number;
-    expiresAt?: Date;
-    lastUsed: Date;
-    usageCount: number;
-  }>();
-
-  generateApiKey(organizationId: number, permissions: string[]): string {
-    const keyId = crypto.randomBytes(16).toString('hex');
-    const keySecret = crypto.randomBytes(32).toString('hex');
-    const apiKey = `nm_${keyId}_${keySecret}`;
-
-    this.keys.set(apiKey, {
-      name: `API Key ${keyId}`,
-      organizationId,
-      permissions,
-      rateLimit: 1000, // requests per hour
-      lastUsed: new Date(),
-      usageCount: 0
-    });
-
-    return apiKey;
-  }
-
   validateApiKey(apiKey: string): {
     valid: boolean;
-    organizationId?: number;
     permissions?: string[];
     rateLimit?: number;
   } {
-    const keyData = this.keys.get(apiKey);
-
-    if (!keyData) {
-      return { valid: false };
-    }
-
-    if (keyData.expiresAt && new Date() > keyData.expiresAt) {
-      this.keys.delete(apiKey);
-      return { valid: false };
-    }
-
-    keyData.lastUsed = new Date();
-    keyData.usageCount++;
-
-    return {
-      valid: true,
-      organizationId: keyData.organizationId,
-      permissions: keyData.permissions,
-      rateLimit: keyData.rateLimit
-    };
-  }
-
-  revokeApiKey(apiKey: string): boolean {
-    return this.keys.delete(apiKey);
+    // API keys not supported in consumer app
+    return { valid: false };
   }
 }
 
@@ -149,11 +100,7 @@ export function authenticateApiKey(req: Request, res: Response, next: NextFuncti
     return res.status(401).json({ error: 'Invalid API key' });
   }
 
-  req.apiKeyAuth = {
-    organizationId: validation.organizationId!,
-    permissions: validation.permissions!,
-    rateLimit: validation.rateLimit!
-  };
+  // API key authentication not used in consumer app
 
   next();
 }

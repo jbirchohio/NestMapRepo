@@ -13,8 +13,7 @@ router.use(jwtAuthMiddleware);
 const createTodoSchema = z.object({
   tripId: z.number(),
   task: z.string().min(1),
-  completed: z.boolean().optional().default(false),
-  organizationId: z.number().optional()
+  completed: z.boolean().optional().default(false)
 });
 
 const updateTodoSchema = z.object({
@@ -46,16 +45,11 @@ router.post('/', async (req, res) => {
     const dataToValidate = {
       tripId: req.body.trip_id,
       task: req.body.task,
-      completed: req.body.completed,
-      organizationId: req.body.organization_id
+      completed: req.body.completed
     };
 
     const validatedData = createTodoSchema.parse(dataToValidate);
 
-    // Set organization ID from authenticated user if not provided
-    if (!validatedData.organizationId && req.user?.organization_id) {
-      validatedData.organizationId = req.user.organization_id;
-    }
 
     const todo = await storage.createTodo(validatedData);
     res.status(201).json(todo);

@@ -264,7 +264,7 @@ app.use((req, res, next) => {
     validateConfig();
     console.log('✅ Configuration validated');
   } catch (error) {
-    console.error('❌ Configuration validation failed:', error.message);
+    console.error('❌ Configuration validation failed:', error instanceof Error ? error.message : String(error));
     if (process.env.NODE_ENV === 'production') {
       process.exit(1);
     }

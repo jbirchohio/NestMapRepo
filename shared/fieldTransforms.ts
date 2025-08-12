@@ -104,3 +104,31 @@ export function transformActivityToDatabase(activityData: any) {
 
   return result;
 }
+
+// Transform database activity data to frontend format
+export function transformActivityToFrontend(activityData: any) {
+  const result: any = {};
+
+  // Handle fields that need snake_case to camelCase transformation
+  if (activityData.trip_id !== undefined) result.tripId = activityData.trip_id;
+  if (activityData.location_name !== undefined) result.locationName = activityData.location_name;
+  if (activityData.organization_id !== undefined) result.organizationId = activityData.organization_id;
+  if (activityData.assigned_to !== undefined) result.assignedTo = activityData.assigned_to;
+  if (activityData.travel_mode !== undefined) result.travelMode = activityData.travel_mode;
+
+  // Handle fields that don't need transformation
+  if (activityData.id !== undefined) result.id = activityData.id;
+  if (activityData.title !== undefined) result.title = activityData.title;
+  if (activityData.date !== undefined) result.date = activityData.date;
+  if (activityData.time !== undefined) result.time = activityData.time;
+  if (activityData.order !== undefined) result.order = activityData.order;
+  if (activityData.completed !== undefined) result.completed = activityData.completed;
+  if (activityData.latitude !== undefined) result.latitude = activityData.latitude;
+  if (activityData.longitude !== undefined) result.longitude = activityData.longitude;
+  if (activityData.notes !== undefined) result.notes = activityData.notes;
+  if (activityData.tag !== undefined) result.tag = activityData.tag;
+  if (activityData.created_at !== undefined) result.createdAt = activityData.created_at;
+  if (activityData.updated_at !== undefined) result.updatedAt = activityData.updated_at;
+
+  return result;
+}

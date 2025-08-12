@@ -25,26 +25,88 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Keep React in the main vendor chunk to ensure it loads first
+          // Core React libraries
           if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'vendor';
+            return 'react-core';
           }
-          // Split other large dependencies
+          
+          // Mapbox and map-related libraries
+          if (id.includes('mapbox-gl') || id.includes('@mapbox')) {
+            return 'mapbox';
+          }
+          
+          // UI component libraries
           if (id.includes('@radix-ui/')) {
             return 'radix-ui';
           }
-          if (id.includes('mapbox-gl')) {
-            return 'mapbox';
+          
+          // Form and validation libraries
+          if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
+            return 'forms';
           }
+          
+          // Data fetching and state management
+          if (id.includes('@tanstack/react-query') || id.includes('axios')) {
+            return 'data-fetching';
+          }
+          
+          // Animation and gesture libraries
+          if (id.includes('framer-motion') || id.includes('@hello-pangea/dnd')) {
+            return 'animations';
+          }
+          
+          // Chart and visualization libraries
+          if (id.includes('recharts') || id.includes('d3')) {
+            return 'charts';
+          }
+          
+          // Editor and rich text libraries
+          if (id.includes('@tiptap') || id.includes('prosemirror')) {
+            return 'editor';
+          }
+          
+          // Date and utility libraries
           if (id.includes('date-fns') || id.includes('clsx') || id.includes('class-variance-authority')) {
             return 'utils';
           }
-        }
+          
+          // Image processing
+          if (id.includes('html2canvas')) {
+            return 'image-processing';
+          }
+          
+          // Payment processing
+          if (id.includes('stripe')) {
+            return 'payments';
+          }
+          
+          // Routing
+          if (id.includes('wouter')) {
+            return 'routing';
+          }
+          
+          // Icons
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
+          
+          // All other vendor libraries
+          if (id.includes('node_modules/')) {
+            return 'vendor';
+          }
+        },
+        // Additional output options for better chunking
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+          return `assets/${chunkInfo.name}-[hash].js`;
+        },
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        entryFileNames: 'assets/[name]-[hash].js'
       }
     },
     // Performance optimizations
     target: 'es2020',
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 500, // Reduced to 500KB to encourage smaller chunks
     sourcemap: false,
     minify: 'esbuild',
     reportCompressedSize: false,

@@ -1,171 +1,73 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-import { users, organizations } from "./schema";
+import { pgTable, serial, text, timestamp, integer, decimal, jsonb, boolean } from "drizzle-orm/pg-core";
 
-// Superadmin audit logs for tracking all administrative actions
-export const superadminAuditLogs = pgTable('superadmin_audit_logs', {
-  id: serial('id').primaryKey(),
-  admin_user_id: integer('admin_user_id').references(() => users.id).notNull(),
-  action: text('action').notNull(), // CREATE_ORG, UPDATE_USER, RESET_PASSWORD, etc.
-  entity_type: text('entity_type').notNull(), // organization, user, system
-  entity_id: integer('entity_id'),
-  target_user_id: integer('target_user_id').references(() => users.id),
-  target_organization_id: integer('target_organization_id').references(() => organizations.id),
-  details: jsonb('details').$type<Record<string, any>>(),
-  ip_address: text('ip_address'),
-  user_agent: text('user_agent'),
-  severity: text('severity').default('info').notNull(), // info, warning, critical
-  created_at: timestamp('created_at').defaultNow().notNull(),
-});
+// Admin-specific tables for consumer app management
 
-// Active user sessions for security monitoring
-export const activeSessions = pgTable("active_sessions", {
-  id: text("id").primaryKey(), // session ID
-  user_id: integer("user_id").references(() => users.id).notNull(),
-  username: text("username").notNull(),
+// Audit logs for admin actions
+export const superadminAuditLogs = pgTable("superadmin_audit_logs", {
+  id: serial("id").primaryKey(),
+  admin_id: integer("admin_id").notNull(),
+  action: text("action").notNull(),
+  resource_type: text("resource_type"),
+  resource_id: text("resource_id"),
+  details: jsonb("details"),
   ip_address: text("ip_address"),
   user_agent: text("user_agent"),
-  location: text("location"),
-  device_info: jsonb("device_info").$type<Record<string, any>>(),
-  last_activity: timestamp("last_activity").defaultNow().notNull(),
-  expires_at: timestamp("expires_at"),
-  created_at: timestamp("created_at").defaultNow().notNull(),
+  risk_level: text("risk_level").default("low"),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
-// AI usage tracking for cost monitoring
-export const aiUsageLogs = pgTable("ai_usage_logs", {
-  id: serial("id").primaryKey(),
-  user_id: integer("user_id").references(() => users.id),
-  organization_id: integer("organization_id").references(() => organizations.id),
-  endpoint: text("endpoint").notNull(),
-  prompt_tokens: integer("prompt_tokens").default(0).notNull(),
-  completion_tokens: integer("completion_tokens").default(0).notNull(),
-  total_tokens: integer("total_tokens").default(0).notNull(),
-  cost_cents: integer("cost_cents").notNull(),
-  model: text("model").notNull(),
-  success: boolean("success").default(true).notNull(),
-  error_message: text("error_message"),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Feature flags for system control
-export const superadminFeatureFlags = pgTable("superadmin_feature_flags", {
-  id: serial("id").primaryKey(),
-  flag_name: text("flag_name").notNull().unique(),
-  description: text("description"),
-  default_value: boolean("default_value").default(false).notNull(),
-  is_enabled: boolean("is_enabled").default(false).notNull(), // For backwards compatibility
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Organization-specific feature overrides
-export const organizationFeatureFlags = pgTable("organization_feature_flags", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
-  flag_name: text("flag_name").notNull(),
-  enabled: boolean("enabled").notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Background jobs tracking
+// Background jobs for admin tasks
 export const superadminBackgroundJobs = pgTable("superadmin_background_jobs", {
   id: serial("id").primaryKey(),
-  job_type: text("job_type").notNull(), // export_data, send_email, cleanup_logs, etc.
-  status: text("status").default("pending").notNull(), // pending, running, completed, failed
-  data: jsonb("data").$type<Record<string, any>>(),
-  result: jsonb("result").$type<Record<string, any>>(),
-  error_message: text("error_message"),
-  progress: integer("progress").default(0).notNull(),
-  total: integer("total").default(100).notNull(),
+  job_type: text("job_type").notNull(),
+  status: text("status").default("pending"),
+  progress: integer("progress").default(0),
+  total: integer("total"),
+  data: jsonb("data"),
+  result: jsonb("result"),
+  error: text("error"),
   started_at: timestamp("started_at"),
   completed_at: timestamp("completed_at"),
-  created_by: integer("created_by").references(() => users.id),
-  created_at: timestamp("created_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
-// Billing events for revenue tracking
-export const billingEvents = pgTable("billing_events", {
+// Admin dashboard stats cache
+export const superadminStatsCache = pgTable("superadmin_stats_cache", {
   id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
-  event_type: text("event_type").notNull(), // subscription_created, payment_succeeded, etc.
-  stripe_event_id: text("stripe_event_id"),
-  amount_cents: integer("amount_cents"),
-  currency: text("currency").default("usd"),
-  metadata: jsonb("metadata").$type<Record<string, any>>(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
+  stat_type: text("stat_type").notNull().unique(),
+  value: jsonb("value").notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// System activity summary for dashboard
-export const systemActivitySummary = pgTable("system_activity_summary", {
+// Feature flags for gradual rollouts
+export const superadminFeatureFlags = pgTable("superadmin_feature_flags", {
   id: serial("id").primaryKey(),
-  date: timestamp("date").notNull(),
-  total_users: integer("total_users").default(0).notNull(),
-  active_users: integer("active_users").default(0).notNull(),
-  total_organizations: integer("total_organizations").default(0).notNull(),
-  active_organizations: integer("active_organizations").default(0).notNull(),
-  total_revenue_cents: integer("total_revenue_cents").default(0).notNull(),
-  new_signups: integer("new_signups").default(0).notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
+  name: text("name").notNull().unique(),
+  enabled: boolean("enabled").default(false),
+  rollout_percentage: integer("rollout_percentage").default(0),
+  user_whitelist: jsonb("user_whitelist").$type<number[]>().default([]),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// Insert schemas
-export const insertSuperadminAuditLogSchema = createInsertSchema(superadminAuditLogs).omit({
-  id: true,
-  created_at: true,
+// Content moderation queue
+export const superadminModerationQueue = pgTable("superadmin_moderation_queue", {
+  id: serial("id").primaryKey(),
+  content_type: text("content_type").notNull(), // template, review, comment, etc
+  content_id: integer("content_id").notNull(),
+  reporter_id: integer("reporter_id"),
+  reason: text("reason"),
+  status: text("status").default("pending"), // pending, approved, rejected
+  moderator_id: integer("moderator_id"),
+  moderator_notes: text("moderator_notes"),
+  created_at: timestamp("created_at").defaultNow(),
+  resolved_at: timestamp("resolved_at"),
 });
 
-export const insertActiveSessionSchema = createInsertSchema(activeSessions).omit({
-  created_at: true,
-});
-
-export const insertAiUsageLogSchema = createInsertSchema(aiUsageLogs).omit({
-  id: true,
-  created_at: true,
-});
-
-export const insertSuperadminFeatureFlagSchema = createInsertSchema(superadminFeatureFlags).omit({
-  id: true,
-  created_at: true,
-});
-
-export const insertOrganizationFeatureFlagSchema = createInsertSchema(organizationFeatureFlags).omit({
-  id: true,
-  created_at: true,
-});
-
-export const insertSuperadminBackgroundJobSchema = createInsertSchema(superadminBackgroundJobs).omit({
-  id: true,
-  created_at: true,
-});
-
-export const insertBillingEventSchema = createInsertSchema(billingEvents).omit({
-  id: true,
-  created_at: true,
-});
-
-// Types
+// Export types
 export type SuperadminAuditLog = typeof superadminAuditLogs.$inferSelect;
-export type InsertSuperadminAuditLog = z.infer<typeof insertSuperadminAuditLogSchema>;
-
-export type ActiveSession = typeof activeSessions.$inferSelect;
-export type InsertActiveSession = z.infer<typeof insertActiveSessionSchema>;
-
-export type AiUsageLog = typeof aiUsageLogs.$inferSelect;
-export type InsertAiUsageLog = z.infer<typeof insertAiUsageLogSchema>;
-
-export type SuperadminFeatureFlag = typeof superadminFeatureFlags.$inferSelect;
-export type InsertSuperadminFeatureFlag = z.infer<typeof insertSuperadminFeatureFlagSchema>;
-
-export type OrganizationFeatureFlag = typeof organizationFeatureFlags.$inferSelect;
-export type InsertOrganizationFeatureFlag = z.infer<typeof insertOrganizationFeatureFlagSchema>;
-
 export type SuperadminBackgroundJob = typeof superadminBackgroundJobs.$inferSelect;
-export type InsertSuperadminBackgroundJob = z.infer<typeof insertSuperadminBackgroundJobSchema>;
-
-export type BillingEvent = typeof billingEvents.$inferSelect;
-export type InsertBillingEvent = z.infer<typeof insertBillingEventSchema>;
-
-export type SystemActivitySummary = typeof systemActivitySummary.$inferSelect;
+export type SuperadminStatsCache = typeof superadminStatsCache.$inferSelect;
+export type SuperadminFeatureFlag = typeof superadminFeatureFlags.$inferSelect;
+export type SuperadminModerationQueue = typeof superadminModerationQueue.$inferSelect;

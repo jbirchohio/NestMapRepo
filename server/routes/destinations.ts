@@ -266,8 +266,7 @@ router.get('/search', async (req, res) => {
     const dbMatches = dbResults
       .filter(dest =>
         dest.name.toLowerCase().includes(q.toLowerCase()) ||
-        dest.country?.toLowerCase().includes(q.toLowerCase()) ||
-        dest.region?.toLowerCase().includes(q.toLowerCase())
+        dest.country?.toLowerCase().includes(q.toLowerCase())
       )
       .map(dest => ({
         slug: dest.slug,

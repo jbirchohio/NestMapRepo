@@ -51,8 +51,8 @@ export class TemplateCopyServiceV2 {
         // Create trip within transaction
         const [newTrip] = await tx.insert(trips).values({
           title: tripData.title || template.title,
-          start_date: tripStartDate,
-          end_date: tripEndDate,
+          start_date: tripStartDate.toISOString().split('T')[0],
+          end_date: tripEndDate.toISOString().split('T')[0],
           user_id: userId,
           city: tripData.city,
           country: tripData.country,

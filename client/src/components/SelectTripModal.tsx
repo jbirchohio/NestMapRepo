@@ -43,7 +43,7 @@ export default function SelectTripModal({
 }: SelectTripModalProps) {
   const [step, setStep] = useState<'trip' | 'date'>('trip');
   const [mode, setMode] = useState<'select' | 'create'>('select');
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [selectedTripId, setSelectedTripId] = useState<number | null>(null);
   const [selectedTrip, setSelectedTrip] = useState<ClientTrip | null>(null);
   const [newTripName, setNewTripName] = useState(`${cityName} Trip`);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -138,7 +138,7 @@ export default function SelectTripModal({
     },
     onSuccess: (data) => {
       toast.success('Activity saved to your trip!');
-      onSuccess(data.tripId);
+      onSuccess(String(data.tripId));
       onClose();
     },
     onError: () => {
@@ -220,7 +220,7 @@ export default function SelectTripModal({
     }
 
     saveActivityMutation.mutate({
-      tripId: selectedTripId,
+      tripId: String(selectedTripId),
       date: format(activityDate, 'yyyy-MM-dd'),
       time: activityTime
     });

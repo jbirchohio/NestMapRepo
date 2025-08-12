@@ -13,11 +13,6 @@ export const users = pgTable("users", {
   avatar_url: text("avatar_url"),
   role: text("role").default("user"), // user or admin
   role_type: text("role_type").default("consumer"), // Always consumer
-  organization_id: integer("organization_id"), // DEPRECATED - kept for DB compatibility only
-  company: text("company"), // DEPRECATED
-  job_title: text("job_title"), // DEPRECATED
-  team_size: text("team_size"), // DEPRECATED
-  use_case: text("use_case"), // DEPRECATED
 
   // Creator fields for template marketplace
   creator_status: text("creator_status").default("none"), // none, pending, approved, verified, suspended
@@ -36,44 +31,6 @@ export const users = pgTable("users", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-// DEPRECATED - Organizations table kept for DB migration compatibility only
-// This table is not used in the consumer app
-export const organizations = pgTable("organizations", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  domain: text("domain"),
-  plan: text("plan").default("free"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-// DEPRECATED - Organization roles kept for DB compatibility only
-export const organizationRoles = pgTable("organization_roles", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").notNull(),
-  name: text("name").notNull(),
-  value: text("value").notNull(),
-  description: text("description"),
-  permissions: jsonb("permissions").$type<string[]>().notNull(),
-  is_default: boolean("is_default").default(false),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-// DEPRECATED - Organization members kept for DB compatibility only
-export const organizationMembers = pgTable("organization_members", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").notNull(),
-  user_id: integer("user_id").notNull(),
-  org_role: text("org_role").notNull().default("member"),
-  permissions: jsonb("permissions"),
-  invited_by: integer("invited_by"),
-  invited_at: timestamp("invited_at").defaultNow(),
-  joined_at: timestamp("joined_at"),
-  status: text("status").default("active"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
 
 // Trip collaborators for sharing trips between users
 export const tripCollaborators = pgTable("trip_collaborators", {
@@ -94,7 +51,6 @@ export const trips = pgTable("trips", {
   start_date: date("start_date").notNull(),
   end_date: date("end_date").notNull(),
   user_id: integer("user_id").notNull(),
-  organizationId: integer("organization_id"), // DEPRECATED - always null
 
   // Location data
   city: text("city"),
@@ -164,7 +120,6 @@ export const trips = pgTable("trips", {
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
   trip_id: integer("trip_id").notNull(),
-  organization_id: integer("organization_id"), // DEPRECATED - always null
   title: text("title").notNull(),
   date: date("date"),
   time: text("time"),
@@ -227,7 +182,6 @@ export const bookings = pgTable("bookings", {
   trip_id: integer("trip_id").notNull(),
   activity_id: integer("activity_id"),
   user_id: integer("user_id").notNull(),
-  organization_id: integer("organization_id"), // DEPRECATED - always null
   booking_type: text("booking_type").notNull(),
   provider: text("provider"),
   confirmation_number: text("confirmation_number"),
@@ -274,7 +228,6 @@ export const invitations = pgTable("invitations", {
   id: serial("id").primaryKey(),
   email: text("email").notNull(),
   invitation_code: text("invitation_code").notNull().unique(),
-  organization_id: integer("organization_id"), // DEPRECATED
   invited_by: integer("invited_by").notNull(),
   role: text("role").default("user"),
   status: text("status").default("pending"),
@@ -318,6 +271,11 @@ export const templates = pgTable("templates", {
   last_sale_at: timestamp("last_sale_at"),
   verified_purchase: boolean("verified_purchase").default(false),
   verified_at: timestamp("verified_at"),
+  quality_score: integer("quality_score"),
+  moderation_status: text("moderation_status").default("pending"), // pending, approved, rejected
+  auto_checks_passed: boolean("auto_checks_passed").default(false),
+  rejection_reason: text("rejection_reason"),
+  moderation_notes: text("moderation_notes"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -386,7 +344,6 @@ export const templatePurchases = pgTable("template_purchases", {
   id: serial("id").primaryKey(),
   template_id: integer("template_id").notNull(),
   buyer_id: integer("buyer_id").notNull(),
-  user_id: integer("user_id"), // DEPRECATED - use buyer_id
   seller_id: integer("seller_id").notNull(),
   trip_id: integer("trip_id"), // Trip created from template
   bundle_purchase_id: integer("bundle_purchase_id"), // If purchased as part of a bundle
@@ -400,6 +357,11 @@ export const templatePurchases = pgTable("template_purchases", {
   stripe_transfer_id: text("stripe_transfer_id"),
   status: text("status").default("pending"), // pending, completed, refunded, disputed
   payout_status: text("payout_status").default("pending"), // pending, processing, completed, failed
+  payout_initiated_at: timestamp("payout_initiated_at"),
+  payout_completed_at: timestamp("payout_completed_at"),
+  payout_method: text("payout_method"),
+  payout_transaction_id: text("payout_transaction_id"),
+  payout_notes: text("payout_notes"),
   refunded_at: timestamp("refunded_at"),
   refund_amount: decimal("refund_amount", { precision: 10, scale: 2 }),
   disputed_at: timestamp("disputed_at"),
@@ -463,6 +425,8 @@ export const creatorBalances = pgTable("creator_balances", {
   stripe_account_status: text("stripe_account_status"),
   bank_account_last4: text("bank_account_last4"),
   bank_account_status: text("bank_account_status"),
+  payout_method: text("payout_method").default("paypal"),
+  w9_on_file: boolean("w9_on_file").default(false),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -524,65 +488,6 @@ export const destinations = pgTable("destinations", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// DEPRECATED TABLES - kept as empty shells for DB compatibility only
-// These are not used in the consumer app
-
-export const cards = pgTable("cards", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").notNull(),
-  name: text("name").notNull(),
-  last_four: text("last_four"),
-  brand: text("brand"),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const expenses = pgTable("expenses", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").notNull(),
-  user_id: integer("user_id").notNull(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const spendControls = pgTable("spend_controls", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const adminBranding = pgTable("admin_branding", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  logo_url: text("logo_url"),
-  favicon_url: text("favicon_url"),
-  primary_color: text("primary_color"),
-  secondary_color: text("secondary_color"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-export const apiKeys = pgTable("api_keys", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id"),
-  name: text("name").notNull(),
-  key_hash: text("key_hash").notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const approvalWorkflows = pgTable("approval_workflows", {
-  id: serial("id").primaryKey(),
-  organization_id: integer("organization_id").notNull(),
-  name: text("name").notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const approvals = pgTable("approvals", {
-  id: serial("id").primaryKey(),
-  trip_id: integer("trip_id").notNull(),
-  approver_id: integer("approver_id").notNull(),
-  status: text("status").default("pending"),
-  created_at: timestamp("created_at").defaultNow(),
-});
 
 // Collaborative Mode - Activity Suggestions
 export const activitySuggestions = pgTable("activity_suggestions", {
@@ -715,19 +620,3 @@ export type TripRsvp = typeof tripRsvps.$inferSelect;
 export type TravelAnalytics = typeof travelAnalytics.$inferSelect;
 export type TemplateBundle = typeof templateBundles.$inferSelect;
 export type BundlePurchase = typeof bundlePurchases.$inferSelect;
-
-// DEPRECATED types - kept for compatibility
-export type Organization = typeof organizations.$inferSelect;
-export type OrganizationRole = typeof organizationRoles.$inferSelect;
-export type OrganizationMember = typeof organizationMembers.$inferSelect;
-export type Card = typeof cards.$inferSelect;
-export type Expense = typeof expenses.$inferSelect;
-export type SpendControl = typeof spendControls.$inferSelect;
-export type ApiKey = typeof apiKeys.$inferSelect;
-export type ApprovalWorkflow = typeof approvalWorkflows.$inferSelect;
-export type Approval = typeof approvals.$inferSelect;
-
-// For compatibility - these can be removed once all references are updated
-export const insertOrganizationSchema = createInsertSchema(organizations);
-export const insertOrganizationRoleSchema = createInsertSchema(organizationRoles);
-export const insertOrganizationMemberSchema = createInsertSchema(organizationMembers);

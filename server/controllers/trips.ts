@@ -24,7 +24,6 @@ export async function getTrips(req: Request, res: Response) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
-    // Log organization access for audit
     // Organization logging removed for consumer app
 
     const trips = await storage.getTripsByUserId(numericUserId);
@@ -48,7 +47,6 @@ export async function getTripById(req: Request, res: Response) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
-    // CRITICAL SECURITY FIX: Add organization filtering to prevent cross-tenant data access
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
@@ -58,9 +56,8 @@ export async function getTripById(req: Request, res: Response) {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organization_id || null;
-    if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
+    // Verify user can access this trip
+    if (trip.user_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
@@ -87,7 +84,6 @@ export async function createTrip(req: Request, res: Response) {
       start_date: req.body.start_date || req.body.startDate,
       end_date: req.body.end_date || req.body.endDate,
       user_id: req.body.user_id || req.body.user_id,
-      organization_id: req.body.organization_id || req.body.organization_id,
       sharing_enabled: req.body.sharing_enabled || req.body.sharingEnabled,
       share_permission: req.body.share_permission || req.body.sharePermission,
       city_latitude: req.body.city_latitude || req.body.cityLatitude,
@@ -174,15 +170,14 @@ export async function updateTrip(req: Request, res: Response) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    // CRITICAL: Get existing trip to verify organization access
+    // Get existing trip to verify access
     const existingTrip = await storage.getTrip(tripId);
     if (!existingTrip) {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organization_id || null;
-    if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
+    // Verify user can modify this trip
+    if (existingTrip.user_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
 
@@ -215,7 +210,6 @@ export async function updateTrip(req: Request, res: Response) {
       Object.entries(updateData).filter(([_, value]) => value !== null)
     );
 
-    // Log organization access for audit
     // Organization logging removed for consumer app
 
     const trip = await storage.updateTrip(tripId, filteredUpdateData);
@@ -245,20 +239,16 @@ export async function deleteTrip(req: Request, res: Response) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    // CRITICAL: Get existing trip to verify organization access
+    // Get existing trip to verify access
     const existingTrip = await storage.getTrip(tripId);
     if (!existingTrip) {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organization_id || null;
-    if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
+    // Verify user can delete this trip
+    if (existingTrip.user_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
     }
-
-    // Log organization access for audit
-    // Organization logging removed for consumer app
 
     const success = await storage.deleteTrip(tripId);
     if (!success) {

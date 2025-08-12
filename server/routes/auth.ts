@@ -64,8 +64,7 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
       auth_id: `jwt_${Date.now()}_${Math.random()}`,
       password_hash: hashedPassword,
       role: 'user',
-      role_type: 'consumer',
-      organization_id: null
+      role_type: 'consumer'
     }).returning();
 
     // Create JWT token with expiry
@@ -219,7 +218,6 @@ router.get('/user', async (req: Request, res: Response) => {
         email: users.email,
         username: users.username,
         role: users.role,
-        organization_id: users.organization_id,
         display_name: users.display_name,
         avatar_url: users.avatar_url
       }).from(users).where(eq(users.id, payload.id)).limit(1);

@@ -8,7 +8,6 @@ interface JWTUser {
   email: string;
   role: string;
   username: string;
-  organization_id?: number; // Optional for consumer app
 }
 
 // Extend Express Request interface

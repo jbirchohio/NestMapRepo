@@ -201,7 +201,7 @@ router.post("/:suggestionId/accept", optionalAuth, async (req, res) => {
       location_name: suggestion.location_name || "",
       notes: suggestion.notes || "",
       order: 0,
-      price: suggestion.estimated_cost ? parseFloat(suggestion.estimated_cost) : null
+      price: suggestion.estimated_cost || null
     }).returning();
     
     // Update suggestion status

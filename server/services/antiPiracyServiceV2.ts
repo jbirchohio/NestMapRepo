@@ -138,6 +138,7 @@ export class AntiPiracyServiceV2 {
     // Check for templates created within 48 hours of purchases
     let suspiciousCreations = 0;
     for (const purchase of purchases) {
+      if (!purchase.purchasedAt) continue;
       const purchaseTime = new Date(purchase.purchasedAt).getTime();
 
       const nearbyTemplates = userTemplates.filter(t => {

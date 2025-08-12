@@ -8,7 +8,7 @@ import { logger } from '../utils/logger';
  * Zero cost optimization - just smarter queries
  */
 export class QueryOptimizer {
-  private batchQueue = new Map<string, any[]>();
+  private batchQueue = new Map<string, Promise<any>>();
   private batchTimers = new Map<string, NodeJS.Timeout>();
 
   /**
@@ -162,7 +162,7 @@ export class QueryOptimizer {
   ): Promise<T> {
     // Check if we already have a pending request for this key
     if (this.batchQueue.has(key)) {
-      return this.batchQueue.get(key);
+      return this.batchQueue.get(key) as Promise<T>;
     }
 
     // Create promise that will be shared by all callers
@@ -196,7 +196,17 @@ export class QueryOptimizer {
    * Optimized search with single query
    */
   async searchTemplatesOptimized(searchParams: any) {
-    // Build dynamic query with all filters
+    // Build conditions
+    const conditions = [eq(templates.status, 'published')];
+    
+    if (searchParams.search) {
+      conditions.push(sql`
+        to_tsvector('english', ${templates.title} || ' ' || COALESCE(${templates.description}, ''))
+        @@ plainto_tsquery('english', ${searchParams.search})
+      `);
+    }
+
+    // Build query with all conditions
     const baseQuery = db
       .select({
         template: templates,
@@ -209,30 +219,15 @@ export class QueryOptimizer {
       .from(templates)
       .leftJoin(users, eq(templates.user_id, users.id))
       .leftJoin(creatorProfiles, eq(users.id, creatorProfiles.user_id))
-      .where(eq(templates.status, 'published'));
+      .where(and(...conditions));
 
-    // Add search conditions dynamically
-    let query = baseQuery;
-
-    if (searchParams.search) {
-      query = query.where(sql`
-        to_tsvector('english', ${templates.title} || ' ' || COALESCE(${templates.description}, ''))
-        @@ plainto_tsquery('english', ${searchParams.search})
-      `);
-    }
-
-    // Sort optimization
-    switch (searchParams.sort) {
-      case 'popular':
-        query = query.orderBy(desc(templates.sales_count));
-        break;
-      case 'newest':
-        query = query.orderBy(desc(templates.created_at));
-        break;
-      case 'rating':
-        query = query.orderBy(desc(templates.rating));
-        break;
-    }
+    // Sort optimization - always apply an orderBy
+    const sortField = searchParams.sort;
+    const query = sortField === 'popular' 
+      ? baseQuery.orderBy(desc(templates.sales_count))
+      : sortField === 'rating'
+      ? baseQuery.orderBy(desc(templates.rating))
+      : baseQuery.orderBy(desc(templates.created_at));
 
     const results = await query.limit(searchParams.limit || 20);
 

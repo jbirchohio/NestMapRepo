@@ -18,27 +18,28 @@ router.get("/", optionalAuth, async (req: Request, res: Response) => {
   try {
     const { type, featured, creator_id } = req.query;
     
-    let query = db
-      .select()
-      .from(templateBundles)
-      .where(eq(templateBundles.status, "published"));
+    // Build conditions
+    const conditions = [eq(templateBundles.status, "published")];
 
     // Filter by type if specified
     if (type) {
-      query = query.where(eq(templateBundles.type, type as string));
+      conditions.push(eq(templateBundles.type, type as string));
     }
 
     // Filter by featured if specified
     if (featured === "true") {
-      query = query.where(eq(templateBundles.featured, true));
+      conditions.push(eq(templateBundles.featured, true));
     }
 
     // Filter by creator if specified
     if (creator_id) {
-      query = query.where(eq(templateBundles.creator_id, parseInt(creator_id as string)));
+      conditions.push(eq(templateBundles.creator_id, parseInt(creator_id as string)));
     }
 
-    const bundles = await query;
+    const bundles = await db
+      .select()
+      .from(templateBundles)
+      .where(and(...conditions));
 
     // Fetch template details for each bundle
     const bundlesWithTemplates = await Promise.all(
@@ -80,7 +81,7 @@ router.get("/:slug", optionalAuth, async (req: Request, res: Response) => {
     // Increment view count
     await db
       .update(templateBundles)
-      .set({ view_count: bundle.view_count + 1 })
+      .set({ view_count: (bundle.view_count || 0) + 1 })
       .where(eq(templateBundles.id, bundle.id));
 
     // Fetch template details
@@ -150,7 +151,7 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
       .from(users)
       .where(eq(users.id, userId));
 
-    const isAdmin = user?.is_admin || false;
+    const isAdmin = user?.role === 'admin' || false;
     const isRemvanaBundle = isAdmin && type === "admin";
 
     // For non-admin users, verify they own all templates
@@ -174,7 +175,7 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
 
     // Calculate original price
     const originalPrice = selectedTemplates.reduce((sum, t) => 
-      sum + parseFloat(t.price), 0
+      sum + parseFloat(t.price || '0'), 0
     );
 
     // Calculate discount percentage
@@ -235,7 +236,7 @@ router.put("/:id", requireAuth, async (req: Request, res: Response) => {
       .from(users)
       .where(eq(users.id, userId));
 
-    const isAdmin = user?.is_admin || false;
+    const isAdmin = user?.role === 'admin' || false;
 
     if (bundle.creator_id !== userId && !isAdmin) {
       return res.status(403).json({ error: "Unauthorized" });
@@ -251,7 +252,7 @@ router.put("/:id", requireAuth, async (req: Request, res: Response) => {
         .where(inArray(templates.id, updates.template_ids));
 
       updates.original_price = selectedTemplates
-        .reduce((sum, t) => sum + parseFloat(t.price), 0)
+        .reduce((sum, t) => sum + parseFloat(t.price || '0'), 0)
         .toString();
 
       if (updates.bundle_price) {
@@ -301,7 +302,7 @@ router.post("/:id/publish", requireAuth, async (req: Request, res: Response) => 
       .from(users)
       .where(eq(users.id, userId));
 
-    const isAdmin = user?.is_admin || false;
+    const isAdmin = user?.role === 'admin' || false;
 
     if (bundle.creator_id !== userId && !isAdmin) {
       return res.status(403).json({ error: "Unauthorized" });
@@ -394,7 +395,7 @@ router.post("/:id/purchase", requireAuth, async (req: Request, res: Response) =>
     }
 
     // Check max sales limit
-    if (bundle.max_sales && bundle.sales_count >= bundle.max_sales) {
+    if (bundle.max_sales && bundle.sales_count !== null && bundle.sales_count >= bundle.max_sales) {
       return res.status(400).json({ error: "Bundle is sold out" });
     }
 
@@ -433,7 +434,7 @@ router.post("/:id/purchase", requireAuth, async (req: Request, res: Response) =>
     await db
       .update(templateBundles)
       .set({ 
-        sales_count: bundle.sales_count + 1,
+        sales_count: (bundle.sales_count || 0) + 1,
         updated_at: new Date()
       })
       .where(eq(templateBundles.id, bundleId));
@@ -495,7 +496,7 @@ router.delete("/:id", requireAuth, async (req: Request, res: Response) => {
       .from(users)
       .where(eq(users.id, userId));
 
-    const isAdmin = user?.is_admin || false;
+    const isAdmin = user?.role === 'admin' || false;
 
     if (bundle.creator_id !== userId && !isAdmin) {
       return res.status(403).json({ error: "Unauthorized" });

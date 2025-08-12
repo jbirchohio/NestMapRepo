@@ -31,12 +31,8 @@ export class OptimizedQueries {
         username: row.user?.username,
         displayName: row.user?.display_name,
         bio: row.creatorProfile?.bio,
-        website: row.creatorProfile?.website_url,
-        socialLinks: {
-          twitter: row.creatorProfile?.social_twitter,
-          instagram: row.creatorProfile?.social_instagram,
-          youtube: row.creatorProfile?.social_youtube
-        },
+        website: row.creatorProfile?.website,
+        socialLinks: row.creatorProfile?.social_links || {},
         verified: row.creatorProfile?.verified || false
       }
     }));

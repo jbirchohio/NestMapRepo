@@ -18,7 +18,7 @@ if (!stripeKey) {
   logger.error('STRIPE_SECRET_KEY is not configured in environment variables');
 }
 const stripe = stripeKey
-  ? new Stripe(stripeKey, { apiVersion: '2023-10-16' })
+  ? new Stripe(stripeKey, { apiVersion: '2024-11-20.acacia' as any })
   : null;
 
 // POST /api/checkout/create-payment-intent - Create a payment intent for template purchase

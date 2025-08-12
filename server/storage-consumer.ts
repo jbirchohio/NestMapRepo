@@ -81,7 +81,6 @@ export interface IStorage {
     offset: number,
   ): Promise<Trip[]>;
   getTripsCountByUserId(userId: number): Promise<number>;
-  getTripsByOrganizationId(organizationId: number): Promise<Trip[]>;
   updateTrip(id: number, updates: any): Promise<Trip | undefined>;
   deleteTrip(id: number): Promise<boolean>;
   getPublicTrips(): Promise<Trip[]>;
@@ -211,8 +210,7 @@ export class ConsumerDatabaseStorage implements IStorage {
         password_hash: hashedPassword,
         display_name: validatedData.display_name,
         role: "user", // Always regular user for consumers
-        role_type: "consumer",
-        organization_id: null, // No organizations in consumer app
+        role_type: "consumer"
       })
       .returning();
 
@@ -274,11 +272,10 @@ export class ConsumerDatabaseStorage implements IStorage {
         start_date: insertTrip.start_date,
         end_date: insertTrip.end_date,
         user_id: insertTrip.user_id,
-        organizationId: null, // Always null for consumers
         share_code: shareCode,
-        sharing_enabled: insertTrip.sharingEnabled || false,
-        share_permission: insertTrip.sharePermission || "read-only",
-        is_public: insertTrip.isPublic || false,
+        sharing_enabled: insertTrip.sharing_enabled || false,
+        share_permission: insertTrip.share_permission || "read-only",
+        is_public: insertTrip.is_public || false,
         city: insertTrip.city,
         country: insertTrip.country,
         location: insertTrip.location,
@@ -365,10 +362,6 @@ export class ConsumerDatabaseStorage implements IStorage {
     return result[0]?.count || 0;
   }
 
-  async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {
-    // Consumer app doesn't use organizations, return empty array
-    return [];
-  }
 
   async updateTrip(id: number, updates: any): Promise<Trip | undefined> {
     const [updated] = await db
@@ -415,7 +408,6 @@ export class ConsumerDatabaseStorage implements IStorage {
       .insert(activities)
       .values({
         trip_id: insertActivity.trip_id,
-        organizationId: null, // Always null for consumers
         title: insertActivity.title,
         date: insertActivity.date,
         time: insertActivity.time,
@@ -498,6 +490,28 @@ export class ConsumerDatabaseStorage implements IStorage {
       .from(notes)
       .where(eq(notes.trip_id, tripId))
       .orderBy(desc(notes.created_at));
+  }
+
+  async updateNote(id: number, updates: { content: string }): Promise<Note | undefined> {
+    const [updated] = await db
+      .update(notes)
+      .set({
+        content: updates.content,
+        updated_at: new Date()
+      })
+      .where(eq(notes.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async deleteNote(id: number): Promise<boolean> {
+    const result = await db
+      .delete(notes)
+      .where(eq(notes.id, id))
+      .returning();
+    
+    return result.length > 0;
   }
 
   async createTodo(todoData: any): Promise<Todo> {
@@ -1281,7 +1295,7 @@ export class ConsumerDatabaseStorage implements IStorage {
     const result = await db
       .delete(groupExpenses)
       .where(eq(groupExpenses.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async settleGroupExpense(id: number): Promise<any | undefined> {

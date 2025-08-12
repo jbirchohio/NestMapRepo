@@ -13,7 +13,6 @@ if (process.env.SENDGRID_API_KEY) {
 }
 
 interface BrandingContext {
-  organizationId?: number;
   domain?: string;
 }
 

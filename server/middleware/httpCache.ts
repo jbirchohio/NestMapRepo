@@ -62,6 +62,7 @@ const cacheProfiles: Record<string, CacheConfig> = {
 
   // Sensitive data - never cache
   sensitive: {
+    maxAge: 0,
     noStore: true
   }
 };

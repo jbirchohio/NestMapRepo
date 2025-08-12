@@ -21,8 +21,8 @@ async function runMigration() {
   try {
     console.log('Running migration to add missing tables and columns...');
     
-    // Create a direct connection
-    const sql = neon(DATABASE_URL);
+    // Create a direct connection (DATABASE_URL is already checked above)
+    const sql = neon(DATABASE_URL!);
     
     // Read the SQL file
     const sqlPath = path.join(__dirname, 'add-missing-tables.sql');

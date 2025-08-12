@@ -52,9 +52,12 @@ export const QUERY_LIMITS = {
  * Apply query limit with validation
  */
 export function applyLimit(requestedLimit?: number, entityType?: keyof typeof QUERY_LIMITS): number {
-  const limits = entityType && QUERY_LIMITS[entityType] 
-    ? QUERY_LIMITS[entityType] 
-    : { DEFAULT: QUERY_LIMITS.DEFAULT_LIMIT, MAX: QUERY_LIMITS.MAX_LIMIT };
+  const configValue = entityType ? QUERY_LIMITS[entityType] : null;
+  
+  // Determine limits based on whether configValue is a number or an object
+  const limits = typeof configValue === 'number'
+    ? { DEFAULT: configValue, MAX: configValue }
+    : configValue || { DEFAULT: QUERY_LIMITS.DEFAULT_LIMIT, MAX: QUERY_LIMITS.MAX_LIMIT };
   
   if (!requestedLimit || requestedLimit <= 0) {
     return limits.DEFAULT;

@@ -524,7 +524,7 @@ export default function HomeConsumerRedesigned() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleArchiveTrip(trip.id);
+                                handleArchiveTrip(String(trip.id));
                               }}
                               className="h-8 w-8 p-0"
                             >
@@ -535,7 +535,7 @@ export default function HomeConsumerRedesigned() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteTrip(trip.id);
+                                handleDeleteTrip(String(trip.id));
                               }}
                               className="h-8 w-8 p-0 hover:text-red-600"
                             >

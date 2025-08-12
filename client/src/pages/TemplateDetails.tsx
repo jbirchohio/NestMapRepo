@@ -84,7 +84,7 @@ export default function TemplateDetails() {
     if (template) {
       analytics.trackTemplatePurchase(
         template.id,
-        template.price || 0,
+        Number(template.price) || 0,
         template.title
       );
     }

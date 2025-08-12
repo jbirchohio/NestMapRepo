@@ -10,7 +10,6 @@ declare module 'jsonwebtoken' {
 
 interface AuthenticatedWebSocket extends WebSocket {
   user_id?: number;
-  organization_id?: number;
   trip_id?: number;
 }
 
@@ -51,7 +50,6 @@ export class CollaborationWebSocketServer {
       // Verify JWT token - FIX: Should use JWT_SECRET not SESSION_SECRET
       const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.SESSION_SECRET || 'dev-secret') as any;
       ws.user_id = decoded.user_id;
-      ws.organization_id = decoded.organization_id;
 
       ws.on('message', (data) => this.handleMessage(ws, data));
       ws.on('close', () => this.handleDisconnect(ws));
@@ -62,8 +60,7 @@ export class CollaborationWebSocketServer {
       // Send welcome message
       ws.send(JSON.stringify({
         type: 'connected',
-        userId: ws.user_id,
-        organizationId: ws.organization_id
+        userId: ws.user_id
       }));
 
     } catch (error) {
@@ -129,8 +126,7 @@ export class CollaborationWebSocketServer {
     // Notify other users in the trip
     this.broadcastToTrip(tripId, {
       type: 'user_joined',
-      userId: ws.user_id,
-      organizationId: ws.organization_id
+      userId: ws.user_id
     }, ws);
   }
 
@@ -184,10 +180,6 @@ export class CollaborationWebSocketServer {
 
     room.forEach(client => {
       if (client !== sender && client.readyState === WebSocket.OPEN) {
-        // Verify client still belongs to same organization
-        if (sender?.organization_id && client.organization_id !== sender.organization_id) {
-          return; // Skip cross-organization broadcasts
-        }
 
         client.send(messageString);
       }
@@ -223,10 +215,9 @@ export class CollaborationWebSocketServer {
   }
 
   // Public method to broadcast trip updates from API endpoints
-  public notifyTripUpdate(tripId: number, organizationId: number, updateType: string, data: any) {
+  public notifyTripUpdate(tripId: number, updateType: string, data: any) {
     this.broadcastToTrip(tripId, {
       type: updateType,
-      organizationId,
       data,
       timestamp: new Date()
     });
@@ -296,15 +287,13 @@ export const WebSocketService = {
     wsInstance = instance;
   },
 
-  broadcast: (organizationId: number, data: any) => {
+  broadcast: (data: any) => {
     if (!wsInstance) {
       return;
     }
 
-    // Get all clients for this organization
     const message = JSON.stringify({
       type: 'broadcast',
-      organizationId,
       data
     });
 

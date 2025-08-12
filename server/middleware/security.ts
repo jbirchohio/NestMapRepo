@@ -58,10 +58,6 @@ export function enforceOrganizationSecurity(req: Request, res: Response, next: N
     return next();
   }
 
-  // Ensure user has organization context for protected resources
-  if (req.user && req.user.organization_id) {
-    req.organizationFilter = (orgId: number | null) => orgId === req.user!.organization_id;
-  }
 
   next();
 }
@@ -72,8 +68,7 @@ export function enforceOrganizationSecurity(req: Request, res: Response, next: N
 export const securitySchemas = {
   tripAccess: z.object({
     trip_id: z.number().positive(),
-    user_id: z.number().positive(),
-    organizationId: z.number().positive().optional()
+    user_id: z.number().positive()
   }),
 
   userPermissions: z.object({
@@ -82,10 +77,6 @@ export const securitySchemas = {
     resource: z.string().min(1)
   }),
 
-  organizationData: z.object({
-    organizationId: z.number().positive(),
-    data: z.record(z.any())
-  })
 };
 
 /**
@@ -97,7 +88,6 @@ export function auditLogger(action: string, resource: string) {
       action,
       resource,
       user_id: req.user?.id,
-      organizationId: req.user?.organization_id,
       ip: req.ip,
       userAgent: req.get('user-agent'),
       timestamp: new Date().toISOString(),

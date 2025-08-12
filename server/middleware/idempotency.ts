@@ -74,7 +74,7 @@ export function idempotent(options?: {
 
       // Set headers from cached response
       Object.entries(cached.headers).forEach(([header, value]) => {
-        res.setHeader(header, value);
+        res.setHeader(header, value as string | number | readonly string[]);
       });
 
       // Add idempotency header

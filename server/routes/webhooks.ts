@@ -23,7 +23,7 @@ if (!webhookSecret) {
 }
 
 const stripe = stripeKey
-  ? new Stripe(stripeKey, { apiVersion: '2023-10-16' })
+  ? new Stripe(stripeKey, { apiVersion: '2025-07-30.basil' })
   : null;
 
 // Webhook endpoint - NOTE: This must NOT use JSON body parser middleware
@@ -191,7 +191,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     await db.update(creatorBalances)
       .set({
         available_balance: sql`available_balance + ${sellerEarnings}`,
-        total_earned: sql`total_earned + ${sellerEarnings}`,
+        lifetime_earnings: sql`lifetime_earnings + ${sellerEarnings}`,
         updated_at: new Date()
       })
       .where(eq(creatorBalances.user_id, sellerId));
@@ -201,8 +201,8 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         user_id: sellerId,
         available_balance: sellerEarnings.toString(),
         pending_balance: '0',
-        total_earned: sellerEarnings.toString(),
-        total_withdrawn: '0',
+        lifetime_earnings: sellerEarnings.toString(),
+        lifetime_payouts: '0',
         currency: 'USD'
       });
   }

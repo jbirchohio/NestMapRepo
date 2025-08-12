@@ -145,7 +145,7 @@ export class AnalyticsService {
       conversionRate,
       averageRating: parseFloat(t.rating || '0') || null,
       reviewCount: t.review_count || 0,
-      shareCount: shares[0]?.count || 0,
+      shareCount: Number(shares[0]?.count || 0),
       dailyStats
     };
   }
@@ -419,7 +419,7 @@ export class AnalyticsService {
   private async getTopTemplates(templateIds: number[], limit: number): Promise<TemplatePerformance[]> {
     if (templateIds.length === 0) return [];
 
-    const templates = await db.select({
+    const templateResults = await db.select({
       id: templates.id,
       title: templates.title,
       salesCount: templates.sales_count,
@@ -433,7 +433,7 @@ export class AnalyticsService {
     // Get revenue for each template
     const performances: TemplatePerformance[] = [];
 
-    for (const template of templates) {
+    for (const template of templateResults) {
       const purchases = await db.select({
         earnings: templatePurchases.seller_earnings
       })

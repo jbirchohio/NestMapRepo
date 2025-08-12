@@ -105,7 +105,7 @@ router.get('/sitemap.xml', async (req, res) => {
         updated_at: trips.updated_at
       })
       .from(trips)
-      .where(sql`${trips.privacy_level} = 'public'`)
+      .where(eq(trips.is_public, true))
       .limit(1000);
 
       publicTrips.forEach(trip => {

@@ -125,8 +125,8 @@ router.get("/year/:year", requireAuth, async (req, res) => {
         const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         return sum + days;
       }, 0),
-      countriesVisited: [...new Set(userTrips.map(t => t.country).filter(Boolean))],
-      citiesVisited: [...new Set(userTrips.map(t => t.city).filter(Boolean))],
+      countriesVisited: [...new Set(userTrips.map(t => t.country).filter(Boolean))] as string[],
+      citiesVisited: [...new Set(userTrips.map(t => t.city).filter(Boolean))] as string[],
       totalActivities: userActivities.length,
     };
     

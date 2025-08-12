@@ -5,9 +5,7 @@ export interface JWTUser {
   username: string;
   email: string;
   role: string;
-  organization_id: number;
   // Additional properties that may be used in some contexts
-  organizationId?: number; // Alias for organization_id
   userId?: number; // Alias for id
   user_id?: number; // Another alias for id
   roleType?: string;
@@ -15,7 +13,6 @@ export interface JWTUser {
   displayName?: string;
   permissions?: string[];
   subscription_tier?: string;
-  organization_tier?: string;
 }
 
 import { Request } from 'express';
@@ -35,10 +32,7 @@ export interface AuditLogEntry {
 }
 
 export interface SecureQueryBuilder {
-  organizationId?: number;
-  organization_id?: number;
   userId?: number;
-  enforceOrganizationScope: boolean;
 }
 
 export type UserRole = 'admin' | 'manager' | 'user' | 'guest' | 'super_admin';

@@ -65,8 +65,9 @@ export default function WeekendTripModal({
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedWeekend, setSelectedWeekend] = useState<'this' | 'next'>('next');
+  const [selectedWeekend, setSelectedWeekend] = useState<'this' | 'next' | 'custom'>('next');
   const [useAI, setUseAI] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
 
   // Rotate examples
   useEffect(() => {
@@ -80,18 +81,31 @@ export default function WeekendTripModal({
   // Calculate default weekend dates
   const getWeekendDates = (which: 'this' | 'next') => {
     const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
     let friday: Date;
     let sunday: Date;
 
     if (which === 'this') {
       // This weekend (upcoming Friday-Sunday)
-      friday = nextFriday(today);
-      sunday = nextSunday(today);
+      // If it's already Friday or later in the week, get the next weekend instead
+      if (dayOfWeek >= 5) { // Friday = 5, Saturday = 6
+        // It's already Friday or Saturday, so get next weekend
+        const nextWeek = addDays(today, 7);
+        friday = nextFriday(nextWeek);
+        sunday = nextSunday(nextWeek);
+      } else {
+        // Get this Friday-Sunday
+        friday = nextFriday(today);
+        sunday = nextSunday(today);
+      }
     } else {
-      // Next weekend
-      const nextWeek = addDays(today, 7);
-      friday = nextFriday(nextWeek);
-      sunday = nextSunday(nextWeek);
+      // Next weekend (always the following weekend)
+      const daysUntilNextFriday = dayOfWeek >= 5 ? 
+        (12 - dayOfWeek) : // If Friday or later, jump to next week's Friday
+        (5 - dayOfWeek + 7); // Otherwise, skip this week's Friday
+      
+      friday = addDays(today, daysUntilNextFriday);
+      sunday = addDays(friday, 2);
     }
 
     return { startDate: friday, endDate: sunday };
@@ -149,11 +163,13 @@ export default function WeekendTripModal({
     setShowSuggestions(false);
   };
 
-  const handleWeekendChange = (which: 'this' | 'next') => {
+  const handleWeekendChange = (which: 'this' | 'next' | 'custom') => {
     setSelectedWeekend(which);
-    const dates = getWeekendDates(which);
-    setValue("startDate", dates.startDate);
-    setValue("endDate", dates.endDate);
+    if (which !== 'custom') {
+      const dates = getWeekendDates(which);
+      setValue("startDate", dates.startDate);
+      setValue("endDate", dates.endDate);
+    }
   };
 
   const onSubmit = async (data: TripFormValues) => {
@@ -301,29 +317,84 @@ export default function WeekendTripModal({
 
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
             {/* Weekend Selection */}
-            <div className="flex gap-2 mb-4">
-              <Button
-                type="button"
-                variant={selectedWeekend === 'this' ? 'default' : 'outline'}
-                onClick={() => handleWeekendChange('this')}
-                className="flex-1"
-              >
-                This Weekend
-                <span className="ml-2 text-xs opacity-75">
-                  {format(getWeekendDates('this').startDate, 'MMM d')}
-                </span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedWeekend === 'next' ? 'default' : 'outline'}
-                onClick={() => handleWeekendChange('next')}
-                className="flex-1"
-              >
-                Next Weekend
-                <span className="ml-2 text-xs opacity-75">
-                  {format(getWeekendDates('next').startDate, 'MMM d')}
-                </span>
-              </Button>
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700">
+                <Calendar className="inline h-4 w-4 mr-1" />
+                When's your escape?
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant={selectedWeekend === 'this' ? 'default' : 'outline'}
+                  onClick={() => handleWeekendChange('this')}
+                  size="sm"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">This Weekend</div>
+                    <div className="text-xs opacity-75">
+                      {format(getWeekendDates('this').startDate, 'MMM d')}
+                    </div>
+                  </div>
+                </Button>
+                <Button
+                  type="button"
+                  variant={selectedWeekend === 'next' ? 'default' : 'outline'}
+                  onClick={() => handleWeekendChange('next')}
+                  size="sm"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">Next Weekend</div>
+                    <div className="text-xs opacity-75">
+                      {format(getWeekendDates('next').startDate, 'MMM d')}
+                    </div>
+                  </div>
+                </Button>
+                <Button
+                  type="button"
+                  variant={selectedWeekend === 'custom' ? 'default' : 'outline'}
+                  onClick={() => setSelectedWeekend('custom')}
+                  size="sm"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">Pick Dates</div>
+                    <div className="text-xs opacity-75">Custom</div>
+                  </div>
+                </Button>
+              </div>
+              
+              {/* Custom Date Selection */}
+              {selectedWeekend === 'custom' && (
+                <div className="grid grid-cols-2 gap-3 mt-3 p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Start Date (Friday)</label>
+                    <Input
+                      type="date"
+                      min={format(new Date(), 'yyyy-MM-dd')}
+                      value={watchedStartDate ? format(watchedStartDate, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => {
+                        const date = new Date(e.target.value);
+                        setValue('startDate', date);
+                        // Auto-set end date to Sunday (2 days later)
+                        setValue('endDate', addDays(date, 2));
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">End Date (Sunday)</label>
+                    <Input
+                      type="date"
+                      min={watchedStartDate ? format(watchedStartDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')}
+                      value={watchedEndDate ? format(watchedEndDate, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => setValue('endDate', new Date(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="col-span-2 text-xs text-gray-500">
+                    💡 Pro tip: Fridays to Sundays work best for weekend trips!
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Popular Destinations */}

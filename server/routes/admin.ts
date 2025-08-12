@@ -151,11 +151,7 @@ router.get('/users', async (req, res) => {
     const { page = 1, limit = 20, role, creator_status: creatorStatus } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    // Build query
-    let query = db.select()
-      .from(users);
-
-    // Apply filters
+    // Build query with conditions
     const conditions = [];
     if (role) {
       conditions.push(eq(users.role, role as string));
@@ -164,11 +160,9 @@ router.get('/users', async (req, res) => {
       conditions.push(eq(users.creator_status, creatorStatus as string));
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const allUsers = await query
+    const allUsers = await db.select()
+      .from(users)
+      .where(conditions.length > 0 ? and(...conditions) : sql`true`)
       .orderBy(desc(users.created_at))
       .limit(Number(limit))
       .offset(offset);
@@ -374,23 +368,6 @@ router.get('/financials/transactions', requireSuperAdmin, async (req, res) => {
     const { page = 1, limit = 50, status, startDate, endDate } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    let query = db.select({
-      id: templatePurchases.id,
-      template_id: templatePurchases.template_id,
-      template_title: templates.title,
-      buyer_id: templatePurchases.buyer_id,
-      buyer_username: users.username,
-      creator_id: templates.user_id,
-      price: templatePurchases.price,
-      platform_fee: templatePurchases.platform_fee,
-      creator_payout: templatePurchases.seller_earnings,
-      payout_status: templatePurchases.payout_status,
-      purchased_at: templatePurchases.purchased_at
-    })
-    .from(templatePurchases)
-    .leftJoin(templates, eq(templatePurchases.template_id, templates.id))
-    .leftJoin(users, eq(templatePurchases.buyer_id, users.id));
-
     // Apply filters
     const conditions = [];
     if (status) {
@@ -405,25 +382,33 @@ router.get('/financials/transactions', requireSuperAdmin, async (req, res) => {
       conditions.push(sql`${templatePurchases.purchased_at} <= ${endDateTime}`);
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const transactions = await query
-      .orderBy(desc(templatePurchases.purchased_at))
-      .limit(Number(limit))
-      .offset(offset);
+    const transactions = await db.select({
+      id: templatePurchases.id,
+      template_id: templatePurchases.template_id,
+      template_title: templates.title,
+      buyer_id: templatePurchases.buyer_id,
+      buyer_username: users.username,
+      creator_id: templates.user_id,
+      price: templatePurchases.price,
+      platform_fee: templatePurchases.platform_fee,
+      creator_payout: templatePurchases.seller_earnings,
+      payout_status: templatePurchases.payout_status,
+      purchased_at: templatePurchases.purchased_at
+    })
+    .from(templatePurchases)
+    .leftJoin(templates, eq(templatePurchases.template_id, templates.id))
+    .leftJoin(users, eq(templatePurchases.buyer_id, users.id))
+    .where(conditions.length > 0 ? and(...conditions) : sql`true`)
+    .orderBy(desc(templatePurchases.purchased_at))
+    .limit(Number(limit))
+    .offset(offset);
 
     // Get total count for pagination
-    const countQuery = db.select({
+    const [{ count }] = await db.select({
       count: sql<number>`count(*)`
-    }).from(templatePurchases);
-
-    if (conditions.length > 0) {
-      countQuery.where(and(...conditions));
-    }
-
-    const [{ count }] = await countQuery;
+    })
+    .from(templatePurchases)
+    .where(conditions.length > 0 ? and(...conditions) : sql`true`);
 
     res.json({
       transactions,
@@ -445,35 +430,34 @@ router.post('/financials/process-payouts', requireSuperAdmin, async (req, res) =
   try {
     const { creatorId, purchaseIds } = req.body;
 
-    let updateQuery = db.update(templatePurchases)
-      .set({
-        payout_status: 'processing',
-        payout_initiated_at: new Date()
-      });
-
-    if (purchaseIds && Array.isArray(purchaseIds)) {
-      // Process specific purchases
-      updateQuery = updateQuery.where(
-        and(
-          sql`${templatePurchases.id} = ANY(${purchaseIds})`,
-          eq(templatePurchases.payout_status, 'pending')
-        )
-      );
-    } else if (creatorId) {
-      // Process all pending for a creator
-      updateQuery = updateQuery.where(
-        and(
-          eq(templatePurchases.payout_status, 'pending'),
-          sql`${templatePurchases.template_id} IN (
-            SELECT id FROM ${templates} WHERE user_id = ${creatorId}
-          )`
-        )
-      );
-    } else {
+    if (!purchaseIds && !creatorId) {
       return res.status(400).json({ message: 'Either creatorId or purchaseIds required' });
     }
 
-    const result = await updateQuery.returning();
+    let whereClause;
+    if (purchaseIds && Array.isArray(purchaseIds)) {
+      // Process specific purchases
+      whereClause = and(
+        sql`${templatePurchases.id} = ANY(${purchaseIds})`,
+        eq(templatePurchases.payout_status, 'pending')
+      );
+    } else if (creatorId) {
+      // Process all pending for a creator
+      whereClause = and(
+        eq(templatePurchases.payout_status, 'pending'),
+        sql`${templatePurchases.template_id} IN (
+          SELECT id FROM ${templates} WHERE user_id = ${creatorId}
+        )`
+      );
+    }
+
+    const result = await db.update(templatePurchases)
+      .set({
+        payout_status: 'processing',
+        payout_initiated_at: new Date()
+      })
+      .where(whereClause!)
+      .returning();
 
     logger.info(`Super admin initiated payout processing for ${result.length} purchases`);
     res.json({
@@ -684,9 +668,9 @@ router.get('/cache/stats', async (req, res) => {
       ai: aiStats,
       summary: {
         totalCacheEntries: geocodeStats.entries + aiStats.entries,
-        totalCacheSizeMB: geocodeStats.sizeMB + aiStats.sizeMB,
+        totalCacheSizeMB: geocodeStats.sizeMB + aiStats.memorySizeMB,
         geocodeHitRate: geocodeStats.hitRate,
-        aiHitRate: aiStats.hitRate
+        aiHitRate: aiStats.averageHits
       }
     });
   } catch (error) {
@@ -822,19 +806,20 @@ router.post('/templates/generate', async (req, res) => {
     else if (cityLower.includes('sydney') || cityLower.includes('melbourne')) country = 'Australia';
 
     // Auto-generate title based on city and duration
-    const cityName = city.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const cityName = city.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     const title = `Ultimate ${duration}-Day ${cityName} ${duration <= 3 ? 'City Break' : duration <= 7 ? 'Adventure' : 'Journey'}`;
 
     // Generate AI itinerary using the existing AI service
-    const openaiClient = (await import('../services/openaiClient')).default;
+    const { getOpenAIClient } = await import('../services/openaiClient');
+    const openaiClient = getOpenAIClient();
 
     // Calculate budget if requested
     let budgetInstructions = '';
     let totalBudget = 0;
+    let calculatedDailyBudget = 0;
     
     if (includeBudget) {
       // Determine daily budget based on level or custom amount
-      let calculatedDailyBudget: number;
       if (dailyBudget && dailyBudget > 0) {
         calculatedDailyBudget = dailyBudget;
       } else {
@@ -1066,22 +1051,22 @@ router.post('/templates/generate', async (req, res) => {
 });
 
 // Get Remvana/seed templates for bundle creation
-router.get("/remvana-templates", requireAdmin, async (req: Request, res: Response) => {
+router.get("/remvana-templates", requireAdmin, async (req: any, res: any) => {
   try {
     // Get templates from Remvana/seed users (adjust IDs based on your seed data)
     const remvanaUserIds = [1, 2, 3]; // Your seed user IDs
     
-    const templates = await db
+    const remvanaTemplates = await db
       .select()
-      .from(templatesTable)
+      .from(templates)
       .where(
         or(
-          inArray(templatesTable.user_id, remvanaUserIds),
-          eq(templatesTable.ai_generated, true)
+          inArray(templates.user_id, remvanaUserIds),
+          eq(templates.ai_generated, true)
         )
       );
 
-    res.json({ templates });
+    res.json({ templates: remvanaTemplates });
   } catch (error) {
     logger.error("Error fetching Remvana templates:", error);
     res.status(500).json({ error: "Failed to fetch templates" });

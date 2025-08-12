@@ -26,13 +26,13 @@ router.get('/share/:shareCode', async (req: Request, res: Response) => {
     }
 
     // Get activities for the trip
-    const activities = await storage.getActivitiesForTrip(trip.id);
+    const activities = await storage.getActivitiesByTripId(trip.id);
     
     // Get notes for the trip (if allowed)
-    const notes = trip.share_permission === 'edit' ? await storage.getNotesForTrip(trip.id) : [];
+    const notes = trip.share_permission === 'edit' ? await storage.getNotesByTripId(trip.id) : [];
     
     // Get todos for the trip (if allowed)
-    const todos = trip.share_permission === 'edit' ? await storage.getTodosForTrip(trip.id) : [];
+    const todos = trip.share_permission === 'edit' ? await storage.getTodosByTripId(trip.id) : [];
 
     // Track view analytics
     logger.info('Public trip view', { 
@@ -57,7 +57,7 @@ router.get('/share/:shareCode', async (req: Request, res: Response) => {
         locationName: activity.location_name,
         date: activity.date,
         time: activity.time,
-        duration: activity.duration,
+        // duration: activity.duration, // TODO: Add duration field to activities table
         notes: activity.notes,
         latitude: activity.latitude,
         longitude: activity.longitude,
@@ -70,9 +70,9 @@ router.get('/share/:shareCode', async (req: Request, res: Response) => {
       })),
       todos: todos.map(todo => ({
         id: todo.id,
-        task: todo.task,
-        completed: todo.completed,
-        priority: todo.priority
+        task: todo.content,
+        completed: todo.is_completed || false,
+        priority: 'medium' // TODO: Add priority field to todos table
       })),
       // Basic trip metadata
       duration: Math.ceil((new Date(trip.end_date).getTime() - new Date(trip.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1,

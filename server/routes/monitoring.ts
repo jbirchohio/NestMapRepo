@@ -79,7 +79,7 @@ router.get('/health/detailed', async (req, res) => {
     database: {
       ...dbStats,
       healthy: dbStats.errors === 0,
-      poolUtilization: `${((dbStats.active / dbStats.config.max) * 100).toFixed(2)}%`
+      poolUtilization: dbStats.config?.max ? `${((dbStats.active / dbStats.config.max) * 100).toFixed(2)}%` : 'N/A'
     },
     cache: {
       hitRate: `${(cacheStats.hitRate * 100).toFixed(2)}%`,

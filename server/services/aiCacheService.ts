@@ -54,12 +54,14 @@ class AISearchCache {
     // Check memory limit before size limit
     while ((this.currentMemoryUsage + dataSize > maxMemoryBytes || this.cache.size >= this.maxSize) && this.cache.size > 0) {
       const firstKey = this.cache.keys().next().value;
-      const entry = this.cache.get(firstKey);
-      if (entry) {
-        const entrySize = Buffer.byteLength(JSON.stringify(entry.data));
-        this.currentMemoryUsage -= entrySize;
+      if (firstKey !== undefined) {
+        const entry = this.cache.get(firstKey);
+        if (entry) {
+          const entrySize = Buffer.byteLength(JSON.stringify(entry.data));
+          this.currentMemoryUsage -= entrySize;
+        }
+        this.cache.delete(firstKey);
       }
-      this.cache.delete(firstKey);
     }
     
     this.cache.set(key, {

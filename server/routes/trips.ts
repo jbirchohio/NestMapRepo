@@ -69,16 +69,13 @@ router.get('/corporate', async (req: Request, res: Response) => {
         return {
           id: trip.id,
           title: trip.title,
-          startDate: trip.start_date.toISOString(),
-          endDate: trip.end_date.toISOString(),
+          startDate: trip.start_date,
+          endDate: trip.end_date,
           userId: trip.user_id,
           city: trip.city,
           country: trip.country,
           budget: trip.budget,
-          completed: trip.completed,
           trip_type: trip.trip_type,
-          client_name: trip.client_name,
-          project_type: trip.project_type,
           userName: user?.display_name || 'Unknown User',
           userEmail: user?.email || 'No Email'
         };
@@ -227,7 +224,6 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
       startDate: trip.start_date ? new Date(trip.start_date).toISOString().split('T')[0] : null,
       endDate: trip.end_date ? new Date(trip.end_date).toISOString().split('T')[0] : null,
       userId: trip.user_id,
-      organizationId: trip.organization_id,
       collaborators: trip.collaborators || [],
       isPublic: trip.is_public,
       shareCode: trip.share_code,
@@ -241,11 +237,7 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
       hotel: trip.hotel,
       hotelLatitude: trip.hotel_latitude,
       hotelLongitude: trip.hotel_longitude,
-      completed: trip.completed,
-      completedAt: trip.completed_at,
       tripType: trip.trip_type,
-      clientName: trip.client_name,
-      projectType: trip.project_type,
       budget: trip.budget,
       createdAt: trip.created_at ? new Date(trip.created_at).toISOString() : null,
       updatedAt: trip.updated_at ? new Date(trip.updated_at).toISOString() : null,
@@ -382,12 +374,12 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
       companyName: "Remvana Travel Services",
       estimatedCost: trip.budget || 0,
       costBreakdown: {
-        flights: Math.round((trip.budget || 0) * 0.4),
-        hotels: Math.round((trip.budget || 0) * 0.3),
-        activities: Math.round((trip.budget || 0) * 0.15),
-        meals: Math.round((trip.budget || 0) * 0.1),
-        transportation: Math.round((trip.budget || 0) * 0.03),
-        miscellaneous: Math.round((trip.budget || 0) * 0.02)
+        flights: Math.round(Number(trip.budget || 0) * 0.4),
+        hotels: Math.round(Number(trip.budget || 0) * 0.3),
+        activities: Math.round(Number(trip.budget || 0) * 0.15),
+        meals: Math.round(Number(trip.budget || 0) * 0.1),
+        transportation: Math.round(Number(trip.budget || 0) * 0.03),
+        miscellaneous: Math.round(Number(trip.budget || 0) * 0.02)
       },
       proposalNotes: message || "We're excited to present this customized travel itinerary tailored specifically for your needs.",
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -552,86 +544,6 @@ router.post("/:id/add-hotel", async (req: Request, res: Response) => {
   }
 });
 
-// Export the router
-// Trip Travelers Routes - Team member management for corporate trips
-
-// Get all travelers for a specific trip
-router.get("/:id/travelers", async (req: Request, res: Response) => {
-  try {
-    const tripId = parseInt(req.params.id);
-    if (isNaN(tripId)) {
-      return res.status(400).json({ message: "Invalid trip ID" });
-    }
-
-    const travelers = await storage.getTripTravelers(tripId);
-    res.json(travelers);
-  } catch (error) {
-    logger.error("Error fetching trip travelers:", error);
-    res.status(500).json({ message: "Could not fetch trip travelers" });
-  }
-});
-
-// Add a traveler to a trip
-router.post("/:id/travelers", async (req: Request, res: Response) => {
-  try {
-    const tripId = parseInt(req.params.id);
-    if (isNaN(tripId)) {
-      return res.status(400).json({ message: "Invalid trip ID" });
-    }
-
-    const travelerData = {
-      trip_id: tripId,
-      ...req.body
-    };
-
-    const newTraveler = await storage.addTripTraveler(travelerData);
-    res.status(201).json(newTraveler);
-  } catch (error) {
-    logger.error("Error adding trip traveler:", error);
-    res.status(500).json({ message: "Could not add trip traveler" });
-  }
-});
-
-// Update a traveler's information
-router.put("/:id/travelers/:travelerId", async (req: Request, res: Response) => {
-  try {
-    const tripId = parseInt(req.params.id);
-    const travelerId = parseInt(req.params.travelerId);
-
-    if (isNaN(tripId) || isNaN(travelerId)) {
-      return res.status(400).json({ message: "Invalid trip or traveler ID" });
-    }
-
-    const updatedTraveler = await storage.updateTripTraveler(travelerId, req.body);
-    if (!updatedTraveler) {
-      return res.status(404).json({ message: "Traveler not found" });
-    }
-
-    res.json(updatedTraveler);
-  } catch (error) {
-    logger.error("Error updating trip traveler:", error);
-    res.status(500).json({ message: "Could not update trip traveler" });
-  }
-});
-
-// Remove a traveler from a trip
-router.delete("/:id/travelers/:travelerId", async (req: Request, res: Response) => {
-  try {
-    const tripId = parseInt(req.params.id);
-    const travelerId = parseInt(req.params.travelerId);
-
-    if (isNaN(tripId) || isNaN(travelerId)) {
-      return res.status(400).json({ message: "Invalid trip or traveler ID" });
-    }
-
-    await storage.removeTripTraveler(travelerId);
-    res.status(204).send();
-  } catch (error) {
-    logger.error("Error removing trip traveler:", error);
-    res.status(500).json({ message: "Could not remove trip traveler" });
-  }
-});
-
 // Toggle collaborative mode for a trip
 router.put("/:id/collaborative", async (req: Request, res: Response) => {
   try {
@@ -692,19 +604,21 @@ router.put("/:id/toggle-complete", async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Only trip owner can toggle completion status" });
     }
 
-    // Toggle the completion status
-    const newStatus = !trip.completed;
+    // For now, we'll use the status field to track completion
+    const isCompleted = trip.status === 'completed';
+    const newStatus = isCompleted ? 'active' : 'completed';
+    
     await db
       .update(tripsTable)
       .set({
-        completed: newStatus,
-        completed_at: newStatus ? new Date() : null
+        status: newStatus,
+        updated_at: new Date()
       })
       .where(eq(tripsTable.id, tripId));
 
     res.json({ 
-      message: newStatus ? "Trip marked as completed" : "Trip marked as ongoing",
-      completed: newStatus
+      message: newStatus === 'completed' ? "Trip marked as completed" : "Trip marked as ongoing",
+      completed: newStatus === 'completed'
     });
   } catch (error) {
     logger.error("Error toggling trip completion:", error);

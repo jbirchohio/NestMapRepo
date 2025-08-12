@@ -370,14 +370,8 @@ export function organizationRateLimit(req: Request, res: Response, next: NextFun
     return next();
   }
 
-  if (!req.user?.organization_id) {
-    // No organization context, apply free tier limits
-    return tieredRateLimit('free')(req, res, next);
-  }
-
-  // Determine organization tier (would typically come from database)
-  const orgTier = (req.user as any)?.organization_tier || 'free';
-  return tieredRateLimit(orgTier)(req, res, next);
+  // Apply free tier limits for all consumer users
+  return tieredRateLimit('free')(req, res, next);
 }
 
 /**
@@ -386,8 +380,8 @@ export function organizationRateLimit(req: Request, res: Response, next: NextFun
 export function tieredRateLimit(tier: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const ip = req.ip || req.connection.remoteAddress || 'unknown';
-    const orgId = req.user?.organization_id || 'none';
-    const key = `tier:${tier}:${orgId}:${ip}`;
+    const orgId = 'none';
+    const key = `tier:${tier}:${ip}`;
 
     const result = comprehensiveRateLimit.checkLimit(key, tier);
 

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { insertActivitySchema, transformActivityToFrontend } from '@shared/schema';
-import { transformActivityToDatabase } from '@shared/fieldTransforms';
+import { insertActivitySchema } from '@shared/schema';
+import { transformActivityToDatabase, transformActivityToFrontend } from '@shared/fieldTransforms';
 import { jwtAuthMiddleware } from '../middleware/jwtAuth';
 // Organization scoping removed for consumer app
 import { storage } from '../storage';
@@ -58,7 +58,6 @@ router.post("/", async (req: Request, res: Response) => {
       assigned_to: req.body.assigned_to,
       order: req.body.order,
       travel_mode: req.body.travel_mode,
-      organization_id: req.user?.organization_id
     });
 
     // Verify trip exists and user has access
@@ -74,7 +73,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Geocode location if coordinates are not provided
     if (activityData.location_name && (!activityData.latitude || !activityData.longitude)) {
-      const geocodeResult = await geocodeLocation(activityData.location_name, trip.city || trip.location);
+      const geocodeResult = await geocodeLocation(activityData.location_name, trip.city || trip.location || undefined);
 
       if (geocodeResult) {
         activityData.latitude = geocodeResult.latitude;
@@ -151,7 +150,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 
       // Get trip to use city as context
       const trip = await storage.getTrip(existingActivity.trip_id);
-      const geocodeResult = await geocodeLocation(updateData.location_name, trip?.city || trip?.location);
+      const geocodeResult = await geocodeLocation(updateData.location_name, trip?.city || trip?.location || undefined);
 
       if (geocodeResult) {
         updateData.latitude = geocodeResult.latitude;
@@ -234,10 +233,6 @@ router.put("/:id/order", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot reorder this activity" });
-    }
 
     const updatedActivity = await storage.updateActivity(activityId, { order });
 

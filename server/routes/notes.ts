@@ -12,8 +12,7 @@ router.use(jwtAuthMiddleware);
 // Validation schemas
 const createNoteSchema = z.object({
   tripId: z.number(),
-  content: z.string().min(1),
-  organizationId: z.number().optional()
+  content: z.string().min(1)
 });
 
 const updateNoteSchema = z.object({
@@ -43,16 +42,11 @@ router.post('/', async (req, res) => {
     // Map them to camelCase for the schema
     const dataToValidate = {
       tripId: req.body.trip_id,
-      content: req.body.content,
-      organizationId: req.body.organization_id
+      content: req.body.content
     };
 
     const validatedData = createNoteSchema.parse(dataToValidate);
 
-    // Set organization ID from authenticated user if not provided
-    if (!validatedData.organizationId && req.user?.organization_id) {
-      validatedData.organizationId = req.user.organization_id;
-    }
 
     const note = await storage.createNote(validatedData);
     res.status(201).json(note);
@@ -75,11 +69,10 @@ router.put('/:id', async (req, res) => {
 
     const validatedData = updateNoteSchema.parse(req.body);
     const note = await storage.updateNote(noteId, validatedData);
-
+    
     if (!note) {
       return res.status(404).json({ message: 'Note not found' });
     }
-
     res.json(note);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -99,11 +92,10 @@ router.delete('/:id', async (req, res) => {
     }
 
     const success = await storage.deleteNote(noteId);
-
+    
     if (!success) {
       return res.status(404).json({ message: 'Note not found' });
     }
-
     res.json({ message: 'Note deleted successfully' });
   } catch (error) {
     logger.error('Error deleting note', { error: error instanceof Error ? error.message : 'Unknown error' });

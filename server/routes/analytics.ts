@@ -14,7 +14,6 @@ router.get('/template/:id', requireAuth, async (req, res) => {
     const templateId = parseInt(req.params.id);
     const { startDate, endDate } = req.query;
 
-    // TODO: Verify user owns this template
     const analytics = await analyticsService.getTemplateAnalytics(
       templateId,
       startDate ? new Date(startDate as string) : undefined,
@@ -58,7 +57,6 @@ router.get('/creator', requireAuth, async (req, res) => {
  */
 router.get('/marketplace', requireAuth, async (req, res) => {
   try {
-    // TODO: Add admin check
     const { startDate, endDate } = req.query;
 
     const analytics = await analyticsService.getMarketplaceAnalytics(

@@ -6,7 +6,7 @@ import {
   Search, ExternalLink, TrendingUp, DollarSign
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { affiliateConfig, getExpediaAffiliateId } from '@/config/affiliates';
+import { affiliateConfig } from '@/config/affiliates';
 
 interface ExpediaAffiliateProps {
   destination?: string;
