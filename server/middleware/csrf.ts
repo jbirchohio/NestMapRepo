@@ -88,8 +88,8 @@ class CSRFProtection {
         return next();
       }
 
-      // Skip for public auth endpoints
-      if (req.path === '/api/auth/login' || req.path === '/api/auth/register') {
+      // Skip for auth endpoints
+      if (req.path.startsWith('/api/auth/')) {
         return next();
       }
 

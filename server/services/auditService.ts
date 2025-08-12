@@ -43,7 +43,9 @@ export class AuditService {
   private writeTimer: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.auditDir = path.join(process.cwd(), 'logs', 'audit');
+    // Use /tmp in production (writable) or local logs directory
+    const baseDir = process.env.NODE_ENV === 'production' ? '/tmp' : process.cwd();
+    this.auditDir = path.join(baseDir, 'logs', 'audit');
     this.currentLogFile = this.getLogFileName();
     this.ensureAuditDirectory();
   }

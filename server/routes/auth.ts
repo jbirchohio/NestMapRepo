@@ -166,7 +166,22 @@ router.post('/logout', (req: Request, res: Response) => {
 
 // Get CSRF token endpoint
 router.get('/csrf-token', (req: Request, res: Response) => {
-  const token = (req as any).csrfToken?.() || '';
+  let token = (req as any).csrfToken?.();
+  
+  // If no token exists, generate one
+  if (!token) {
+    const crypto = require('crypto');
+    token = crypto.randomBytes(24).toString('hex');
+    
+    // Set the cookie
+    res.cookie('_csrf', token, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+  }
+  
   res.json({ csrfToken: token });
 });
 
