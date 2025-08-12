@@ -49,7 +49,6 @@ import {
   or,
   gte,
   lte,
-  ilike,
   SQL,
 } from "drizzle-orm";
 import { hashPassword } from "./auth";
@@ -726,11 +725,11 @@ export class ConsumerDatabaseStorage implements IStorage {
     const conditions: SQL[] = [eq(templates.status, "published")];
 
     if (search) {
-      const pattern = `%${search}%`;
+      const pattern = `%${search.toLowerCase()}%`;
       conditions.push(
         or(
-          ilike(templates.title, pattern),
-          ilike(templates.description, pattern),
+          sql`LOWER(${templates.title}) LIKE ${pattern}`,
+          sql`LOWER(${templates.description}) LIKE ${pattern}`,
         )!,
       );
     }

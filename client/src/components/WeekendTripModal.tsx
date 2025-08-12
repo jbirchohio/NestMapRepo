@@ -87,14 +87,20 @@ export default function WeekendTripModal({
 
     if (which === 'this') {
       // This weekend (upcoming Friday-Sunday)
-      // If it's already Friday or later in the week, get the next weekend instead
-      if (dayOfWeek >= 5) { // Friday = 5, Saturday = 6
-        // It's already Friday or Saturday, so get next weekend
-        const nextWeek = addDays(today, 7);
-        friday = nextFriday(nextWeek);
-        sunday = nextSunday(nextWeek);
+      if (dayOfWeek === 0) { // Sunday
+        // It's Sunday, so "this weekend" is the one that just ended
+        friday = addDays(today, -2);
+        sunday = today;
+      } else if (dayOfWeek === 6) { // Saturday
+        // It's Saturday, current weekend
+        friday = addDays(today, -1);
+        sunday = addDays(today, 1);
+      } else if (dayOfWeek === 5) { // Friday
+        // It's Friday, current weekend starts today
+        friday = today;
+        sunday = addDays(today, 2);
       } else {
-        // Get this Friday-Sunday
+        // Monday-Thursday: get upcoming weekend
         friday = nextFriday(today);
         sunday = nextSunday(today);
       }
@@ -322,43 +328,43 @@ export default function WeekendTripModal({
                 <Calendar className="inline h-4 w-4 mr-1" />
                 When's your escape?
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  type="button"
-                  variant={selectedWeekend === 'this' ? 'default' : 'outline'}
-                  onClick={() => handleWeekendChange('this')}
-                  size="sm"
-                >
-                  <div className="text-left">
-                    <div className="font-medium">This Weekend</div>
-                    <div className="text-xs opacity-75">
-                      {format(getWeekendDates('this').startDate, 'MMM d')}
+              <div className="flex flex-col space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={selectedWeekend === 'this' ? 'default' : 'outline'}
+                    onClick={() => handleWeekendChange('this')}
+                    className="w-full"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="font-medium text-sm">This Weekend</span>
+                      <span className="text-xs opacity-75">
+                        {format(getWeekendDates('this').startDate, 'MMM d')}
+                      </span>
                     </div>
-                  </div>
-                </Button>
-                <Button
-                  type="button"
-                  variant={selectedWeekend === 'next' ? 'default' : 'outline'}
-                  onClick={() => handleWeekendChange('next')}
-                  size="sm"
-                >
-                  <div className="text-left">
-                    <div className="font-medium">Next Weekend</div>
-                    <div className="text-xs opacity-75">
-                      {format(getWeekendDates('next').startDate, 'MMM d')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedWeekend === 'next' ? 'default' : 'outline'}
+                    onClick={() => handleWeekendChange('next')}
+                    className="w-full"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="font-medium text-sm">Next Weekend</span>
+                      <span className="text-xs opacity-75">
+                        {format(getWeekendDates('next').startDate, 'MMM d')}
+                      </span>
                     </div>
-                  </div>
-                </Button>
+                  </Button>
+                </div>
                 <Button
                   type="button"
                   variant={selectedWeekend === 'custom' ? 'default' : 'outline'}
                   onClick={() => setSelectedWeekend('custom')}
-                  size="sm"
+                  className="w-full"
                 >
-                  <div className="text-left">
-                    <div className="font-medium">Pick Dates</div>
-                    <div className="text-xs opacity-75">Custom</div>
-                  </div>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <span className="font-medium">Choose Custom Dates</span>
                 </Button>
               </div>
               
