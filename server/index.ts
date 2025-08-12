@@ -26,7 +26,7 @@ import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } 
 import { apiRateLimit, authRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
 // Organization scoping removed for consumer app
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
-import { csrfVerify } from "./middleware/csrf";
+import { csrfSetToken, csrfVerify } from "./middleware/csrf";
 // Migration import removed - handled inline
 import { db } from "./db-connection";
 import { users } from "../shared/schema";
@@ -196,6 +196,11 @@ app.get('/api/ping', (req, res) => {
 
 // Apply case conversion middleware first, then JWT authentication only to API routes
 app.use(caseConversionMiddleware);
+
+// Set CSRF token for all requests (creates token if not exists)
+app.use(csrfSetToken);
+
+// JWT authentication only to API routes
 app.use('/api', jwtAuthMiddleware);
 
 // CSRF verification for state-changing API requests (after auth)
