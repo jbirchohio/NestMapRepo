@@ -92,7 +92,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
                 title: activity.title,
                 date: activity.date,
                 time: activity.time || '09:00',
-                location: activity.locationName,
+                locationName: activity.locationName,
                 notes: activity.notes || '',
                 latitude: activity.latitude,
                 longitude: activity.longitude
