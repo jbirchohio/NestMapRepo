@@ -162,7 +162,30 @@ export default function PromoCodesAdmin() {
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<PromoCode> }) => {
       return apiRequest('PUT', `/api/promo-codes/${id}`, updates);
     },
-    onSuccess: () => {
+    onMutate: async ({ id, updates }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin', 'promo-codes'] });
+      
+      // Snapshot the previous value
+      const previousCodes = queryClient.getQueryData(['admin', 'promo-codes']);
+      
+      // Optimistically update
+      queryClient.setQueryData(['admin', 'promo-codes'], (old: PromoCode[] | undefined) => {
+        if (!old) return old;
+        return old.map(code => 
+          code.id === id ? { ...code, ...updates } : code
+        );
+      });
+      
+      return { previousCodes };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousCodes) {
+        queryClient.setQueryData(['admin', 'promo-codes'], context.previousCodes);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'promo-codes'] });
       setEditingCode(null);
     },
@@ -401,10 +424,13 @@ export default function PromoCodesAdmin() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={code.is_active && !code.is_expired && !code.is_maxed_out}
+                          checked={code.is_active}
                           onCheckedChange={() => toggleActive(code)}
                           disabled={code.is_expired || code.is_maxed_out}
                         />
+                        {code.is_expired && (
+                          <Badge variant="destructive">Expired</Badge>
+                        )}
                         {code.is_maxed_out && (
                           <Badge variant="secondary">Maxed</Badge>
                         )}
