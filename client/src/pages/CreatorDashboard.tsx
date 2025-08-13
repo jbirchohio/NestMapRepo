@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import BundleCreator from '@/components/BundleCreator';
+import EditTemplateModal from '@/components/EditTemplateModal';
 import {
   DollarSign, TrendingUp, Users, Eye, Package,
   ArrowUpRight, ArrowDownRight, Download, CreditCard,
@@ -50,11 +51,14 @@ import {
 export default function CreatorDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const [selectedTimeframe, setSelectedTimeframe] = useState('30d');
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutMethod, setPayoutMethod] = useState('paypal');
   const [payoutAmount, setPayoutAmount] = useState('');
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Fetch dashboard data
   const { data: dashboard, isLoading, refetch } = useQuery({
@@ -383,13 +387,34 @@ export default function CreatorDashboard() {
                       </div>
 
                       <div className="flex gap-2 ml-4">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingTemplate(template);
+                            setShowEditModal(true);
+                          }}
+                        >
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/template/${template.slug}`);
+                            toast({
+                              title: 'Link copied!',
+                              description: 'Template link copied to clipboard'
+                            });
+                          }}
+                        >
                           <Share2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/creator/analytics/${template.id}`)}
+                        >
                           <BarChart3 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -731,6 +756,19 @@ export default function CreatorDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Template Modal */}
+      <EditTemplateModal
+        template={editingTemplate}
+        open={showEditModal}
+        onOpenChange={(open) => {
+          setShowEditModal(open);
+          if (!open) {
+            setEditingTemplate(null);
+            refetch(); // Refresh dashboard data after edit
+          }
+        }}
+      />
     </div>
   );
 }

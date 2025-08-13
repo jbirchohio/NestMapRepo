@@ -133,7 +133,7 @@ export function HelpPage() {
         },
         {
           question: 'Are activity prices competitive?',
-          answer: 'Our partner prices are the same as booking directly. Sometimes you\'ll even find exclusive deals!'
+          answer: 'We earn a small commission from our partners when you book through our links. The prices you see are the same as booking directly with them.'
         },
         {
           question: 'Can I cancel a booking?',

@@ -433,7 +433,7 @@ export default function TemplateDetails() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Purchase Card */}
-            <Card className="sticky top-24 z-10 bg-white">
+            <Card className="bg-white">
               <CardContent className="pt-6">
                 <div className="text-center mb-6">
                   <div className="text-4xl font-bold text-purple-600">
@@ -514,7 +514,7 @@ export default function TemplateDetails() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Shield className="h-4 w-4 text-green-600" />
-                    <span>30-day money-back guarantee</span>
+                    <span>Secure checkout</span>
                   </div>
                 </div>
               </CardContent>

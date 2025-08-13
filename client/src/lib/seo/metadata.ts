@@ -31,12 +31,12 @@ const TITLE_TEMPLATES = {
 
 // Description templates
 const DESCRIPTION_TEMPLATES = {
-  home: 'Plan your perfect trip with AI-powered recommendations. Book flights, hotels, and activities in one place. Save 22% with vacation packages.',
-  destination: 'Complete %s travel guide with AI recommendations. Find the best hotels, flights, activities, and local tips. Plan your %s trip in minutes.',
-  activity: 'Book %s in %s with instant confirmation. Compare prices, read reviews, and save on top-rated tours and activities.',
-  hotel: 'Compare %d+ hotels in %s. Best price guaranteed. Read real reviews and book with confidence.',
-  package: 'Book flight + hotel packages to %s and save an average of 22%. AI-powered trip planning included free.',
-  trip: 'Planning a trip to %s? Use our AI travel planner to create the perfect itinerary in minutes. Book everything in one place.',
+  home: 'Plan your perfect trip with AI-powered recommendations. Create custom itineraries and discover amazing destinations.',
+  destination: 'Complete %s travel guide with AI recommendations. Find the best attractions, activities, and local tips. Plan your %s trip in minutes.',
+  activity: 'Discover top-rated activities in %s. Read reviews and get recommendations for tours and attractions.',
+  hotel: 'Find recommended hotels in %s. Get suggestions and tips for where to stay.',
+  package: 'Plan your complete %s vacation with our AI trip planner. Create custom itineraries in minutes.',
+  trip: 'Planning a trip to %s? Use our AI travel planner to create the perfect itinerary in minutes.',
   blog: '%s - Expert travel tips and destination guides from Remvana.',
   compare: 'See how Remvana compares to %s for travel planning. Feature comparison, pricing, and user reviews.',
 };

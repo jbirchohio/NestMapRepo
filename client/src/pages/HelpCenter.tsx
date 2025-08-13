@@ -66,7 +66,7 @@ export default function HelpCenter() {
         },
         {
           question: 'How do I book flights and hotels?',
-          answer: 'Use our Bookings section to search for flights and hotels. We integrate with multiple providers to show real-time availability and pricing. Click "Book Now" to complete your reservation.'
+          answer: 'We partner with Expedia to help you find the best deals on flights and hotels. When you click on booking links, you\'ll be redirected to Expedia to complete your reservation.'
         },
         {
           question: 'Can I export my itinerary?',

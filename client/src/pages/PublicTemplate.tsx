@@ -362,7 +362,7 @@ export default function PublicTemplate() {
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Shield className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      <span>30-day money-back guarantee</span>
+                      <span>Secure checkout</span>
                     </div>
                   </div>
 

@@ -69,8 +69,8 @@ export default function TemplateGenerator() {
       return;
     }
 
-    if (!price || parseFloat(price) <= 0) {
-      toast.error('Please enter a valid price');
+    if (!price || parseFloat(price) < 10) {
+      toast.error('Please enter a valid price (minimum $10)');
       return;
     }
 
@@ -155,14 +155,22 @@ export default function TemplateGenerator() {
               <Input
                 id="price"
                 type="number"
-                min="0"
+                min="10"
                 step="0.01"
                 placeholder="e.g., 49.99"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (val < 10 && e.target.value !== '') {
+                    toast.error('Minimum price is $10');
+                    setPrice('10');
+                  } else {
+                    setPrice(e.target.value);
+                  }
+                }}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Duration will be based on price (higher price = longer trip)
+                Minimum: $10 • Duration: $10-30 (3 days), $31-50 (5 days), $51-75 (7 days), $76+ (10+ days)
               </p>
             </div>
           </div>

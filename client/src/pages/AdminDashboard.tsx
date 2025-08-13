@@ -11,6 +11,7 @@ import { useLocation } from 'wouter';
 import { DollarSign, Users, FileText, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Shield, UserCheck, UserX, Search, Crown, MapPin, Sparkles } from 'lucide-react';
 import DestinationManagement from '@/components/admin/DestinationManagement';
 import TemplateGenerator from '@/components/admin/TemplateGenerator';
+import TemplateManager from '@/components/admin/TemplateManager';
 import BundleCreator from '@/components/BundleCreator';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -239,12 +240,13 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-7' : 'grid-cols-6'} w-full max-w-5xl`}>
+          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'} w-full max-w-5xl`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="generate">Generate</TabsTrigger>
+            <TabsTrigger value="templates">Manage Templates</TabsTrigger>
             <TabsTrigger value="bundles">Bundles</TabsTrigger>
             {isSuperAdmin && <TabsTrigger value="financials">Financials</TabsTrigger>}
           </TabsList>
@@ -376,8 +378,12 @@ export default function AdminDashboard() {
             <DestinationManagement />
           </TabsContent>
 
-          <TabsContent value="templates" className="space-y-4">
+          <TabsContent value="generate" className="space-y-4">
             <TemplateGenerator />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-4">
+            <TemplateManager />
           </TabsContent>
 
           <TabsContent value="bundles" className="space-y-4">

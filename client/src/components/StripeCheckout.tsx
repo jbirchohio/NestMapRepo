@@ -277,7 +277,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
           {/* Trust Badges */}
           <div className="text-center text-xs text-gray-500 pt-4 border-t">
             <p>Powered by Stripe • 256-bit SSL Encryption</p>
-            <p className="mt-1">30-day money-back guarantee</p>
+            <p className="mt-1">All sales are final</p>
           </div>
         </form>
       </CardContent>

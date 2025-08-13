@@ -54,7 +54,7 @@ export default function PopularDestinations() {
             Popular Destinations
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover amazing places around the world. Book flights and hotels together to save 22% on average.
+            Discover amazing places around the world. Create custom itineraries and find the best travel deals.
           </p>
         </div>
 

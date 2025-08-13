@@ -748,6 +748,11 @@ router.post('/templates/generate', async (req, res) => {
       return res.status(400).json({ message: 'City and price are required' });
     }
 
+    // Validate minimum price
+    if (price < 10) {
+      return res.status(400).json({ message: 'Minimum template price is $10' });
+    }
+
     // Auto-determine duration based on price
     let duration: number;
     if (price <= 30) {
@@ -1098,6 +1103,211 @@ router.get("/remvana-templates", requireAdmin, async (req: any, res: any) => {
   } catch (error) {
     logger.error("Error fetching Remvana templates:", error);
     res.status(500).json({ error: "Failed to fetch templates" });
+  }
+});
+
+// GET /api/admin/templates - Get all templates with admin access
+router.get('/templates', requireAdmin, async (req: any, res: any) => {
+  try {
+    const { search, status, userId, page = '1', limit = '50' } = req.query;
+    
+    let query = db
+      .select({
+        template: templates,
+        creator: users
+      })
+      .from(templates)
+      .leftJoin(users, eq(templates.user_id, users.id));
+
+    // Build where conditions
+    const conditions = [];
+    if (search) {
+      conditions.push(
+        or(
+          sql`${templates.title} ILIKE ${`%${search}%`}`,
+          sql`${templates.description} ILIKE ${`%${search}%`}`,
+          sql`${templates.destinations}::text ILIKE ${`%${search}%`}`
+        )
+      );
+    }
+    if (status && status !== 'all') {
+      conditions.push(eq(templates.status, status));
+    }
+    if (userId && userId !== 'all') {
+      conditions.push(eq(templates.user_id, parseInt(userId)));
+    }
+
+    // Apply pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Execute query with conditions
+    const results = conditions.length > 0 
+      ? await query
+          .where(and(...conditions))
+          .limit(parseInt(limit))
+          .offset(offset)
+      : await query
+          .limit(parseInt(limit))
+          .offset(offset);
+
+    // Format the results
+    const formattedTemplates = results.map(row => ({
+      ...row.template,
+      creator: row.creator ? {
+        id: row.creator.id,
+        username: row.creator.username,
+        email: row.creator.email,
+        displayName: row.creator.display_name
+      } : null
+    }));
+
+    res.json({ 
+      templates: formattedTemplates,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+  } catch (error) {
+    logger.error('Error fetching admin templates:', error);
+    res.status(500).json({ error: 'Failed to fetch templates' });
+  }
+});
+
+// GET /api/admin/creators - Get all creators for filtering
+router.get('/creators', requireAdmin, async (req: any, res: any) => {
+  try {
+    const creators = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        displayName: users.display_name
+      })
+      .from(users)
+      .innerJoin(templates, eq(users.id, templates.user_id))
+      .groupBy(users.id);
+
+    res.json(creators);
+  } catch (error) {
+    logger.error('Error fetching creators:', error);
+    res.status(500).json({ error: 'Failed to fetch creators' });
+  }
+});
+
+// PUT /api/admin/templates/:id - Update template with admin override
+router.put('/templates/:id', requireAdmin, async (req: any, res: any) => {
+  try {
+    const templateId = parseInt(req.params.id);
+    const updates = req.body;
+
+    // Admin can update any field without restrictions
+    const [updatedTemplate] = await db
+      .update(templates)
+      .set({
+        ...updates,
+        updated_at: new Date()
+      })
+      .where(eq(templates.id, templateId))
+      .returning();
+
+    if (!updatedTemplate) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Log admin action
+    logger.info(`Admin ${req.user.id} updated template ${templateId}`, updates);
+
+    res.json(updatedTemplate);
+  } catch (error) {
+    logger.error('Error updating template:', error);
+    res.status(500).json({ error: 'Failed to update template' });
+  }
+});
+
+// DELETE /api/admin/templates/:id - Delete template with admin override
+router.delete('/templates/:id', requireAdmin, async (req: any, res: any) => {
+  try {
+    const templateId = parseInt(req.params.id);
+
+    // Get template info before deletion for logging
+    const [template] = await db
+      .select()
+      .from(templates)
+      .where(eq(templates.id, templateId))
+      .limit(1);
+
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Admin can delete any template, even with sales
+    await db
+      .delete(templates)
+      .where(eq(templates.id, templateId));
+
+    // Log admin action
+    logger.warn(`Admin ${req.user.id} deleted template ${templateId} (had ${template.sales_count} sales)`);
+
+    res.json({ message: 'Template deleted successfully' });
+  } catch (error) {
+    logger.error('Error deleting template:', error);
+    res.status(500).json({ error: 'Failed to delete template' });
+  }
+});
+
+// POST /api/admin/templates/:id/fix-duration - Fix template duration
+router.post('/templates/:id/fix-duration', requireAdmin, async (req: any, res: any) => {
+  try {
+    const templateId = parseInt(req.params.id);
+    const { duration } = req.body;
+
+    if (!duration || duration < 1) {
+      return res.status(400).json({ error: 'Invalid duration' });
+    }
+
+    // Get the template
+    const [template] = await db
+      .select()
+      .from(templates)
+      .where(eq(templates.id, templateId))
+      .limit(1);
+
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Update the duration in the database
+    const [updatedTemplate] = await db
+      .update(templates)
+      .set({
+        duration: duration,
+        updated_at: new Date()
+      })
+      .where(eq(templates.id, templateId))
+      .returning();
+
+    // Also update the trip_data if it exists
+    if (template.trip_data) {
+      const tripData = template.trip_data as any;
+      tripData.duration = duration;
+      
+      await db
+        .update(templates)
+        .set({
+          trip_data: tripData
+        })
+        .where(eq(templates.id, templateId));
+    }
+
+    logger.info(`Admin ${req.user.id} fixed duration for template ${templateId} from ${template.duration} to ${duration} days`);
+
+    res.json({ 
+      message: 'Duration fixed successfully',
+      oldDuration: template.duration,
+      newDuration: duration
+    });
+  } catch (error) {
+    logger.error('Error fixing template duration:', error);
+    res.status(500).json({ error: 'Failed to fix duration' });
   }
 });
 
