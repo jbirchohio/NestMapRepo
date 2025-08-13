@@ -1290,20 +1290,32 @@ Any other preferences like:
       });
     }
 
+    // Calculate trip duration
+    const startDate = new Date(extractedData.startDate);
+    const endDate = new Date(extractedData.endDate);
+    const tripDurationDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    // For longer trips, we'll generate activities in chunks to avoid token limits
+    const MAX_DAYS_PER_REQUEST = 4; // Generate 4 days at a time to stay within token limits
+    
     // Generate vacation itinerary using AI
     const itineraryPrompt = `Create a detailed ${extractedData.tripPurpose || 'vacation'} itinerary for:
 Destination: ${extractedData.destination}
-Dates: ${extractedData.startDate} to ${extractedData.endDate}
+Dates: ${extractedData.startDate} to ${extractedData.endDate} (${tripDurationDays} days)
 Budget: $${extractedData.budget || 3000} USD total
 Travelers: ${extractedData.groupSize || 2} people
 Accommodation preference: ${extractedData.preferences?.accommodationType || 'mid-range'}
 Activities: ${extractedData.preferences?.activityTypes?.join(', ') || 'sightseeing, culture, relaxation'}
 Food preferences: ${extractedData.preferences?.foodTypes?.join(', ') || 'local cuisine, popular restaurants'}
 
-Please provide a complete vacation itinerary with:
+${tripDurationDays > MAX_DAYS_PER_REQUEST ? 
+  `IMPORTANT: This is a ${tripDurationDays}-day trip. For now, provide overview information and activities for the FIRST ${MAX_DAYS_PER_REQUEST} DAYS ONLY. Focus on quality over quantity.` : 
+  'Please provide a complete vacation itinerary.'}
+
+Please provide:
 1. Recommended flights (with realistic prices)
 2. Hotel suggestions (2-3 options with nightly rates)
-3. Daily activities schedule (morning, afternoon, evening)
+3. Daily activities schedule (morning, afternoon, evening) ${tripDurationDays > MAX_DAYS_PER_REQUEST ? `for days 1-${MAX_DAYS_PER_REQUEST}` : ''}
 4. Restaurant recommendations for meals
 5. Transportation tips
 6. Total budget breakdown
@@ -1397,12 +1409,95 @@ Format as JSON with this structure:
       messages: [{ role: "user", content: itineraryPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.7,
+      max_tokens: 2000, // Increase token limit for initial response
     });
 
     const generatedTrip = JSON.parse(itineraryResponse.choices[0].message.content || "{}");
 
+    // If trip is longer than MAX_DAYS_PER_REQUEST, generate additional days
+    let allActivities = [...(generatedTrip.activities || [])];
+    let allMeals = [...(generatedTrip.meals || [])];
+    
+    if (tripDurationDays > MAX_DAYS_PER_REQUEST) {
+      // Generate remaining days in chunks
+      for (let dayStart = MAX_DAYS_PER_REQUEST + 1; dayStart <= tripDurationDays; dayStart += MAX_DAYS_PER_REQUEST) {
+        const dayEnd = Math.min(dayStart + MAX_DAYS_PER_REQUEST - 1, tripDurationDays);
+        
+        // Calculate dates for this chunk
+        const chunkStartDate = new Date(startDate);
+        chunkStartDate.setDate(chunkStartDate.getDate() + dayStart - 1);
+        const chunkEndDate = new Date(startDate);
+        chunkEndDate.setDate(chunkEndDate.getDate() + dayEnd - 1);
+        
+        const additionalDaysPrompt = `Continue creating the itinerary for days ${dayStart}-${dayEnd} of the trip to ${extractedData.destination}.
+        
+Previous context:
+- Trip dates: ${extractedData.startDate} to ${extractedData.endDate}
+- Already planned: Days 1-${dayStart - 1}
+- Now planning: Days ${dayStart}-${dayEnd} (${chunkStartDate.toISOString().split('T')[0]} to ${chunkEndDate.toISOString().split('T')[0]})
+- Budget remaining: Proportional amount for remaining days
+- Same traveler preferences as before
+
+Create varied and interesting activities for days ${dayStart}-${dayEnd}, avoiding repetition from earlier days.
+
+Return ONLY a JSON object with this structure:
+{
+  "activities": [
+    {
+      "date": "YYYY-MM-DD",
+      "time": "HH:MM",
+      "title": "Activity name",
+      "description": "Description",
+      "duration": "X hours",
+      "location": "Location",
+      "price": 50,
+      "category": "sightseeing/culture/food/relaxation"
+    }
+  ],
+  "meals": [
+    {
+      "date": "YYYY-MM-DD",
+      "time": "HH:MM",
+      "restaurant": "Restaurant name",
+      "cuisine": "Type",
+      "location": "Address",
+      "estimatedCost": 40,
+      "type": "breakfast/lunch/dinner"
+    }
+  ]
+}`;
+
+        try {
+          const additionalResponse = await openai.chat.completions.create({
+            model: OPENAI_MODEL,
+            messages: [{ role: "user", content: additionalDaysPrompt }],
+            response_format: { type: "json_object" },
+            temperature: 0.8, // Slightly higher for variety
+            max_tokens: 1500,
+          });
+          
+          const additionalDays = JSON.parse(additionalResponse.choices[0].message.content || "{}");
+          
+          // Add the additional activities and meals
+          if (additionalDays.activities) {
+            allActivities.push(...additionalDays.activities);
+          }
+          if (additionalDays.meals) {
+            allMeals.push(...additionalDays.meals);
+          }
+        } catch (error) {
+          logger.error(`Failed to generate days ${dayStart}-${dayEnd}:`, error);
+          // Continue with what we have
+        }
+      }
+    }
+    
+    // Update generatedTrip with all activities and meals
+    generatedTrip.activities = allActivities;
+    generatedTrip.meals = allMeals;
+
     // Format activities for frontend consumption
-    const formattedActivities = generatedTrip.activities.map((activity: any, index: number) => ({
+    const formattedActivities = allActivities.map((activity: any, index: number) => ({
       id: `ai-${index}`,
       title: activity.title || activity.name,
       description: activity.description,
@@ -1468,13 +1563,18 @@ Format as JSON with this structure:
       flights: generatedTrip.flights,
       accommodation: generatedTrip.accommodation,
       activities: formattedActivities,
-      meals: generatedTrip.meals,
+      meals: allMeals,
       groundTransportation: generatedTrip.transportation,
       budgetBreakdown: generatedTrip.budgetBreakdown,
       recommendations: generatedTrip.recommendations,
       weatherConsiderations: generatedTrip.weatherConsiderations,
-      message: "Your personalized itinerary has been created!",
-      savedToTrip: !!tripId
+      message: `Your personalized ${tripDurationDays}-day itinerary has been created with ${formattedActivities.length} activities!`,
+      savedToTrip: !!tripId,
+      debug: {
+        tripDurationDays,
+        activitiesGenerated: formattedActivities.length,
+        mealsGenerated: allMeals.length
+      }
     });
 
   } catch (error) {
