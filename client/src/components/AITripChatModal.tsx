@@ -103,18 +103,21 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
               console.log(`Fixed activity date from ${activity.date} to ${activityDate}`);
             }
             
+            // Convert camelCase to snake_case for backend API
             const activityData = {
-              tripId: newTrip.id,
+              trip_id: newTrip.id,  // Changed from tripId to trip_id
               title: activity.title,
               date: activityDate,
               time: activity.time || '09:00',
-              locationName: activity.locationName,
+              location_name: activity.locationName || activity.location_name || '', // Changed from locationName to location_name
               notes: activity.notes || '',
               latitude: activity.latitude,
-              longitude: activity.longitude
+              longitude: activity.longitude,
+              tag: activity.tag || 'activity', // Add default tag
+              order: index // Add order
             };
             
-            console.log('Creating activity with time:', activityData.time, 'Original time:', activity.time);
+            console.log('Creating activity:', activityData.title, 'with data:', activityData);
             
             const activityResponse = await fetch('/api/activities', {
               method: 'POST',

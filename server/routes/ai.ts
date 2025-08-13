@@ -6,6 +6,7 @@ import { db } from "../db-connection";
 import { trips, activities } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getOpenAIClient, OPENAI_MODEL } from '../services/openaiClient';
+import { logger } from "../utils/logger";
 
 // Use centralized OpenAI client
 const openai = getOpenAIClient();
@@ -457,10 +458,19 @@ Keep your main response conversational and helpful.`
     // Remove the JSON block from the display message
     const displayMessage = aiResponse.replace(/<TRIP_JSON>[\s\S]*?<\/TRIP_JSON>/, '').trim();
 
+    // If we have a tripSuggestion with activities AND the user has an account, 
+    // optionally create the trip and activities automatically
+    let createdTripId = null;
+    if (tripSuggestion && tripSuggestion.activities && req.user) {
+      // Note: Frontend will handle trip creation, but we can log this for debugging
+      logger.info(`AI generated trip suggestion with ${tripSuggestion.activities.length} activities for user ${req.user.id}`);
+    }
+
     res.json({
       success: true,
       message: displayMessage,
-      tripSuggestion
+      tripSuggestion,
+      createdTripId
     });
   } catch (error) {
     res.status(500).json({
@@ -603,9 +613,9 @@ Return SPECIFIC activities with REAL places in JSON format:
 {
   "activities": [
     {
-      "title": "Specific activity name",
+      "title": "Specific activity name (e.g., 'Visit Empire State Building')",
       "date": "Day 1, 2, or 3",
-      "time": "HH:MM",
+      "time": "HH:MM (24-hour format, e.g., '14:30')",
       "locationName": "Exact place name and address",
       "notes": "Brief description or tips",
       "tag": "food/sightseeing/culture/entertainment/nightlife",
@@ -614,6 +624,11 @@ Return SPECIFIC activities with REAL places in JSON format:
     }
   ]
 }
+
+CRITICAL: Every activity MUST have:
+- title: The name of the activity (REQUIRED)
+- time: In HH:MM format like "09:00", "14:30", "19:00" (REQUIRED)
+- locationName: The place where it happens (REQUIRED)
 
 Include 4-6 activities per day for ${destination}.`;
 
@@ -674,23 +689,35 @@ Include 4-6 activities per day for ${destination}.`;
     // Save activities to database
     const savedActivities = [];
     for (const activity of enrichedActivities) {
-      const result = await db
-        .insert(activities)
-        .values({
+      try {
+        // Fix field mapping - activity.locationName needs to be location_name for DB
+        const activityData = {
           trip_id: activity.trip_id,
           title: activity.title,
           date: activity.date,
-          time: activity.time,
-          location_name: activity.locationName,
-          notes: activity.notes,
-          tag: activity.tag,
-          latitude: activity.latitude?.toString() || null,
-          longitude: activity.longitude?.toString() || null,
-          order: activity.order
-        })
-        .returning();
-      if (Array.isArray(result) && result.length > 0) {
-        savedActivities.push(result[0]);
+          time: activity.time || '09:00', // Default time if missing
+          location_name: activity.locationName || activity.location_name || activity.location || '', // Handle all field name variations
+          notes: activity.notes || '',
+          tag: activity.tag || 'activity',
+          latitude: activity.latitude ? activity.latitude.toString() : null,
+          longitude: activity.longitude ? activity.longitude.toString() : null,
+          order: activity.order || 0
+        };
+        
+        logger.info(`Creating weekend activity: ${activityData.title} on ${activityData.date} at ${activityData.time}`);
+        
+        const result = await db
+          .insert(activities)
+          .values(activityData)
+          .returning();
+          
+        if (Array.isArray(result) && result.length > 0) {
+          savedActivities.push(result[0]);
+          logger.info(`Successfully created activity: ${result[0].id}`);
+        }
+      } catch (error) {
+        logger.error(`Failed to create activity "${activity.title}":`, error);
+        // Continue with other activities even if one fails
       }
     }
 
