@@ -10,7 +10,7 @@ import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
 import NewTripModalConsumer from "@/components/NewTripModalConsumer";
 import WeekendTripModal from "@/components/WeekendTripModal";
-import AITripChatModal from "@/components/AITripChatModal";
+import AITripGenerator from "@/components/AITripGenerator";
 // Removed PackageSearch import
 import PopularDestinations from "@/components/PopularDestinations";
 import DestinationSearch from "@/components/DestinationSearch";
@@ -21,7 +21,7 @@ import {
   Plus, MapPin, Calendar, TrendingUp, Sparkles,
   MessageSquare, Compass, Clock, Users, Plane,
   Camera, Heart, Zap, Globe, Star, ArrowRight,
-  Archive, Trash2, Sunset, Gift
+  Archive, Trash2, Sunset, Gift, X
 } from "lucide-react";
 
 // Quick action cards - now includes Weekend Escape
@@ -154,7 +154,7 @@ export default function HomeConsumerRedesigned() {
   const [location, setLocation] = useLocation();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [isWeekendTripModalOpen, setIsWeekendTripModalOpen] = useState(false);
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("signup");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
@@ -232,7 +232,7 @@ export default function HomeConsumerRedesigned() {
 
     switch(action) {
       case 'ai-chat':
-        setIsAIChatOpen(true);
+        setIsAIGeneratorOpen(true);
         break;
       case 'quick-trip':
         // Always open new trip modal for quick trip
@@ -768,10 +768,22 @@ export default function HomeConsumerRedesigned() {
         onTripCreated={handleTripCreated}
       />
 
-      <AITripChatModal
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-      />
+      {isAIGeneratorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">AI Trip Planner</h2>
+              <button
+                onClick={() => setIsAIGeneratorOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <AITripGenerator />
+          </div>
+        </div>
+      )}
 
       {isAuthModalOpen && (
         <AuthModalSimple

@@ -329,7 +329,15 @@ router.post("/chat", async (req, res) => {
     const isCreatingTrip = lastMessage.includes("create") ||
                           lastMessage.includes("plan") ||
                           lastMessage.includes("itinerary") ||
-                          lastMessage.includes("weekend");
+                          lastMessage.includes("weekend") ||
+                          lastMessage.includes("going on a trip") ||
+                          lastMessage.includes("going to") ||
+                          lastMessage.includes("travel to") ||
+                          lastMessage.includes("visiting") ||
+                          lastMessage.includes("trip to") ||
+                          (lastMessage.includes("budget") && lastMessage.includes("day")) ||
+                          (lastMessage.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i) && 
+                           lastMessage.match(/\d{1,2}(st|nd|rd|th)?/));
 
     // Add system prompt for trip planning context
     const systemMessage = {
