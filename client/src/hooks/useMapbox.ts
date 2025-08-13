@@ -119,27 +119,34 @@ export default function useMapbox() {
       el.style.width = '40px';
       el.style.height = '40px';
       
-      // Create the pin icon
+      // Create the pin icon with Remvana's purple color scheme
       const pin = document.createElement('div');
-      pin.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23${(markerData as any).color || 'ef4444'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>')`;
+      // Use Remvana's purple color (#9333ea or purple-600)
+      const pinColor = (markerData as any).color || '9333ea';
+      pin.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23${pinColor}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>')`;
       pin.style.width = '40px';
       pin.style.height = '40px';
       pin.style.backgroundSize = 'contain';
       pin.style.backgroundRepeat = 'no-repeat';
       pin.style.cursor = 'pointer';
+      // Add subtle drop shadow for better visibility on the map
+      pin.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
       
       // Create label with the marker letter
       const label = document.createElement('div');
       label.textContent = markerData.label || '';
       label.style.position = 'absolute';
-      label.style.top = '8px';
+      label.style.top = '7px';
       label.style.left = '50%';
       label.style.transform = 'translateX(-50%)';
       label.style.color = 'white';
-      label.style.fontSize = '14px';
-      label.style.fontWeight = 'bold';
-      label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.5)';
+      label.style.fontSize = '13px';
+      label.style.fontWeight = '700';
+      label.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      // Strong text shadow for excellent visibility on purple background
+      label.style.textShadow = '0 0 4px rgba(0,0,0,0.9), 1px 1px 2px rgba(0,0,0,1), -1px -1px 2px rgba(0,0,0,1)';
       label.style.pointerEvents = 'none';
+      label.style.userSelect = 'none';
       
       el.appendChild(pin);
       el.appendChild(label);

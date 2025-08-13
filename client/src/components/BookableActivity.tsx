@@ -20,6 +20,7 @@ interface BookableActivityProps {
   activityTitle: string;
   latitude?: string;
   longitude?: string;
+  city?: string;  // Add city prop for better location-specific searches
   onBook?: (product: ViatorProduct) => void;
 }
 
@@ -27,6 +28,7 @@ export default function BookableActivity({
   activityTitle,
   latitude,
   longitude,
+  city,
   onBook
 }: BookableActivityProps) {
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export default function BookableActivity({
     if (activityTitle && latitude && longitude && !hasSearched) {
       searchBookableActivities();
     }
-  }, [activityTitle, latitude, longitude]);
+  }, [activityTitle, latitude, longitude, city]);
 
   const searchBookableActivities = async () => {
     if (!activityTitle || !latitude || !longitude) return;
@@ -47,10 +49,14 @@ export default function BookableActivity({
     setHasSearched(true);
 
     try {
+      // Include city in the search to get more relevant, location-specific results
+      const searchQuery = city ? `${activityTitle} ${city}` : activityTitle;
+      
       const response = await apiRequest('POST', '/api/viator/search', {
-        activityName: activityTitle,
+        activityName: searchQuery,
         latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude)
+        longitude: parseFloat(longitude),
+        city: city  // Pass city context to the backend
       });
 
       if (response.activities && response.activities.length > 0) {

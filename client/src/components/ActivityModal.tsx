@@ -708,6 +708,7 @@ export default function ActivityModal({
                     activityTitle={watch("title")}
                     latitude={watch("latitude")}
                     longitude={watch("longitude")}
+                    city={trip?.city || trip?.location}  // Pass the trip's city for better search results
                     onBook={(product) => {
                       // Track booking click
                       // Optionally add booking info to notes
