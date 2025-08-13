@@ -50,7 +50,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
   };
 
   const endDate = calculateEndDate(startDate);
-  const finalPrice = promoData ? promoData.final_amount : price;
+  const finalPrice = promoData ? promoData.finalAmount : price;
 
   // Set default start date to tomorrow
   useEffect(() => {
@@ -80,7 +80,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
       setPromoData(response);
       toast({
         title: 'Promo code applied!',
-        description: `You saved $${response.discount_applied.toFixed(2)}`,
+        description: `You saved $${response.discountApplied.toFixed(2)}`,
       });
     } catch (err: any) {
       setPromoError(err.error || 'Invalid promo code');
@@ -112,9 +112,9 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
           template_id: templateId,
           start_date: startDate,
           end_date: endDate,
-          promo_code_id: promoData?.promo_code_id,
+          promo_code_id: promoData?.promoCodeId,
           promo_code: promoData?.code,
-          discount_amount: promoData?.discount_applied,
+          discount_amount: promoData?.discountApplied,
         }),
       });
 
@@ -223,9 +223,9 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
                 </p>
                 {promoData && (
                   <p className="text-xs text-green-600 font-medium">
-                    {promoData.discount_type === 'percentage' 
-                      ? `${promoData.discount_amount}% off`
-                      : `$${promoData.discount_amount} off`}
+                    {promoData.discountType === 'percentage' 
+                      ? `${promoData.discountAmount}% off`
+                      : `$${promoData.discountAmount} off`}
                   </p>
                 )}
               </div>
@@ -279,7 +279,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
             )}
             {promoData && (
               <p className="mt-1 text-xs text-green-600">
-                ✓ Code applied: You save ${promoData.discount_applied.toFixed(2)}
+                ✓ Code applied: You save ${promoData.discountApplied.toFixed(2)}
               </p>
             )}
           </div>
