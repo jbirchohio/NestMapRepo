@@ -335,7 +335,14 @@ router.post("/chat", async (req, res) => {
       role: "system",
       content: `You are a helpful AI travel assistant. Help users plan their trips by providing friendly, conversational responses.
 
-${isCreatingTrip ? `IMPORTANT: The user wants to create a trip. You should:
+${isCreatingTrip ? `IMPORTANT: The user wants to create a trip. 
+
+FIRST, check if the user has provided specific dates:
+- If NO dates provided: ASK them "When would you like to go? Please give me your travel dates (like 'March 15-20' or 'next weekend')."
+- If they say "next weekend" or similar: Calculate the actual dates (upcoming Saturday-Sunday)
+- If they give vague timing like "in summer": ASK for specific dates
+
+Only proceed with trip creation if you have specific dates. You should:
 1. Provide a conversational response describing the trip plan
 2. Include a JSON block at the end with trip details AND specific activities
 
@@ -345,21 +352,29 @@ Include this EXACT format at the end of your response:
 {
   "title": "Trip title here",
   "description": "Brief trip description",
-  "startDate": "YYYY-MM-DD",
-  "endDate": "YYYY-MM-DD",
+  "startDate": "YYYY-MM-DD (actual date, e.g., '2025-03-15')",
+  "endDate": "YYYY-MM-DD (actual date, e.g., '2025-03-20')",
   "city": "City name",
   "country": "Country name",
   "activities": [
     {
       "title": "Specific activity name (e.g., 'Visit Empire State Building')",
-      "date": "YYYY-MM-DD",
-      "time": "HH:MM (e.g., '10:00')",
+      "date": "YYYY-MM-DD (MUST be between startDate and endDate)",
+      "time": "HH:MM (24-hour format, e.g., '10:00' or '14:30')",
       "locationName": "Exact location/address",
       "notes": "Brief description or tips"
     }
   ]
 }
 </TRIP_JSON>
+
+CRITICAL DATE RULES:
+- Today's date is ${new Date().toISOString().split('T')[0]}
+- All dates MUST be in the future
+- Activity dates MUST be between startDate and endDate
+- Use proper YYYY-MM-DD format (e.g., '2025-03-15', not '2023-09-08')
+- For "next weekend": Use the upcoming Saturday and Sunday dates
+- Distribute activities evenly across the trip days
 
 Guidelines for activities:
 - Include 3-5 SPECIFIC activities per day

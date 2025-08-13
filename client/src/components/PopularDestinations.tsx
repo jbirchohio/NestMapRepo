@@ -86,7 +86,7 @@ export default function PopularDestinations() {
                           <MapPin className="h-12 w-12" />
                         </div>
                       )}
-                      {destination.templateCount > 0 && (
+                      {destination.templateCount && destination.templateCount > 0 && (
                         <Badge className="absolute top-2 right-2 bg-yellow-500">
                           {destination.templateCount} templates
                         </Badge>

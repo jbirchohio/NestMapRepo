@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
+import { queryClient } from '@/lib/queryClient';
+import { API_ENDPOINTS } from '@/lib/constants';
 import {
   X, Send, Sparkles, MapPin, Calendar,
   Users, DollarSign, Loader2, Bot, User
@@ -78,9 +80,29 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
 
       const newTrip = await tripResponse.json();
       // Now create activities for the trip
+      let successfulActivities = 0;
       if (suggestion.activities && suggestion.activities.length > 0) {
-        for (const activity of suggestion.activities) {
+        // Ensure we have valid trip dates
+        const tripStartDate = new Date(suggestion.startDate);
+        const tripEndDate = new Date(suggestion.endDate);
+        const daysDiff = Math.ceil((tripEndDate.getTime() - tripStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        const activityPromises = suggestion.activities.map(async (activity: any, index: number) => {
           try {
+            // Fix activity date to be within trip range
+            let activityDate = activity.date;
+            
+            // If activity date is invalid or outside trip range, assign it evenly across trip days
+            const actDate = new Date(activityDate);
+            if (isNaN(actDate.getTime()) || actDate < tripStartDate || actDate > tripEndDate) {
+              // Distribute activities across trip days
+              const dayIndex = Math.min(index, daysDiff - 1);
+              const newDate = new Date(tripStartDate);
+              newDate.setDate(tripStartDate.getDate() + dayIndex);
+              activityDate = newDate.toISOString().split('T')[0];
+              console.log(`Fixed activity date from ${activity.date} to ${activityDate}`);
+            }
+            
             const activityResponse = await fetch('/api/activities', {
               method: 'POST',
               headers: {
@@ -90,7 +112,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
               body: JSON.stringify({
                 tripId: newTrip.id,
                 title: activity.title,
-                date: activity.date,
+                date: activityDate,
                 time: activity.time || '09:00',
                 locationName: activity.locationName,
                 notes: activity.notes || '',
@@ -100,23 +122,42 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
             });
 
             if (!activityResponse.ok) {
-              console.error('Failed to create activity:', await activityResponse.text());
+              const errorText = await activityResponse.text();
+              console.error('Failed to create activity:', errorText);
+              return false;
             }
+            
+            const createdActivity = await activityResponse.json();
+            console.log('Activity created successfully:', createdActivity);
+            return true;
           } catch (error) {
             console.error('Error creating activity:', error);
+            return false;
           }
-        }
+        });
+        
+        // Wait for all activities to be created
+        const results = await Promise.all(activityPromises);
+        successfulActivities = results.filter(success => success).length;
+        console.log(`Created ${successfulActivities} out of ${suggestion.activities.length} activities`);
       }
 
+      // Invalidate the activities cache for the new trip
+      await queryClient.invalidateQueries({ 
+        queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id), "activities"] 
+      });
+      
       // Success! Navigate to the trip
       toast({
         title: "✈️ Trip Created!",
-        description: `Your ${suggestion.title} is ready with ${suggestion.activities?.length || 0} activities!`,
+        description: `Your ${suggestion.title} is ready with ${successfulActivities} activities!`,
       });
 
-      // Navigate to the new trip
-      setLocation(`/trip/${newTrip.id}`);
-      onClose();
+      // Small delay to ensure activities are propagated
+      setTimeout(() => {
+        setLocation(`/trip/${newTrip.id}`);
+        onClose();
+      }, 500);
 
       return newTrip;
     } catch (error) {
@@ -215,11 +256,24 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
 
       // If the AI suggests creating a trip, offer to create it
       if (data.tripSuggestion) {
+        // Validate that the suggestion has proper dates
+        const startDate = new Date(data.tripSuggestion.startDate);
+        const endDate = new Date(data.tripSuggestion.endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Check if dates are valid and in the future
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate < today) {
+          console.error('Invalid dates in trip suggestion:', data.tripSuggestion);
+          // Don't offer to create the trip if dates are invalid
+          return;
+        }
+        
         // Add a follow-up message asking if they want to create the trip
         const confirmMessage: Message = {
           id: (Date.now() + 2).toString(),
           role: 'assistant',
-          content: `I've prepared a trip plan for "${data.tripSuggestion.title}". Would you like me to create this trip for you? Just say "yes" or "create it" to proceed, or we can keep refining the plan!`,
+          content: `I've prepared a trip plan for "${data.tripSuggestion.title}" from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}. Would you like me to create this trip for you? Just say "yes" or "create it" to proceed, or we can keep refining the plan!`,
           timestamp: new Date()
         };
 
