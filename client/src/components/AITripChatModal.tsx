@@ -103,22 +103,26 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
               console.log(`Fixed activity date from ${activity.date} to ${activityDate}`);
             }
             
+            const activityData = {
+              tripId: newTrip.id,
+              title: activity.title,
+              date: activityDate,
+              time: activity.time || '09:00',
+              locationName: activity.locationName,
+              notes: activity.notes || '',
+              latitude: activity.latitude,
+              longitude: activity.longitude
+            };
+            
+            console.log('Creating activity with time:', activityData.time, 'Original time:', activity.time);
+            
             const activityResponse = await fetch('/api/activities', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
               },
-              body: JSON.stringify({
-                tripId: newTrip.id,
-                title: activity.title,
-                date: activityDate,
-                time: activity.time || '09:00',
-                locationName: activity.locationName,
-                notes: activity.notes || '',
-                latitude: activity.latitude,
-                longitude: activity.longitude
-              })
+              body: JSON.stringify(activityData)
             });
 
             if (!activityResponse.ok) {
@@ -142,10 +146,40 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
         console.log(`Created ${successfulActivities} out of ${suggestion.activities.length} activities`);
       }
 
-      // Invalidate the activities cache for the new trip
-      await queryClient.invalidateQueries({ 
-        queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id), "activities"] 
-      });
+      // Invalidate all relevant caches
+      await Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id), "activities"] 
+        }),
+        queryClient.invalidateQueries({ 
+          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id)] 
+        }),
+        queryClient.invalidateQueries({ 
+          queryKey: [API_ENDPOINTS.TRIPS] 
+        })
+      ]);
+      
+      // Pre-fetch the trip and activities data
+      await Promise.all([
+        queryClient.prefetchQuery({
+          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id)],
+          queryFn: async () => {
+            const res = await fetch(`/api/trips/${newTrip.id}`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            return res.json();
+          }
+        }),
+        queryClient.prefetchQuery({
+          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id), "activities"],
+          queryFn: async () => {
+            const res = await fetch(`/api/trips/${newTrip.id}/activities`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            return res.json();
+          }
+        })
+      ]);
       
       // Success! Navigate to the trip
       toast({
@@ -153,11 +187,9 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
         description: `Your ${suggestion.title} is ready with ${successfulActivities} activities!`,
       });
 
-      // Small delay to ensure activities are propagated
-      setTimeout(() => {
-        setLocation(`/trip/${newTrip.id}`);
-        onClose();
-      }, 500);
+      // Navigate immediately - data is already pre-fetched
+      onClose();
+      setLocation(`/trip/${newTrip.id}`);
 
       return newTrip;
     } catch (error) {
@@ -167,15 +199,6 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
-
-    // Check if user is confirming trip creation
-    const lowerText = text.toLowerCase();
-    const isConfirmingCreation = (lowerText.includes('yes') ||
-                                  lowerText.includes('create') ||
-                                  lowerText.includes('go ahead') ||
-                                  lowerText.includes('do it') ||
-                                  lowerText.includes('sure')) &&
-                                  (window as any).pendingTripSuggestion;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -189,40 +212,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
     setIsLoading(true);
 
     try {
-      // If user is confirming, create the trip
-      if (isConfirmingCreation) {
-        const suggestion = (window as any).pendingTripSuggestion;
-
-        const creatingMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Creating your trip to ${suggestion.city}... 🎉`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, creatingMessage]);
-
-        const trip = await createTripFromSuggestion(suggestion);
-
-        // Clear the pending suggestion
-        delete (window as any).pendingTripSuggestion;
-        
-        // Success message
-        const successMessage: Message = {
-          id: (Date.now() + 2).toString(),
-          role: 'assistant',
-          content: `Your trip has been created successfully! Redirecting you to your itinerary... 🚀`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, successMessage]);
-        
-        // Redirect to the new trip after a short delay
-        setTimeout(() => {
-          onClose();
-          setLocation(`/trip/${trip.id}`);
-        }, 1500);
-        
-        return;
-      }
+      // Removed old confirmation flow - trips are now auto-created
 
       // Otherwise, continue the conversation
       const response = await fetch('/api/ai/chat', {
@@ -269,18 +259,29 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
           return;
         }
         
-        // Add a follow-up message asking if they want to create the trip
-        const confirmMessage: Message = {
+        // Auto-create the trip without asking for confirmation
+        const creatingMessage: Message = {
           id: (Date.now() + 2).toString(),
           role: 'assistant',
-          content: `I've prepared a trip plan for "${data.tripSuggestion.title}" from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}. Would you like me to create this trip for you? Just say "yes" or "create it" to proceed, or we can keep refining the plan!`,
+          content: `Creating your trip to ${data.tripSuggestion.city}... 🎉`,
           timestamp: new Date()
         };
-
-        setMessages(prev => [...prev, confirmMessage]);
-
-        // Store the suggestion for later use
-        (window as any).pendingTripSuggestion = data.tripSuggestion;
+        setMessages(prev => [...prev, creatingMessage]);
+        
+        // Automatically create the trip
+        setTimeout(async () => {
+          try {
+            await createTripFromSuggestion(data.tripSuggestion);
+          } catch (error) {
+            const errorMessage: Message = {
+              id: (Date.now() + 3).toString(),
+              role: 'assistant',
+              content: "Oops! There was an issue creating your trip. Please try again.",
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+          }
+        }, 500);
       }
     } catch (error) {
       const errorMessage: Message = {

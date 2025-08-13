@@ -343,8 +343,9 @@ FIRST, check if the user has provided specific dates:
 - If they give vague timing like "in summer": ASK for specific dates
 
 Only proceed with trip creation if you have specific dates. You should:
-1. Provide a conversational response describing the trip plan
+1. Provide a brief, excited response about the trip (2-3 sentences max)
 2. Include a JSON block at the end with trip details AND specific activities
+3. DO NOT ask if they want anything else or if they want to create it - they already asked you to create it!
 
 Include this EXACT format at the end of your response:
 
@@ -379,7 +380,8 @@ CRITICAL DATE RULES:
 Guidelines for activities:
 - Include 3-5 SPECIFIC activities per day
 - Use real place names (museums, restaurants, landmarks, etc.)
-- Provide realistic times
+- ALWAYS provide realistic times in HH:MM format (e.g., "09:00", "14:30", "19:00")
+- Suggested times: Morning (09:00-11:00), Lunch (12:00-13:00), Afternoon (14:00-17:00), Dinner (18:00-20:00)
 - Mix different types of activities (sightseeing, dining, entertainment)
 - For the city they mentioned, use actual popular attractions
 

@@ -50,8 +50,13 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
   // Convert 24-hour time to 12-hour format
   const formatTime = (time: string) => {
     if (!time) return "--:--";
-    const [hours, minutes] = time.split(':');
+    const parts = time.split(':');
+    if (parts.length < 2) return time; // Return as-is if not in HH:MM format
+    
+    const [hours, minutes = '00'] = parts;
     const hour = parseInt(hours);
+    if (isNaN(hour)) return time; // Return as-is if hour is not a number
+    
     const period = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
     return `${formattedHour}:${minutes} ${period}`;
