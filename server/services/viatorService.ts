@@ -325,19 +325,48 @@ export class ViatorService {
     activityName: string
   ): Promise<ViatorProduct[]> {
     try {
-      // Map coordinates to destination IDs
-      let destId = 684; // Default to Las Vegas
+      // Improved coordinate-based destination mapping
+      let destId = null;
       
-      // Simple coordinate-based destination mapping
+      // Check major US cities based on coordinates
       if (latitude >= 40.4 && latitude <= 41.0 && longitude >= -74.5 && longitude <= -73.5) {
         destId = 687; // New York City
+      } else if (latitude >= 41.5 && latitude <= 42.2 && longitude >= -88.5 && longitude <= -87.2) {
+        destId = 689; // Chicago
       } else if (latitude >= 25.7 && latitude <= 26.0 && longitude >= -80.3 && longitude <= -80.1) {
         destId = 11104; // Miami
       } else if (latitude >= 34.0 && latitude <= 34.2 && longitude >= -118.5 && longitude <= -118.2) {
         destId = 645; // Los Angeles
+      } else if (latitude >= 37.7 && latitude <= 37.9 && longitude >= -122.6 && longitude <= -122.3) {
+        destId = 651; // San Francisco
+      } else if (latitude >= 36.0 && latitude <= 36.3 && longitude >= -115.3 && longitude <= -115.0) {
+        destId = 684; // Las Vegas
+      } else if (latitude >= 47.5 && latitude <= 47.8 && longitude >= -122.5 && longitude <= -122.2) {
+        destId = 704; // Seattle
+      } else if (latitude >= 42.2 && latitude <= 42.5 && longitude >= -71.2 && longitude <= -70.9) {
+        destId = 663; // Boston
+      } else if (latitude >= 38.8 && latitude <= 39.0 && longitude >= -77.2 && longitude <= -76.9) {
+        destId = 657; // Washington DC
+      } else if (latitude >= 29.6 && latitude <= 29.9 && longitude >= -95.6 && longitude <= -95.2) {
+        destId = 671; // Houston
+      } else if (latitude >= 39.6 && latitude <= 39.9 && longitude >= -105.2 && longitude <= -104.8) {
+        destId = 666; // Denver
+      } else if (latitude >= 33.3 && latitude <= 33.6 && longitude >= -112.3 && longitude <= -111.9) {
+        destId = 660; // Phoenix
+      } else if (latitude >= 32.6 && latitude <= 32.9 && longitude >= -117.3 && longitude <= -117.0) {
+        destId = 702; // San Diego
+      } else if (latitude >= 35.9 && latitude <= 36.3 && longitude >= -87.0 && longitude <= -86.5) {
+        destId = 700; // Nashville
+      } else if (latitude >= 28.4 && latitude <= 28.7 && longitude >= -81.5 && longitude <= -81.2) {
+        destId = 664; // Orlando
       }
       
-      // console.log(`Mapped coordinates (${latitude}, ${longitude}) to destination ID: ${destId}`);
+      if (!destId) {
+        console.log(`Warning: No Viator destination mapping for coordinates (${latitude}, ${longitude}). Skipping search.`);
+        return [];
+      }
+      
+      console.log(`Mapped coordinates (${latitude}, ${longitude}) to destination ID: ${destId}`);
       
       return this.searchActivities({
         destId,

@@ -15,7 +15,7 @@ router.post('/search', async (req, res) => {
     // Removed verbose logging - was flooding Railway logs
     // console.log('Viator search request body:', req.body);
     
-    const { latitude, longitude, activity_name, activityName, startDate, endDate } = req.body;
+    const { latitude, longitude, activity_name, activityName, city, startDate, endDate } = req.body;
     
     // Handle both camelCase and snake_case
     const searchName = activityName || activity_name;
@@ -25,11 +25,41 @@ router.post('/search', async (req, res) => {
       return res.status(400).json({ error: 'Activity name is required' });
     }
 
-    const activities = await viatorService.searchByLocationAndActivity(
-      latitude,
-      longitude,
-      searchName
-    );
+    // Only search if we have a city - no fallback to wrong locations
+    let activities = [];
+    
+    if (city) {
+      console.log(`Searching Viator for "${searchName}" in ${city}`);
+      
+      // First, get the destination ID for the city
+      const destId = await viatorService.getDestinationId(city);
+      
+      if (destId) {
+        // Search activities for this specific destination
+        activities = await viatorService.searchActivities({
+          destId,
+          searchQuery: searchName,
+          topX: '1-10',
+          sortOrder: 'TRAVELER_RATING'
+        });
+        
+        // If we have coordinates, filter to only show activities within ~10 miles
+        if (latitude && longitude && activities.length > 0) {
+          console.log(`Filtering ${activities.length} activities by distance from coordinates`);
+          // Note: Viator doesn't always provide coordinates for activities,
+          // so we may not be able to filter by distance effectively
+          // For now, we trust that activities with the destination ID are relevant
+        }
+      } else {
+        console.log(`Could not find Viator destination ID for ${city} - no activities to show`);
+        // Return empty array - don't show activities from wrong locations
+        activities = [];
+      }
+    } else {
+      console.log(`No city provided for Viator search - returning empty results`);
+      // No city = no search. Don't guess wrong locations.
+      activities = [];
+    }
 
     res.json({ activities });
   } catch (error) {
