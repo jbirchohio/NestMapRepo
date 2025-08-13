@@ -346,15 +346,27 @@ router.post("/chat", async (req, res) => {
 
 ${isCreatingTrip ? `IMPORTANT: The user wants to create a trip. 
 
-FIRST, check if the user has provided specific dates:
-- If NO dates provided: ASK them "When would you like to go? Please give me your travel dates (like 'March 15-20' or 'next weekend')."
-- If they say "next weekend" or similar: Calculate the actual dates (upcoming Saturday-Sunday)
-- If they give vague timing like "in summer": ASK for specific dates
+FIRST, extract ALL trip details from their message:
+- Dates: If provided, use them. If vague ("next week"), calculate actual dates
+- Budget: If mentioned (e.g., "$200/day", "$3000 total"), respect it in your suggestions
+- Group size: Number of adults, kids if mentioned
+- Interests: Any specific things they want to do or see
+
+BUDGET AWARENESS:
+- If budget is mentioned, categorize activities as:
+  - FREE: Parks, walking tours, beaches, hiking, window shopping
+  - BUDGET ($): Street food, public transport, local markets, some museums
+  - MODERATE ($$): Mid-range restaurants, paid attractions, guided tours
+  - EXPENSIVE ($$$): Fine dining, premium experiences, private tours
+- Mix free and paid activities to stay within budget
+- For "$200/day for 2 adults", that's ~$100/person - focus on free/budget activities
 
 Only proceed with trip creation if you have specific dates. You should:
 1. Provide a brief, excited response about the trip (2-3 sentences max)
 2. Include a JSON block at the end with trip details AND specific activities
 3. DO NOT ask if they want anything else or if they want to create it - they already asked you to create it!
+4. For longer trips (>4 days), generate AT LEAST 3-5 activities per day
+5. If budget constraints exist, mention how you're staying within budget
 
 Include this EXACT format at the end of your response:
 
@@ -387,26 +399,19 @@ CRITICAL DATE RULES:
 - Distribute activities evenly across the trip days
 
 Guidelines for activities:
-- Include 3-5 SPECIFIC activities per day
+- Include 3-5 SPECIFIC activities per day MINIMUM
+- For longer trips (7+ days): Generate FULL itinerary with activities for EVERY SINGLE DAY
 - Use real place names (museums, restaurants, landmarks, etc.)
 - ALWAYS provide realistic times in HH:MM format (e.g., "09:00", "14:30", "19:00")
 - Suggested times: Morning (09:00-11:00), Lunch (12:00-13:00), Afternoon (14:00-17:00), Dinner (18:00-20:00)
-- Mix different types of activities (sightseeing, dining, entertainment)
-- For the city they mentioned, use actual popular attractions
+- Mix different types of activities (sightseeing, dining, entertainment, local experiences)
+- Research the ACTUAL city they're visiting and use REAL attractions and restaurants
 
-CRITICAL: Use REAL, SPECIFIC places that actually exist. Examples:
-
-For NYC:
-- "Visit Empire State Building" at "350 5th Ave, New York, NY 10118"
-- "Lunch at Joe's Pizza" at "7 Carmine St, New York, NY 10014"
-- "See The Lion King on Broadway" at "Minskoff Theatre, 200 W 45th St, New York, NY"
-- "Walk the High Line" at "High Line Park, New York, NY 10011"
-- "Brunch at Jacob's Pickles" at "509 Amsterdam Ave, New York, NY 10024"
-
-For other cities, use similarly specific, real locations:
-- London: "Visit British Museum" at "Great Russell St, London WC1B 3DG"
-- Paris: "Lunch at Café de Flore" at "172 Bd Saint-Germain, 75006 Paris"
-- Tokyo: "Dinner at Ichiran Ramen" at "3-34-11 Shinjuku, Tokyo"
+CRITICAL: 
+- Generate activities for EVERY day of the trip, not just the first few days
+- Use REAL, SPECIFIC places that actually exist in the destination city
+- Include variety: tourist spots, local favorites, restaurants, cafes, markets, parks
+- Consider day trips or nearby attractions for longer stays
 
 Make dates start from the next Friday if not specified.` : 'Do not include any JSON blocks unless the user explicitly asks to create or plan a trip.'}
 
@@ -417,7 +422,7 @@ Keep your main response conversational and helpful.`
       model: OPENAI_MODEL,
       messages: [systemMessage, ...messages],
       temperature: 0.7,
-      max_tokens: 1000  // Increased for detailed activities
+      max_tokens: 3000  // Increased significantly for longer trips with many activities
     });
 
     const aiResponse = response.choices[0].message.content || "";
