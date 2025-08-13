@@ -616,7 +616,8 @@ Return SPECIFIC activities with REAL places in JSON format:
       "title": "Specific activity name (e.g., 'Visit Empire State Building')",
       "date": "Day 1, 2, or 3",
       "time": "HH:MM (24-hour format, e.g., '14:30')",
-      "locationName": "Exact place name and address",
+      "locationName": "FULL ADDRESS including street number, street name, city, state, zip",
+      "locationAddress": "Alternative address format if available",
       "notes": "Brief description or tips",
       "tag": "food/sightseeing/culture/entertainment/nightlife",
       "latitude": null,
@@ -625,12 +626,23 @@ Return SPECIFIC activities with REAL places in JSON format:
   ]
 }
 
-CRITICAL: Every activity MUST have:
-- title: The name of the activity (REQUIRED)
-- time: In HH:MM format like "09:00", "14:30", "19:00" (REQUIRED)
-- locationName: The place where it happens (REQUIRED)
+CRITICAL LOCATION REQUIREMENTS:
+- locationName MUST be a COMPLETE ADDRESS with street number and street name
+- For restaurants/businesses: Include the full business name AND street address
+- For landmarks: Include the official name AND street address
+- For neighborhoods/areas: Include a specific intersection or landmark within it
 
-Include 4-6 activities per day for ${destination}.`;
+GOOD Examples for ${destination}:
+- "Hattie B's Hot Chicken, 112 19th Avenue South, Nashville, TN 37203"
+- "Country Music Hall of Fame, 222 5th Avenue South, Nashville, TN 37203"
+- "The Gulch at 11th Avenue South and Division Street, Nashville, TN"
+
+BAD Examples (too vague for geocoding):
+- "Hattie B's Hot Chicken" (missing address)
+- "Downtown Nashville" (too general)
+- "Local coffee shop" (not specific)
+
+Include 4-6 activities per day with REAL, GEOCODABLE addresses for ${destination}.`;
 
     const response = await openai.chat.completions.create({
       model: OPENAI_MODEL,
@@ -673,16 +685,69 @@ Include 4-6 activities per day for ${destination}.`;
     // Geocode activities if we have the geocoding service
     try {
       const { geocodeLocation } = await import('../geocoding');
+      const { generateDistributedCoordinates, getCityCenter } = await import('../services/coordinateGenerator');
+      
+      logger.info(`Starting geocoding for ${enrichedActivities.length} activities in ${destination}`);
+      
+      // First, try to get the city center as a fallback
+      let cityCenter = null;
+      const cityCoords = await geocodeLocation(destination, undefined);
+      if (cityCoords) {
+        cityCenter = {
+          latitude: parseFloat(cityCoords.latitude),
+          longitude: parseFloat(cityCoords.longitude)
+        };
+        logger.info(`City center for ${destination}: ${cityCenter.latitude}, ${cityCenter.longitude}`);
+      } else {
+        // Use predefined city center if available
+        cityCenter = getCityCenter(destination);
+        if (cityCenter) {
+          logger.info(`Using predefined center for ${destination}: ${cityCenter.latitude}, ${cityCenter.longitude}`);
+        }
+      }
+      
+      // Try to geocode each activity
+      let geocodingFailures = 0;
       for (const activity of enrichedActivities) {
-        if (activity.locationName) {
-          const coords = await geocodeLocation(activity.locationName, destination);
+        if (activity.locationName || activity.locationAddress) {
+          // Try locationName first, then locationAddress as fallback
+          const locationToGeocode = activity.locationName || activity.locationAddress;
+          logger.info(`Geocoding "${activity.title}" at location: "${locationToGeocode}"`);
+          
+          const coords = await geocodeLocation(locationToGeocode, destination);
           if (coords) {
             activity.latitude = coords.latitude;
             activity.longitude = coords.longitude;
+            logger.info(`Successfully geocoded "${activity.title}" to ${coords.latitude}, ${coords.longitude}`);
+          } else {
+            geocodingFailures++;
+            logger.warn(`Failed to geocode: "${locationToGeocode}" for ${destination}`);
+          }
+        } else {
+          logger.warn(`Activity "${activity.title}" has no location to geocode`);
+          geocodingFailures++;
+        }
+      }
+      
+      // If more than half of activities failed to geocode, use distributed coordinates
+      if (geocodingFailures > enrichedActivities.length / 2 && cityCenter) {
+        logger.warn(`High geocoding failure rate (${geocodingFailures}/${enrichedActivities.length}). Using distributed coordinates.`);
+        const activitiesWithCoords = generateDistributedCoordinates(
+          enrichedActivities,
+          cityCenter,
+          destination
+        );
+        
+        // Update the enrichedActivities with generated coordinates
+        for (let i = 0; i < enrichedActivities.length; i++) {
+          if (activitiesWithCoords[i].latitude && activitiesWithCoords[i].longitude) {
+            enrichedActivities[i].latitude = activitiesWithCoords[i].latitude;
+            enrichedActivities[i].longitude = activitiesWithCoords[i].longitude;
           }
         }
       }
     } catch (e) {
+      logger.error('Geocoding error:', e);
       // Geocoding is optional, continue without it
     }
 
