@@ -3,7 +3,7 @@ import { requireAuth } from '../middleware/jwtAuth';
 import { logger } from '../utils/logger';
 import { storage } from '../storage';
 import { db } from '../db-connection';
-import { users, templatePurchases, templates } from '@shared/schema';
+import { users, templatePurchases, templates, promoCodes, promoCodeUses } from '@shared/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { paymentRateLimit } from '../middleware/rateLimiting';
@@ -104,17 +104,92 @@ router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdem
 // POST /api/checkout/confirm-purchase - Confirm the purchase after payment
 router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempotency, async (req, res) => {
   try {
+    const { payment_intent_id, template_id, start_date, end_date, is_free_purchase, promo_code_id, discount_amount } = req.body;
+    const userId = req.user!.id;
+
+    if (!template_id) {
+      return res.status(400).json({ message: 'Template ID is required' });
+    }
+
+    // Handle free purchases (100% discount)
+    if (is_free_purchase) {
+      // Get template details
+      const template = await storage.getTemplate(template_id);
+      if (!template) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+
+      // Create purchase record with $0
+      const [purchase] = await db.insert(templatePurchases)
+        .values({
+          template_id: template_id,
+          buyer_id: userId,
+          seller_id: template.user_id,
+          price: '0.00',
+          platform_fee: '0.00',
+          seller_earnings: '0.00',
+          stripe_fee: '0.00',
+          stripe_payment_intent_id: null,
+          stripe_payment_id: null,
+          status: 'completed',
+          payout_status: 'not_applicable',
+        })
+        .returning();
+
+      // Record promo code usage if applicable
+      if (promo_code_id) {
+        await db.insert(promoCodeUses).values({
+          promo_code_id,
+          user_id: userId,
+          template_purchase_id: purchase.id,
+          discount_applied: discount_amount?.toString() || template.price,
+        });
+
+        // Increment promo code usage count
+        await db.update(promoCodes)
+          .set({ used_count: sql`${promoCodes.used_count} + 1` })
+          .where(eq(promoCodes.id, promo_code_id));
+      }
+
+      // Update template sales count
+      await db.update(templates)
+        .set({ 
+          sales_count: sql`COALESCE(${templates.sales_count}, 0) + 1`
+        })
+        .where(eq(templates.id, template_id));
+
+      // Create trip from template
+      const { templateCopyService } = await import('../services/templateCopyService');
+      const tripId = await templateCopyService.copyTemplateToTrip(
+        template_id,
+        userId,
+        start_date ? new Date(start_date) : undefined,
+        end_date ? new Date(end_date) : undefined
+      );
+
+      // Update purchase with trip ID
+      await db.update(templatePurchases)
+        .set({ trip_id: tripId })
+        .where(eq(templatePurchases.id, purchase.id));
+
+      logger.info(`Free purchase completed for template ${template_id} by user ${userId}`);
+
+      return res.json({
+        message: 'Free template acquired successfully',
+        purchaseId: purchase.id,
+        tripId
+      });
+    }
+
+    // Regular paid purchase flow
     if (!stripe) {
       return res.status(503).json({
         message: 'Payment processing is not configured'
       });
     }
 
-    const { payment_intent_id, template_id, start_date, end_date } = req.body;
-    const userId = req.user!.id;
-
-    if (!payment_intent_id || !template_id) {
-      return res.status(400).json({ message: 'Payment intent ID and template ID are required' });
+    if (!payment_intent_id) {
+      return res.status(400).json({ message: 'Payment intent ID is required for paid purchases' });
     }
 
     // Verify payment intent

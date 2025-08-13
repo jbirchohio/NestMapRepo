@@ -93,14 +93,52 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!stripe || !elements) {
-      return;
-    }
-
     setIsProcessing(true);
     setError(null);
 
     try {
+      // Check if this is a free purchase (100% discount)
+      if (finalPrice === 0) {
+        // Handle free purchase without Stripe
+        const confirmResponse = await fetch('/api/checkout/confirm-purchase', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            template_id: templateId,
+            start_date: startDate,
+            end_date: endDate,
+            is_free_purchase: true,
+            promo_code_id: promoData?.promoCodeId,
+            promo_code: promoData?.code,
+            discount_amount: promoData?.discountApplied,
+          }),
+        });
+
+        if (!confirmResponse.ok) {
+          const errorData = await confirmResponse.json();
+          throw new Error(errorData.message || 'Failed to confirm purchase');
+        }
+
+        const purchaseData = await confirmResponse.json();
+        
+        // Success!
+        toast({
+          title: 'Success!',
+          description: `You've got "${templateTitle}" for free!`,
+        });
+
+        onSuccess(purchaseData);
+        return;
+      }
+
+      // Regular payment flow for non-zero amounts
+      if (!stripe || !elements) {
+        throw new Error('Payment processing not available');
+      }
+
       // Step 1: Create payment intent on backend
       const response = await fetch('/api/checkout/create-payment-intent', {
         method: 'POST',
@@ -319,19 +357,28 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
             </div>
           </div>
 
-          {/* Card Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Card Details
-            </label>
-            <div className="border rounded-lg p-3 bg-white">
-              <CardElement options={cardElementOptions} />
+          {/* Card Input - Only show if payment is required */}
+          {finalPrice > 0 ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Card Details
+              </label>
+              <div className="border rounded-lg p-3 bg-white">
+                <CardElement options={cardElementOptions} />
+              </div>
+              <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                <Lock className="h-3 w-3" />
+                Your payment info is secure and encrypted
+              </p>
             </div>
-            <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
-              <Lock className="h-3 w-3" />
-              Your payment info is secure and encrypted
-            </p>
-          </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-800 font-medium flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                No payment required - This template is free with your promo code!
+              </p>
+            </div>
+          )}
 
           {/* Test Card Info */}
           {import.meta.env.DEV && (
@@ -362,13 +409,18 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
             </Button>
             <Button
               type="submit"
-              disabled={!stripe || isProcessing}
+              disabled={finalPrice > 0 && !stripe ? true : isProcessing}
               className="flex-1"
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing...
+                </>
+              ) : finalPrice === 0 ? (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Get for Free
                 </>
               ) : (
                 <>
