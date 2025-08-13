@@ -352,15 +352,18 @@ export default function TemplateManager() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {template.duration} days
-                        {template.duration === 1 && template.price && Number(template.price) > 10 && (
+                        {template.duration === 1 && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              const expectedDuration = Number(template.price) <= 30 ? 3 :
-                                Number(template.price) <= 50 ? 5 :
-                                Number(template.price) <= 75 ? 7 :
-                                Number(template.price) <= 100 ? 10 : 14;
+                              // Calculate expected duration based on price
+                              const price = Number(template.price) || 0;
+                              const expectedDuration = price <= 10 ? 3 :
+                                price <= 30 ? 3 :
+                                price <= 50 ? 5 :
+                                price <= 75 ? 7 :
+                                price <= 100 ? 10 : 14;
                               
                               if (confirm(`Fix duration from 1 day to ${expectedDuration} days?`)) {
                                 fixDurationMutation.mutate({ 
@@ -369,9 +372,9 @@ export default function TemplateManager() {
                                 });
                               }
                             }}
-                            className="text-orange-600"
+                            className="text-orange-600 border-orange-600 hover:bg-orange-50"
                           >
-                            Fix
+                            Fix Duration
                           </Button>
                         )}
                       </div>
@@ -524,12 +527,33 @@ export default function TemplateManager() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="duration">Duration (days)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    value={editFormData.duration || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, duration: parseInt(e.target.value) })}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={editFormData.duration || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, duration: parseInt(e.target.value) })}
+                    />
+                    {editFormData.duration === 1 && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const price = Number(editFormData.price) || 0;
+                          const suggestedDuration = price <= 10 ? 3 :
+                            price <= 30 ? 3 :
+                            price <= 50 ? 5 :
+                            price <= 75 ? 7 :
+                            price <= 100 ? 10 : 14;
+                          setEditFormData({ ...editFormData, duration: suggestedDuration });
+                        }}
+                        className="text-orange-600"
+                      >
+                        Auto-fix
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
