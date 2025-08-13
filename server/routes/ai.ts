@@ -398,20 +398,38 @@ CRITICAL DATE RULES:
 - For "next weekend": Use the upcoming Saturday and Sunday dates
 - Distribute activities evenly across the trip days
 
-Guidelines for activities:
-- Include 3-5 SPECIFIC activities per day MINIMUM
-- For longer trips (7+ days): Generate FULL itinerary with activities for EVERY SINGLE DAY
-- Use real place names (museums, restaurants, landmarks, etc.)
-- ALWAYS provide realistic times in HH:MM format (e.g., "09:00", "14:30", "19:00")
-- Suggested times: Morning (09:00-11:00), Lunch (12:00-13:00), Afternoon (14:00-17:00), Dinner (18:00-20:00)
-- Mix different types of activities (sightseeing, dining, entertainment, local experiences)
-- Research the ACTUAL city they're visiting and use REAL attractions and restaurants
+ACTIVITY GENERATION RULES - YOU MUST FOLLOW THESE EXACTLY:
 
-CRITICAL: 
-- Generate activities for EVERY day of the trip, not just the first few days
-- Use REAL, SPECIFIC places that actually exist in the destination city
-- Include variety: tourist spots, local favorites, restaurants, cafes, markets, parks
-- Consider day trips or nearby attractions for longer stays
+For a trip from startDate to endDate, calculate the EXACT number of days.
+Then generate activities using this MANDATORY formula:
+
+- Days 1-3: 4 activities per day (12 total)
+- Days 4-7: 4 activities per day (16 total) 
+- Days 8-10: 4 activities per day (12 total)
+- Days 11-13: 4 activities per day (12 total)
+- Days 14+: 3 activities per day minimum
+
+EXAMPLE: For a 13-day trip (Aug 20 - Sep 1), you MUST generate:
+- Day 1 (Aug 20): 4 activities
+- Day 2 (Aug 21): 4 activities  
+- Day 3 (Aug 22): 4 activities
+- Day 4 (Aug 23): 4 activities
+- Day 5 (Aug 24): 4 activities
+- Day 6 (Aug 25): 4 activities (include day trip if mentioned)
+- Day 7 (Aug 26): 4 activities
+- Day 8 (Aug 27): 4 activities
+- Day 9 (Aug 28): 4 activities
+- Day 10 (Aug 29): 4 activities
+- Day 11 (Aug 30): 4 activities
+- Day 12 (Aug 31): 4 activities
+- Day 13 (Sep 1): 3 activities (departure day)
+TOTAL: 51 activities MINIMUM
+
+Each activity needs:
+- Specific time (09:00, 12:30, 15:00, 19:00)
+- Real location name that exists
+- Mix of: sightseeing, meals, activities, entertainment
+- Consider the budget if mentioned
 
 Make dates start from the next Friday if not specified.` : 'Do not include any JSON blocks unless the user explicitly asks to create or plan a trip.'}
 
@@ -422,7 +440,7 @@ Keep your main response conversational and helpful.`
       model: OPENAI_MODEL,
       messages: [systemMessage, ...messages],
       temperature: 0.7,
-      max_tokens: 3000  // Increased significantly for longer trips with many activities
+      max_tokens: 4000  // Maximum tokens for GPT-3.5 to handle 50+ activities
     });
 
     const aiResponse = response.choices[0].message.content || "";
@@ -433,6 +451,9 @@ Keep your main response conversational and helpful.`
     if (jsonMatch) {
       try {
         tripSuggestion = JSON.parse(jsonMatch[1]);
+        
+        // Log for debugging
+        logger.info(`AI generated trip with ${tripSuggestion.activities?.length || 0} activities for ${tripSuggestion.city} from ${tripSuggestion.startDate} to ${tripSuggestion.endDate}`);
         // Validate dates
         const today = new Date();
         const startDate = new Date(tripSuggestion.startDate);
