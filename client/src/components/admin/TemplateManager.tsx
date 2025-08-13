@@ -392,7 +392,13 @@ export default function TemplateManager() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => window.open(`/template/${template.slug}`, '_blank')}>
+                          <DropdownMenuItem onClick={() => {
+                            if (template.slug) {
+                              window.open(`/templates/${template.slug}`, '_blank');
+                            } else {
+                              toast.error('Template slug is missing');
+                            }
+                          }}>
                             <Eye className="h-4 w-4 mr-2" />
                             View
                           </DropdownMenuItem>
@@ -459,7 +465,13 @@ export default function TemplateManager() {
                       size="sm" 
                       variant="outline" 
                       className="flex-1"
-                      onClick={() => window.open(`/template/${template.slug}`, '_blank')}
+                      onClick={() => {
+                        if (template.slug) {
+                          window.open(`/templates/${template.slug}`, '_blank');
+                        } else {
+                          toast.error('Template slug is missing');
+                        }
+                      }}
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       View

@@ -28,6 +28,7 @@ import TemplateDetails from "@/pages/TemplateDetails";
 import CreateTemplate from "@/pages/CreateTemplate";
 import PublicTemplate from "@/pages/PublicTemplate";
 import CreatorDashboard from "@/pages/CreatorDashboard";
+import TemplateAnalytics from "@/pages/TemplateAnalytics";
 import AdminDashboard from "@/pages/AdminDashboard";
 import YearInTravelPage from "@/pages/YearInTravelPage";
 
@@ -110,6 +111,7 @@ function Router() {
           <Route path="/templates/:slug" component={TemplateDetails} />
           <Route path="/t/:shareCode" component={PublicTemplate} />
           <Route path="/creator/dashboard" component={CreatorDashboard} />
+          <Route path="/creator/analytics/:templateId" component={TemplateAnalytics} />
 
           {/* Admin */}
           <Route path="/admin" component={AdminDashboard} />
