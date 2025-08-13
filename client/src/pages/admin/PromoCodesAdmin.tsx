@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -97,6 +97,24 @@ export default function PromoCodesAdmin() {
     creator_id: '',
   });
 
+  // When editing code changes, populate form
+  useEffect(() => {
+    if (editingCode) {
+      setFormData({
+        code: editingCode.code,
+        description: editingCode.description || '',
+        discount_type: editingCode.discount_type,
+        discount_amount: editingCode.discount_amount.toString(),
+        minimum_purchase: editingCode.minimum_purchase?.toString() || '',
+        max_uses: editingCode.max_uses?.toString() || '',
+        max_uses_per_user: editingCode.max_uses_per_user.toString(),
+        valid_until: editingCode.valid_until ? new Date(editingCode.valid_until).toISOString().slice(0, 16) : '',
+        template_id: editingCode.template_id?.toString() || '',
+        creator_id: editingCode.creator_id?.toString() || '',
+      });
+    }
+  }, [editingCode]);
+
   const queryClient = useQueryClient();
 
   // Fetch promo codes
@@ -178,6 +196,30 @@ export default function PromoCodesAdmin() {
 
   const handleCreate = () => {
     createMutation.mutate(formData);
+  };
+
+  const handleUpdate = () => {
+    if (!editingCode) return;
+    
+    const updates: any = {
+      description: formData.description || null,
+      minimum_purchase: formData.minimum_purchase ? formData.minimum_purchase : null,
+      max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
+      max_uses_per_user: parseInt(formData.max_uses_per_user) || 1,
+      valid_until: formData.valid_until || null,
+      template_id: formData.template_id ? parseInt(formData.template_id) : null,
+      creator_id: formData.creator_id ? parseInt(formData.creator_id) : null,
+    };
+
+    updateMutation.mutate({ 
+      id: editingCode.id, 
+      updates 
+    }, {
+      onSuccess: () => {
+        setEditingCode(null);
+        resetForm();
+      }
+    });
   };
 
   const toggleActive = (code: PromoCode) => {
@@ -578,6 +620,155 @@ export default function PromoCodesAdmin() {
             </Button>
             <Button onClick={handleCreate} disabled={createMutation.isPending}>
               Create Promo Code
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingCode} onOpenChange={(open) => !open && setEditingCode(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Promo Code</DialogTitle>
+            <DialogDescription>
+              Update settings for {editingCode?.code}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Promo Code</Label>
+                <Input
+                  value={editingCode?.code || ''}
+                  disabled
+                  className="font-mono bg-muted"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Code cannot be changed</p>
+              </div>
+              <div>
+                <Label>Discount</Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    value={editingCode?.discount_amount || ''}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <span className="text-muted-foreground">
+                    {editingCode?.discount_type === 'percentage' ? '%' : '$'}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Discount cannot be changed</p>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Description of the promo code"
+                rows={2}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-minimum_purchase">Minimum Purchase ($)</Label>
+                <Input
+                  id="edit-minimum_purchase"
+                  type="number"
+                  value={formData.minimum_purchase}
+                  onChange={(e) => setFormData({ ...formData, minimum_purchase: e.target.value })}
+                  placeholder="No minimum"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-valid_until">Valid Until</Label>
+                <Input
+                  id="edit-valid_until"
+                  type="datetime-local"
+                  value={formData.valid_until}
+                  onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-max_uses">Max Total Uses</Label>
+                <Input
+                  id="edit-max_uses"
+                  type="number"
+                  value={formData.max_uses}
+                  onChange={(e) => setFormData({ ...formData, max_uses: e.target.value })}
+                  placeholder="Unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_uses_per_user">Max Uses Per User</Label>
+                <Input
+                  id="edit-max_uses_per_user"
+                  type="number"
+                  value={formData.max_uses_per_user}
+                  onChange={(e) => setFormData({ ...formData, max_uses_per_user: e.target.value })}
+                  placeholder="1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-template_id">Specific Template ID (Optional)</Label>
+                <Input
+                  id="edit-template_id"
+                  type="number"
+                  value={formData.template_id}
+                  onChange={(e) => setFormData({ ...formData, template_id: e.target.value })}
+                  placeholder="Any template"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-creator_id">Specific Creator ID (Optional)</Label>
+                <Input
+                  id="edit-creator_id"
+                  type="number"
+                  value={formData.creator_id}
+                  onChange={(e) => setFormData({ ...formData, creator_id: e.target.value })}
+                  placeholder="Any creator"
+                />
+              </div>
+            </div>
+
+            {/* Usage Stats */}
+            <div className="bg-muted p-4 rounded-lg">
+              <h4 className="font-medium mb-2">Usage Statistics</h4>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Times Used:</span>
+                  <p className="font-medium">{editingCode?.times_used || 0}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Created:</span>
+                  <p className="font-medium">
+                    {editingCode?.created_at ? new Date(editingCode.created_at).toLocaleDateString() : '-'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Status:</span>
+                  <p className="font-medium">
+                    {editingCode?.is_active ? 'Active' : 'Inactive'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditingCode(null); resetForm(); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdate} disabled={updateMutation.isPending}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
