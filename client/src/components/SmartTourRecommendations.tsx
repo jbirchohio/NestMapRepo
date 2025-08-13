@@ -240,7 +240,7 @@ export default function SmartTourRecommendations({
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
-      body: JSON.stringify({ productCode: tour.productCode })
+      body: JSON.stringify({ product_code: tour.productCode })
     })
     .then(res => res.json())
     .then(data => {

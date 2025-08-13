@@ -686,11 +686,14 @@ Include 4-6 activities per day for ${destination}.`;
       // Geocoding is optional, continue without it
     }
 
-    // Save activities to database
+    // Import storage for proper activity creation
+    const { storage } = await import('../storage');
+    
+    // Save activities to database using storage layer
     const savedActivities = [];
     for (const activity of enrichedActivities) {
       try {
-        // Fix field mapping - activity.locationName needs to be location_name for DB
+        // Use storage.createActivity which handles field validation properly
         const activityData = {
           trip_id: activity.trip_id,
           title: activity.title,
@@ -701,22 +704,26 @@ Include 4-6 activities per day for ${destination}.`;
           tag: activity.tag || 'activity',
           latitude: activity.latitude ? activity.latitude.toString() : null,
           longitude: activity.longitude ? activity.longitude.toString() : null,
-          order: activity.order || 0
+          order: activity.order || 0,
+          travel_mode: 'walking', // Add default travel mode
+          assigned_to: null // Add default assigned_to
         };
         
         logger.info(`Creating weekend activity: ${activityData.title} on ${activityData.date} at ${activityData.time}`);
         
-        const result = await db
-          .insert(activities)
-          .values(activityData)
-          .returning();
-          
-        if (Array.isArray(result) && result.length > 0) {
-          savedActivities.push(result[0]);
-          logger.info(`Successfully created activity: ${result[0].id}`);
+        // Use storage layer instead of raw db insert
+        const createdActivity = await storage.createActivity(activityData);
+        
+        if (createdActivity) {
+          savedActivities.push(createdActivity);
+          logger.info(`Successfully created activity: ${createdActivity.id}`);
         }
       } catch (error) {
-        logger.error(`Failed to create activity "${activity.title}":`, error);
+        logger.error(`Failed to create activity "${activity.title}":`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          activity
+        });
         // Continue with other activities even if one fails
       }
     }

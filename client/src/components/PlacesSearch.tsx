@@ -78,7 +78,7 @@ export default function PlacesSearch({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ searchQuery: debouncedSearchTerm })
+        body: JSON.stringify({ search_query: debouncedSearchTerm, city_context: "" })
       });
 
       if (!response.ok) {

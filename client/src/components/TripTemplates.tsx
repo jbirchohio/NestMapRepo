@@ -59,10 +59,17 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
       startDate: string;
       customTitle?: string;
     }) => {
-      const response = await fetch(`/api/templates/${templateId}/create-trip`, {
+      const response = await fetch(`/api/templates/reuse`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, startDate, customTitle })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ 
+          template_id: templateId, 
+          start_date: startDate, 
+          end_date: customTitle ? null : undefined // Let backend calculate end date
+        })
       });
       if (!response.ok) throw new Error("Failed to create trip");
       return response.json();

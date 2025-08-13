@@ -175,7 +175,7 @@ export default function TemplatePurchaseButton({
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ templateId }),
+        body: JSON.stringify({ template_id: templateId }),
       });
 
       if (!response.ok) {
