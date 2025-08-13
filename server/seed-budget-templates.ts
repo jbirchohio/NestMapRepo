@@ -210,7 +210,7 @@ async function seedBudgetTemplates() {
       try {
         const openaiClient = getOpenAIClient();
         const response = await openaiClient.chat.completions.create({
-          model: 'gpt-4o',
+          model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'system',

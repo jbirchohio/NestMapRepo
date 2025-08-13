@@ -907,23 +907,51 @@ router.post('/templates/generate', async (req, res) => {
       }
     }`;
 
-    const response = await openaiClient.chat.completions.create({
-      model: 'gpt-4o',  // Use GPT-4 for better quality
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional travel expert creating premium, detailed itineraries for a travel marketplace. Create comprehensive, actionable itineraries that travelers would pay for. Always respond with valid JSON.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.8,
-      max_tokens: 4000,
+    // Add timeout wrapper for OpenAI call
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('OpenAI API timeout after 30 seconds')), 30000);
     });
-
-    const generatedItinerary = JSON.parse(response.choices[0].message.content || '{}');
+    
+    let generatedItinerary;
+    try {
+      const response = await Promise.race([
+        openaiClient.chat.completions.create({
+          model: 'gpt-3.5-turbo',  // Use consistent model across app
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional travel expert creating premium, detailed itineraries for a travel marketplace. Create comprehensive, actionable itineraries that travelers would pay for. Always respond with valid JSON.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.8,
+          max_tokens: 3000,  // Reduce tokens for faster response
+        }),
+        timeoutPromise
+      ]) as any;
+      
+      generatedItinerary = JSON.parse(response.choices[0].message.content || '{}');
+    } catch (parseError) {
+      logger.error('Failed to generate or parse itinerary:', parseError);
+      // Return a basic fallback template
+      generatedItinerary = {
+        tripSummary: {
+          overview: `Explore the best of ${city} in ${duration} days`,
+          highlights: [`${city} highlights`, 'Local cuisine', 'Cultural experiences', 'Hidden gems', 'Must-see attractions']
+        },
+        activities: [],
+        recommendations: {
+          bestTimeToVisit: 'Spring and fall are ideal',
+          gettingAround: 'Use public transportation',
+          whereToStay: 'City center recommended',
+          localTips: ['Book in advance', 'Try local food', 'Learn basic phrases'],
+          foodSpecialties: ['Local specialties']
+        }
+      };
+    }
 
     // Create slug from title
     const slug = title.toLowerCase()
