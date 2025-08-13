@@ -53,3 +53,22 @@
 [2025-08-13T18:27:11.854Z] INFO: Cache statistics {"hitRate":"0.00%","totalSize":"0.00MB","evictions":0}
 [2025-08-13T18:32:11.868Z] INFO: Cache statistics {"hitRate":"0.00%","totalSize":"0.00MB","evictions":0}
 [2025-08-13T18:37:11.879Z] INFO: Cache statistics {"hitRate":"0.00%","totalSize":"0.00MB","evictions":0}
+[2025-08-13T18:42:11.886Z] INFO: Cache statistics {"hitRate":"0.00%","totalSize":"0.00MB","evictions":0}
+[2025-08-13T18:44:17.679Z] INFO: Request started {"correlationId":"PITqJLTDvCUA","requestId":"fP8j1U20","method":"GET","path":"/api/templates","ip":"127.0.0.1","userAgent":"curl/8.12.1"}
+Query: select count(*)::integer from "templates" where ("templates"."status" = $1 and "templates"."tags" @> ARRAY[$2]::text[]) -- params: ["published", "kid-friendly"]
+[2025-08-13T18:44:17.974Z] DEBUG: Database connection established (1/20)
+[2025-08-13T18:44:18.218Z] ERROR: Error fetching templates: {"length":200,"name":"error","severity":"ERROR","code":"42883","hint":"No operator matches the given name and argument types. You might need to add explicit type casts.","position":"99","file":"parse_oper.c","line":"647","routine":"op_error"}
+[2025-08-13T18:44:18.223Z] INFO: Request completed {"correlationId":"PITqJLTDvCUA","requestId":"fP8j1U20","method":"GET","path":"/api/templates","statusCode":500,"duration":"544ms","contentLength":"39"}
+[2025-08-13T18:44:18.267Z] DEBUG: Database connection closed (0/20)
+[2025-08-13T18:44:24.492Z] INFO: Request started {"correlationId":"AG1jiZbtnbwt","requestId":"ZW95S07a","method":"GET","path":"/api/templates","ip":"127.0.0.1","userAgent":"curl/8.12.1"}
+Query: select count(*)::integer from "templates" where ("templates"."status" = $1 and "templates"."tags" @> ARRAY[$2]::text[]) -- params: ["published", "kid-friendly"]
+[2025-08-13T18:44:24.883Z] DEBUG: Database connection established (1/20)
+[2025-08-13T18:44:25.185Z] ERROR: Error fetching templates: {"length":200,"name":"error","severity":"ERROR","code":"42883","hint":"No operator matches the given name and argument types. You might need to add explicit type casts.","position":"99","file":"parse_oper.c","line":"647","routine":"op_error"}
+[2025-08-13T18:44:25.186Z] INFO: Request completed {"correlationId":"AG1jiZbtnbwt","requestId":"ZW95S07a","method":"GET","path":"/api/templates","statusCode":500,"duration":"694ms","contentLength":"39"}
+[2025-08-13T18:44:25.226Z] DEBUG: Database connection closed (0/20)
+[2025-08-13T18:44:53.349Z] INFO: Request started {"correlationId":"FyKzEWyyveTs","requestId":"8YMVfEMq","method":"GET","path":"/api/templates","ip":"127.0.0.1","userAgent":"curl/8.12.1"}
+Query: select count(*)::integer from "templates" where ("templates"."status" = $1 and "templates"."tags" @> ARRAY[$2]::text[]) -- params: ["published", "kid-friendly"]
+[2025-08-13T18:44:53.583Z] DEBUG: Database connection established (1/20)
+[2025-08-13T18:44:53.802Z] ERROR: Error fetching templates: {"length":200,"name":"error","severity":"ERROR","code":"42883","hint":"No operator matches the given name and argument types. You might need to add explicit type casts.","position":"99","file":"parse_oper.c","line":"647","routine":"op_error"}
+[2025-08-13T18:44:53.803Z] INFO: Request completed {"correlationId":"FyKzEWyyveTs","requestId":"8YMVfEMq","method":"GET","path":"/api/templates","statusCode":500,"duration":"454ms","contentLength":"39"}
+[2025-08-13T18:44:53.838Z] DEBUG: Database connection closed (0/20)

@@ -396,8 +396,12 @@ router.get('/stats', requireAuth, async (req, res) => {
       total_codes: totalCodes.count || 0,
       active_codes: activeCodes.count || 0,
       total_uses: totalUses.count || 0,
-      total_discount_given: parseFloat(totalUses.total_discount || '0'),
-      top_performing_codes: topCodes,
+      total_discount_given: totalUses.total_discount ? parseFloat(totalUses.total_discount) : 0,
+      top_performing_codes: topCodes.map(code => ({
+        ...code,
+        uses: code.uses || 0,
+        total_discount: code.total_discount || '0'
+      })),
     });
   } catch (error) {
     console.error('Error fetching promo code stats:', error);

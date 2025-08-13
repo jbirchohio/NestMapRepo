@@ -735,13 +735,13 @@ export class ConsumerDatabaseStorage implements IStorage {
     }
 
     if (tag) {
-      // Use parameterized query to prevent SQL injection
-      conditions.push(sql`${templates.tags} @> ARRAY[${tag}]::text[]`);
+      // Use JSONB containment operator for single tag
+      conditions.push(sql`${templates.tags} @> ${JSON.stringify([tag])}::jsonb`);
     }
 
     if (destination) {
-      // Use parameterized query to prevent SQL injection
-      conditions.push(sql`${templates.destinations} @> ARRAY[${destination}]::text[]`);
+      // Use JSONB containment operator for single destination
+      conditions.push(sql`${templates.destinations} @> ${JSON.stringify([destination])}::jsonb`);
     }
 
     if (minPrice !== undefined) {

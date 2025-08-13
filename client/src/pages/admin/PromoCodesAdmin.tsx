@@ -250,7 +250,7 @@ export default function PromoCodesAdmin() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${stats.total_discount_given.toFixed(2)}
+                ${(stats.total_discount_given || 0).toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Given to customers
@@ -267,7 +267,7 @@ export default function PromoCodesAdmin() {
             <CardContent>
               <div className="text-2xl font-bold">
                 ${stats.total_uses > 0 
-                  ? (stats.total_discount_given / stats.total_uses).toFixed(2)
+                  ? ((stats.total_discount_given || 0) / stats.total_uses).toFixed(2)
                   : '0.00'}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -425,7 +425,7 @@ export default function PromoCodesAdmin() {
                   <div className="text-right">
                     <div className="font-semibold">{code.uses} uses</div>
                     <div className="text-sm text-muted-foreground">
-                      ${parseFloat(code.total_discount).toFixed(2)} given
+                      ${parseFloat(code.total_discount || '0').toFixed(2)} given
                     </div>
                   </div>
                 </div>
