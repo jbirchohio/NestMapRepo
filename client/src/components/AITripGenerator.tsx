@@ -185,15 +185,41 @@ export default function AITripGenerator() {
 
   const generateTripMutation = useMutation({
     mutationFn: async (userPrompt: string) => {
-      const response = await apiRequest('POST', '/api/ai/generate-trip', {
-        prompt: userPrompt,
-        conversation,
-        tripId: null // Can be connected to existing trip if needed
-      });
-      if (!response.ok) {
-        throw new Error('Failed to generate trip');
+      // Use a longer timeout for trip generation (60 seconds)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/ai/generate-trip', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            prompt: userPrompt,
+            conversation,
+            tripId: null
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error || 'Failed to generate trip');
+        }
+        
+        return response.json();
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out. This trip is taking longer than expected. Please try again with a shorter trip duration.');
+        }
+        throw error;
       }
-      return response.json();
     },
     onSuccess: (data) => {
       if (data.type === 'questions') {
@@ -209,7 +235,13 @@ export default function AITripGenerator() {
         setIsGenerating(false);
       }
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Trip generation error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate trip. Please try again.",
+        variant: "destructive",
+      });
       setIsGenerating(false);
     }
   });
@@ -333,7 +365,7 @@ export default function AITripGenerator() {
               {isGenerating ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Generating...</span>
+                  <span>Creating your trip (this may take 30-60 seconds for longer trips)...</span>
                 </>
               ) : (
                 <>
