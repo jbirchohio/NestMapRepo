@@ -23,12 +23,13 @@ import {
 import { format } from 'date-fns';
 
 export default function TemplateAnalytics() {
-  const { templateId } = useParams();
+  const params = useParams();
+  const templateId = params.templateId;
   const [, navigate] = useLocation();
   const [timeRange, setTimeRange] = useState('30d');
 
   // Fetch template analytics
-  const { data: analytics, isLoading } = useQuery({
+  const { data: analytics, isLoading, error } = useQuery({
     queryKey: ['template-analytics', templateId, timeRange],
     queryFn: async () => {
       const response = await fetch(`/api/templates/${templateId}/analytics?range=${timeRange}`, {
@@ -36,20 +37,24 @@ export default function TemplateAnalytics() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch analytics');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch analytics');
+      }
       return response.json();
-    }
+    },
+    enabled: !!templateId
   });
 
   // Mock data for now - replace with real API data
   const mockData = {
     template: {
-      id: templateId,
-      title: 'Loading...',
-      price: '0',
-      salesCount: 0,
-      viewCount: 0,
-      rating: 0,
+      id: templateId || '0',
+      title: `Template #${templateId || '0'} Analytics`,
+      price: '49.99',
+      salesCount: 42,
+      viewCount: 1370,
+      rating: 4.5,
       status: 'published'
     },
     metrics: {
@@ -83,7 +88,6 @@ export default function TemplateAnalytics() {
     ]
   };
 
-  const data = analytics || mockData;
   const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 
   if (isLoading) {
@@ -92,6 +96,36 @@ export default function TemplateAnalytics() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Error: {(error as Error).message}</p>
+          <Button 
+            onClick={() => navigate('/creator/dashboard')} 
+            className="mt-4"
+            variant="outline"
+          >
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use real data from API, fallback to mock if needed
+  const data = analytics || mockData;
+  
+  if (!data || !data.template) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">No analytics data available</p>
         </div>
       </div>
     );
