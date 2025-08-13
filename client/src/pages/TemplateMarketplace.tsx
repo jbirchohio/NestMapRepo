@@ -20,7 +20,8 @@ const POPULAR_DESTINATIONS = [
 
 const POPULAR_TAGS = [
   'romantic', 'budget', 'luxury', 'adventure', 'foodie',
-  'family', 'solo', 'beach', 'city-break', 'road-trip'
+  'family', 'kids-friendly', 'solo', 'beach', 'city-break', 
+  'road-trip', 'budget-friendly', 'nature', 'culture'
 ];
 
 export default function TemplateMarketplace() {
@@ -32,9 +33,10 @@ export default function TemplateMarketplace() {
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Fetch templates
-  const { data: templates, isLoading } = useQuery({
-    queryKey: ['templates', search, selectedTag, selectedDestination, priceRange, duration, sortBy],
+  // Fetch templates with pagination
+  const [page, setPage] = useState(1);
+  const { data: templatesData, isLoading } = useQuery({
+    queryKey: ['templates', search, selectedTag, selectedDestination, priceRange, duration, sortBy, page],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
@@ -44,13 +46,21 @@ export default function TemplateMarketplace() {
       params.append('maxPrice', priceRange[1].toString());
       if (duration) params.append('duration', duration.toString());
       params.append('sort', sortBy);
+      params.append('page', page.toString());
+      params.append('limit', '100'); // Request up to 100 templates to show more
 
       const response = await fetch(`/api/templates?${params}`);
       if (!response.ok) throw new Error('Failed to fetch templates');
       const data = await response.json();
-      return data.templates as ClientTemplate[];
+      return {
+        templates: data.templates as ClientTemplate[],
+        pagination: data.pagination
+      };
     },
   });
+
+  const templates = templatesData?.templates;
+  const pagination = templatesData?.pagination;
 
   const clearFilters = () => {
     setSearch('');
@@ -111,7 +121,7 @@ export default function TemplateMarketplace() {
             className="mt-8 grid grid-cols-3 gap-4 max-w-xl mx-auto"
           >
             <div className="text-center">
-              <div className="text-2xl font-bold">{templates?.length || 0}</div>
+              <div className="text-2xl font-bold">{pagination?.total || templates?.length || 0}</div>
               <div className="text-sm text-purple-100">Templates</div>
             </div>
             <div className="text-center">

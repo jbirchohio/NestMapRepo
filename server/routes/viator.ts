@@ -26,7 +26,7 @@ router.post('/search', async (req, res) => {
     }
 
     // Only search if we have a city - no fallback to wrong locations
-    let activities = [];
+    let activities: any[] = [];
     
     if (city) {
       console.log(`Searching Viator for "${searchName}" in ${city}`);
