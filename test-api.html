@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Template API</title>
+</head>
+<body>
+    <h1>Testing Template API</h1>
+    <pre id="output"></pre>
+    
+    <script>
+        fetch('http://localhost:5000/api/templates/ultimate-3-day-akron-ohio-city-break-1755048797488')
+            .then(res => res.json())
+            .then(data => {
+                console.log('Full response:', data);
+                console.log('Template tripData:', data.tripData);
+                console.log('Activities:', data.tripData?.activities);
+                
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                document.getElementById('output').textContent = 'Error: ' + err;
+            });
+    </script>
+</body>
+</html>

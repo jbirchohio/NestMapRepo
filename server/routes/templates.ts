@@ -229,8 +229,11 @@ router.get("/:slug", async (req, res) => {
     const baseDate = new Date();
     baseDate.setDate(baseDate.getDate() + 30);
 
-    // Extract activities from the days structure
-    if (tripData.days && Array.isArray(tripData.days)) {
+    // Extract activities - check both formats (days structure or direct activities array)
+    if (tripData.activities && Array.isArray(tripData.activities)) {
+      // Direct activities array (new format from AI generation)
+      activities = tripData.activities;
+    } else if (tripData.days && Array.isArray(tripData.days)) {
       tripData.days.forEach((day: any) => {
         if (day.activities && Array.isArray(day.activities)) {
           // Calculate the date for this day

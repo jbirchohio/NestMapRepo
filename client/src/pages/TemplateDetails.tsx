@@ -129,7 +129,11 @@ export default function TemplateDetails() {
 
   const tripData = template.tripData || {};
   const activities = tripData.activities || [];
+  console.log('Template tripData:', tripData);
+  console.log('Activities from tripData:', activities);
+  console.log('Activities length:', activities.length);
   const dayGroups = groupActivitiesByDay(activities);
+  console.log('Day groups:', dayGroups);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 pt-20">
