@@ -1236,13 +1236,16 @@ router.post("/generate-trip", async (req, res) => {
     const extractionPrompt = `Extract trip details from this request and return as JSON:
 "${prompt}"
 
+IMPORTANT: Extract dates in any format (like "next week", "June 15-22", "15 days from now") and convert to YYYY-MM-DD format.
+For relative dates, use today's date as reference: ${new Date().toISOString().split('T')[0]}
+
 Return format:
 {
   "destination": "city name",
   "startDate": "YYYY-MM-DD",
   "endDate": "YYYY-MM-DD",
-  "budget": number,
-  "groupSize": number,
+  "budget": number (extract any amount mentioned, or use 3000 as default),
+  "groupSize": number (default to 2 if not specified),
   "tripPurpose": "business/leisure/mixed",
   "preferences": {
     "accommodationType": "luxury/business/budget",
@@ -1251,7 +1254,13 @@ Return format:
   }
 }
 
-If any information is missing, use reasonable defaults or mark as null.`;
+Be aggressive in extracting information. For example:
+- "I want to go to Paris" -> destination: "Paris"
+- "next week" -> calculate actual dates
+- "for a week" -> 7 days from start date
+- "around $5000" -> budget: 5000
+- If dates are vague but destination is clear, default to 7 days starting 2 weeks from today
+- If budget isn't mentioned, use 3000 as default`;
 
     const extractionResponse = await openai.chat.completions.create({
       model: OPENAI_MODEL,
@@ -1262,11 +1271,30 @@ If any information is missing, use reasonable defaults or mark as null.`;
 
     const extractedData = JSON.parse(extractionResponse.choices[0].message.content || "{}");
 
-    // Check if we need more information
+    // Check if we need more information - only ask if destination is missing
+    // We can generate a trip with defaults for dates and budget
     const missingFields = [];
     if (!extractedData.destination) missingFields.push("destination");
-    if (!extractedData.startDate) missingFields.push("travel dates");
-    if (!extractedData.budget) missingFields.push("budget");
+    
+    // Auto-fill missing dates if we have a destination
+    if (extractedData.destination && !extractedData.startDate) {
+      // Default to 2 weeks from now for 7 days
+      const defaultStart = new Date();
+      defaultStart.setDate(defaultStart.getDate() + 14);
+      extractedData.startDate = defaultStart.toISOString().split('T')[0];
+      
+      const defaultEnd = new Date(defaultStart);
+      defaultEnd.setDate(defaultEnd.getDate() + 6);
+      extractedData.endDate = defaultEnd.toISOString().split('T')[0];
+      
+      logger.info(`Auto-filled dates: ${extractedData.startDate} to ${extractedData.endDate}`);
+    }
+    
+    // Auto-fill budget if missing
+    if (!extractedData.budget) {
+      extractedData.budget = 3000;
+      logger.info(`Auto-filled budget: $${extractedData.budget}`);
+    }
 
     if (missingFields.length > 0) {
       // Return questions to gather missing information
@@ -1289,6 +1317,9 @@ Any other preferences like:
         ]
       });
     }
+    
+    // All required info is present - we're generating the trip immediately
+    logger.info(`Generating trip for ${extractedData.destination} from ${extractedData.startDate} to ${extractedData.endDate} with budget $${extractedData.budget}`);
 
     // Calculate trip duration
     const startDate = new Date(extractedData.startDate);
@@ -1568,7 +1599,7 @@ Return ONLY a JSON object with this structure:
       budgetBreakdown: generatedTrip.budgetBreakdown,
       recommendations: generatedTrip.recommendations,
       weatherConsiderations: generatedTrip.weatherConsiderations,
-      message: `Your personalized ${tripDurationDays}-day itinerary has been created with ${formattedActivities.length} activities!`,
+      message: `Perfect! I've created your ${tripDurationDays}-day ${extractedData.destination} itinerary with ${formattedActivities.length} activities, ${allMeals.length} dining recommendations, and complete travel arrangements!`,
       savedToTrip: !!tripId,
       debug: {
         tripDurationDays,
