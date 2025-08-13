@@ -1231,6 +1231,11 @@ router.post("/generate-trip", async (req, res) => {
 
     // Parse the prompt to extract trip requirements
     const promptLower = prompt.toLowerCase();
+    
+    // Check if user is forcing trip generation with defaults
+    const forceGeneration = promptLower.includes("create the trip now") || 
+                           promptLower.includes("use reasonable defaults") ||
+                           promptLower.includes("just create it");
 
     // Use AI to extract structured data from natural language prompt
     const extractionPrompt = `Extract trip details from this request and return as JSON:
@@ -1274,10 +1279,18 @@ Be aggressive in extracting information. For example:
     // Check if we need more information - only ask if destination is missing
     // We can generate a trip with defaults for dates and budget
     const missingFields = [];
-    if (!extractedData.destination) missingFields.push("destination");
+    if (!extractedData.destination && !forceGeneration) missingFields.push("destination");
+    
+    // Auto-fill destination if forcing and missing
+    if (!extractedData.destination && forceGeneration) {
+      // Try to extract any location mentioned or default to a popular destination
+      const locationMatch = prompt.match(/\b(paris|london|tokyo|rome|barcelona|amsterdam|new york|los angeles|miami|hawaii|bali|thailand|dubai)\b/i);
+      extractedData.destination = locationMatch ? locationMatch[0] : "Paris";
+      logger.info(`Auto-filled destination: ${extractedData.destination}`);
+    }
     
     // Auto-fill missing dates if we have a destination
-    if (extractedData.destination && !extractedData.startDate) {
+    if ((extractedData.destination || forceGeneration) && !extractedData.startDate) {
       // Default to 2 weeks from now for 7 days
       const defaultStart = new Date();
       defaultStart.setDate(defaultStart.getDate() + 14);

@@ -276,8 +276,24 @@ export default function AITripGenerator() {
                 </div>
               )}
             </div>
-            <div className="text-sm text-blue-600 font-medium">
-              Please provide these details below to continue:
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-blue-600 font-medium">
+                Please provide these details below to continue:
+              </div>
+              <Button
+                onClick={() => {
+                  // Force trip generation with current info
+                  const forcePrompt = prompt + " Please create the trip now with these details. Use reasonable defaults for any missing information.";
+                  setIsGenerating(true);
+                  generateTripMutation.mutate(forcePrompt);
+                }}
+                variant="outline"
+                className="flex items-center space-x-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                disabled={isGenerating}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Create Trip Now</span>
+              </Button>
             </div>
           </CardContent>
         </Card>
