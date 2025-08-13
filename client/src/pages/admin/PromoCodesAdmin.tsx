@@ -49,23 +49,23 @@ import { formatDistanceToNow } from 'date-fns';
 interface PromoCode {
   id: number;
   code: string;
-  stripe_coupon_id?: string;
+  stripeCouponId?: string;
   description?: string;
-  discount_type: 'percentage' | 'fixed';
-  discount_amount: string;
-  minimum_purchase?: string;
-  max_uses?: number;
-  max_uses_per_user: number;
-  used_count: number;
-  valid_from: string;
-  valid_until?: string;
-  template_id?: number;
-  creator_id?: number;
-  is_active: boolean;
-  created_at: string;
-  times_used?: number;
-  is_expired?: boolean;
-  is_maxed_out?: boolean;
+  discountType: 'percentage' | 'fixed';
+  discountAmount: string;
+  minimumPurchase?: string;
+  maxUses?: number;
+  maxUsesPerUser: number;
+  usedCount: number;
+  validFrom: string;
+  validUntil?: string;
+  templateId?: number;
+  creatorId?: number;
+  isActive: boolean;
+  createdAt: string;
+  timesUsed?: number;
+  isExpired?: boolean;
+  isMaxedOut?: boolean;
 }
 
 interface PromoStats {
@@ -160,6 +160,7 @@ export default function PromoCodesAdmin() {
   // Update promo code mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<PromoCode> }) => {
+      // Send only the updates, not wrapped in an object
       return apiRequest('PUT', `/api/promo-codes/${id}`, updates);
     },
     onMutate: async ({ id, updates }) => {
@@ -248,7 +249,7 @@ export default function PromoCodesAdmin() {
   const toggleActive = (code: PromoCode) => {
     updateMutation.mutate({
       id: code.id,
-      updates: { is_active: !code.is_active }
+      updates: { is_active: !code.isActive }
     });
   };
 
@@ -381,37 +382,37 @@ export default function PromoCodesAdmin() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
-                        {code.discount_type === 'percentage' ? (
+                        {code.discountType === 'percentage' ? (
                           <>
                             <Percent className="w-4 h-4" />
-                            {code.discount_amount}%
+                            {code.discountAmount}%
                           </>
                         ) : (
                           <>
                             <DollarSign className="w-4 h-4" />
-                            {code.discount_amount}
+                            {code.discountAmount}
                           </>
                         )}
                       </div>
-                      {code.minimum_purchase && (
+                      {code.minimumPurchase && (
                         <p className="text-xs text-muted-foreground">
-                          Min: ${code.minimum_purchase}
+                          Min: ${code.minimumPurchase}
                         </p>
                       )}
                     </td>
                     <td className="py-3 px-4">
                       <div className="text-sm">
-                        {code.times_used || 0} / {code.max_uses || '∞'}
+                        {code.timesUsed || 0} / {code.maxUses || '∞'}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Max {code.max_uses_per_user}/user
+                        Max {code.maxUsesPerUser}/user
                       </p>
                     </td>
                     <td className="py-3 px-4">
-                      {code.valid_until ? (
+                      {code.validUntil ? (
                         <div className="text-sm">
-                          {new Date(code.valid_until).toLocaleDateString()}
-                          {code.is_expired && (
+                          {new Date(code.validUntil).toLocaleDateString()}
+                          {code.isExpired && (
                             <Badge variant="destructive" className="ml-2">
                               Expired
                             </Badge>
@@ -424,14 +425,14 @@ export default function PromoCodesAdmin() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={code.is_active}
+                          checked={code.isActive}
                           onCheckedChange={() => toggleActive(code)}
-                          disabled={code.is_expired || code.is_maxed_out}
+                          disabled={code.isExpired || code.isMaxedOut}
                         />
-                        {code.is_expired && (
+                        {code.isExpired && (
                           <Badge variant="destructive">Expired</Badge>
                         )}
-                        {code.is_maxed_out && (
+                        {code.isMaxedOut && (
                           <Badge variant="secondary">Maxed</Badge>
                         )}
                       </div>
