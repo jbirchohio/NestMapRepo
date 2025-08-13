@@ -9,8 +9,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CreditCard, Lock, CheckCircle, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, CreditCard, Lock, CheckCircle, Calendar, Tag, Percent } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 // Initialize Stripe - check for the key and handle gracefully
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -34,6 +36,10 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>('');
+  const [promoCode, setPromoCode] = useState<string>('');
+  const [promoData, setPromoData] = useState<any>(null);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
 
   // Calculate end date based on start date and duration
   const calculateEndDate = (start: string) => {
@@ -44,6 +50,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
   };
 
   const endDate = calculateEndDate(startDate);
+  const finalPrice = promoData ? promoData.final_amount : price;
 
   // Set default start date to tomorrow
   useEffect(() => {
@@ -51,6 +58,37 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
     tomorrow.setDate(tomorrow.getDate() + 1);
     setStartDate(tomorrow.toISOString().split('T')[0]);
   }, []); // Run once on mount
+
+  // Validate promo code
+  const validatePromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoData(null);
+      setPromoError(null);
+      return;
+    }
+
+    setIsValidatingPromo(true);
+    setPromoError(null);
+
+    try {
+      const response = await apiRequest('POST', '/api/promo-codes/validate', {
+        code: promoCode.toUpperCase(),
+        template_id: templateId,
+        amount: price,
+      });
+
+      setPromoData(response);
+      toast({
+        title: 'Promo code applied!',
+        description: `You saved $${response.discount_applied.toFixed(2)}`,
+      });
+    } catch (err: any) {
+      setPromoError(err.error || 'Invalid promo code');
+      setPromoData(null);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +111,10 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
         body: JSON.stringify({
           template_id: templateId,
           start_date: startDate,
-          end_date: endDate
+          end_date: endDate,
+          promo_code_id: promoData?.promo_code_id,
+          promo_code: promoData?.code,
+          discount_amount: promoData?.discount_applied,
         }),
       });
 
@@ -173,10 +214,74 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
                 <p className="font-semibold text-gray-900">{templateTitle}</p>
                 <p className="text-sm text-gray-600">{templateDuration}-day travel template</p>
               </div>
-              <p className="text-xl font-bold text-purple-600">
-                ${price} {currency}
-              </p>
+              <div className="text-right">
+                {promoData && (
+                  <p className="text-sm text-gray-500 line-through">${price}</p>
+                )}
+                <p className="text-xl font-bold text-purple-600">
+                  ${finalPrice.toFixed(2)} {currency}
+                </p>
+                {promoData && (
+                  <p className="text-xs text-green-600 font-medium">
+                    {promoData.discount_type === 'percentage' 
+                      ? `${promoData.discount_amount}% off`
+                      : `$${promoData.discount_amount} off`}
+                  </p>
+                )}
+              </div>
             </div>
+          </div>
+
+          {/* Promo Code */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Tag className="h-4 w-4" />
+              Promo Code (Optional)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="Enter code"
+                disabled={isValidatingPromo || !!promoData}
+                className="flex-1 font-mono"
+              />
+              {!promoData ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={validatePromoCode}
+                  disabled={!promoCode.trim() || isValidatingPromo}
+                >
+                  {isValidatingPromo ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Apply'
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPromoCode('');
+                    setPromoData(null);
+                    setPromoError(null);
+                  }}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+            {promoError && (
+              <p className="mt-1 text-xs text-red-600">{promoError}</p>
+            )}
+            {promoData && (
+              <p className="mt-1 text-xs text-green-600">
+                ✓ Code applied: You save ${promoData.discount_applied.toFixed(2)}
+              </p>
+            )}
           </div>
 
           {/* Travel Dates Selection */}
@@ -268,7 +373,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
               ) : (
                 <>
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  Pay ${price}
+                  Pay ${finalPrice.toFixed(2)}
                 </>
               )}
             </Button>

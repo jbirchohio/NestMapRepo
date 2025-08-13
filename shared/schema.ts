@@ -548,6 +548,38 @@ export const tripRsvps = pgTable("trip_rsvps", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+// Promo Codes for template purchases
+export const promoCodes = pgTable("promo_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // The actual promo code (e.g., "WELCOME20")
+  stripe_coupon_id: text("stripe_coupon_id"), // Stripe's coupon ID for checkout
+  description: text("description"),
+  discount_type: text("discount_type").notNull(), // "percentage" or "fixed"
+  discount_amount: decimal("discount_amount", { precision: 10, scale: 2 }).notNull(), // 20 for 20% or 5.00 for $5 off
+  minimum_purchase: decimal("minimum_purchase", { precision: 10, scale: 2 }), // Minimum order amount
+  max_uses: integer("max_uses"), // Total number of times code can be used (null = unlimited)
+  max_uses_per_user: integer("max_uses_per_user").default(1), // How many times each user can use it
+  used_count: integer("used_count").default(0), // Track total usage
+  valid_from: timestamp("valid_from").defaultNow(),
+  valid_until: timestamp("valid_until"), // Expiration date
+  template_id: integer("template_id"), // Specific template only
+  creator_id: integer("creator_id"), // Codes from specific creators
+  is_active: boolean("is_active").default(true),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default({}),
+  created_at: timestamp("created_at").defaultNow(),
+  created_by: integer("created_by"), // Admin who created the code
+});
+
+// Track promo code usage per user
+export const promoCodeUses = pgTable("promo_code_uses", {
+  id: serial("id").primaryKey(),
+  promo_code_id: integer("promo_code_id").notNull().references(() => promoCodes.id),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  template_purchase_id: integer("template_purchase_id").references(() => templatePurchases.id),
+  discount_applied: decimal("discount_applied", { precision: 10, scale: 2 }).notNull(),
+  used_at: timestamp("used_at").defaultNow(),
+});
+
 // Year in Travel Analytics
 export const travelAnalytics = pgTable("travel_analytics", {
   id: serial("id").primaryKey(),
@@ -588,6 +620,8 @@ export const insertTripRsvpSchema = createInsertSchema(tripRsvps);
 export const insertTravelAnalyticsSchema = createInsertSchema(travelAnalytics);
 export const insertTemplateBundleSchema = createInsertSchema(templateBundles);
 export const insertBundlePurchaseSchema = createInsertSchema(bundlePurchases);
+export const insertPromoCodeSchema = createInsertSchema(promoCodes);
+export const insertPromoCodeUseSchema = createInsertSchema(promoCodeUses);
 
 // Simplified user registration schema for consumers
 export const registerUserSchema = z.object({
@@ -620,3 +654,5 @@ export type TripRsvp = typeof tripRsvps.$inferSelect;
 export type TravelAnalytics = typeof travelAnalytics.$inferSelect;
 export type TemplateBundle = typeof templateBundles.$inferSelect;
 export type BundlePurchase = typeof bundlePurchases.$inferSelect;
+export type PromoCode = typeof promoCodes.$inferSelect;
+export type PromoCodeUse = typeof promoCodeUses.$inferSelect;

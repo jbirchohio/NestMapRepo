@@ -12,7 +12,10 @@
     "db:studio": "drizzle-kit studio",
     "seed": "tsx scripts/seed-templates.ts",
     "seed:weekend": "tsx --require dotenv/config server/seedWeekendTemplates.ts",
-    "seed:luxury": "tsx --require dotenv/config server/seedLuxuryTemplates.ts"
+    "seed:luxury": "tsx --require dotenv/config server/seedLuxuryTemplates.ts",
+    "seed:budget": "tsx --require dotenv/config server/seed-budget-templates.ts",
+    "seed:kids": "tsx --require dotenv/config server/seed-kid-templates.ts",
+    "seed:all": "npm run seed:budget && npm run seed:kids && npm run seed:weekend && npm run seed:luxury"
   },
   "dependencies": {
     "@capacitor/cli": "^7.2.0",

@@ -20,7 +20,7 @@ const POPULAR_DESTINATIONS = [
 
 const POPULAR_TAGS = [
   'romantic', 'budget', 'luxury', 'adventure', 'foodie',
-  'family', 'kids-friendly', 'solo', 'beach', 'city-break', 
+  'family', 'kid-friendly', 'solo', 'beach', 'city-break', 
   'road-trip', 'budget-friendly', 'nature', 'culture'
 ];
 

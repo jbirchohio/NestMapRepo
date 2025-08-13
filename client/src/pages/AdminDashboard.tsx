@@ -13,6 +13,7 @@ import DestinationManagement from '@/components/admin/DestinationManagement';
 import TemplateGenerator from '@/components/admin/TemplateGenerator';
 import TemplateManager from '@/components/admin/TemplateManager';
 import BundleCreator from '@/components/BundleCreator';
+import PromoCodesAdmin from '@/pages/admin/PromoCodesAdmin';
 import { formatDistanceToNow, format } from 'date-fns';
 
 // Helper function to safely format dates
@@ -240,14 +241,15 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'} w-full max-w-5xl`}>
+          <TabsList className={`grid ${isSuperAdmin ? 'grid-cols-9' : 'grid-cols-8'} w-full max-w-6xl`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
             <TabsTrigger value="generate">Generate</TabsTrigger>
-            <TabsTrigger value="templates">Manage Templates</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="bundles">Bundles</TabsTrigger>
+            <TabsTrigger value="promo">Promo Codes</TabsTrigger>
             {isSuperAdmin && <TabsTrigger value="financials">Financials</TabsTrigger>}
           </TabsList>
 
@@ -388,6 +390,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="bundles" className="space-y-4">
             <BundleCreator isAdmin={true} />
+          </TabsContent>
+
+          <TabsContent value="promo" className="space-y-4">
+            <PromoCodesAdmin />
           </TabsContent>
 
           {isSuperAdmin && (
