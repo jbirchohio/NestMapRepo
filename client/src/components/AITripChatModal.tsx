@@ -79,144 +79,26 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       }
 
       const newTrip = await tripResponse.json();
-      // Now create activities for the trip
-      let successfulActivities = 0;
       
-      // Calculate expected activities
-      const tripStartDate = new Date(suggestion.startDate);
-      const tripEndDate = new Date(suggestion.endDate);
-      const daysDiff = Math.ceil((tripEndDate.getTime() - tripStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      const expectedActivities = daysDiff * 3; // At least 3 per day
-      
-      // If we don't have enough activities, generate them
-      if (!suggestion.activities || suggestion.activities.length < expectedActivities) {
-        console.log(`Only got ${suggestion.activities?.length || 0} activities for ${daysDiff}-day trip. Generating full itinerary...`);
-        
-        try {
-          const fullItineraryResponse = await fetch('/api/ai/generate-full-itinerary', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ trip_id: newTrip.id })
-          });
-          
-          if (fullItineraryResponse.ok) {
-            const result = await fullItineraryResponse.json();
-            successfulActivities = result.activitiesCreated || 0;
-            console.log(`Generated ${successfulActivities} activities using full itinerary endpoint`);
-          }
-        } catch (error) {
-          console.error('Failed to generate full itinerary:', error);
-        }
-      } else if (suggestion.activities && suggestion.activities.length > 0) {
-        // We have enough activities from the initial response
-        
-        const activityPromises = suggestion.activities.map(async (activity: any, index: number) => {
-          try {
-            // Fix activity date to be within trip range
-            let activityDate = activity.date;
-            
-            // If activity date is invalid or outside trip range, assign it evenly across trip days
-            const actDate = new Date(activityDate);
-            if (isNaN(actDate.getTime()) || actDate < tripStartDate || actDate > tripEndDate) {
-              // Distribute activities across trip days
-              const dayIndex = Math.min(index, daysDiff - 1);
-              const newDate = new Date(tripStartDate);
-              newDate.setDate(tripStartDate.getDate() + dayIndex);
-              activityDate = newDate.toISOString().split('T')[0];
-              console.log(`Fixed activity date from ${activity.date} to ${activityDate}`);
-            }
-            
-            // Convert camelCase to snake_case for backend API
-            const activityData = {
-              trip_id: newTrip.id,  // Changed from tripId to trip_id
-              title: activity.title,
-              date: activityDate,
-              time: activity.time || '09:00',
-              location_name: activity.locationName || activity.location_name || '', // Changed from locationName to location_name
-              notes: activity.notes || '',
-              latitude: activity.latitude,
-              longitude: activity.longitude,
-              tag: activity.tag || 'activity', // Add default tag
-              order: index // Add order
-            };
-            
-            console.log('Creating activity:', activityData.title, 'with data:', activityData);
-            
-            const activityResponse = await fetch('/api/activities', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              },
-              body: JSON.stringify(activityData)
-            });
-
-            if (!activityResponse.ok) {
-              const errorText = await activityResponse.text();
-              console.error('Failed to create activity:', errorText);
-              return false;
-            }
-            
-            const createdActivity = await activityResponse.json();
-            console.log('Activity created successfully:', createdActivity);
-            return true;
-          } catch (error) {
-            console.error('Error creating activity:', error);
-            return false;
-          }
-        });
-        
-        // Wait for all activities to be created
-        const results = await Promise.all(activityPromises);
-        successfulActivities = results.filter(success => success).length;
-        console.log(`Created ${successfulActivities} out of ${suggestion.activities.length} activities`);
-      }
-
-      // Invalidate all relevant caches
-      await Promise.all([
-        queryClient.invalidateQueries({ 
-          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id), "activities"] 
-        }),
-        queryClient.invalidateQueries({ 
-          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id)] 
-        }),
-        queryClient.invalidateQueries({ 
-          queryKey: [API_ENDPOINTS.TRIPS] 
-        })
-      ]);
-      
-      // Pre-fetch the trip and activities data
-      await Promise.all([
-        queryClient.prefetchQuery({
-          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id)],
-          queryFn: async () => {
-            const res = await fetch(`/api/trips/${newTrip.id}`, {
-              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
-            return res.json();
-          }
-        }),
-        queryClient.prefetchQuery({
-          queryKey: [API_ENDPOINTS.TRIPS, String(newTrip.id), "activities"],
-          queryFn: async () => {
-            const res = await fetch(`/api/trips/${newTrip.id}/activities`, {
-              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
-            return res.json();
-          }
-        })
-      ]);
-      
-      // Success! Navigate to the trip
+      // Success! Navigate to the trip immediately
       toast({
         title: "✈️ Trip Created!",
-        description: `Your ${suggestion.title} is ready with ${successfulActivities} activities!`,
+        description: `Your trip to ${suggestion.city} is ready!`,
       });
 
-      // Navigate immediately - data is already pre-fetched
+      // Store trip metadata for generation on the trip page
+      const tripMetadata = {
+        city: suggestion.city,
+        country: suggestion.country,
+        startDate: suggestion.startDate,
+        endDate: suggestion.endDate,
+        initialActivities: suggestion.activities || []
+      };
+      
+      localStorage.setItem(`trip_${newTrip.id}_generating`, 'true');
+      localStorage.setItem(`trip_${newTrip.id}_metadata`, JSON.stringify(tripMetadata));
+      
+      // Navigate immediately - activities will be generated on the trip page
       onClose();
       setLocation(`/trip/${newTrip.id}`);
 

@@ -179,6 +179,9 @@ export interface ClientTrip {
   // Legacy coordinates (for backward compatibility)
   latitude?: string;
   longitude?: string;
+  // AI regeneration tracking
+  aiRegenerationsUsed?: number;
+  aiRegenerationsLimit?: number;
 }
 
 // ======================================

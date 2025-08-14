@@ -19,6 +19,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { MessageCircle, X, Sparkles, Package, Share2, Camera } from "lucide-react";
 import CreateTemplateModal from "@/components/CreateTemplateModal";
 import TripPosterGenerator from "@/components/TripPosterGenerator";
+import ActivityGenerator from "@/components/ActivityGenerator";
 
 export default function TripPlanner() {
   const [match, params] = useRoute("/trip/:id");
@@ -401,6 +402,12 @@ export default function TripPlanner() {
       onCreatePoster={() => setShowPosterGenerator(true)}
       onToggleCollaborative={handleToggleCollaborative}
     >
+      {/* Activity Generator for progressive loading */}
+      <ActivityGenerator 
+        tripId={tripId} 
+        onActivitiesGenerated={refetchActivities}
+      />
+      
       {/* Mobile view toggle buttons */}
       <div className="md:hidden flex border rounded-md overflow-hidden shadow-sm m-2 relative z-50 bg-white dark:bg-[hsl(var(--card))]">
         <Button

@@ -1774,4 +1774,150 @@ Return ONLY a JSON object with this structure:
   }
 });
 
+// POST /api/ai/regenerate-activity - Generate a replacement activity
+router.post("/regenerate-activity", async (req, res) => {
+  try {
+    const { activity_id, trip_id } = req.body;
+    
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    // Get trip and verify ownership
+    const [trip] = await db
+      .select()
+      .from(trips)
+      .where(and(
+        eq(trips.id, trip_id),
+        eq(trips.user_id, req.user.id)
+      ));
+
+    if (!trip) {
+      return res.status(404).json({ success: false, error: "Trip not found" });
+    }
+
+    // Check regeneration limit
+    if (trip.ai_regenerations_used >= trip.ai_regenerations_limit) {
+      return res.status(429).json({
+        success: false,
+        error: "Regeneration limit reached",
+        limit: trip.ai_regenerations_limit,
+        used: trip.ai_regenerations_used
+      });
+    }
+
+    // Get the activity to regenerate
+    const [oldActivity] = await db
+      .select()
+      .from(activities)
+      .where(and(
+        eq(activities.id, activity_id),
+        eq(activities.trip_id, trip_id)
+      ));
+
+    if (!oldActivity) {
+      return res.status(404).json({ success: false, error: "Activity not found" });
+    }
+
+    // Get other activities for the same day to avoid duplicates
+    const dayActivities = await db
+      .select()
+      .from(activities)
+      .where(and(
+        eq(activities.trip_id, trip_id),
+        eq(activities.date, oldActivity.date)
+      ));
+
+    const existingTitles = dayActivities
+      .filter(a => a.id !== activity_id)
+      .map(a => a.title);
+
+    // Generate new activity using OpenAI
+    const prompt = `Generate a DIFFERENT activity to replace "${oldActivity.title}" for a trip to ${trip.city || 'this location'}.
+    
+    Context:
+    - Date: ${oldActivity.date}
+    - Time slot: ${oldActivity.time}
+    - Location: ${trip.city || 'Unknown'}, ${trip.country || ''}
+    - Current activities for this day (DO NOT DUPLICATE): ${existingTitles.join(', ')}
+    
+    Requirements:
+    - Generate something COMPLETELY DIFFERENT from "${oldActivity.title}"
+    - Make it appropriate for the time slot (${oldActivity.time})
+    - Keep it interesting and location-specific
+    - Avoid these existing activities: ${existingTitles.join(', ')}
+    
+    Return a JSON object with:
+    {
+      "title": "Activity name",
+      "location_name": "Specific venue or area",
+      "notes": "2-3 sentence description",
+      "tag": "activity|dining|culture|outdoor|shopping|entertainment",
+      "price": estimated cost in USD (number),
+      "latitude": latitude if known (number),
+      "longitude": longitude if known (number)
+    }`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a travel planning assistant. Generate unique, interesting activities for travelers. Always return valid JSON."
+        },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.9, // Higher temperature for more variety
+      max_tokens: 500,
+      response_format: { type: "json_object" }
+    });
+
+    const newActivityData = JSON.parse(completion.choices[0]?.message?.content || "{}");
+    
+    // Update the activity
+    await db
+      .update(activities)
+      .set({
+        title: newActivityData.title,
+        location_name: newActivityData.location_name || oldActivity.location_name,
+        notes: newActivityData.notes || '',
+        tag: newActivityData.tag || oldActivity.tag,
+        price: newActivityData.price ? String(newActivityData.price) : oldActivity.price,
+        latitude: newActivityData.latitude ? String(newActivityData.latitude) : oldActivity.latitude,
+        longitude: newActivityData.longitude ? String(newActivityData.longitude) : oldActivity.longitude,
+        updated_at: new Date()
+      })
+      .where(eq(activities.id, activity_id));
+
+    // Increment regeneration counter
+    await db
+      .update(trips)
+      .set({
+        ai_regenerations_used: trip.ai_regenerations_used + 1
+      })
+      .where(eq(trips.id, trip_id));
+
+    // Fetch updated activity
+    const [updatedActivity] = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.id, activity_id));
+
+    logger.info(`Activity regenerated for trip ${trip_id}, activity ${activity_id}`);
+
+    res.json({
+      success: true,
+      activity: updatedActivity,
+      regenerations_remaining: trip.ai_regenerations_limit - trip.ai_regenerations_used - 1
+    });
+
+  } catch (error) {
+    logger.error("Error regenerating activity:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to regenerate activity"
+    });
+  }
+});
+
 export default router;

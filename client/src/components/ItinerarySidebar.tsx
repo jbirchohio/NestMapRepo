@@ -371,6 +371,15 @@ export default function ItinerarySidebar({
               date={activeDay || new Date()}
               tripId={trip.id}
               onActivityUpdated={onActivitiesUpdated}
+              regenerationsRemaining={
+                trip.aiRegenerationsLimit !== undefined && trip.aiRegenerationsUsed !== undefined
+                  ? trip.aiRegenerationsLimit - trip.aiRegenerationsUsed
+                  : undefined
+              }
+              onRegenerationsUpdate={(remaining) => {
+                // Update will happen through refetch
+                onActivitiesUpdated();
+              }}
             />
           </TabsContent>
 

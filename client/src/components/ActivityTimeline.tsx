@@ -9,13 +9,17 @@ interface ActivityTimelineProps {
   date: Date;
   tripId: number;
   onActivityUpdated: () => void;
+  regenerationsRemaining?: number;
+  onRegenerationsUpdate?: (remaining: number) => void;
 }
 
 export default function ActivityTimeline({
   activities,
   date,
   tripId,
-  onActivityUpdated
+  onActivityUpdated,
+  regenerationsRemaining,
+  onRegenerationsUpdate
 }: ActivityTimelineProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ClientActivity | null>(null);
@@ -64,6 +68,8 @@ export default function ActivityTimeline({
             activity={activity}
             onClick={handleEditActivity}
             onDelete={onActivityUpdated}
+            regenerationsRemaining={regenerationsRemaining}
+            onRegenerationsUpdate={onRegenerationsUpdate}
           />
         ))
       )}

@@ -5,16 +5,24 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation, Baby, Moon, Cookie, Coffee } from "lucide-react";
+import { MapPin, Navigation, Baby, Moon, Cookie, Coffee, RefreshCw } from "lucide-react";
 // import BookableActivity from "@/components/BookableActivity"; // Hidden for now
 
 interface ActivityItemProps {
   activity: ClientActivity;
   onClick: (activity: ClientActivity) => void;
   onDelete?: () => void;
+  regenerationsRemaining?: number;
+  onRegenerationsUpdate?: (remaining: number) => void;
 }
 
-export default function ActivityItem({ activity, onClick, onDelete }: ActivityItemProps) {
+export default function ActivityItem({ 
+  activity, 
+  onClick, 
+  onDelete,
+  regenerationsRemaining,
+  onRegenerationsUpdate
+}: ActivityItemProps) {
   const { toast } = useToast();
 
   // Delete activity mutation
@@ -44,6 +52,47 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
         description: errorMessage,
         variant: "destructive",
       });
+    },
+  });
+
+  // Regenerate activity mutation
+  const regenerateActivity = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/ai/regenerate-activity", {
+        activity_id: activity.id,
+        trip_id: activity.tripId
+      });
+    },
+    onSuccess: (data) => {
+      // Invalidate activities query to refresh the list
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] });
+
+      toast({
+        title: "✨ Activity Regenerated!",
+        description: `New activity created. ${data.regenerations_remaining} regenerations remaining.`,
+      });
+
+      // Update parent component with remaining regenerations
+      if (onRegenerationsUpdate) {
+        onRegenerationsUpdate(data.regenerations_remaining);
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || error.error || "Failed to regenerate activity";
+      
+      if (error.error === "Regeneration limit reached") {
+        toast({
+          title: "⚠️ Regeneration Limit Reached",
+          description: `You've used all ${error.limit} regenerations for this trip.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error Regenerating Activity",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -90,6 +139,48 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
             className="h-8 px-3 text-xs"
           >
             Cancel
+          </Button>
+        </div>
+      ),
+    });
+  };
+
+  // Handle regenerate action
+  const handleRegenerate = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the activity click
+
+    if (regenerationsRemaining === 0) {
+      toast({
+        title: "⚠️ No Regenerations Left",
+        description: "You've used all regenerations for this trip.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Show a confirmation toast with warning about limited regenerations
+    const { dismiss } = toast({
+      title: "Try a Different Activity?",
+      description: `This will replace "${activity.title}" with a new suggestion. You have ${regenerationsRemaining} regenerations left.`,
+      action: (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              regenerateActivity.mutate();
+              dismiss();
+            }}
+            size="sm"
+            className="h-8 px-3 text-xs bg-purple-600 hover:bg-purple-700"
+          >
+            Generate New
+          </Button>
+          <Button
+            onClick={() => dismiss()}
+            variant="outline"
+            size="sm"
+            className="h-8 px-3 text-xs"
+          >
+            Keep Current
           </Button>
         </div>
       ),
@@ -171,6 +262,24 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
 
           {/* Action buttons - visible on hover on desktop, always visible on mobile */}
           <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10 flex gap-1">
+            {/* Try Different button - only show if regenerations are available */}
+            {regenerationsRemaining !== undefined && regenerationsRemaining >= 0 && (
+              <button
+                className={`${
+                  regenerationsRemaining > 0 
+                    ? 'bg-purple-500 hover:bg-purple-600' 
+                    : 'bg-gray-400 cursor-not-allowed'
+                } text-white p-1.5 rounded-full cursor-pointer shadow-sm transition-colors`}
+                onClick={handleRegenerate}
+                title={regenerationsRemaining > 0 
+                  ? `Try different activity (${regenerationsRemaining} left)` 
+                  : 'No regenerations left'}
+                disabled={regenerationsRemaining === 0}
+              >
+                <RefreshCw className={`h-4 w-4 ${regenerateActivity.isPending ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+            
             {/* Google Maps button */}
             {(activity.latitude || activity.longitude || activity.locationName) && (
               <button

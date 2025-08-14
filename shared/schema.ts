@@ -111,6 +111,10 @@ export const trips = pgTable("trips", {
   revoked_at: timestamp("revoked_at"),
   frozen_reason: text("frozen_reason"),
   frozen_at: timestamp("frozen_at"),
+  
+  // AI generation tracking
+  ai_regenerations_used: integer("ai_regenerations_used").default(0),
+  ai_regenerations_limit: integer("ai_regenerations_limit").default(5),
 
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
