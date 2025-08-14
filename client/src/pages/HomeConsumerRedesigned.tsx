@@ -37,13 +37,13 @@ const getQuickActions = (hasAI: boolean, userTrips: number) => {
       id: 'ai-plan',
       icon: Sparkles,
       title: 'AI Trip Planner',
-      description: hasAI ? 'Chat with AI to plan your perfect trip' : 'Coming soon - AI-powered trip planning',
+      description: 'Under maintenance - We\'re improving this feature',
       color: 'from-purple-500 to-pink-500',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
       action: 'ai-chat',
-      enabled: hasAI,
-      badge: !hasAI ? 'Coming Soon' : null
+      enabled: false,  // DISABLED until we fix real place generation
+      badge: 'Under Maintenance'
     },
     {
       id: 'quick-escape',

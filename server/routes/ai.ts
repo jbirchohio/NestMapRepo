@@ -652,30 +652,37 @@ Dates: ${batchStartDate.toISOString().split('T')[0]} to ${batchEndDate.toISOStri
 Budget: ${trip.budget || 'moderate'}
 ${alreadyVisitedList ? `\nIMPORTANT: DO NOT suggest these attractions again as they've already been planned: ${alreadyVisitedList}` : ''}
       
+CRITICAL: You MUST use REAL places from your training data for ${trip.city}:
+- Use actual tourist attractions you know exist (specific museums, actual castles, real landmarks)
+- Use specific restaurant names from your knowledge (NOT "Local Bakery" or "Traditional Restaurant")
+- If you know famous places in ${trip.city}, use those
+- For smaller cities, use the most prominent attractions and restaurants you're aware of
+- NEVER make up generic placeholder names
+
 Generate EXACTLY 4 activities per day. For ${batchEnd - batchStart + 1} days, that's ${(batchEnd - batchStart + 1) * 4} activities total.
-Each day should have unique attractions/activities (meals can repeat types but suggest different restaurants).
+Each day should have unique attractions/activities (meals can use different real restaurants).
 
 Return ONLY a JSON array of activities:
 [
   {
     "date": "YYYY-MM-DD",
     "time": "HH:MM",
-    "title": "Activity name",
-    "locationName": "Specific location in ${trip.city}",
+    "title": "REAL business/attraction name (not generic)",
+    "locationName": "Actual venue or specific address in ${trip.city}",
     "notes": "Brief description",
     "tag": "food/culture/sightseeing/entertainment"
   }
 ]
 
-Include breakfast, lunch, dinner, and one activity/attraction per day.`;
+Include breakfast, lunch, dinner, and one activity/attraction per day using REAL establishments.`;
 
       try {
         const response = await openai.chat.completions.create({
-          model: OPENAI_MODEL,
+          model: "gpt-3.5-turbo", // Using 3.5 for cost optimization
           messages: [{ role: "user", content: batchPrompt }],
           response_format: { type: "json_object" },
           temperature: 0.7,
-          max_tokens: 1500
+          max_tokens: 1200 // Reduced since we're being more specific
         });
 
         const batchResult = JSON.parse(response.choices[0].message.content || "[]");
@@ -789,8 +796,38 @@ router.post("/generate-weekend", async (req, res) => {
     if (!trip || trip.user_id !== req.user.id) {
       return res.status(404).json({ success: false, error: "Trip not found or access denied" });
     }
+    
+    // Get REAL places from OpenStreetMap
+    const { findRealPlaces } = await import('../services/overpassService');
+    
+    logger.info(`Fetching real places for ${trip.city}, ${trip.country}`);
+    
+    // Fetch real places in parallel
+    const [restaurants, attractions, cafes] = await Promise.all([
+      findRealPlaces(trip.city || destination, trip.country || 'Germany', 'restaurant', 15),
+      findRealPlaces(trip.city || destination, trip.country || 'Germany', 'tourism', 15),
+      findRealPlaces(trip.city || destination, trip.country || 'Germany', 'cafe', 10)
+    ]);
+    
+    // Format real places for the prompt
+    const realPlacesContext = `
+REAL PLACES IN ${destination} (from OpenStreetMap):
+
+Restaurants (${restaurants.length} found):
+${restaurants.map((r: any) => `- ${r.name}${r.address ? ` at ${r.address}` : ''}${r.cuisine ? ` (${r.cuisine})` : ''}`).join('\n')}
+
+Tourist Attractions (${attractions.length} found):
+${attractions.map((a: any) => `- ${a.name}${a.tourism ? ` (${a.tourism})` : ''}`).join('\n')}
+
+Cafes/Bakeries (${cafes.length} found):
+${cafes.map((c: any) => `- ${c.name}${c.address ? ` at ${c.address}` : ''}`).join('\n')}
+
+IMPORTANT: You MUST use places from the lists above. These are REAL, verified places.
+`;
 
     const prompt = `Create a perfect weekend itinerary for ${destination} (${duration} days).
+
+${realPlacesContext}
 
 Generate a fun, action-packed weekend trip with a mix of must-see attractions, great food spots, and local experiences.
 
@@ -802,6 +839,14 @@ Guidelines:
 - Mix tourist attractions with local favorites
 - Consider realistic travel times between locations
 - Include variety: sightseeing, food, culture, entertainment
+
+CRITICAL REQUIREMENTS:
+1. Use ONLY real places that actually exist in ${destination}
+2. For attractions: Use famous landmarks, real museums, actual parks (e.g., "Sigmaringen Castle", "Louvre Museum", NOT "Local Castle")
+3. For restaurants: Use specific restaurant names you know exist (e.g., "Le Comptoir du Relais" in Paris, NOT "Traditional French Bistro")
+4. For cafes: Use actual cafe names or well-known chains (e.g., "Café de Flore" in Paris, "Starbucks", NOT "Cozy Local Cafe")
+5. If you don't know specific names in ${destination}, use the most famous/popular places from that city that tourists typically visit
+6. NEVER use generic placeholders like "Local Restaurant", "Traditional Bakery", "City Museum"
 
 Return SPECIFIC activities with REAL places in JSON format:
 {
@@ -826,30 +871,33 @@ CRITICAL LOCATION REQUIREMENTS:
 - For landmarks: Include the official name AND street address
 - For neighborhoods/areas: Include a specific intersection or landmark within it
 
-GOOD Examples for ${destination}:
-- "Hattie B's Hot Chicken, 112 19th Avenue South, Nashville, TN 37203"
-- "Country Music Hall of Fame, 222 5th Avenue South, Nashville, TN 37203"
-- "The Gulch at 11th Avenue South and Division Street, Nashville, TN"
+For example, if the destination is Paris:
+GOOD (real places):
+- "Eiffel Tower, Champ de Mars, 5 Avenue Anatole France, 75007 Paris"
+- "Le Comptoir du Relais, 9 Carrefour de l'Odéon, 75006 Paris" (real restaurant)
+- "Louvre Museum, Rue de Rivoli, 75001 Paris"
 
-BAD Examples (too vague for geocoding):
-- "Hattie B's Hot Chicken" (missing address)
-- "Downtown Nashville" (too general)
-- "Local coffee shop" (not specific)
+BAD (made-up or generic):
+- "Café Parisien" (generic made-up name)
+- "Local bakery" (not specific)
+- "Traditional restaurant" (too vague)
+
+For ${destination}, use ONLY real establishments and attractions that actually exist.
 
 Include 4-6 activities per day with REAL, GEOCODABLE addresses for ${destination}.`;
 
     const response = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
+      model: "gpt-3.5-turbo", // Using 3.5 for cost optimization
       messages: [
         {
           role: "system",
-          content: "You are an expert weekend trip planner. Create exciting, realistic weekend itineraries with specific places and optimal timing."
+          content: "You are an expert travel planner with extensive knowledge of real tourist destinations. You MUST use actual business names and attractions that exist. NEVER invent generic names. Use famous landmarks, well-known restaurants, and popular tourist spots from your training data."
         },
         { role: "user", content: prompt }
       ],
       response_format: { type: "json_object" },
-      max_tokens: 1500,
-      temperature: 0.8,
+      max_tokens: 1200,
+      temperature: 0.7,
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
@@ -857,8 +905,14 @@ Include 4-6 activities per day with REAL, GEOCODABLE addresses for ${destination
     // Calculate actual dates based on trip dates
     const startDate = new Date(trip.start_date);
     const activities = result.activities || [];
+    
+    // Create a map of real places for quick lookup
+    const realPlacesMap = new Map();
+    [...restaurants, ...attractions, ...cafes].forEach(place => {
+      realPlacesMap.set(place.name.toLowerCase(), place);
+    });
 
-    // Map activities to actual dates
+    // Map activities to actual dates and add real coordinates
     const enrichedActivities = activities.map((activity: any, index: number) => {
       // Determine which day this activity is for
       let dayOffset = 0;
@@ -867,13 +921,38 @@ Include 4-6 activities per day with REAL, GEOCODABLE addresses for ${destination
       
       const activityDate = new Date(startDate);
       activityDate.setDate(startDate.getDate() + dayOffset);
-
-      return {
+      
+      // Try to find this place in our real places map
+      const activityNameLower = (activity.title || '').toLowerCase();
+      let realPlace = null;
+      
+      // Check if the activity title contains a real place name
+      for (const [placeName, place] of realPlacesMap) {
+        if (activityNameLower.includes(placeName)) {
+          realPlace = place;
+          break;
+        }
+      }
+      
+      // If we found a real place, use its exact coordinates
+      const enrichedActivity = {
         ...activity,
         date: activityDate.toISOString().split('T')[0],
         trip_id,
         order: index
       };
+      
+      if (realPlace) {
+        enrichedActivity.latitude = realPlace.lat.toString();
+        enrichedActivity.longitude = realPlace.lon.toString();
+        enrichedActivity.locationName = realPlace.name;
+        if (realPlace.address) {
+          enrichedActivity.locationAddress = realPlace.address;
+        }
+        logger.info(`Matched "${activity.title}" to real place "${realPlace.name}" at ${realPlace.lat}, ${realPlace.lon}`);
+      }
+
+      return enrichedActivity;
     });
 
     // Geocode activities if we have the geocoding service
@@ -1563,11 +1642,13 @@ ${tripDurationDays > MAX_DAYS_PER_REQUEST ?
 
 Please provide:
 1. Recommended flights (with realistic prices)
-2. Hotel suggestions (2-3 options with nightly rates)
-3. Daily activities schedule (morning, afternoon, evening) ${tripDurationDays > MAX_DAYS_PER_REQUEST ? `for days 1-${MAX_DAYS_PER_REQUEST}` : ''}
-4. Restaurant recommendations for meals
+2. Hotel suggestions (2-3 options with nightly rates) - use REAL hotel names or chains
+3. Daily activities schedule (morning, afternoon, evening) ${tripDurationDays > MAX_DAYS_PER_REQUEST ? `for days 1-${MAX_DAYS_PER_REQUEST}` : ''} - use REAL attractions
+4. Restaurant recommendations - use ACTUAL restaurant names you know exist
 5. Transportation tips
 6. Total budget breakdown
+
+CRITICAL: Use ONLY real places from your knowledge base. NO generic names!
 
 Format as JSON with this structure:
 {
@@ -1604,7 +1685,7 @@ Format as JSON with this structure:
     {
       "date": "2024-03-16",
       "time": "09:00",
-      "title": "Activity name",
+      "title": "REAL activity/attraction name (e.g., 'Sigmaringen Castle' not 'Local Castle')",
       "description": "Description",
       "duration": "2 hours",
       "location": "Location",
@@ -1617,7 +1698,7 @@ Format as JSON with this structure:
     {
       "date": "2024-03-16",
       "time": "12:30",
-      "restaurant": "Restaurant name",
+      "restaurant": "REAL restaurant name that exists (not generic like 'Local Restaurant')",
       "cuisine": "French",
       "location": "Address",
       "estimatedCost": 40,
@@ -1654,11 +1735,11 @@ Format as JSON with this structure:
 }`;
 
     const itineraryResponse = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
+      model: "gpt-3.5-turbo", // Using 3.5 for cost optimization
       messages: [{ role: "user", content: itineraryPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 2000, // Increase token limit for initial response
+      max_tokens: 1500, // Reduced for cost efficiency
     });
 
     const generatedTrip = JSON.parse(itineraryResponse.choices[0].message.content || "{}");
@@ -1693,6 +1774,10 @@ Format as JSON with this structure:
         const alreadyVisitedList = Array.from(visitedAttractions).join(', ');
         
         const additionalDaysPrompt = `Continue creating the itinerary for days ${dayStart}-${dayEnd} of the trip to ${extractedData.destination}.
+        
+CRITICAL: You MUST suggest REAL, EXISTING places that tourists actually visit.
+Use actual tourist attractions, real restaurants with good reviews, and genuine hotels.
+DO NOT make up generic names like "Local Restaurant" or "Traditional Bakery".
         
 Previous context:
 - Trip dates: ${extractedData.startDate} to ${extractedData.endDate}
@@ -1927,13 +2012,15 @@ router.post("/regenerate-activity", async (req, res) => {
     Requirements:
     - Generate something COMPLETELY DIFFERENT from "${oldActivity.title}"
     - Make it appropriate for the time slot (${oldActivity.time})
-    - Keep it interesting and location-specific
+    - MUST BE A REAL PLACE that actually exists in ${trip.city}
+    - Use actual tourist attractions, real restaurants, genuine landmarks
+    - DO NOT make up generic names like "Local Bakery" or "Traditional Restaurant"
     - Avoid these existing activities: ${existingTitles.join(', ')}
     
     Return a JSON object with:
     {
-      "title": "Activity name",
-      "location_name": "Specific venue or area",
+      "title": "REAL activity/place name (not generic)",
+      "location_name": "Actual venue name or specific address",
       "notes": "2-3 sentence description",
       "tag": "activity|dining|culture|outdoor|shopping|entertainment",
       "price": estimated cost in USD (number),
@@ -1942,7 +2029,7 @@ router.post("/regenerate-activity", async (req, res) => {
     }`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo", // Using 3.5 for cost optimization
       messages: [
         {
           role: "system",
@@ -1951,7 +2038,7 @@ router.post("/regenerate-activity", async (req, res) => {
         { role: "user", content: prompt }
       ],
       temperature: 0.9, // Higher temperature for more variety
-      max_tokens: 500,
+      max_tokens: 400,
       response_format: { type: "json_object" }
     });
 

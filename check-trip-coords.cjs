@@ -9,32 +9,35 @@ async function checkTripCoords() {
   try {
     await client.connect();
     
-    // Get trip 120 details
+    // Get trip 121 details
     const tripResult = await client.query(`
       SELECT id, title, city, country, city_latitude, city_longitude
       FROM trips 
-      WHERE id = 120
+      WHERE id = 121
     `);
     
-    console.log('\n=== Trip 120 Details ===');
+    console.log('\n=== Trip 121 Details ===');
     if (tripResult.rows.length > 0) {
       const trip = tripResult.rows[0];
       console.log('Trip:', trip.title);
       console.log('City:', trip.city);
       console.log('Country:', trip.country);
       console.log('City Coords:', trip.city_latitude, trip.city_longitude);
+    } else {
+      console.log('Trip 121 not found');
+      return;
     }
     
-    // Get all activities for trip 120
+    // Get all activities for trip 121
     const activitiesResult = await client.query(`
       SELECT id, title, location_name, latitude, longitude, date
       FROM activities 
-      WHERE trip_id = 120
+      WHERE trip_id = 121
       ORDER BY date, time
-      LIMIT 20
+      LIMIT 30
     `);
     
-    console.log('\n=== Activities for Trip 120 ===');
+    console.log('\n=== Activities for Trip 121 ===');
     console.log(`Found ${activitiesResult.rows.length} activities\n`);
     
     for (const activity of activitiesResult.rows) {
