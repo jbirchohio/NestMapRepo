@@ -398,38 +398,21 @@ CRITICAL DATE RULES:
 - For "next weekend": Use the upcoming Saturday and Sunday dates
 - Distribute activities evenly across the trip days
 
-ACTIVITY GENERATION RULES - YOU MUST FOLLOW THESE EXACTLY:
+ACTIVITY GENERATION RULES:
 
-For a trip from startDate to endDate, calculate the EXACT number of days.
-Then generate activities using this MANDATORY formula:
+Generate AT LEAST 3-4 activities for EACH day of the trip.
+For a 13-day trip, that means 39-52 activities total.
 
-- Days 1-3: 4 activities per day (12 total)
-- Days 4-7: 4 activities per day (16 total) 
-- Days 8-10: 4 activities per day (12 total)
-- Days 11-13: 4 activities per day (12 total)
-- Days 14+: 3 activities per day minimum
+IMPORTANT: The activities array should have 40+ items for a 13-day trip.
 
-EXAMPLE: For a 13-day trip (Aug 20 - Sep 1), you MUST generate:
-- Day 1 (Aug 20): 4 activities
-- Day 2 (Aug 21): 4 activities  
-- Day 3 (Aug 22): 4 activities
-- Day 4 (Aug 23): 4 activities
-- Day 5 (Aug 24): 4 activities
-- Day 6 (Aug 25): 4 activities (include day trip if mentioned)
-- Day 7 (Aug 26): 4 activities
-- Day 8 (Aug 27): 4 activities
-- Day 9 (Aug 28): 4 activities
-- Day 10 (Aug 29): 4 activities
-- Day 11 (Aug 30): 4 activities
-- Day 12 (Aug 31): 4 activities
-- Day 13 (Sep 1): 3 activities (departure day)
-TOTAL: 51 activities MINIMUM
+For each day, include:
+- Morning activity (09:00-11:00)
+- Lunch (12:00-13:30)  
+- Afternoon activity (14:00-17:00)
+- Dinner or evening activity (18:00-20:00)
 
-Each activity needs:
-- Specific time (09:00, 12:30, 15:00, 19:00)
-- Real location name that exists
-- Mix of: sightseeing, meals, activities, entertainment
-- Consider the budget if mentioned
+Spread activities across ALL dates from startDate to endDate.
+Use real, specific locations in the destination city.
 
 Make dates start from the next Friday if not specified.` : 'Do not include any JSON blocks unless the user explicitly asks to create or plan a trip.'}
 
@@ -454,6 +437,14 @@ Keep your main response conversational and helpful.`
         
         // Log for debugging
         logger.info(`AI generated trip with ${tripSuggestion.activities?.length || 0} activities for ${tripSuggestion.city} from ${tripSuggestion.startDate} to ${tripSuggestion.endDate}`);
+        
+        // Calculate expected activities
+        const tripStart = new Date(tripSuggestion.startDate);
+        const tripEnd = new Date(tripSuggestion.endDate);
+        const tripDays = Math.ceil((tripEnd.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const expectedActivities = tripDays * 3; // At least 3 per day
+        
+        logger.info(`Trip is ${tripDays} days, expecting at least ${expectedActivities} activities, got ${tripSuggestion.activities?.length || 0}`);
         // Validate dates
         const today = new Date();
         const startDate = new Date(tripSuggestion.startDate);
@@ -600,6 +591,126 @@ Format as JSON:
     res.status(500).json({
       success: false,
       error: "Failed to generate activity suggestions"
+    });
+  }
+});
+
+// POST /api/ai/generate-full-itinerary - Generate complete itinerary for existing trip
+router.post("/generate-full-itinerary", async (req, res) => {
+  try {
+    const { trip_id } = req.body;
+
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    if (!trip_id) {
+      return res.status(400).json({
+        success: false,
+        error: "Trip ID is required"
+      });
+    }
+
+    // Get trip details
+    const [trip] = await db
+      .select()
+      .from(trips)
+      .where(eq(trips.id, trip_id));
+
+    if (!trip || trip.user_id !== req.user.id) {
+      return res.status(404).json({ success: false, error: "Trip not found or access denied" });
+    }
+
+    // Calculate trip duration
+    const startDate = new Date(trip.start_date);
+    const endDate = new Date(trip.end_date);
+    const tripDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    logger.info(`Generating full itinerary for ${tripDays}-day trip to ${trip.city}`);
+
+    // Generate activities in batches of 3 days at a time
+    const allActivities = [];
+    const DAYS_PER_BATCH = 3;
+    
+    for (let dayIndex = 0; dayIndex < tripDays; dayIndex += DAYS_PER_BATCH) {
+      const batchStart = dayIndex;
+      const batchEnd = Math.min(dayIndex + DAYS_PER_BATCH - 1, tripDays - 1);
+      
+      const batchStartDate = new Date(startDate);
+      batchStartDate.setDate(startDate.getDate() + batchStart);
+      
+      const batchEndDate = new Date(startDate);
+      batchEndDate.setDate(startDate.getDate() + batchEnd);
+      
+      const batchPrompt = `Generate activities for days ${batchStart + 1}-${batchEnd + 1} of a trip to ${trip.city}, ${trip.country || 'Germany'}.
+      
+Dates: ${batchStartDate.toISOString().split('T')[0]} to ${batchEndDate.toISOString().split('T')[0]}
+Budget: ${trip.budget || 'moderate'}
+      
+Generate EXACTLY 4 activities per day. For ${batchEnd - batchStart + 1} days, that's ${(batchEnd - batchStart + 1) * 4} activities total.
+
+Return ONLY a JSON array of activities:
+[
+  {
+    "date": "YYYY-MM-DD",
+    "time": "HH:MM",
+    "title": "Activity name",
+    "locationName": "Specific location in ${trip.city}",
+    "notes": "Brief description",
+    "tag": "food/culture/sightseeing/entertainment"
+  }
+]
+
+Include breakfast, lunch, dinner, and one activity/attraction per day.`;
+
+      try {
+        const response = await openai.chat.completions.create({
+          model: OPENAI_MODEL,
+          messages: [{ role: "user", content: batchPrompt }],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+          max_tokens: 1500
+        });
+
+        const batchResult = JSON.parse(response.choices[0].message.content || "[]");
+        const batchActivities = Array.isArray(batchResult) ? batchResult : (batchResult.activities || []);
+        
+        logger.info(`Generated ${batchActivities.length} activities for days ${batchStart + 1}-${batchEnd + 1}`);
+        allActivities.push(...batchActivities);
+      } catch (error) {
+        logger.error(`Failed to generate activities for days ${batchStart + 1}-${batchEnd + 1}:`, error);
+      }
+    }
+
+    // Save all activities to database
+    for (const activity of allActivities) {
+      await db.insert(activities).values({
+        trip_id,
+        title: activity.title,
+        date: activity.date,
+        time: activity.time,
+        location_name: activity.locationName,
+        notes: activity.notes,
+        tag: activity.tag || 'activity',
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+    }
+
+    logger.info(`Created ${allActivities.length} activities for trip ${trip_id}`);
+
+    res.json({
+      success: true,
+      message: `Generated ${allActivities.length} activities for your ${tripDays}-day trip`,
+      activitiesCreated: allActivities.length,
+      activities: allActivities
+    });
+
+  } catch (error) {
+    logger.error('Error generating full itinerary:', error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate full itinerary"
     });
   }
 });

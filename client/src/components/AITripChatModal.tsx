@@ -81,11 +81,37 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       const newTrip = await tripResponse.json();
       // Now create activities for the trip
       let successfulActivities = 0;
-      if (suggestion.activities && suggestion.activities.length > 0) {
-        // Ensure we have valid trip dates
-        const tripStartDate = new Date(suggestion.startDate);
-        const tripEndDate = new Date(suggestion.endDate);
-        const daysDiff = Math.ceil((tripEndDate.getTime() - tripStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // Calculate expected activities
+      const tripStartDate = new Date(suggestion.startDate);
+      const tripEndDate = new Date(suggestion.endDate);
+      const daysDiff = Math.ceil((tripEndDate.getTime() - tripStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const expectedActivities = daysDiff * 3; // At least 3 per day
+      
+      // If we don't have enough activities, generate them
+      if (!suggestion.activities || suggestion.activities.length < expectedActivities) {
+        console.log(`Only got ${suggestion.activities?.length || 0} activities for ${daysDiff}-day trip. Generating full itinerary...`);
+        
+        try {
+          const fullItineraryResponse = await fetch('/api/ai/generate-full-itinerary', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ trip_id: newTrip.id })
+          });
+          
+          if (fullItineraryResponse.ok) {
+            const result = await fullItineraryResponse.json();
+            successfulActivities = result.activitiesCreated || 0;
+            console.log(`Generated ${successfulActivities} activities using full itinerary endpoint`);
+          }
+        } catch (error) {
+          console.error('Failed to generate full itinerary:', error);
+        }
+      } else if (suggestion.activities && suggestion.activities.length > 0) {
+        // We have enough activities from the initial response
         
         const activityPromises = suggestion.activities.map(async (activity: any, index: number) => {
           try {
