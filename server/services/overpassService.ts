@@ -26,6 +26,7 @@ export async function findRealPlaces(
   limit: number = 10
 ): Promise<Place[]> {
   try {
+    logger.info(`[OVERPASS] Fetching ${category} for ${city}, ${country}`);
     // Build Overpass query based on category
     let query = '';
     const bbox = await getCityBoundingBox(city, country);

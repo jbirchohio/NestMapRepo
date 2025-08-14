@@ -1,0 +1,53 @@
+
+> remvana@1.0.0 dev
+> cross-env NODE_ENV=development tsx --require dotenv/config server/index.ts
+
+🔍 CORS Debug: {
+  NODE_ENV: 'development',
+  CORS_ORIGIN: 'http://localhost:5000',
+  ALL_ENV_KEYS: [ 'CORS_ORIGIN' ],
+  TOTAL_ENV_VARS: 159,
+  RAILWAY_ENV: undefined,
+  PORT: '5000',
+  DATABASE_URL_EXISTS: true
+}
+⚠️  Using development SESSION_SECRET - NOT suitable for production
+[2025-08-14T17:56:53.860Z] INFO: GeocodeCache initialized with 10000 max entries, 50MB max size
+[2025-08-14T17:56:54.098Z] INFO: Static data preloaded into cache
+✅ Loaded .env file for development
+[2025-08-14T17:56:54.222Z] DEBUG: Created interval: interval-monitor (60000ms)
+📂 Uploads directory path: C:\Users\Jonas\Desktop\NestMapRepo\uploads
+📂 Uploads directory exists: true
+📂 Sample files in uploads/covers: [
+  '.gitkeep',
+  'cover_template_remvana.png',
+  'cover_template_remvana.webp'
+]
+🚀 Starting server initialization...
+✅ Configuration validated
+🔧 Environment check:
+  - NODE_ENV: development
+  - DATABASE_URL loaded: true
+  - JWT_SECRET loaded: true
+📍 Mounting API routes...
+✅ API routes mounted successfully
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1937:16)
+    at listenInCluster (node:net:1994:12)
+    at node:net:2203:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1973:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 5000
+}
+
+Node.js v22.14.0

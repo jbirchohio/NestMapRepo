@@ -107,7 +107,7 @@ Provide a brief, engaging summary that highlights the key experiences and flow o
   }
 });
 
-// POST /api/ai/suggest-food - Get AI food recommendations
+// POST /api/ai/suggest-food - Get AI food recommendations with real OSM data
 router.post("/suggest-food", async (req, res) => {
   try {
     const validatedData = suggestFoodSchema.parse(req.body);
@@ -117,72 +117,69 @@ router.post("/suggest-food", async (req, res) => {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    // Import cache service
-    const { aiCache } = await import('../services/aiCacheService');
-
-    // Check cache first
-    const cacheKey = aiCache.generateKey('food', city, `${cuisine_type || 'any'}_${budget_range || 'any'}`);
-    const cachedResult = aiCache.get(cacheKey);
-
-    if (cachedResult) {
-      return res.json(cachedResult);
+    // Get REAL restaurants from OpenStreetMap
+    const { batchFetchAndCache } = await import('../services/osmBatchFetch');
+    
+    const countryContext = 'Germany'; // Default, could be enhanced to detect from city
+    logger.info(`[SUGGEST-FOOD] Fetching real restaurants in ${city}`);
+    
+    // Fetch real places (uses cache if available)
+    const { restaurants } = await batchFetchAndCache(city, countryContext);
+    
+    if (restaurants.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Could not find restaurants in ${city}. Please try a different city.`
+      });
     }
-
-    const budgetText = budget_range === 'budget' ? 'affordable, budget-friendly' :
-                     budget_range === 'mid-range' ? 'mid-range pricing' :
-                     budget_range === 'luxury' ? 'high-end, luxury' : 'varied price ranges';
-
-    const cuisineText = cuisine_type ? ` specializing in ${cuisine_type} cuisine` : '';
-
-    const prompt = `Recommend 5 excellent restaurants in ${city}${cuisineText} with ${budgetText}.
-
-For each restaurant, provide:
-- Name
-- Brief description (1-2 sentences)
-- Signature dish or specialty
-- Approximate price range
-
-Format as JSON with this structure:
-{
-  "recommendations": [
-    {
-      "name": "Restaurant Name",
-      "description": "Brief description",
-      "specialty": "Signature dish",
-      "price_range": "$ or $$ or $$$"
+    
+    // Filter by cuisine type if specified
+    let filteredRestaurants = restaurants;
+    if (cuisine_type) {
+      const cuisineLower = cuisine_type.toLowerCase();
+      filteredRestaurants = restaurants.filter(r => {
+        const restaurantCuisine = (r.tags?.cuisine || '').toLowerCase();
+        return restaurantCuisine.includes(cuisineLower) || 
+               r.name.toLowerCase().includes(cuisineLower);
+      });
+      
+      // If no matches for specific cuisine, use all restaurants
+      if (filteredRestaurants.length === 0) {
+        filteredRestaurants = restaurants;
+      }
     }
-  ]
-}`;
-
-    const response = await openai.chat.completions.create({
-      model: OPENAI_MODEL, // Using GPT-3.5 for 80% cost savings
-      messages: [
-        {
-          role: "system",
-          content: "You are a knowledgeable food and travel expert. Provide restaurant recommendations in valid JSON format."
-        },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 800,
-      temperature: 0.8,
+    
+    // Select top 5 restaurants (or fewer if not available)
+    const recommendations = filteredRestaurants.slice(0, 5).map(restaurant => {
+      // Determine price range based on tags or random for demo
+      const priceRange = restaurant.tags?.['price:range'] || 
+                        (budget_range === 'budget' ? '$' :
+                         budget_range === 'luxury' ? '$$$' : '$$');
+      
+      return {
+        name: restaurant.name,
+        description: restaurant.tags?.description || 
+                    `Popular ${restaurant.tags?.cuisine || 'local'} restaurant in ${city}`,
+        specialty: restaurant.tags?.cuisine || "Local specialties",
+        price_range: priceRange,
+        latitude: restaurant.lat,
+        longitude: restaurant.lon,
+        address: restaurant.tags?.['addr:street'] || restaurant.tags?.address || city
+      };
     });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
 
     const responseData = {
       success: true,
       city,
       cuisine_type,
       budget_range,
-      ...result
+      recommendations,
+      source: "OpenStreetMap"
     };
-
-    // Cache for 3 days (restaurant data is relatively stable)
-    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
 
     res.json(responseData);
   } catch (error) {
+    logger.error('Failed to suggest food:', error);
     res.status(500).json({
       success: false,
       error: "Failed to generate food recommendations"
@@ -339,6 +336,53 @@ router.post("/chat", async (req, res) => {
                           (lastMessage.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i) && 
                            lastMessage.match(/\d{1,2}(st|nd|rd|th)?/));
 
+    // Extract city and country from the user's message if they're creating a trip
+    let realPlaces = null;
+    let cityToSearch = null;
+    let countryToSearch = null;
+    
+    if (isCreatingTrip) {
+      // Try to extract city from the message
+      const cityMatch = lastMessage.match(/(?:to|in|at|visit|visiting)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
+      const commonCities = ['Berlin', 'Munich', 'Hamburg', 'Paris', 'London', 'Rome', 'Barcelona', 'Amsterdam', 'Prague', 'Vienna'];
+      
+      for (const city of commonCities) {
+        if (lastMessage.toLowerCase().includes(city.toLowerCase())) {
+          cityToSearch = city;
+          break;
+        }
+      }
+      
+      if (!cityToSearch && cityMatch) {
+        cityToSearch = cityMatch[1];
+      }
+      
+      // Default country based on common cities or use Germany as default
+      const cityCountryMap: Record<string, string> = {
+        'Paris': 'France',
+        'London': 'United Kingdom',
+        'Rome': 'Italy',
+        'Barcelona': 'Spain',
+        'Amsterdam': 'Netherlands',
+        'Prague': 'Czech Republic',
+        'Vienna': 'Austria'
+      };
+      
+      countryToSearch = cityCountryMap[cityToSearch || ''] || 'Germany';
+      
+      // If we have a city, fetch real places from OSM
+      if (cityToSearch) {
+        try {
+          const { batchFetchAndCache } = await import('../services/osmBatchFetch');
+          logger.info(`[CHAT] Fetching real places for ${cityToSearch}, ${countryToSearch}`);
+          realPlaces = await batchFetchAndCache(cityToSearch, countryToSearch);
+          logger.info(`[CHAT] Got ${realPlaces.restaurants.length} restaurants, ${realPlaces.attractions.length} attractions, ${realPlaces.cafes.length} cafes`);
+        } catch (error) {
+          logger.error(`[CHAT] Failed to fetch OSM data:`, error);
+        }
+      }
+    }
+    
     // Add system prompt for trip planning context
     const systemMessage = {
       role: "system",
@@ -384,7 +428,9 @@ Include this EXACT format at the end of your response:
       "date": "YYYY-MM-DD (MUST be between startDate and endDate)",
       "time": "HH:MM (24-hour format, e.g., '10:00' or '14:30')",
       "locationName": "Exact location/address",
-      "notes": "Brief description or tips"
+      "notes": "Brief description or tips",
+      "latitude": "decimal latitude if available",
+      "longitude": "decimal longitude if available"
     }
   ]
 }
@@ -412,6 +458,25 @@ For each day, include:
 - Dinner or evening activity (18:00-20:00)
 
 Spread activities across ALL dates from startDate to endDate.
+
+${realPlaces ? `
+CRITICAL: You MUST use these REAL places from ${cityToSearch}:
+
+RESTAURANTS (use for lunch/dinner):
+${realPlaces.restaurants.slice(0, 15).map(r => `- ${r.name} (lat: ${r.lat}, lon: ${r.lon})`).join('\n')}
+
+ATTRACTIONS (use for sightseeing):
+${realPlaces.attractions.slice(0, 15).map(a => `- ${a.name} (lat: ${a.lat}, lon: ${a.lon})`).join('\n')}
+
+CAFES (use for breakfast/coffee):
+${realPlaces.cafes.slice(0, 10).map(c => `- ${c.name} (lat: ${c.lat}, lon: ${c.lon})`).join('\n')}
+
+IMPORTANT: 
+- Use ONLY these real places in your activities
+- Include the exact coordinates (latitude, longitude) for each activity
+- Vary the places to avoid repetition
+- Mix restaurants, attractions, and cafes throughout the day
+` : ''}
 Use real, specific locations in the destination city.
 
 Make dates start from the next Friday if not specified.` : 'Do not include any JSON blocks unless the user explicitly asks to create or plan a trip.'}
@@ -460,20 +525,29 @@ Keep your main response conversational and helpful.`
           tripSuggestion.endDate = new Date(nextFriday.getTime() + duration).toISOString().split('T')[0];
         }
 
-        // If we have activities, enrich them with geocoding
+        // If we have activities, they should already have coordinates from OSM
+        // Only geocode if coordinates are missing (fallback)
         if (tripSuggestion.activities && tripSuggestion.activities.length > 0) {
           const { geocodeLocation } = await import('../geocoding');
+          
+          let coordinatesFromOSM = 0;
+          let geocoded = 0;
 
-          // Geocode each activity location
+          // Only geocode activities that don't have coordinates
           for (const activity of tripSuggestion.activities) {
-            if (activity.locationName) {
+            if (activity.latitude && activity.longitude) {
+              coordinatesFromOSM++;
+            } else if (activity.locationName) {
               const coords = await geocodeLocation(activity.locationName, tripSuggestion.city, tripSuggestion.country);
               if (coords) {
                 activity.latitude = coords.latitude;
                 activity.longitude = coords.longitude;
+                geocoded++;
               }
             }
           }
+          
+          logger.info(`[CHAT] Activities with OSM coordinates: ${coordinatesFromOSM}/${tripSuggestion.activities.length}, geocoded: ${geocoded}`);
         }
       } catch (e) {
         tripSuggestion = null;
@@ -506,7 +580,7 @@ Keep your main response conversational and helpful.`
   }
 });
 
-// POST /api/ai/suggest-activities - Get AI activity suggestions
+// POST /api/ai/suggest-activities - Get AI activity suggestions with REAL OSM data
 router.post("/suggest-activities", async (req, res) => {
   try {
     const { city, interests, duration } = req.body;
@@ -522,21 +596,44 @@ router.post("/suggest-activities", async (req, res) => {
       });
     }
 
-    // Import cache service
-    const { aiCache } = await import('../services/aiCacheService');
-
-    // Check cache first
-    const cacheKey = aiCache.generateKey('activities', city, `${interests || 'general'}_${duration || 'any'}`);
-    const cachedResult = aiCache.get(cacheKey);
-
-    if (cachedResult) {
-      return res.json(cachedResult);
+    // Get REAL places from OpenStreetMap
+    const { batchFetchAndCache } = await import('../services/osmBatchFetch');
+    
+    // Try to determine country from common cities
+    const cityCountryMap: Record<string, string> = {
+      'Paris': 'France',
+      'London': 'United Kingdom',
+      'Rome': 'Italy',
+      'Barcelona': 'Spain',
+      'Amsterdam': 'Netherlands',
+      'Prague': 'Czech Republic',
+      'Vienna': 'Austria',
+      'Berlin': 'Germany',
+      'Munich': 'Germany',
+      'Hamburg': 'Germany'
+    };
+    
+    const countryContext = cityCountryMap[city] || 'Germany';
+    
+    logger.info(`[SUGGEST-ACTIVITIES] Fetching real places for ${city}, ${countryContext}`);
+    
+    // Fetch real places (uses cache if available)
+    const { restaurants, attractions, cafes } = await batchFetchAndCache(city, countryContext);
+    
+    if (attractions.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Could not find attractions in ${city}. Please try a different city.`
+      });
     }
-
+    
     const interestsText = Array.isArray(interests) ? interests.join(', ') : (interests || 'general sightseeing');
     const durationText = duration ? `${duration} days` : 'a few days';
 
-    const prompt = `Suggest 6 excellent activities and attractions in ${city} for someone interested in ${interestsText}, planning to spend ${durationText} there.
+    // Select 6 diverse real attractions
+    const selectedAttractions = attractions.slice(0, 6);
+    
+    const prompt = `Given these REAL attractions in ${city}, create activity suggestions for someone interested in ${interestsText}, planning to spend ${durationText} there.
 
 For each activity, provide:
 - Name/title
@@ -545,26 +642,31 @@ For each activity, provide:
 - Approximate duration
 - Activity type/category
 
-Format as JSON:
+REAL ATTRACTIONS:
+${selectedAttractions.map(a => `- ${a.name} (lat: ${a.lat}, lon: ${a.lon})`).join('\n')}
+
+Format as JSON, using ONLY the real attractions above:
 {
   "activities": [
     {
-      "title": "Activity Name",
+      "title": "Name from the list above",
       "description": "Brief description",
       "best_time": "Time recommendation",
       "duration": "Time needed",
       "category": "Activity type",
-      "priority": "high/medium/low"
+      "priority": "high/medium/low",
+      "latitude": decimal latitude,
+      "longitude": decimal longitude
     }
   ]
 }`;
 
     const response = await openai.chat.completions.create({
-      model: OPENAI_MODEL, // Using GPT-3.5 for 80% cost savings
+      model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
-          content: "You are a knowledgeable travel expert. Provide activity recommendations in valid JSON format."
+          content: "You are a knowledgeable travel expert. Use ONLY the real attractions provided to create recommendations."
         },
         { role: "user", content: prompt }
       ],
@@ -574,17 +676,29 @@ Format as JSON:
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
+    
+    // Ensure all activities have coordinates from our real places
+    if (result.activities) {
+      result.activities = result.activities.map((activity: any) => {
+        const realPlace = selectedAttractions.find(a => 
+          activity.title?.includes(a.name) || a.name.includes(activity.title)
+        );
+        if (realPlace) {
+          activity.latitude = realPlace.lat;
+          activity.longitude = realPlace.lon;
+        }
+        return activity;
+      });
+    }
 
     const responseData = {
       success: true,
       city,
       interests: interestsText,
       duration,
+      source: "OpenStreetMap",
       ...result
     };
-
-    // Cache for 3 days (activity data is relatively stable)
-    aiCache.set(cacheKey, responseData, aiCache.DURATIONS.LOCATION_SEARCH);
 
     res.json(responseData);
   } catch (error) {
@@ -627,125 +741,119 @@ router.post("/generate-full-itinerary", async (req, res) => {
     const tripDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     
     logger.info(`Generating full itinerary for ${tripDays}-day trip to ${trip.city}`);
+    
+    // Get REAL places from OpenStreetMap using batch fetch with caching
+    const { batchFetchAndCache } = await import('../services/osmBatchFetch');
+    
+    const cityToSearch = trip.city || 'Berlin';
+    const countryToSearch = trip.country || 'Germany';
+    
+    logger.info(`[FULL-ITINERARY] Fetching real places for ${cityToSearch}, ${countryToSearch}`);
+    
+    // Fetch all places in a single request (or use cache)
+    const { restaurants, attractions, cafes } = await batchFetchAndCache(cityToSearch, countryToSearch);
+    
+    logger.info(`[FULL-ITINERARY] Got ${restaurants.length} restaurants, ${attractions.length} attractions, ${cafes.length} cafes`);
+    
+    // Only proceed if we got real places
+    if (restaurants.length === 0 && attractions.length === 0) {
+      logger.error(`[FULL-ITINERARY] No real places found for ${cityToSearch}`);
+      return res.status(400).json({
+        success: false,
+        error: `Could not find real places in ${cityToSearch}. Please try a different city.`
+      });
+    }
 
     // Generate activities in batches of 3 days at a time
     const allActivities = [];
     const DAYS_PER_BATCH = 3;
     const visitedAttractions = new Set(); // Track unique attractions to avoid duplicates
+    const usedRestaurants = new Set(); // Track used restaurants to ensure variety
     
-    for (let dayIndex = 0; dayIndex < tripDays; dayIndex += DAYS_PER_BATCH) {
-      const batchStart = dayIndex;
-      const batchEnd = Math.min(dayIndex + DAYS_PER_BATCH - 1, tripDays - 1);
+    // Create activities for each day using real OSM places
+    for (let dayIndex = 0; dayIndex < tripDays; dayIndex++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + dayIndex);
+      const dateStr = currentDate.toISOString().split('T')[0];
       
-      const batchStartDate = new Date(startDate);
-      batchStartDate.setDate(startDate.getDate() + batchStart);
-      
-      const batchEndDate = new Date(startDate);
-      batchEndDate.setDate(startDate.getDate() + batchEnd);
-      
-      // Build list of already visited attractions
-      const alreadyVisitedList = Array.from(visitedAttractions).join(', ');
-      
-      const batchPrompt = `Generate activities for days ${batchStart + 1}-${batchEnd + 1} of a trip to ${trip.city}, ${trip.country || 'Germany'}.
-      
-Dates: ${batchStartDate.toISOString().split('T')[0]} to ${batchEndDate.toISOString().split('T')[0]}
-Budget: ${trip.budget || 'moderate'}
-${alreadyVisitedList ? `\nIMPORTANT: DO NOT suggest these attractions again as they've already been planned: ${alreadyVisitedList}` : ''}
-      
-CRITICAL: You MUST use REAL places from your training data for ${trip.city}:
-- Use actual tourist attractions you know exist (specific museums, actual castles, real landmarks)
-- Use specific restaurant names from your knowledge (NOT "Local Bakery" or "Traditional Restaurant")
-- If you know famous places in ${trip.city}, use those
-- For smaller cities, use the most prominent attractions and restaurants you're aware of
-- NEVER make up generic placeholder names
-
-Generate EXACTLY 4 activities per day. For ${batchEnd - batchStart + 1} days, that's ${(batchEnd - batchStart + 1) * 4} activities total.
-Each day should have unique attractions/activities (meals can use different real restaurants).
-
-Return ONLY a JSON array of activities:
-[
-  {
-    "date": "YYYY-MM-DD",
-    "time": "HH:MM",
-    "title": "REAL business/attraction name (not generic)",
-    "locationName": "Actual venue or specific address in ${trip.city}",
-    "notes": "Brief description",
-    "tag": "food/culture/sightseeing/entertainment"
-  }
-]
-
-Include breakfast, lunch, dinner, and one activity/attraction per day using REAL establishments.`;
-
-      try {
-        const response = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo", // Using 3.5 for cost optimization
-          messages: [{ role: "user", content: batchPrompt }],
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-          max_tokens: 1200 // Reduced since we're being more specific
+      // Pick breakfast place (cafe)
+      const breakfastCafe = cafes.find(c => !usedRestaurants.has(c.name)) || cafes[dayIndex % cafes.length];
+      if (breakfastCafe) {
+        allActivities.push({
+          date: dateStr,
+          time: "08:30",
+          title: `Breakfast at ${breakfastCafe.name}`,
+          locationName: breakfastCafe.name,
+          latitude: breakfastCafe.lat,
+          longitude: breakfastCafe.lon,
+          notes: breakfastCafe.tags?.cuisine ? `Enjoy ${breakfastCafe.tags.cuisine} breakfast` : "Start your day with coffee and pastries",
+          tag: "food"
         });
-
-        const batchResult = JSON.parse(response.choices[0].message.content || "[]");
-        const batchActivities = Array.isArray(batchResult) ? batchResult : (batchResult.activities || []);
-        
-        // Track non-meal activities to avoid duplicates
-        for (const activity of batchActivities) {
-          const activityTitle = activity.title?.toLowerCase() || '';
-          const activityTag = activity.tag?.toLowerCase() || '';
-          
-          // Don't track meals/dining as they can have different restaurants
-          if (!activityTag.includes('food') && 
-              !activityTitle.includes('breakfast') && 
-              !activityTitle.includes('lunch') && 
-              !activityTitle.includes('dinner')) {
-            visitedAttractions.add(activity.title);
-          }
-        }
-        
-        logger.info(`Generated ${batchActivities.length} activities for days ${batchStart + 1}-${batchEnd + 1}`);
-        allActivities.push(...batchActivities);
-      } catch (error) {
-        logger.error(`Failed to generate activities for days ${batchStart + 1}-${batchEnd + 1}:`, error);
+        usedRestaurants.add(breakfastCafe.name);
+      }
+      
+      // Pick morning attraction
+      const morningAttraction = attractions.find(a => !visitedAttractions.has(a.name)) || attractions[dayIndex % attractions.length];
+      if (morningAttraction) {
+        allActivities.push({
+          date: dateStr,
+          time: "10:00",
+          title: `Visit ${morningAttraction.name}`,
+          locationName: morningAttraction.name,
+          latitude: morningAttraction.lat,
+          longitude: morningAttraction.lon,
+          notes: morningAttraction.tags?.tourism || "Explore this popular attraction",
+          tag: "sightseeing"
+        });
+        visitedAttractions.add(morningAttraction.name);
+      }
+      
+      // Pick lunch restaurant
+      const lunchPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[dayIndex % restaurants.length];
+      if (lunchPlace) {
+        allActivities.push({
+          date: dateStr,
+          time: "13:00",
+          title: `Lunch at ${lunchPlace.name}`,
+          locationName: lunchPlace.name,
+          latitude: lunchPlace.lat,
+          longitude: lunchPlace.lon,
+          notes: lunchPlace.tags?.cuisine ? `${lunchPlace.tags.cuisine} cuisine` : "Enjoy local cuisine",
+          tag: "food"
+        });
+        usedRestaurants.add(lunchPlace.name);
+      }
+      
+      // Pick dinner restaurant
+      const dinnerPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[(dayIndex + 10) % restaurants.length];
+      if (dinnerPlace) {
+        allActivities.push({
+          date: dateStr,
+          time: "19:00",
+          title: `Dinner at ${dinnerPlace.name}`,
+          locationName: dinnerPlace.name,
+          latitude: dinnerPlace.lat,
+          longitude: dinnerPlace.lon,
+          notes: dinnerPlace.tags?.cuisine ? `${dinnerPlace.tags.cuisine} dining experience` : "Evening dining",
+          tag: "food"
+        });
+        usedRestaurants.add(dinnerPlace.name);
       }
     }
-
-    // Geocode activities before saving
-    const { geocodeLocation } = await import('../geocoding');
     
+    logger.info(`[FULL-ITINERARY] Created ${allActivities.length} activities from real OSM places`);
+
+    // Save activities with real OSM coordinates
     for (const activity of allActivities) {
-      let latitude = null;
-      let longitude = null;
-      
-      // Try to geocode the activity location
-      if (activity.locationName) {
-        try {
-          const coords = await geocodeLocation(
-            activity.locationName, 
-            trip.city, 
-            trip.country || 'Germany'
-          );
-          
-          if (coords) {
-            latitude = coords.latitude;
-            longitude = coords.longitude;
-            logger.info(`Geocoded "${activity.title}" at "${activity.locationName}" to ${latitude}, ${longitude}`);
-          } else {
-            logger.warn(`Failed to geocode "${activity.locationName}" for activity "${activity.title}"`);
-          }
-        } catch (error) {
-          logger.error(`Geocoding error for "${activity.locationName}":`, error);
-        }
-      }
-      
-      // Save activity with coordinates
+      // Save activity with real coordinates from OSM
       await db.insert(activities).values({
         trip_id,
         title: activity.title,
         date: activity.date,
         time: activity.time,
         location_name: activity.locationName,
-        latitude: latitude ? String(latitude) : null,
-        longitude: longitude ? String(longitude) : null,
+        latitude: activity.latitude ? String(activity.latitude) : null,
+        longitude: activity.longitude ? String(activity.longitude) : null,
         notes: activity.notes,
         tag: activity.tag || 'activity',
         created_at: new Date(),
@@ -797,242 +905,152 @@ router.post("/generate-weekend", async (req, res) => {
       return res.status(404).json({ success: false, error: "Trip not found or access denied" });
     }
     
-    // Get REAL places from OpenStreetMap
-    const { findRealPlaces } = await import('../services/overpassService');
+    // Get REAL places from OpenStreetMap using batch fetch with caching
+    const { batchFetchAndCache } = await import('../services/osmBatchFetch');
     
-    logger.info(`Fetching real places for ${trip.city}, ${trip.country}`);
+    const cityToSearch = trip.city || destination.split(',')[0].trim();
+    const countryToSearch = trip.country || destination.split(',')[1]?.trim() || 'Germany';
     
-    // Fetch real places in parallel
-    const [restaurants, attractions, cafes] = await Promise.all([
-      findRealPlaces(trip.city || destination, trip.country || 'Germany', 'restaurant', 15),
-      findRealPlaces(trip.city || destination, trip.country || 'Germany', 'tourism', 15),
-      findRealPlaces(trip.city || destination, trip.country || 'Germany', 'cafe', 10)
-    ]);
+    logger.info(`[WEEKEND] Fetching real places for ${cityToSearch}, ${countryToSearch}`);
     
-    // Format real places for the prompt
-    const realPlacesContext = `
-REAL PLACES IN ${destination} (from OpenStreetMap):
-
-Restaurants (${restaurants.length} found):
-${restaurants.map((r: any) => `- ${r.name}${r.address ? ` at ${r.address}` : ''}${r.cuisine ? ` (${r.cuisine})` : ''}`).join('\n')}
-
-Tourist Attractions (${attractions.length} found):
-${attractions.map((a: any) => `- ${a.name}${a.tourism ? ` (${a.tourism})` : ''}`).join('\n')}
-
-Cafes/Bakeries (${cafes.length} found):
-${cafes.map((c: any) => `- ${c.name}${c.address ? ` at ${c.address}` : ''}`).join('\n')}
-
-IMPORTANT: You MUST use places from the lists above. These are REAL, verified places.
-`;
-
-    const prompt = `Create a perfect weekend itinerary for ${destination} (${duration} days).
-
-${realPlacesContext}
-
-Generate a fun, action-packed weekend trip with a mix of must-see attractions, great food spots, and local experiences.
-
-Guidelines:
-- Day 1 (Friday): Arrival day - start with afternoon/evening activities
-- Day 2 (Saturday): Full day of activities from morning to night
-- Day 3 (Sunday): Morning/afternoon activities before departure
-- Include specific restaurant recommendations
-- Mix tourist attractions with local favorites
-- Consider realistic travel times between locations
-- Include variety: sightseeing, food, culture, entertainment
-
-CRITICAL REQUIREMENTS:
-1. Use ONLY real places that actually exist in ${destination}
-2. For attractions: Use famous landmarks, real museums, actual parks (e.g., "Sigmaringen Castle", "Louvre Museum", NOT "Local Castle")
-3. For restaurants: Use specific restaurant names you know exist (e.g., "Le Comptoir du Relais" in Paris, NOT "Traditional French Bistro")
-4. For cafes: Use actual cafe names or well-known chains (e.g., "Café de Flore" in Paris, "Starbucks", NOT "Cozy Local Cafe")
-5. If you don't know specific names in ${destination}, use the most famous/popular places from that city that tourists typically visit
-6. NEVER use generic placeholders like "Local Restaurant", "Traditional Bakery", "City Museum"
-
-Return SPECIFIC activities with REAL places in JSON format:
-{
-  "activities": [
-    {
-      "title": "Specific activity name (e.g., 'Visit Empire State Building')",
-      "date": "Day 1, 2, or 3",
-      "time": "HH:MM (24-hour format, e.g., '14:30')",
-      "locationName": "FULL ADDRESS including street number, street name, city, state, zip",
-      "locationAddress": "Alternative address format if available",
-      "notes": "Brief description or tips",
-      "tag": "food/sightseeing/culture/entertainment/nightlife",
-      "latitude": null,
-      "longitude": null
+    // Fetch all places in a single request (or use cache)
+    const { restaurants, attractions, cafes } = await batchFetchAndCache(cityToSearch, countryToSearch);
+    
+    logger.info(`[WEEKEND] Got ${restaurants.length} restaurants, ${attractions.length} attractions, ${cafes.length} cafes`);
+    
+    // Log the first few places for debugging
+    if (restaurants.length > 0) {
+      logger.info(`[WEEKEND] Sample restaurants: ${restaurants.slice(0,3).map(r => `${r.name} (${r.lat},${r.lon})`).join(', ')}`);
     }
-  ]
-}
-
-CRITICAL LOCATION REQUIREMENTS:
-- locationName MUST be a COMPLETE ADDRESS with street number and street name
-- For restaurants/businesses: Include the full business name AND street address
-- For landmarks: Include the official name AND street address
-- For neighborhoods/areas: Include a specific intersection or landmark within it
-
-For example, if the destination is Paris:
-GOOD (real places):
-- "Eiffel Tower, Champ de Mars, 5 Avenue Anatole France, 75007 Paris"
-- "Le Comptoir du Relais, 9 Carrefour de l'Odéon, 75006 Paris" (real restaurant)
-- "Louvre Museum, Rue de Rivoli, 75001 Paris"
-
-BAD (made-up or generic):
-- "Café Parisien" (generic made-up name)
-- "Local bakery" (not specific)
-- "Traditional restaurant" (too vague)
-
-For ${destination}, use ONLY real establishments and attractions that actually exist.
-
-Include 4-6 activities per day with REAL, GEOCODABLE addresses for ${destination}.`;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using 3.5 for cost optimization
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert travel planner with extensive knowledge of real tourist destinations. You MUST use actual business names and attractions that exist. NEVER invent generic names. Use famous landmarks, well-known restaurants, and popular tourist spots from your training data."
-        },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 1200,
-      temperature: 0.7,
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
-
-    // Calculate actual dates based on trip dates
-    const startDate = new Date(trip.start_date);
-    const activities = result.activities || [];
+    if (attractions.length > 0) {
+      logger.info(`[WEEKEND] Sample attractions: ${attractions.slice(0,3).map(a => `${a.name} (${a.lat},${a.lon})`).join(', ')}`);
+    }
     
-    // Create a map of real places for quick lookup
-    const realPlacesMap = new Map();
-    [...restaurants, ...attractions, ...cafes].forEach(place => {
-      realPlacesMap.set(place.name.toLowerCase(), place);
+    // Only proceed if we got real places
+    if (restaurants.length === 0 && attractions.length === 0) {
+      logger.error(`[AI] No real places found for ${destination}`);
+      return res.status(400).json({
+        success: false,
+        error: `Could not find real places in ${destination}. Please try a different city.`
+      });
+    }
+    
+    // NEW APPROACH: Pick places first, then create itinerary
+    const startDate = new Date(trip.start_date);
+    const allPlaces = [...restaurants, ...attractions, ...cafes];
+    
+    // Select diverse places for the weekend
+    const selectedPlaces = [];
+    
+    // Day 1 (Friday evening): 1 restaurant for dinner
+    if (restaurants.length > 0) {
+      selectedPlaces.push({ ...restaurants[0], day: 0, time: '19:00', tag: 'food', title: `Dinner at ${restaurants[0].name}` });
+    }
+    
+    // Day 2 (Saturday): Full day
+    // Morning attraction
+    if (attractions.length > 0) {
+      selectedPlaces.push({ ...attractions[0], day: 1, time: '09:00', tag: 'sightseeing', title: `Visit ${attractions[0].name}` });
+    }
+    // Lunch
+    if (restaurants.length > 1) {
+      selectedPlaces.push({ ...restaurants[1], day: 1, time: '12:30', tag: 'food', title: `Lunch at ${restaurants[1].name}` });
+    } else if (cafes.length > 0) {
+      selectedPlaces.push({ ...cafes[0], day: 1, time: '12:30', tag: 'food', title: `Light lunch at ${cafes[0].name}` });
+    }
+    // Afternoon attraction
+    if (attractions.length > 1) {
+      selectedPlaces.push({ ...attractions[1], day: 1, time: '14:30', tag: 'sightseeing', title: `Explore ${attractions[1].name}` });
+    }
+    // Coffee break
+    if (cafes.length > 0) {
+      const cafeIndex = cafes.length > 1 ? 1 : 0;
+      selectedPlaces.push({ ...cafes[cafeIndex], day: 1, time: '16:30', tag: 'food', title: `Coffee break at ${cafes[cafeIndex].name}` });
+    }
+    // Dinner
+    if (restaurants.length > 2) {
+      selectedPlaces.push({ ...restaurants[2], day: 1, time: '19:30', tag: 'food', title: `Dinner at ${restaurants[2].name}` });
+    }
+    
+    // Day 3 (Sunday): Morning/afternoon before departure
+    // Morning attraction or cafe
+    if (attractions.length > 2) {
+      selectedPlaces.push({ ...attractions[2], day: 2, time: '09:30', tag: 'sightseeing', title: `Morning visit to ${attractions[2].name}` });
+    } else if (cafes.length > 2) {
+      selectedPlaces.push({ ...cafes[2], day: 2, time: '09:30', tag: 'food', title: `Breakfast at ${cafes[2].name}` });
+    }
+    // Final lunch before departure
+    if (restaurants.length > 3) {
+      selectedPlaces.push({ ...restaurants[3], day: 2, time: '12:00', tag: 'food', title: `Farewell lunch at ${restaurants[3].name}` });
+    }
+    
+    // Skip AI entirely - just use the real places directly
+    logger.info(`[AI] Selected ${selectedPlaces.length} real places for itinerary`);
+    
+    // Format activities without AI involvement
+    const activities = selectedPlaces.map(place => {
+      let notes = '';
+      
+      // Generate appropriate notes based on type
+      if (place.cuisine) {
+        notes = `Enjoy authentic ${place.cuisine} cuisine at this local favorite`;
+      } else if (place.type === 'viewpoint') {
+        notes = 'Take in panoramic views of the city and surrounding landscape';
+      } else if (place.type === 'museum' || place.type === 'attraction') {
+        notes = 'Explore the exhibits and learn about local history and culture';
+      } else if (place.tag === 'food') {
+        notes = 'Experience local flavors and traditional dishes';
+      } else {
+        notes = 'Discover this local gem and its unique character';
+      }
+      
+      return {
+        title: place.title,
+        locationName: place.name,
+        locationAddress: place.address || '',
+        latitude: place.lat.toString(),
+        longitude: place.lon.toString(),
+        time: place.time,
+        day: place.day,
+        notes: notes,
+        tag: place.tag
+      };
+    });
+    
+    logger.info(`[WEEKEND] Created ${activities.length} activities from real OSM places`);
+    
+    // Log what we're about to save
+    activities.forEach((act, i) => {
+      logger.info(`[WEEKEND] Activity ${i+1}: ${act.title} at ${act.locationName} (${act.latitude},${act.longitude})`);
     });
 
-    // Map activities to actual dates and add real coordinates
+    // Map activities to actual dates - coordinates already included
     const enrichedActivities = activities.map((activity: any, index: number) => {
-      // Determine which day this activity is for
-      let dayOffset = 0;
-      if (activity.date?.includes('2')) dayOffset = 1;
-      if (activity.date?.includes('3')) dayOffset = 2;
-      
+      // Calculate actual date based on day offset
+      const dayOffset = activity.day || 0;
       const activityDate = new Date(startDate);
       activityDate.setDate(startDate.getDate() + dayOffset);
       
-      // Try to find this place in our real places map
-      const activityNameLower = (activity.title || '').toLowerCase();
-      let realPlace = null;
-      
-      // Check if the activity title contains a real place name
-      for (const [placeName, place] of realPlacesMap) {
-        if (activityNameLower.includes(placeName)) {
-          realPlace = place;
-          break;
-        }
-      }
-      
-      // If we found a real place, use its exact coordinates
-      const enrichedActivity = {
+      return {
         ...activity,
         date: activityDate.toISOString().split('T')[0],
         trip_id,
-        order: index
+        order: index,
+        // Ensure coordinates are strings
+        latitude: activity.latitude?.toString(),
+        longitude: activity.longitude?.toString(),
+        location_name: activity.locationName,
+        location_address: activity.locationAddress
       };
-      
-      if (realPlace) {
-        enrichedActivity.latitude = realPlace.lat.toString();
-        enrichedActivity.longitude = realPlace.lon.toString();
-        enrichedActivity.locationName = realPlace.name;
-        if (realPlace.address) {
-          enrichedActivity.locationAddress = realPlace.address;
-        }
-        logger.info(`Matched "${activity.title}" to real place "${realPlace.name}" at ${realPlace.lat}, ${realPlace.lon}`);
-      }
-
-      return enrichedActivity;
     });
 
-    // Geocode activities if we have the geocoding service
-    try {
-      const { geocodeLocation } = await import('../geocoding');
-      const { generateDistributedCoordinates, getCityCenter } = await import('../services/coordinateGenerator');
-      
-      logger.info(`Starting geocoding for ${enrichedActivities.length} activities in ${destination}`);
-      
-      // Extract city and country from destination
-      let city = destination;
-      let country = '';
-      
-      // Check if destination includes country (e.g., "Sigmaringen, Germany")
-      if (destination.includes(',')) {
-        const parts = destination.split(',').map(p => p.trim());
-        city = parts[0];
-        country = parts[parts.length - 1];
-      }
-      
-      // First, try to get the city center as a fallback
-      let cityCenter = null;
-      const cityCoords = await geocodeLocation(city, undefined, country);
-      if (cityCoords) {
-        cityCenter = {
-          latitude: parseFloat(cityCoords.latitude),
-          longitude: parseFloat(cityCoords.longitude)
-        };
-        logger.info(`City center for ${destination}: ${cityCenter.latitude}, ${cityCenter.longitude}`);
-      } else {
-        // Use predefined city center if available
-        cityCenter = getCityCenter(destination);
-        if (cityCenter) {
-          logger.info(`Using predefined center for ${destination}: ${cityCenter.latitude}, ${cityCenter.longitude}`);
-        }
-      }
-      
-      // Try to geocode each activity
-      let geocodingFailures = 0;
-      for (const activity of enrichedActivities) {
-        if (activity.locationName || activity.locationAddress) {
-          // Try locationName first, then locationAddress as fallback
-          const locationToGeocode = activity.locationName || activity.locationAddress;
-          logger.info(`Geocoding "${activity.title}" at location: "${locationToGeocode}"`);
-          
-          const coords = await geocodeLocation(locationToGeocode, city, country);
-          if (coords) {
-            activity.latitude = coords.latitude;
-            activity.longitude = coords.longitude;
-            logger.info(`Successfully geocoded "${activity.title}" to ${coords.latitude}, ${coords.longitude}`);
-          } else {
-            geocodingFailures++;
-            logger.warn(`Failed to geocode: "${locationToGeocode}" for ${destination}`);
-          }
-        } else {
-          logger.warn(`Activity "${activity.title}" has no location to geocode`);
-          geocodingFailures++;
-        }
-      }
-      
-      // If more than half of activities failed to geocode, use distributed coordinates
-      if (geocodingFailures > enrichedActivities.length / 2 && cityCenter) {
-        logger.warn(`High geocoding failure rate (${geocodingFailures}/${enrichedActivities.length}). Using distributed coordinates.`);
-        const activitiesWithCoords = generateDistributedCoordinates(
-          enrichedActivities,
-          cityCenter,
-          destination
-        );
-        
-        // Update the enrichedActivities with generated coordinates
-        for (let i = 0; i < enrichedActivities.length; i++) {
-          if (activitiesWithCoords[i].latitude && activitiesWithCoords[i].longitude) {
-            enrichedActivities[i].latitude = activitiesWithCoords[i].latitude;
-            enrichedActivities[i].longitude = activitiesWithCoords[i].longitude;
-          }
-        }
-      }
-    } catch (e) {
-      logger.error('Geocoding error:', e);
-      // Geocoding is optional, continue without it
+    // Log coordinate status
+    const activitiesWithCoords = enrichedActivities.filter(a => a.latitude && a.longitude).length;
+    logger.info(`[AI] ${activitiesWithCoords}/${enrichedActivities.length} activities have coordinates from real OSM places`);
+    
+    // Only try geocoding if we're missing coordinates (which shouldn't happen with new approach)
+    if (activitiesWithCoords < enrichedActivities.length) {
+      logger.warn(`[AI] Some activities missing coordinates - this shouldn't happen with real places`);
     }
 
     // Import storage for proper activity creation
@@ -2000,49 +2018,77 @@ router.post("/regenerate-activity", async (req, res) => {
       .filter(a => a.id !== activity_id)
       .map(a => a.title);
 
-    // Generate new activity using OpenAI
-    const prompt = `Generate a DIFFERENT activity to replace "${oldActivity.title}" for a trip to ${trip.city || 'this location'}.
+    // Get REAL places from OpenStreetMap for regeneration
+    const { batchFetchAndCache } = await import('../services/osmBatchFetch');
     
-    Context:
-    - Date: ${oldActivity.date}
-    - Time slot: ${oldActivity.time}
-    - Location: ${trip.city || 'Unknown'}, ${trip.country || ''}
-    - Current activities for this day (DO NOT DUPLICATE): ${existingTitles.join(', ')}
+    const cityToSearch = trip.city || 'Berlin';
+    const countryToSearch = trip.country || 'Germany';
     
-    Requirements:
-    - Generate something COMPLETELY DIFFERENT from "${oldActivity.title}"
-    - Make it appropriate for the time slot (${oldActivity.time})
-    - MUST BE A REAL PLACE that actually exists in ${trip.city}
-    - Use actual tourist attractions, real restaurants, genuine landmarks
-    - DO NOT make up generic names like "Local Bakery" or "Traditional Restaurant"
-    - Avoid these existing activities: ${existingTitles.join(', ')}
+    logger.info(`[REGENERATE] Fetching real places for ${cityToSearch}, ${countryToSearch}`);
     
-    Return a JSON object with:
-    {
-      "title": "REAL activity/place name (not generic)",
-      "location_name": "Actual venue name or specific address",
-      "notes": "2-3 sentence description",
-      "tag": "activity|dining|culture|outdoor|shopping|entertainment",
-      "price": estimated cost in USD (number),
-      "latitude": latitude if known (number),
-      "longitude": longitude if known (number)
-    }`;
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using 3.5 for cost optimization
-      messages: [
-        {
-          role: "system",
-          content: "You are a travel planning assistant. Generate unique, interesting activities for travelers. Always return valid JSON."
-        },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.9, // Higher temperature for more variety
-      max_tokens: 400,
-      response_format: { type: "json_object" }
-    });
-
-    const newActivityData = JSON.parse(completion.choices[0]?.message?.content || "{}");
+    // Fetch real places (uses cache if available)
+    const { restaurants, attractions, cafes } = await batchFetchAndCache(cityToSearch, countryToSearch);
+    
+    // Determine which type of place to suggest based on time
+    const hour = parseInt(oldActivity.time?.split(':')[0] || '12');
+    let placePool = [];
+    let activityType = oldActivity.tag || 'activity';
+    
+    if (hour >= 7 && hour < 10) {
+      // Breakfast time - use cafes
+      placePool = cafes;
+      activityType = 'dining';
+    } else if (hour >= 11 && hour < 14) {
+      // Lunch time - use restaurants
+      placePool = restaurants;
+      activityType = 'dining';
+    } else if (hour >= 18 && hour < 21) {
+      // Dinner time - use restaurants
+      placePool = restaurants;
+      activityType = 'dining';
+    } else {
+      // Activity time - use attractions
+      placePool = attractions;
+      activityType = 'activity';
+    }
+    
+    // Filter out places already used in the day
+    const availablePlaces = placePool.filter(place => 
+      !existingTitles.some(title => 
+        title.toLowerCase().includes(place.name.toLowerCase()) ||
+        place.name.toLowerCase().includes(title.toLowerCase())
+      )
+    );
+    
+    // Pick a random place from available options
+    const placesToConsider = availablePlaces.length > 0 ? availablePlaces : placePool;
+    const selectedPlace = placesToConsider[Math.floor(Math.random() * Math.min(placesToConsider.length, 10))];
+    
+    if (!selectedPlace) {
+      return res.status(400).json({
+        success: false,
+        error: "Could not find alternative activities in this location"
+      });
+    }
+    
+    logger.info(`[REGENERATE] Selected ${selectedPlace.name} to replace ${oldActivity.title}`);
+    
+    // Create activity data with the REAL place
+    const newActivityData = {
+      title: activityType === 'dining' 
+        ? `${hour < 10 ? 'Breakfast' : hour < 14 ? 'Lunch' : 'Dinner'} at ${selectedPlace.name}`
+        : `Visit ${selectedPlace.name}`,
+      location_name: selectedPlace.name,
+      notes: `Experience ${selectedPlace.name} in ${trip.city}. ${
+        selectedPlace.tags?.tourism ? `A ${selectedPlace.tags.tourism} attraction.` : 
+        selectedPlace.tags?.cuisine ? `Featuring ${selectedPlace.tags.cuisine} cuisine.` : 
+        'A popular local destination.'
+      }`,
+      tag: activityType,
+      price: activityType === 'dining' ? 30 : 15, // Default prices
+      latitude: selectedPlace.lat,
+      longitude: selectedPlace.lon
+    };
     
     // Update the activity
     await db

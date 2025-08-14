@@ -91,6 +91,7 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
         username: user.username,
         role: user.role,
       },
+      token: token, // Include token for API clients
       message: 'Registration successful'
     });
   } catch (error) {
@@ -149,6 +150,7 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
         username: user.username,
         role: user.role,
       },
+      token: token, // Include token for API clients
       message: 'Login successful'
     });
   } catch (error) {
