@@ -62,7 +62,8 @@ export async function geocodeLocation(
     // Build search query with city and country context if provided
     let searchQuery = cleanLocationName;
     
-    // Add city context
+    // CRITICAL: Always include city context for location-specific searches
+    // This helps Mapbox find the right location in the right city
     if (cityContext && !cleanLocationName.toLowerCase().includes(cityContext.toLowerCase())) {
       searchQuery = `${cleanLocationName}, ${cityContext}`;
     }
@@ -151,12 +152,39 @@ export async function geocodeLocation(
       for (const feature of data.features) {
         let score = 0;
         
-        // PENALIZE generic place results (cities/regions)
-        // These are usually fallback results when specific location isn't found
+        const placeLower = feature.place_name?.toLowerCase() || '';
+        const textLower = feature.text?.toLowerCase() || '';
+        
+        // CRITICAL: Check if this result is actually in the right city
+        // This is the most important factor for location-specific searches
+        if (cityContext && cityLower) {
+          // Check if the full place name includes the city
+          if (placeLower.includes(cityLower)) {
+            score += 100;  // Huge bonus for being in the right city
+            console.log(`[GEOCODE]   ✓ In correct city: ${cityLower}`);
+          } else {
+            // If we're looking for a specific location in a city, heavily penalize wrong cities
+            if (!feature.place_type?.includes('place')) {
+              score -= 200;  // Heavy penalty for being in wrong city
+              console.log(`[GEOCODE]   ✗ Wrong city (looking for ${cityLower})`);
+            }
+          }
+        }
+        
+        // Special handling for when we're searching for the city itself
         if (feature.place_type?.includes('place') && 
-            feature.place_type.length === 1 &&
-            feature.text?.toLowerCase() === cityLower) {
-          score -= 100;  // Heavy penalty for generic city result
+            feature.place_type.length === 1) {
+          // This is a city/place result
+          if (textLower === cityLower || 
+              (cityContext && textLower === cityContext.toLowerCase())) {
+            // This IS the city we're looking for
+            score += 50;
+            console.log(`[GEOCODE]   ✓ This is the target city`);
+          } else {
+            // This is some other city - not what we want
+            score -= 100;
+            console.log(`[GEOCODE]   ✗ Wrong city result`);
+          }
         }
         
         // HIGHEST priority for POIs (actual businesses/landmarks)
@@ -171,7 +199,6 @@ export async function geocodeLocation(
         
         // Bonus if place name includes the location we're searching for
         const searchTerms = cleanLocationName.toLowerCase().split(/[\s,]+/);
-        const placeLower = feature.place_name?.toLowerCase() || '';
         for (const term of searchTerms) {
           if (term.length > 3 && placeLower.includes(term)) {
             score += 10;
@@ -181,11 +208,6 @@ export async function geocodeLocation(
         // STRONG bonus if in the right country (critical for international geocoding)
         if (countryContext && placeLower.includes(countryLower)) {
           score += 25;
-        }
-        
-        // Bonus if in the right city
-        if (cityContext && placeLower.includes(cityLower)) {
-          score += 15;
         }
         
         // PENALTY for results in wrong country
@@ -212,10 +234,38 @@ export async function geocodeLocation(
         }
       }
       
-      // If we only found generic city results (negative score), 
-      // don't use them - return null instead
-      if (bestScore < 0) {
-        console.log(`[GEOCODE] Only found generic city result for "${locationName}" - returning null`);
+      // If we only found results with negative scores (wrong cities),
+      // try to at least geocode the city itself as a fallback
+      if (bestScore < 0 && cityContext) {
+        console.log(`[GEOCODE] No good matches found - falling back to city coordinates for ${cityContext}`);
+        
+        // Make a new request just for the city
+        const cityQuery = `${cityContext}${countryContext ? ', ' + countryContext : ''}`;
+        const encodedCityQuery = encodeURIComponent(cityQuery);
+        const cityUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedCityQuery}.json?access_token=${mapboxToken}&limit=1&types=place${countryParam}&language=en`;
+        
+        try {
+          const cityResponse = await fetch(cityUrl);
+          const cityData = await cityResponse.json();
+          
+          if (cityData.features && cityData.features.length > 0) {
+            const cityFeature = cityData.features[0];
+            if (cityFeature.center && Array.isArray(cityFeature.center) && cityFeature.center.length >= 2) {
+              const [lng, lat] = cityFeature.center;
+              console.log(`[GEOCODE] Using city center fallback: ${lat}, ${lng}`);
+              
+              return {
+                latitude: lat.toString(),
+                longitude: lng.toString(),
+                address: `${cleanLocationName}, ${cityFeature.place_name}`
+              };
+            }
+          }
+        } catch (error) {
+          console.error('[GEOCODE] Error getting city fallback:', error);
+        }
+        
+        // If even city geocoding fails, return null
         return null;
       }
       
