@@ -1289,29 +1289,88 @@ router.post("/weather-activities", async (req, res) => {
       return res.json(cachedResult);
     }
 
-    const prompt = `Suggest 5 activities in ${location} that are perfect for ${weatherCondition} weather.
+    // Parse location to get city and country
+    const locationParts = location.split(',').map(p => p.trim());
+    const cityToSearch = locationParts[0];
+    const countryToSearch = locationParts[1] || '';
+
+    // Import OSM batch fetching service
+    const { batchFetchAndCache } = await import('../services/osmBatchFetch');
+
+    // Fetch real places from OSM
+    const realPlaces = await batchFetchAndCache(cityToSearch, countryToSearch);
+
+    // Determine which places are suitable for the weather
+    let suitablePlaces = [];
+    const weatherLower = weatherCondition.toLowerCase();
+    
+    if (weatherLower.includes('rain') || weatherLower.includes('snow') || weatherLower.includes('cold')) {
+      // Indoor activities - museums, restaurants, cafes
+      suitablePlaces = [
+        ...realPlaces.attractions.filter(a => 
+          a.tags?.tourism === 'museum' || 
+          a.tags?.building || 
+          a.tags?.amenity === 'theatre' ||
+          a.tags?.shop
+        ).slice(0, 3),
+        ...realPlaces.restaurants.slice(0, 1),
+        ...realPlaces.cafes.slice(0, 1)
+      ];
+    } else if (weatherLower.includes('sunny') || weatherLower.includes('clear') || weatherLower.includes('warm')) {
+      // Outdoor activities - parks, viewpoints, outdoor attractions
+      suitablePlaces = [
+        ...realPlaces.attractions.filter(a => 
+          a.tags?.leisure === 'park' || 
+          a.tags?.tourism === 'viewpoint' ||
+          a.tags?.natural ||
+          a.tags?.historic === 'monument'
+        ).slice(0, 5)
+      ];
+    } else {
+      // Mixed weather - variety of activities
+      suitablePlaces = [
+        ...realPlaces.attractions.slice(0, 3),
+        ...realPlaces.restaurants.slice(0, 1),
+        ...realPlaces.cafes.slice(0, 1)
+      ];
+    }
+
+    // If we don't have enough suitable places, add more general attractions
+    if (suitablePlaces.length < 5) {
+      const needed = 5 - suitablePlaces.length;
+      suitablePlaces.push(...realPlaces.attractions.slice(0, needed));
+    }
+
+    const prompt = `Given these real places in ${location} and ${weatherCondition} weather, recommend which 5 would be best and explain why they're suitable for the weather.
     ${date ? `Date: ${date}` : ''}
+
+Available real places:
+${suitablePlaces.slice(0, 10).map(p => `- ${p.name} (${p.type || 'attraction'})`).join('\n')}
 
 Format as JSON:
 {
   "activities": [
     {
-      "name": "Activity Name",
+      "name": "Exact place name from the list",
       "description": "Brief description",
       "duration": "estimated time (e.g., 2-3 hours)",
       "location": "Specific location or area",
-      "weatherSuitability": "Why this is good for the weather",
-      "tips": "Any helpful tips"
+      "weatherSuitability": "Why this is good for ${weatherCondition} weather",
+      "tips": "Any helpful tips",
+      "latitude": number,
+      "longitude": number
     }
   ]
-}`;
+}
+
+IMPORTANT: Only use places from the provided list. Include the exact coordinates.`;
 
     const response = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
-          content: "You are a travel advisor specializing in weather-appropriate activities."
+          content: "You are a travel advisor specializing in weather-appropriate activities. Only recommend places from the provided list."
         },
         { role: "user", content: prompt }
       ],
@@ -1322,9 +1381,30 @@ Format as JSON:
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
 
+    // Add coordinates to the activities
+    if (result.activities) {
+      result.activities = result.activities.map(activity => {
+        const matchingPlace = suitablePlaces.find(p => 
+          p.name === activity.name || 
+          activity.name.includes(p.name) ||
+          p.name.includes(activity.name)
+        );
+        
+        if (matchingPlace) {
+          return {
+            ...activity,
+            latitude: matchingPlace.lat,
+            longitude: matchingPlace.lon
+          };
+        }
+        return activity;
+      });
+    }
+
     const responseData = {
       success: true,
-      ...result
+      ...result,
+      source: 'OpenStreetMap'
     };
 
     // Cache for 1 day only (weather changes daily)
