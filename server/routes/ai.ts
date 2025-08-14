@@ -467,7 +467,7 @@ Keep your main response conversational and helpful.`
           // Geocode each activity location
           for (const activity of tripSuggestion.activities) {
             if (activity.locationName) {
-              const coords = await geocodeLocation(activity.locationName, tripSuggestion.city);
+              const coords = await geocodeLocation(activity.locationName, tripSuggestion.city, tripSuggestion.country);
               if (coords) {
                 activity.latitude = coords.latitude;
                 activity.longitude = coords.longitude;
@@ -834,9 +834,20 @@ Include 4-6 activities per day with REAL, GEOCODABLE addresses for ${destination
       
       logger.info(`Starting geocoding for ${enrichedActivities.length} activities in ${destination}`);
       
+      // Extract city and country from destination
+      let city = destination;
+      let country = '';
+      
+      // Check if destination includes country (e.g., "Sigmaringen, Germany")
+      if (destination.includes(',')) {
+        const parts = destination.split(',').map(p => p.trim());
+        city = parts[0];
+        country = parts[parts.length - 1];
+      }
+      
       // First, try to get the city center as a fallback
       let cityCenter = null;
-      const cityCoords = await geocodeLocation(destination, undefined);
+      const cityCoords = await geocodeLocation(city, undefined, country);
       if (cityCoords) {
         cityCenter = {
           latitude: parseFloat(cityCoords.latitude),
@@ -859,7 +870,7 @@ Include 4-6 activities per day with REAL, GEOCODABLE addresses for ${destination
           const locationToGeocode = activity.locationName || activity.locationAddress;
           logger.info(`Geocoding "${activity.title}" at location: "${locationToGeocode}"`);
           
-          const coords = await geocodeLocation(locationToGeocode, destination);
+          const coords = await geocodeLocation(locationToGeocode, city, country);
           if (coords) {
             activity.latitude = coords.latitude;
             activity.longitude = coords.longitude;

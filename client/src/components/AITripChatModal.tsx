@@ -69,8 +69,8 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
           country: suggestion.country,
           startDate: suggestion.startDate,
           endDate: suggestion.endDate,
-          cityLatitude: suggestion.activities?.[0]?.latitude || null,
-          cityLongitude: suggestion.activities?.[0]?.longitude || null
+          cityLatitude: suggestion.cityLatitude || suggestion.activities?.[0]?.latitude || null,
+          cityLongitude: suggestion.cityLongitude || suggestion.activities?.[0]?.longitude || null
         })
       });
 

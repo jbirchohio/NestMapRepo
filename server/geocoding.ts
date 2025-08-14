@@ -13,7 +13,8 @@ interface GeocodeResult {
  */
 export async function geocodeLocation(
   locationName: string, 
-  cityContext?: string
+  cityContext?: string,
+  countryContext?: string
 ): Promise<GeocodeResult | null> {
   try {
     const mapboxToken = process.env.VITE_MAPBOX_TOKEN || process.env.MAPBOX_TOKEN;
@@ -58,26 +59,66 @@ export async function geocodeLocation(
       return null;
     }
     
-    // Build search query with city context if provided
+    // Build search query with city and country context if provided
     let searchQuery = cleanLocationName;
+    
+    // Add city context
     if (cityContext && !cleanLocationName.toLowerCase().includes(cityContext.toLowerCase())) {
       searchQuery = `${cleanLocationName}, ${cityContext}`;
+    }
+    
+    // Add country context for better international results
+    if (countryContext && !searchQuery.toLowerCase().includes(countryContext.toLowerCase())) {
+      searchQuery = `${searchQuery}, ${countryContext}`;
     }
 
     console.log(`[GEOCODE] Input: "${locationName}" → Clean: "${cleanLocationName}" → Query: "${searchQuery}"`);
 
     const encodedQuery = encodeURIComponent(searchQuery);
     
-    // Add proximity bias to search near the city if we have context
-    let proximityParam = '';
-    if (cityContext && cityContext.toLowerCase().includes('new york')) {
-      // NYC coordinates for proximity bias
-      proximityParam = '&proximity=-74.006,40.7128';
+    // Use country code for better results instead of proximity bias
+    let countryParam = '';
+    if (countryContext) {
+      // Map country names to ISO codes for Mapbox
+      const countryMap: { [key: string]: string } = {
+        'germany': 'de',
+        'deutschland': 'de',
+        'france': 'fr',
+        'italy': 'it',
+        'spain': 'es',
+        'united kingdom': 'gb',
+        'uk': 'gb',
+        'united states': 'us',
+        'usa': 'us',
+        'canada': 'ca',
+        'australia': 'au',
+        'japan': 'jp',
+        'china': 'cn',
+        'netherlands': 'nl',
+        'belgium': 'be',
+        'switzerland': 'ch',
+        'austria': 'at',
+        'poland': 'pl',
+        'portugal': 'pt',
+        'greece': 'gr',
+        'sweden': 'se',
+        'norway': 'no',
+        'denmark': 'dk',
+        'finland': 'fi'
+      };
+      
+      const countryLower = countryContext.toLowerCase();
+      for (const [name, code] of Object.entries(countryMap)) {
+        if (countryLower.includes(name)) {
+          countryParam = `&country=${code}`;
+          break;
+        }
+      }
     }
     
-    // CHANGED: Prioritize address type for better results
-    // Only fall back to POI and place if address doesn't work
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${mapboxToken}&limit=5&types=address,poi,place${proximityParam}&language=en`;
+    // Use place,poi,address order for better landmark results
+    // Add country filter if available
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${mapboxToken}&limit=5&types=place,poi,address${countryParam}&language=en`;
 
     console.log(`[GEOCODE] API URL: ${url.replace(mapboxToken, 'HIDDEN')}`);
     
@@ -104,6 +145,7 @@ export async function geocodeLocation(
       let bestScore = -1;
       
       const cityLower = cityContext?.toLowerCase() || '';
+      const countryLower = countryContext?.toLowerCase() || '';
       
       // Score each feature based on relevance and type
       for (const feature of data.features) {
@@ -136,9 +178,25 @@ export async function geocodeLocation(
           }
         }
         
+        // STRONG bonus if in the right country (critical for international geocoding)
+        if (countryContext && placeLower.includes(countryLower)) {
+          score += 25;
+        }
+        
         // Bonus if in the right city
         if (cityContext && placeLower.includes(cityLower)) {
-          score += 5;
+          score += 15;
+        }
+        
+        // PENALTY for results in wrong country
+        const wrongCountries = ['united states', 'usa', 'united kingdom', 'uk', 'canada'];
+        if (countryContext && countryLower.includes('germany')) {
+          for (const wrongCountry of wrongCountries) {
+            if (placeLower.includes(wrongCountry)) {
+              score -= 50;
+              break;
+            }
+          }
         }
         
         // Use Mapbox relevance score
