@@ -978,6 +978,17 @@ router.post('/templates/generate', async (req, res) => {
     if (country === 'Italy' || country === 'France') tags.push('food-lovers');
     if (country === 'Japan' || country === 'Thailand') tags.push('asian-cuisine');
 
+    // Check if we got enough activities
+    const expectedActivities = duration * 4; // 4 activities per day for templates
+    const receivedActivities = generatedItinerary.activities?.length || 0;
+    
+    logger.info(`Template generation: Expected ${expectedActivities} activities for ${duration} days, got ${receivedActivities}`);
+    
+    // If we didn't get enough activities, warn but continue
+    if (receivedActivities < expectedActivities * 0.75) { // If less than 75% of expected
+      logger.warn(`Template generation: Only got ${receivedActivities} activities instead of ${expectedActivities} for ${city}. Consider regenerating.`);
+    }
+    
     // Format trip data for storage - structure it like existing templates
     const tripData: any = {
       title,
