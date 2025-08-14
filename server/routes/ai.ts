@@ -631,6 +631,7 @@ router.post("/generate-full-itinerary", async (req, res) => {
     // Generate activities in batches of 3 days at a time
     const allActivities = [];
     const DAYS_PER_BATCH = 3;
+    const visitedAttractions = new Set(); // Track unique attractions to avoid duplicates
     
     for (let dayIndex = 0; dayIndex < tripDays; dayIndex += DAYS_PER_BATCH) {
       const batchStart = dayIndex;
@@ -642,12 +643,17 @@ router.post("/generate-full-itinerary", async (req, res) => {
       const batchEndDate = new Date(startDate);
       batchEndDate.setDate(startDate.getDate() + batchEnd);
       
+      // Build list of already visited attractions
+      const alreadyVisitedList = Array.from(visitedAttractions).join(', ');
+      
       const batchPrompt = `Generate activities for days ${batchStart + 1}-${batchEnd + 1} of a trip to ${trip.city}, ${trip.country || 'Germany'}.
       
 Dates: ${batchStartDate.toISOString().split('T')[0]} to ${batchEndDate.toISOString().split('T')[0]}
 Budget: ${trip.budget || 'moderate'}
+${alreadyVisitedList ? `\nIMPORTANT: DO NOT suggest these attractions again as they've already been planned: ${alreadyVisitedList}` : ''}
       
 Generate EXACTLY 4 activities per day. For ${batchEnd - batchStart + 1} days, that's ${(batchEnd - batchStart + 1) * 4} activities total.
+Each day should have unique attractions/activities (meals can repeat types but suggest different restaurants).
 
 Return ONLY a JSON array of activities:
 [
@@ -675,6 +681,20 @@ Include breakfast, lunch, dinner, and one activity/attraction per day.`;
         const batchResult = JSON.parse(response.choices[0].message.content || "[]");
         const batchActivities = Array.isArray(batchResult) ? batchResult : (batchResult.activities || []);
         
+        // Track non-meal activities to avoid duplicates
+        for (const activity of batchActivities) {
+          const activityTitle = activity.title?.toLowerCase() || '';
+          const activityTag = activity.tag?.toLowerCase() || '';
+          
+          // Don't track meals/dining as they can have different restaurants
+          if (!activityTag.includes('food') && 
+              !activityTitle.includes('breakfast') && 
+              !activityTitle.includes('lunch') && 
+              !activityTitle.includes('dinner')) {
+            visitedAttractions.add(activity.title);
+          }
+        }
+        
         logger.info(`Generated ${batchActivities.length} activities for days ${batchStart + 1}-${batchEnd + 1}`);
         allActivities.push(...batchActivities);
       } catch (error) {
@@ -682,14 +702,43 @@ Include breakfast, lunch, dinner, and one activity/attraction per day.`;
       }
     }
 
-    // Save all activities to database
+    // Geocode activities before saving
+    const { geocodeLocation } = await import('../geocoding');
+    
     for (const activity of allActivities) {
+      let latitude = null;
+      let longitude = null;
+      
+      // Try to geocode the activity location
+      if (activity.locationName) {
+        try {
+          const coords = await geocodeLocation(
+            activity.locationName, 
+            trip.city, 
+            trip.country || 'Germany'
+          );
+          
+          if (coords) {
+            latitude = coords.latitude;
+            longitude = coords.longitude;
+            logger.info(`Geocoded "${activity.title}" at "${activity.locationName}" to ${latitude}, ${longitude}`);
+          } else {
+            logger.warn(`Failed to geocode "${activity.locationName}" for activity "${activity.title}"`);
+          }
+        } catch (error) {
+          logger.error(`Geocoding error for "${activity.locationName}":`, error);
+        }
+      }
+      
+      // Save activity with coordinates
       await db.insert(activities).values({
         trip_id,
         title: activity.title,
         date: activity.date,
         time: activity.time,
         location_name: activity.locationName,
+        latitude: latitude ? String(latitude) : null,
+        longitude: longitude ? String(longitude) : null,
         notes: activity.notes,
         tag: activity.tag || 'activity',
         created_at: new Date(),
@@ -1619,6 +1668,18 @@ Format as JSON with this structure:
     let allMeals = [...(generatedTrip.meals || [])];
     
     if (tripDurationDays > MAX_DAYS_PER_REQUEST) {
+      // Track already suggested attractions
+      const visitedAttractions = new Set();
+      
+      // Add initial activities to visited list
+      for (const activity of allActivities) {
+        if (activity.title && !activity.title.toLowerCase().includes('breakfast') && 
+            !activity.title.toLowerCase().includes('lunch') && 
+            !activity.title.toLowerCase().includes('dinner')) {
+          visitedAttractions.add(activity.title);
+        }
+      }
+      
       // Generate remaining days in chunks
       for (let dayStart = MAX_DAYS_PER_REQUEST + 1; dayStart <= tripDurationDays; dayStart += MAX_DAYS_PER_REQUEST) {
         const dayEnd = Math.min(dayStart + MAX_DAYS_PER_REQUEST - 1, tripDurationDays);
@@ -1629,6 +1690,8 @@ Format as JSON with this structure:
         const chunkEndDate = new Date(startDate);
         chunkEndDate.setDate(chunkEndDate.getDate() + dayEnd - 1);
         
+        const alreadyVisitedList = Array.from(visitedAttractions).join(', ');
+        
         const additionalDaysPrompt = `Continue creating the itinerary for days ${dayStart}-${dayEnd} of the trip to ${extractedData.destination}.
         
 Previous context:
@@ -1637,8 +1700,9 @@ Previous context:
 - Now planning: Days ${dayStart}-${dayEnd} (${chunkStartDate.toISOString().split('T')[0]} to ${chunkEndDate.toISOString().split('T')[0]})
 - Budget remaining: Proportional amount for remaining days
 - Same traveler preferences as before
+${alreadyVisitedList ? `\nIMPORTANT: These attractions have already been planned, DO NOT repeat them: ${alreadyVisitedList}` : ''}
 
-Create varied and interesting activities for days ${dayStart}-${dayEnd}, avoiding repetition from earlier days.
+Create varied and interesting activities for days ${dayStart}-${dayEnd}, with completely NEW attractions not mentioned above.
 
 Return ONLY a JSON object with this structure:
 {
@@ -1680,6 +1744,14 @@ Return ONLY a JSON object with this structure:
           
           // Add the additional activities and meals
           if (additionalDays.activities) {
+            // Track new attractions to avoid future duplicates
+            for (const activity of additionalDays.activities) {
+              if (activity.title && !activity.title.toLowerCase().includes('breakfast') && 
+                  !activity.title.toLowerCase().includes('lunch') && 
+                  !activity.title.toLowerCase().includes('dinner')) {
+                visitedAttractions.add(activity.title);
+              }
+            }
             allActivities.push(...additionalDays.activities);
           }
           if (additionalDays.meals) {
