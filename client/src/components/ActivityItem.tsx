@@ -10,6 +10,7 @@ import { MapPin, Navigation, Baby, Moon, Cookie, Coffee, RefreshCw } from "lucid
 
 interface ActivityItemProps {
   activity: ClientActivity;
+  activityNumber?: number;
   onClick: (activity: ClientActivity) => void;
   onDelete?: () => void;
   regenerationsRemaining?: number;
