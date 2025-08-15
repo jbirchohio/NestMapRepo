@@ -72,7 +72,11 @@ export default function EnhancedAIAssistantModal({
 
       const res = await apiRequest("POST", API_ENDPOINTS.AI.ASSISTANT, {
         question,
-        tripContext
+        trip_context: tripContext,
+        conversation_history: conversation.slice(-5).map(m => ({
+          role: m.role,
+          content: m.content
+        }))
       });
 
       return res.json();
