@@ -43,11 +43,11 @@ type MessageType = {
 
 // Activity categories with icons
 const ACTIVITY_CATEGORIES = [
-  { id: 'food', label: 'Food & Dining', icon: Utensils, color: 'bg-orange-500' },
-  { id: 'culture', label: 'Culture & Museums', icon: Building, color: 'bg-purple-500' },
-  { id: 'sightseeing', label: 'Sightseeing', icon: Camera, color: 'bg-blue-500' },
+  { id: 'food', label: 'Food', icon: Utensils, color: 'bg-orange-500' },
+  { id: 'culture', label: 'Culture', icon: Building, color: 'bg-purple-500' },
+  { id: 'sightseeing', label: 'Sights', icon: Camera, color: 'bg-blue-500' },
   { id: 'shopping', label: 'Shopping', icon: ShoppingBag, color: 'bg-pink-500' },
-  { id: 'cafe', label: 'Cafes & Drinks', icon: Coffee, color: 'bg-amber-500' },
+  { id: 'cafe', label: 'Cafes', icon: Coffee, color: 'bg-amber-500' },
   { id: 'outdoor', label: 'Outdoor & Parks', icon: Mountain, color: 'bg-green-500' },
 ];
 
@@ -438,14 +438,14 @@ export default function EnhancedAIAssistantModalV2({
                             <Button
                               key={category.id}
                               variant="outline"
-                              className="group justify-start p-4 h-auto flex-col items-center gap-2 hover:border-purple-400 hover:bg-purple-50 transition-all duration-200"
+                              className="group justify-center p-2 sm:p-4 h-auto flex flex-col items-center gap-1 sm:gap-2 hover:border-purple-400 hover:bg-purple-50 transition-all duration-200 overflow-hidden"
                               onClick={() => handleCategorySelect(category.id)}
                               disabled={isProcessing}
                             >
-                              <div className={`${category.color} w-10 h-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                <category.icon className="w-5 h-5 text-white" />
+                              <div className={`${category.color} w-8 sm:w-10 h-8 sm:h-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0`}>
+                                <category.icon className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                               </div>
-                              <span className="text-xs font-medium">{category.label}</span>
+                              <span className="text-xs font-medium text-center line-clamp-2 w-full">{category.label}</span>
                             </Button>
                           ))}
                         </div>
@@ -536,9 +536,9 @@ export default function EnhancedAIAssistantModalV2({
                     variant="outline"
                     size="sm"
                     onClick={() => handleQuickPrompt(prompt)}
-                    className="justify-start text-xs hover:bg-purple-100 hover:border-purple-300 transition-colors"
+                    className="justify-start text-xs hover:bg-purple-100 hover:border-purple-300 transition-colors truncate overflow-hidden px-2"
                   >
-                    {prompt.label}
+                    <span className="truncate">{prompt.label}</span>
                   </Button>
                 ))}
               </div>
