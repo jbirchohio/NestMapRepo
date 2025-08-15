@@ -13,7 +13,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import useAIAssistant from "@/hooks/useAIAssistant";
 import BudgetTracker from "./BudgetTracker";
 import FamilyQuickActions from "./FamilyQuickActions";
@@ -52,6 +52,7 @@ export default function ItinerarySidebar({
   const [isAutoOptimizing, setIsAutoOptimizing] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [newNote, setNewNote] = useState("");
+  const [dayPage, setDayPage] = useState(0);
 
   const { optimizeItinerary } = useAIAssistant();
   const user = jwtAuth.getUser();
@@ -211,26 +212,69 @@ export default function ItinerarySidebar({
           </TabsList>
 
           <TabsContent value="itinerary" className="space-y-4">
-            {/* Day Selection - better stacking for days */}
+            {/* Day Selection with pagination for many days */}
             <div className="mb-4">
-              <div className="grid grid-cols-2 gap-2">
-                {trip.days && trip.days.length > 0 ? (
-                  trip.days.map((day, index) => (
-                  <Button
-                    key={day.toISOString()}
-                    variant={day.toDateString() === activeDay?.toDateString() ? "default" : "outline"}
-                    className="px-3 py-2 text-sm md:text-base h-auto"
-                    onClick={() => onChangeDayClick(day)}
-                  >
-                    Day {index + 1} - {formatDate(day)}
-                  </Button>
-                  ))
-                ) : (
-                  <div className="text-sm text-muted-foreground text-center py-2">
-                    No days available for this trip
+              {trip.days && trip.days.length > 0 ? (
+                trip.days.length > 7 ? (
+                  // Paginated view for trips longer than 7 days
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDayPage(Math.max(0, dayPage - 1))}
+                        disabled={dayPage === 0}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        Days {dayPage * 6 + 1}-{Math.min((dayPage + 1) * 6, trip.days.length)} of {trip.days.length}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDayPage(Math.min(Math.floor((trip.days.length - 1) / 6), dayPage + 1))}
+                        disabled={(dayPage + 1) * 6 >= trip.days.length}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {trip.days.slice(dayPage * 6, (dayPage + 1) * 6).map((day, index) => {
+                        const actualIndex = dayPage * 6 + index;
+                        return (
+                          <Button
+                            key={day.toISOString()}
+                            variant={day.toDateString() === activeDay?.toDateString() ? "default" : "outline"}
+                            className="px-3 py-2 text-sm h-auto"
+                            onClick={() => onChangeDayClick(day)}
+                          >
+                            Day {actualIndex + 1} - {formatDate(day)}
+                          </Button>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
-              </div>
+                ) : (
+                  // Regular grid for 7 days or less
+                  <div className="grid grid-cols-2 gap-2">
+                    {trip.days.map((day, index) => (
+                      <Button
+                        key={day.toISOString()}
+                        variant={day.toDateString() === activeDay?.toDateString() ? "default" : "outline"}
+                        className="px-3 py-2 text-sm md:text-base h-auto"
+                        onClick={() => onChangeDayClick(day)}
+                      >
+                        Day {index + 1} - {formatDate(day)}
+                      </Button>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-2">
+                  No days available for this trip
+                </div>
+              )}
             </div>
 
             {/* Split buttons into separate containers */}
@@ -269,52 +313,28 @@ export default function ItinerarySidebar({
                 AI Assistant
               </Button>
 
-              {/* AI Itinerary Optimization Buttons */}
-              <div className="flex gap-2">
-                {/* One-Click Auto Optimize Button */}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="flex-1"
-                  onClick={handleAutoOptimize}
-                  disabled={activities.length === 0 || isAutoOptimizing}
-                >
-                  {isAutoOptimizing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      Optimizing...
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                      </svg>
-                      Auto-Optimize
-                    </>
-                  )}
-                </Button>
-
-                {/* Review & Optimize Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setIsOptimizationModalOpen(true)}
-                  disabled={activities.length === 0}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 3h5v5"/>
-                    <path d="m21 3-5 5"/>
-                    <path d="M8 3H3v5"/>
-                    <path d="m3 3 5 5"/>
-                    <path d="M16 21h5v-5"/>
-                    <path d="m21 21-5-5"/>
-                    <path d="M8 21H3v-5"/>
-                    <path d="m3 21 5-5"/>
-                  </svg>
-                  Review & Optimize
-                </Button>
-              </div>
+              {/* AI Itinerary Optimization Button */}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-full"
+                onClick={handleAutoOptimize}
+                disabled={activities.length === 0 || isAutoOptimizing}
+              >
+                {isAutoOptimizing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Optimizing...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    Auto-Optimize
+                  </>
+                )}
+              </Button>
             </div>
 
             {/* Family Quick Actions */}

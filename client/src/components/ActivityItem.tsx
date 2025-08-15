@@ -246,15 +246,15 @@ export default function ActivityItem({
           ${!activity.title?.toLowerCase().includes('nap') && 
             !activity.title?.toLowerCase().includes('snack') && 
             !activity.title?.toLowerCase().includes('playground') ? 'bg-[hsl(var(--primary))]' : ''}
-          text-white p-2 text-center font-medium
+          text-white px-2 py-1 text-center text-sm font-medium
         `}>
           {formatTime(activity.time)}
         </div>
 
-        <div className="p-3 pt-6 relative">
+        <div className="p-2 relative">
 
           {/* Action buttons - visible on hover on desktop, always visible on mobile */}
-          <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10 flex gap-1">
+          <div className="absolute top-1 right-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10 flex gap-1">
             {/* Try Different button - only show if regenerations are available */}
             {regenerationsRemaining !== undefined && regenerationsRemaining >= 0 && (
               <button
@@ -262,133 +262,112 @@ export default function ActivityItem({
                   regenerationsRemaining > 0 
                     ? 'bg-purple-500 hover:bg-purple-600' 
                     : 'bg-gray-400 cursor-not-allowed'
-                } text-white p-1.5 rounded-full cursor-pointer shadow-sm transition-colors`}
+                } text-white p-1 rounded-full cursor-pointer shadow-sm transition-colors`}
                 onClick={handleRegenerate}
                 title={regenerationsRemaining > 0 
                   ? `Try different activity (${regenerationsRemaining} left)` 
                   : 'No regenerations left'}
                 disabled={regenerationsRemaining === 0}
               >
-                <RefreshCw className={`h-4 w-4 ${regenerateActivity.isPending ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-3 w-3 ${regenerateActivity.isPending ? 'animate-spin' : ''}`} />
               </button>
             )}
             
             {/* Google Maps button */}
             {(activity.latitude || activity.longitude || activity.locationName) && (
               <button
-                className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 cursor-pointer shadow-sm"
+                className="bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 cursor-pointer shadow-sm"
                 onClick={openInGoogleMaps}
                 title="Open in Google Maps"
               >
-                <Navigation className="h-4 w-4" />
+                <Navigation className="h-3 w-3" />
               </button>
             )}
             
             {/* Delete button */}
             <button
-              className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 cursor-pointer shadow-sm"
+              className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 cursor-pointer shadow-sm"
               onClick={handleDelete}
               title="Delete activity"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12m0-12L6 18" />
               </svg>
             </button>
           </div>
 
-          {/* Activity content area */}
+          {/* Activity content area - compact */}
           <div onClick={() => onClick(activity)}>
-            {/* Title and tag row */}
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  {activity.title?.toLowerCase().includes('nap') && <Moon className="w-4 h-4 text-purple-600" />}
-                  {activity.title?.toLowerCase().includes('snack') && <Cookie className="w-4 h-4 text-orange-600" />}
-                  {activity.title?.toLowerCase().includes('coffee') && <Coffee className="w-4 h-4 text-amber-600" />}
-                  {activity.title?.toLowerCase().includes('playground') && <Baby className="w-4 h-4 text-green-600" />}
-                  <h3 className="font-medium">{activity.title}</h3>
-                </div>
-                {/* Kid-friendly and category badges */}
-                <div className="flex gap-2 mt-1">
-                  {activity.kidFriendly && (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
-                      <Baby className="h-3 w-3" />
-                      <span>Kid-Friendly</span>
-                      {activity.minAge !== undefined && activity.maxAge !== undefined && (
-                        <span className="text-green-600">({activity.minAge}-{activity.maxAge})</span>
-                      )}
-                    </div>
-                  )}
-                  {activity.strollerAccessible && (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
-                      <span>♿ Stroller OK</span>
-                    </div>
-                  )}
-                  {activity.category && (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">
-                      <span>{activity.category}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {activity.tag && <TagBadge tag={activity.tag} />}
-            </div>
-
-            {/* Notes (if any) */}
-            {activity.notes && (
-              <div className="text-sm mt-2">{activity.notes}</div>
-            )}
-
-            {/* Cost indicator */}
-            {(activity.price || activity.actualCost) && (
-              <div className="flex items-center gap-2 mt-2">
-                <span className={`text-sm font-medium ${activity.isPaid ? 'text-green-600' : 'text-gray-600'}`}>
-                  💰 {activity.actualCost ? `$${activity.actualCost}` : `~$${activity.price}`}
-                  {activity.splitBetween && activity.splitBetween > 1 && (
-                    <span className="text-xs ml-1">÷{activity.splitBetween}</span>
-                  )}
-                </span>
-                {activity.isPaid && (
-                  <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Paid</span>
-                )}
-                {activity.costCategory && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded capitalize">
-                    {activity.costCategory}
+            {/* Title, icons and tag in one line */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                {activity.title?.toLowerCase().includes('nap') && <Moon className="w-3 h-3 text-purple-600 flex-shrink-0" />}
+                {activity.title?.toLowerCase().includes('snack') && <Cookie className="w-3 h-3 text-orange-600 flex-shrink-0" />}
+                {activity.title?.toLowerCase().includes('coffee') && <Coffee className="w-3 h-3 text-amber-600 flex-shrink-0" />}
+                {activity.title?.toLowerCase().includes('playground') && <Baby className="w-3 h-3 text-green-600 flex-shrink-0" />}
+                <h3 className="font-medium text-sm truncate">{activity.title}</h3>
+                {/* Most important badge inline */}
+                {activity.kidFriendly && (
+                  <span className="inline-flex items-center gap-0.5 px-1 py-0 bg-green-100 text-green-700 rounded text-xs flex-shrink-0">
+                    <Baby className="h-2.5 w-2.5" />
+                    Kids
                   </span>
                 )}
               </div>
+              {activity.tag && <TagBadge tag={activity.tag} />}
+            </div>
+            
+            {/* Additional badges only if needed - smaller */}
+            {(activity.strollerAccessible || activity.category) && (
+              <div className="flex gap-1 mt-0.5">
+                {activity.strollerAccessible && (
+                  <span className="text-xs text-blue-600">♿</span>
+                )}
+                {activity.category && (
+                  <span className="text-xs text-gray-500">{activity.category}</span>
+                )}
+              </div>
             )}
 
-            {/* Travel time indicator */}
-            {activity.travelTimeFromPrevious && (
-              <div className="flex items-center text-xs text-[hsl(var(--muted-foreground))] mt-2">
-                {String(activity.travelMode).toLowerCase() === "walking" && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M13 5c3 0 5 2 5 5 0 3-2 5-5 5M7 8l2 2M7 12l5 5M19 19l-5-5" />
-                  </svg>
+            {/* Notes (if any) */}
+            {activity.notes && (
+              <div className="text-xs text-gray-600 mt-1 line-clamp-2">{activity.notes}</div>
+            )}
+
+            {/* Cost and travel mode in one compact line */}
+            {(activity.price || activity.actualCost || activity.travelTimeFromPrevious) && (
+              <div className="flex items-center justify-between gap-2 mt-1">
+                {/* Cost */}
+                {(activity.price || activity.actualCost) && (
+                  <div className="flex items-center gap-1">
+                    <span className={`text-xs ${activity.isPaid ? 'text-green-600' : 'text-gray-600'}`}>
+                      💰 {activity.actualCost ? `$${activity.actualCost}` : `~$${activity.price}`}
+                      {activity.splitBetween && activity.splitBetween > 1 && (
+                        <span className="text-xs ml-0.5">÷{activity.splitBetween}</span>
+                      )}
+                    </span>
+                    {activity.isPaid && (
+                      <span className="text-xs bg-green-100 text-green-700 px-1 py-0 rounded">✓</span>
+                    )}
+                  </div>
                 )}
-                {String(activity.travelMode).toLowerCase() === "driving" && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M7 17h10M5 11h14m-7-5h-2l-2 5H5l-2 3v2h18v-2l-2-3h-3l-2-5h-2zm2 8a1 1 0 11-2 0 1 1 0 012 0zm6 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                  </svg>
+                
+                {/* Travel time */}
+                {activity.travelTimeFromPrevious && (
+                  <div className="flex items-center text-xs text-[hsl(var(--muted-foreground))]">
+                    {String(activity.travelMode).toLowerCase() === "walking" && "🚶"}
+                    {String(activity.travelMode).toLowerCase() === "driving" && "🚗"}
+                    {String(activity.travelMode).toLowerCase() === "transit" && "🚌"}
+                    {(!activity.travelMode || String(activity.travelMode).toLowerCase() === "null") && "🕓"}
+                    <span className="ml-0.5">{activity.travelTimeFromPrevious}</span>
+                  </div>
                 )}
-                {String(activity.travelMode).toLowerCase() === "transit" && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 5h-6a2 2 0 00-2 2v9a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2zm1 11h-8m8-5H8m4-5v10"></path>
-                  </svg>
-                )}
-                {(!activity.travelMode || String(activity.travelMode).toLowerCase() === "null") && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-                {activity.travelTimeFromPrevious} from previous stop
               </div>
             )}
 
             {/* Time conflict warning - for identical times */}
             {activity.timeConflict && (
-              <div className="flex items-center text-xs text-[hsl(var(--destructive))] mt-2 bg-red-50 dark:bg-red-950 p-2 rounded">
+              <div className="flex items-center text-xs text-[hsl(var(--destructive))] mt-1 bg-red-50 dark:bg-red-950 p-1 rounded">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
