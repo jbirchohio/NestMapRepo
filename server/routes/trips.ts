@@ -239,6 +239,8 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
       hotelLongitude: trip.hotel_longitude,
       tripType: trip.trip_type,
       budget: trip.budget,
+      aiRegenerationsLimit: trip.ai_regenerations_limit,
+      aiRegenerationsUsed: trip.ai_regenerations_used,
       createdAt: trip.created_at ? new Date(trip.created_at).toISOString() : null,
       updatedAt: trip.updated_at ? new Date(trip.updated_at).toISOString() : null,
     };
