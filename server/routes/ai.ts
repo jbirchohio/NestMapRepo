@@ -1275,10 +1275,17 @@ Provide the translation in JSON format:
 // POST /api/ai/weather-activities - Get weather-based activity suggestions
 router.post("/weather-activities", async (req, res) => {
   try {
+    // Debug logging
+    console.log('Weather activities request body:', req.body);
+    
     // After case conversion middleware, fields are in snake_case
     const location = req.body.location;
     const date = req.body.date;
-    const weatherCondition = req.body.weather_condition || req.body.weatherCondition; // Handle both cases
+    // The middleware should convert weatherCondition to weather_condition
+    const weatherCondition = req.body.weather_condition;
+
+    console.log('Parsed values:', { location, date, weatherCondition });
+    console.log('User:', req.user ? 'authenticated' : 'not authenticated');
 
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
@@ -1287,7 +1294,7 @@ router.post("/weather-activities", async (req, res) => {
     if (!location || !weatherCondition) {
       return res.status(400).json({
         success: false,
-        error: "Location and weather condition are required"
+        error: `Location and weather condition are required. Received: location="${location}", weatherCondition="${weatherCondition}"`
       });
     }
 
