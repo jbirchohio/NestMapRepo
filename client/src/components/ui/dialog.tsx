@@ -10,13 +10,7 @@ const Dialog = DialogPrimitive.Root
 
 const DialogTrigger = DialogPrimitive.Trigger
 
-const DialogPortal = ({ children, ...props }: DialogPrimitive.DialogPortalProps) => (
-  <DialogPrimitive.Portal {...props}>
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-      {children}
-    </div>
-  </DialogPrimitive.Portal>
-)
+const DialogPortal = DialogPrimitive.Portal
 
 const DialogClose = DialogPrimitive.Close
 
@@ -38,42 +32,19 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
-  // Use media query to detect mobile
-  const [isMobile, setIsMobile] = React.useState(false);
-  
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  return (
-    <DialogPortal>
-      <DialogOverlay />
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <DialogPrimitive.Content
         ref={ref}
-        style={{
-          position: 'fixed',
-          left: isMobile ? '1rem' : '50%',
-          right: isMobile ? '1rem' : 'auto',
-          top: isMobile ? '1rem' : '50%',
-          bottom: isMobile ? '1rem' : 'auto',
-          transform: isMobile ? 'none' : 'translate(-50%, -50%)',
-          zIndex: 50,
-          width: isMobile ? 'auto' : 'calc(100% - 2rem)',
-          maxWidth: isMobile ? 'none' : '32rem',
-          maxHeight: isMobile ? 'none' : '85vh',
-          height: isMobile ? 'auto' : 'auto',
-          overflow: 'auto',
-          margin: 0
-        }}
         className={cn(
-          "grid gap-4 border bg-background p-4 sm:p-6 shadow-lg rounded-lg",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "relative w-full max-w-lg max-h-[85vh] overflow-auto",
+          "bg-background rounded-lg border shadow-lg",
+          "p-4 sm:p-6",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className
         )}
         {...props}
@@ -84,9 +55,9 @@ const DialogContent = React.forwardRef<
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
-    </DialogPortal>
-  );
-})
+    </div>
+  </DialogPortal>
+))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({
