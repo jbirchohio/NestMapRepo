@@ -375,12 +375,14 @@ export default function EnhancedAIAssistantModalV2({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[700px] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
-            AI Trip Assistant
-            <Badge variant="secondary" className="ml-auto">
+      <DialogContent className="sm:max-w-4xl h-[85vh] sm:h-[700px] flex flex-col p-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+          <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <span className="text-base sm:text-lg">AI Trip Assistant</span>
+            </div>
+            <Badge variant="secondary" className="sm:ml-auto">
               {regenerationsRemaining} suggestions left
             </Badge>
           </DialogTitle>
@@ -391,7 +393,7 @@ export default function EnhancedAIAssistantModalV2({
 
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Date selector */}
-          <div className="px-6 py-3 border-b bg-gradient-to-r from-purple-50 to-blue-50">
+          <div className="px-4 sm:px-6 py-2 sm:py-3 border-b bg-gradient-to-r from-purple-50 to-blue-50">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-purple-600" />
               <span className="text-sm text-gray-700 font-medium">Adding activities for:</span>

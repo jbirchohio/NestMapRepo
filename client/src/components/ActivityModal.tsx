@@ -314,21 +314,25 @@ export default function ActivityModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-4 md:pt-16 md:items-center">
-      <div className="bg-background rounded-lg w-full max-w-md max-h-[96vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/50">
+      <div className="bg-background rounded-t-2xl sm:rounded-lg w-full sm:max-w-md max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Fixed header */}
+        <div className="p-4 sm:p-6 border-b flex-shrink-0">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg sm:text-xl font-semibold">
               {activity ? "Edit Activity" : "Add Activity"}
             </h2>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
               ✕
             </Button>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="space-y-4">
-              <div className="mb-4">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} id="activity-form">
+            <div className="space-y-3 sm:space-y-4">
+              <div>
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Title</label>
                 <Input
                   {...register("title")}
@@ -342,7 +346,7 @@ export default function ActivityModal({
 
               {/* Trip Date Pills */}
               {trip?.startDate && trip?.endDate && (
-                <div className="mb-4">
+                <div>
                   <TripDatePicker
                     startDate={new Date(trip.startDate)}
                     endDate={new Date(trip.endDate)}
@@ -356,7 +360,7 @@ export default function ActivityModal({
                 </div>
               )}
 
-              <div className="mb-4">
+              <div>
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Time</label>
                 <Input
                   type="time"
@@ -368,9 +372,9 @@ export default function ActivityModal({
                 )}
               </div>
 
-              <div className="mb-4">
+              <div>
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Location</label>
-                <div className="flex w-full space-x-2">
+                <div className="flex w-full gap-1 sm:gap-2">
                   <Input
                     {...register("locationName", { required: true })}
                     placeholder="Search for a place (e.g., 'Leo House')"
@@ -381,7 +385,7 @@ export default function ActivityModal({
                     <Button
                       type="button"
                       variant="outline"
-                      className="whitespace-nowrap px-2 text-xs"
+                      className="whitespace-nowrap px-2 text-xs flex-shrink-0"
                       onClick={() => {
                         setValue("locationName", trip.hotel || "");
                         setValue("latitude", trip.hotelLatitude || undefined);
@@ -399,7 +403,7 @@ export default function ActivityModal({
                   <Button
                     type="button"
                     variant="outline"
-                    className="whitespace-nowrap px-3"
+                    className="whitespace-nowrap px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
                     onClick={async () => {
                       // Force use the current input value (not the debounced one)
                       const locationName = searchTerm || watch("locationName");
@@ -631,7 +635,7 @@ export default function ActivityModal({
                 )}
               </div>
 
-              <div className="mb-4">
+              <div>
                 <input type="hidden" {...register("latitude")} />
                 <input type="hidden" {...register("longitude")} />
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Notes</label>
@@ -643,7 +647,7 @@ export default function ActivityModal({
                 />
               </div>
 
-              <div className="mb-3">
+              <div>
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Type</label>
                 <div className="grid grid-cols-3 gap-1">
                   {Object.values(ACTIVITY_TAGS).map((tag) => (
@@ -663,48 +667,39 @@ export default function ActivityModal({
               </div>
 
               {/* Travel Mode Selection */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Travel Mode (to this location)</label>
-                <div className="flex flex-wrap gap-2">
+              <div>
+                <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Travel Mode</label>
+                <div className="grid grid-cols-3 gap-1">
                   <Button
                     type="button"
                     variant={watch("travelMode") === "walking" ? "default" : "outline"}
-                    className="px-3 py-1 h-8"
+                    className="px-2 py-1 h-7 text-xs"
                     onClick={() => setValue("travelMode", "walking")}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M13 5c3 0 5 2 5 5 0 3-2 5-5 5M7 8l2 2M7 12l5 5M19 19l-5-5" />
-                    </svg>
-                    Walking
+                    🚶 Walk
                   </Button>
                   <Button
                     type="button"
                     variant={watch("travelMode") === "driving" ? "default" : "outline"}
-                    className="px-3 py-1 h-8"
+                    className="px-2 py-1 h-7 text-xs"
                     onClick={() => setValue("travelMode", "driving")}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M7 17h10M5 11h14m-7-5h-2l-2 5H5l-2 3v2h18v-2l-2-3h-3l-2-5h-2zm2 8a1 1 0 11-2 0 1 1 0 012 0zm6 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                    </svg>
-                    Driving
+                    🚗 Drive
                   </Button>
                   <Button
                     type="button"
                     variant={watch("travelMode") === "transit" ? "default" : "outline"}
-                    className="px-3 py-1 h-8"
+                    className="px-2 py-1 h-7 text-xs"
                     onClick={() => setValue("travelMode", "transit")}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M15 5h-6a2 2 0 00-2 2v9a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2zm1 11h-8m8-5H8m4-5v10"></path>
-                    </svg>
-                    Public Transit
+                    🚌 Transit
                   </Button>
                 </div>
               </div>
 
               {/* Bookable Activity Section - only show after title and location are set */}
               {watch("title") && watch("locationName") && (
-                <div className="mb-4 border-t pt-4">
+                <div className="border-t pt-3">
                   <BookableActivity
                     activityTitle={watch("title")}
                     latitude={watch("latitude")}
@@ -723,27 +718,33 @@ export default function ActivityModal({
                 </div>
               )}
             </div>
-
-            <div className="flex justify-end gap-2 mt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createActivity.isPending || updateActivity.isPending}
-              >
-                {activity ? (
-                  updateActivity.isPending ? "Updating..." : "Update"
-                ) : (
-                  createActivity.isPending ? "Adding..." : "Add Activity"
-                )}
-              </Button>
-            </div>
           </form>
+        </div>
+
+        {/* Fixed footer */}
+        <div className="p-4 sm:p-6 border-t bg-background flex-shrink-0">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="activity-form"
+              disabled={createActivity.isPending || updateActivity.isPending}
+              className="flex-1"
+            >
+              {activity ? (
+                updateActivity.isPending ? "Updating..." : "Update"
+              ) : (
+                createActivity.isPending ? "Adding..." : "Add Activity"
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
