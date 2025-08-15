@@ -228,13 +228,13 @@ export default function ItinerarySidebar({
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
                       <span className="text-sm text-muted-foreground">
-                        Days {dayPage * 6 + 1}-{Math.min((dayPage + 1) * 6, trip.days.length)} of {trip.days.length}
+                        Days {dayPage * 6 + 1}-{Math.min((dayPage + 1) * 6, trip.days?.length || 0)} of {trip.days?.length || 0}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setDayPage(Math.min(Math.floor((trip.days.length - 1) / 6), dayPage + 1))}
-                        disabled={(dayPage + 1) * 6 >= trip.days.length}
+                        onClick={() => setDayPage(Math.min(Math.floor(((trip.days?.length || 1) - 1) / 6), dayPage + 1))}
+                        disabled={(dayPage + 1) * 6 >= (trip.days?.length || 0)}
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>

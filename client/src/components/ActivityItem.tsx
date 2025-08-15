@@ -18,6 +18,7 @@ interface ActivityItemProps {
 
 export default function ActivityItem({ 
   activity, 
+  activityNumber,
   onClick, 
   onDelete,
   regenerationsRemaining,
