@@ -12,8 +12,6 @@ const router = Router();
  */
 router.post('/search', async (req, res) => {
   try {
-    // Debug: Check if API key is loaded
-    console.log('[VIATOR] API Key configured:', !!process.env.VIATOR_API_KEY);
     
     // Removed verbose logging - was flooding Railway logs
     // console.log('Viator search request body:', req.body);

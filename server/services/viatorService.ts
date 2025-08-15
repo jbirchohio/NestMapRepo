@@ -192,9 +192,6 @@ export class ViatorService {
    */
   async searchActivities(params: ViatorSearchParams): Promise<ViatorProduct[]> {
     try {
-      // Debug: Log API key status
-      console.log('[VIATOR SERVICE] API Key present:', !!VIATOR_API_KEY);
-      console.log('[VIATOR SERVICE] API Key length:', VIATOR_API_KEY?.length);
       
       // console.log('Viator searchActivities called with params:', params);
       
