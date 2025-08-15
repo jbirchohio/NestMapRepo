@@ -446,16 +446,27 @@ CRITICAL DATE RULES:
 
 ACTIVITY GENERATION RULES:
 
-Generate AT LEAST 3-4 activities for EACH day of the trip.
-For a 13-day trip, that means 39-52 activities total.
+Generate EXACTLY 5 activities for EACH day of the trip following this pattern:
+- 3 meals (breakfast from CAFES, lunch & dinner from RESTAURANTS)
+- 2 tourist activities (from ATTRACTIONS list - museums, landmarks, parks, etc.)
 
-IMPORTANT: The activities array should have 40+ items for a 13-day trip.
+For a 3-day trip = 15 activities total (5 per day)
+For a 7-day trip = 35 activities total (5 per day)
+For a 13-day trip = 65 activities total (5 per day)
 
-For each day, include:
-- Morning activity (09:00-11:00)
-- Lunch (12:00-13:30)  
-- Afternoon activity (14:00-17:00)
-- Dinner or evening activity (18:00-20:00)
+For each day, create a balanced schedule with:
+- Breakfast (08:00-09:00) - Pick from CAFES list
+- Morning activity (09:30-11:30) - Pick from ATTRACTIONS list (museum, landmark, etc.)
+- Lunch (12:00-13:30) - Pick from RESTAURANTS list
+- Afternoon activity (14:00-17:00) - Pick from ATTRACTIONS list (different from morning)
+- Dinner (18:30-20:30) - Pick from RESTAURANTS list (different from lunch)
+
+CRITICAL: Each day should have:
+- 1 breakfast (cafe)
+- 2 different attractions/activities (NOT restaurants)
+- 1 lunch (restaurant)
+- 1 dinner (different restaurant)
+Total: 5 activities per day with proper variety
 
 Spread activities across ALL dates from startDate to endDate.
 
@@ -471,11 +482,13 @@ ${realPlaces.attractions.slice(0, 15).map(a => `- ${a.name} (lat: ${a.lat}, lon:
 CAFES (use for breakfast/coffee):
 ${realPlaces.cafes.slice(0, 10).map(c => `- ${c.name} (lat: ${c.lat}, lon: ${c.lon})`).join('\n')}
 
-IMPORTANT: 
-- Use ONLY these real places in your activities
+IMPORTANT RULES FOR USING THESE PLACES:
+- Use ONLY these real places in your activities - DO NOT make up any places
 - Include the exact coordinates (latitude, longitude) for each activity
-- Vary the places to avoid repetition
-- Mix restaurants, attractions, and cafes throughout the day
+- NEVER repeat the same restaurant or attraction twice in the trip
+- For MEALS: Only use items from RESTAURANTS list for lunch/dinner, CAFES for breakfast
+- For ACTIVITIES: Only use items from ATTRACTIONS list for sightseeing/tours
+- DO NOT use restaurants as "activities" - they are only for meal times
 ` : ''}
 Use real, specific locations in the destination city.
 
@@ -507,9 +520,9 @@ Keep your main response conversational and helpful.`
         const tripStart = new Date(tripSuggestion.startDate);
         const tripEnd = new Date(tripSuggestion.endDate);
         const tripDays = Math.ceil((tripEnd.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        const expectedActivities = tripDays * 3; // At least 3 per day
+        const expectedActivities = tripDays * 5; // 5 activities per day (breakfast, lunch, dinner, 2 attractions)
         
-        logger.info(`Trip is ${tripDays} days, expecting at least ${expectedActivities} activities, got ${tripSuggestion.activities?.length || 0}`);
+        logger.info(`Trip is ${tripDays} days, expecting ${expectedActivities} activities (5 per day), got ${tripSuggestion.activities?.length || 0}`);
         // Validate dates
         const today = new Date();
         const startDate = new Date(tripSuggestion.startDate);

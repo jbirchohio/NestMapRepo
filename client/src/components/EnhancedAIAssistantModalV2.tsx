@@ -73,9 +73,7 @@ export default function EnhancedAIAssistantModalV2({
   const [conversation, setConversation] = useState<MessageType[]>([
     {
       role: "assistant",
-      content: `Hi! I'm your AI trip assistant for ${trip?.city || trip?.title}. I can help you discover and add real activities to your itinerary. 
-
-Try clicking "Add more activities" below to get started!`
+      content: "Hi! I'm your AI trip assistant for " + (trip?.city || trip?.title || "your trip") + ". I can help you discover and add real activities to your itinerary.\n\nTry clicking 'Add more activities' below to get started!"
     }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -115,7 +113,7 @@ Try clicking "Add more activities" below to get started!`
         // Add message showing available activities
         setConversation(prev => [...prev, {
           role: "assistant",
-          content: `I found ${data.activities.length} ${ACTIVITY_CATEGORIES.find(c => c.id === category)?.label} options for you:`,
+          content: "I found " + data.activities.length + " " + (ACTIVITY_CATEGORIES.find(c => c.id === category)?.label || "activity") + " options for you:",
           showActivityPicker: true,
           selectedCategory: category,
           suggestions: data.activities
@@ -123,7 +121,7 @@ Try clicking "Add more activities" below to get started!`
       } else {
         setConversation(prev => [...prev, {
           role: "assistant",
-          content: `I couldn't find any ${category} activities in ${trip.city}. Try a different category?`
+          content: "I couldn't find any " + category + " activities in " + trip.city + ". Try a different category?"
         }]);
       }
     },
@@ -168,7 +166,7 @@ Try clicking "Add more activities" below to get started!`
       // Add confirmation message
       setConversation(prev => [...prev, {
         role: "assistant",
-        content: `Great! I've added "${data.title}" to your itinerary for ${new Date(data.date).toLocaleDateString()}. You have ${regenerationsRemaining - 1} AI suggestions remaining.`
+        content: "Great! I've added '" + data.title + "' to your itinerary for " + new Date(data.date).toLocaleDateString() + ". You have " + (regenerationsRemaining - 1) + " AI suggestions remaining."
       }]);
     },
     onError: (error: any) => {
@@ -220,19 +218,19 @@ Try clicking "Add more activities" below to get started!`
               ...s,
               title: s.name,
               locationName: s.name,
-              description: `${s.type} - ${s.priceRange}`,
+              description: s.type + " - " + s.priceRange,
               category: 'food'
             })));
             
             setConversation(prev => [...prev, {
               role: "assistant",
-              content: `I found these great dining options in ${trip.city}:`,
+              content: "I found these great dining options in " + trip.city + ":",
               showActivityPicker: true,
               suggestions: data.suggestions.map((s: any) => ({
                 ...s,
                 title: s.name,
                 locationName: s.name,
-                description: `${s.type} - ${s.priceRange}`,
+                description: s.type + " - " + s.priceRange,
                 category: 'food'
               }))
             }]);
@@ -259,7 +257,7 @@ Try clicking "Add more activities" below to get started!`
           if (data.activities && data.activities.length > 0) {
             setConversation(prev => [...prev, {
               role: "assistant",
-              content: `Based on the weather forecast (${data.weather?.condition || 'current conditions'}), here are my suggestions:`,
+              content: "Based on the weather forecast (" + (data.weather?.condition || 'current conditions') + "), here are my suggestions:",
               showActivityPicker: true,
               suggestions: data.activities.map((a: any) => ({
                 ...a,
@@ -282,7 +280,7 @@ Try clicking "Add more activities" below to get started!`
         // Show budget options inline
         setConversation(prev => [...prev, {
           role: "assistant",
-          content: `Here are budget-friendly options for ${trip.city}:\n\n💵 **Free Activities:**\n• Walk through city parks\n• Visit free museums on designated days\n• Explore local markets\n• Self-guided walking tours\n\n💰 **Low-Cost Options:**\n• Public transportation day passes\n• Street food tours\n• Local cafes over tourist restaurants\n• Group discounts for attractions\n\nWould you like specific recommendations for any of these?"
+          content: "Here are budget-friendly options for " + trip.city + ":\n\n💵 **Free Activities:**\n• Walk through city parks\n• Visit free museums on designated days\n• Explore local markets\n• Self-guided walking tours\n\n💰 **Low-Cost Options:**\n• Public transportation day passes\n• Street food tours\n• Local cafes over tourist restaurants\n• Group discounts for attractions\n\nWould you like specific recommendations for any of these?"
         }]);
         break;
         
@@ -302,9 +300,10 @@ Try clicking "Add more activities" below to get started!`
   const handleCategorySelect = (category: string) => {
     setIsProcessing(true);
     
+    const categoryLabel = ACTIVITY_CATEGORIES.find(c => c.id === category)?.label || category;
     setConversation(prev => [...prev, {
       role: "user",
-      content: `Show me ${ACTIVITY_CATEGORIES.find(c => c.id === category)?.label} options`
+      content: "Show me " + categoryLabel + " options"
     }]);
 
     fetchCategoryActivities.mutate(category);
