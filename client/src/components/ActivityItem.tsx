@@ -238,7 +238,7 @@ export default function ActivityItem({
           relative overflow-hidden
         `}
       >
-        {/* Time header */}
+        {/* Time header with activity number */}
         <div className={`
           ${activity.title?.toLowerCase().includes('nap') ? 'bg-purple-500' : ''}
           ${activity.title?.toLowerCase().includes('snack') ? 'bg-orange-500' : ''}
@@ -246,9 +246,15 @@ export default function ActivityItem({
           ${!activity.title?.toLowerCase().includes('nap') && 
             !activity.title?.toLowerCase().includes('snack') && 
             !activity.title?.toLowerCase().includes('playground') ? 'bg-[hsl(var(--primary))]' : ''}
-          text-white px-2 py-1 text-center text-sm font-medium
+          text-white px-2 py-1 text-sm font-medium flex items-center justify-between
         `}>
-          {formatTime(activity.time)}
+          {activityNumber && (
+            <span className="bg-white bg-opacity-20 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+              {activityNumber}
+            </span>
+          )}
+          <span className="flex-1 text-center">{formatTime(activity.time)}</span>
+          {activityNumber ? <span className="w-5"></span> : null}
         </div>
 
         <div className="p-2 relative">

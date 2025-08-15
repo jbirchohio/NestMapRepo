@@ -62,10 +62,11 @@ export default function ActivityTimeline({
           </Button>
         </div>
       ) : (
-        sortedActivities.map((activity) => (
+        sortedActivities.map((activity, index) => (
           <ActivityItem
             key={activity.id}
             activity={activity}
+            activityNumber={index + 1}
             onClick={handleEditActivity}
             onDelete={onActivityUpdated}
             regenerationsRemaining={regenerationsRemaining}
