@@ -226,14 +226,7 @@ export default function ActivityItem({
   };
 
   return (
-    <div className="pl-8 relative timeline-item group">
-      {/* Timeline point */}
-      <div className="flex items-center absolute left-0 timeline-point">
-        <div className="h-6 w-6 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center text-xs font-medium">
-          <div className="h-2 w-2 bg-white rounded-full"></div>
-        </div>
-      </div>
-
+    <div className="relative timeline-item group">
       {/* Activity card with time header */}
       <div
         className={`

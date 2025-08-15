@@ -38,7 +38,7 @@ const posterThemes = [
     id: 'city',
     name: 'City Lights',
     gradient: 'from-gray-700 via-gray-900 to-black',
-    textColor: 'text-white',
+    textColor: 'text-yellow-300',
     bgPattern: 'bg-gradient-to-b'
   },
   {
@@ -80,6 +80,7 @@ export default function TripPosterGenerator({
   onClose
 }: TripPosterGeneratorProps) {
   const posterRef = useRef<HTMLDivElement>(null);
+  const hiddenPosterRef = useRef<HTMLDivElement>(null);
   const [selectedTheme, setSelectedTheme] = useState(posterThemes[0]);
   const [selectedFormat, setSelectedFormat] = useState(posterFormats[0]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -95,26 +96,24 @@ export default function TripPosterGenerator({
   const uniqueLocations = new Set(activities.map(a => a.locationName)).size;
   const totalActivities = activities.length;
 
-  // Get top activities (max 5)
+  // Get top activities - limit based on format
+  const maxActivities = selectedFormat.id === 'instagram-post' ? 3 : 
+                       selectedFormat.id === 'facebook-post' ? 2 : 5;
   const topActivities = activities
     .filter(a => a.title)
-    .slice(0, 5)
+    .slice(0, maxActivities)
     .map(a => a.title);
 
   const downloadPoster = async () => {
-    if (!posterRef.current) return;
+    if (!hiddenPosterRef.current) return;
 
     setIsGenerating(true);
     try {
-      // Generate the canvas
-      const canvas = await html2canvas(posterRef.current, {
+      // Generate the canvas from the hidden full-size element
+      const canvas = await html2canvas(hiddenPosterRef.current, {
         scale: 2, // Higher quality
         useCORS: true,
-        backgroundColor: null,
-        width: selectedFormat.width,
-        height: selectedFormat.height,
-        windowWidth: selectedFormat.width,
-        windowHeight: selectedFormat.height
+        backgroundColor: null
       });
 
       // Convert to blob
@@ -148,16 +147,14 @@ export default function TripPosterGenerator({
   };
 
   const sharePoster = async () => {
-    if (!posterRef.current) return;
+    if (!hiddenPosterRef.current) return;
 
     setIsGenerating(true);
     try {
-      const canvas = await html2canvas(posterRef.current, {
+      const canvas = await html2canvas(hiddenPosterRef.current, {
         scale: 2,
         useCORS: true,
-        backgroundColor: null,
-        width: selectedFormat.width,
-        height: selectedFormat.height
+        backgroundColor: null
       });
 
       canvas.toBlob(async (blob) => {
@@ -316,7 +313,7 @@ export default function TripPosterGenerator({
                 transformOrigin: 'top left'
               }}
             >
-              <div className={`h-full ${selectedTheme.bgPattern} ${selectedTheme.gradient} p-8 flex flex-col justify-between`}>
+              <div className={`h-full ${selectedTheme.bgPattern} ${selectedTheme.gradient} ${selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? 'p-6' : 'p-8'} flex flex-col justify-between`}>
                 {/* Header */}
                 <div className={selectedTheme.textColor}>
                   <div className="flex items-center gap-2 mb-4">
@@ -326,11 +323,11 @@ export default function TripPosterGenerator({
                     </span>
                   </div>
                   
-                  <h1 className="text-4xl font-bold mb-2">
+                  <h1 className={`${selectedFormat.id === 'instagram-post' ? 'text-2xl' : selectedFormat.id === 'facebook-post' ? 'text-3xl' : 'text-4xl'} font-bold mb-2`}>
                     {trip.title}
                   </h1>
                   
-                  <div className="text-xl opacity-90">
+                  <div className={`${selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? 'text-lg' : 'text-xl'} opacity-90`}>
                     {trip.city}{trip.country ? `, ${trip.country}` : ''}
                   </div>
                   
@@ -340,19 +337,19 @@ export default function TripPosterGenerator({
                 </div>
 
                 {/* Middle Content */}
-                <div className="flex-1 flex flex-col justify-center">
-                  {showStats && (
-                    <div className={`grid grid-cols-3 gap-4 mb-6 ${selectedTheme.textColor}`}>
+                <div className={`flex-1 flex flex-col justify-center ${selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? 'py-2' : ''}`}>
+                  {showStats && (selectedFormat.id !== 'facebook-post' || !showActivities) && (
+                    <div className={`grid grid-cols-3 gap-4 ${selectedFormat.id === 'instagram-post' ? 'mb-4' : 'mb-6'} ${selectedTheme.textColor}`}>
                       <div className="text-center">
-                        <div className="text-3xl font-bold">{tripDuration}</div>
+                        <div className={`${selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? 'text-2xl' : 'text-3xl'} font-bold`}>{tripDuration}</div>
                         <div className="text-xs uppercase opacity-80">Days</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-bold">{totalActivities}</div>
+                        <div className={`${selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? 'text-2xl' : 'text-3xl'} font-bold`}>{totalActivities}</div>
                         <div className="text-xs uppercase opacity-80">Activities</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-bold">{uniqueLocations}</div>
+                        <div className={`${selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? 'text-2xl' : 'text-3xl'} font-bold`}>{uniqueLocations}</div>
                         <div className="text-xs uppercase opacity-80">Places</div>
                       </div>
                     </div>
@@ -378,6 +375,140 @@ export default function TripPosterGenerator({
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Hidden full-size poster for generation */}
+      <div 
+        ref={hiddenPosterRef}
+        className="fixed -left-[9999px] -top-[9999px]"
+        style={{
+          width: `${selectedFormat.width}px`,
+          height: `${selectedFormat.height}px`
+        }}
+      >
+        <div className={`h-full ${selectedTheme.bgPattern} ${selectedTheme.gradient} flex flex-col justify-between`}
+          style={{
+            padding: selectedFormat.id === 'instagram-post' ? '48px' : 
+                     selectedFormat.id === 'facebook-post' ? '40px' : '64px'
+          }}
+        >
+          {/* Header */}
+          <div className={selectedTheme.textColor}>
+            <div className="flex items-center gap-3" style={{ marginBottom: '32px' }}>
+              <Sparkles style={{ width: '48px', height: '48px' }} />
+              <span style={{ 
+                fontSize: selectedFormat.id === 'facebook-post' ? '20px' : '24px',
+                fontWeight: '500',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                opacity: 0.9
+              }}>
+                Travel Memory
+              </span>
+            </div>
+            
+            <h1 style={{
+              fontSize: selectedFormat.id === 'instagram-post' ? '64px' : 
+                       selectedFormat.id === 'facebook-post' ? '56px' : '96px',
+              fontWeight: 'bold',
+              marginBottom: '16px',
+              lineHeight: '1.1'
+            }}>
+              {trip.title}
+            </h1>
+            
+            <div style={{
+              fontSize: selectedFormat.id === 'instagram-post' ? '36px' : 
+                       selectedFormat.id === 'facebook-post' ? '32px' : '48px',
+              opacity: 0.9
+            }}>
+              {trip.city}{trip.country ? `, ${trip.country}` : ''}
+            </div>
+            
+            <div style={{ fontSize: '24px', marginTop: '16px', opacity: 0.8 }}>
+              {format(new Date(trip.startDate), 'MMM d')} - {format(new Date(trip.endDate), 'MMM d, yyyy')}
+            </div>
+          </div>
+
+          {/* Middle Content */}
+          <div style={{ 
+            flex: 1, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'center',
+            padding: selectedFormat.id === 'facebook-post' ? '20px 0' : '40px 0'
+          }}>
+            {showStats && (selectedFormat.id !== 'facebook-post' || !showActivities) && (
+              <div className={selectedTheme.textColor} style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '32px',
+                marginBottom: selectedFormat.id === 'instagram-post' ? '48px' : '64px',
+                textAlign: 'center'
+              }}>
+                <div>
+                  <div style={{ 
+                    fontSize: selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? '64px' : '72px',
+                    fontWeight: 'bold' 
+                  }}>{tripDuration}</div>
+                  <div style={{ fontSize: '20px', textTransform: 'uppercase', opacity: 0.8 }}>Days</div>
+                </div>
+                <div>
+                  <div style={{ 
+                    fontSize: selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? '64px' : '72px',
+                    fontWeight: 'bold' 
+                  }}>{totalActivities}</div>
+                  <div style={{ fontSize: '20px', textTransform: 'uppercase', opacity: 0.8 }}>Activities</div>
+                </div>
+                <div>
+                  <div style={{ 
+                    fontSize: selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? '64px' : '72px',
+                    fontWeight: 'bold' 
+                  }}>{uniqueLocations}</div>
+                  <div style={{ fontSize: '20px', textTransform: 'uppercase', opacity: 0.8 }}>Places</div>
+                </div>
+              </div>
+            )}
+
+            {showActivities && topActivities.length > 0 && (
+              <div className={selectedTheme.textColor}>
+                <div style={{ 
+                  fontSize: '20px', 
+                  textTransform: 'uppercase', 
+                  opacity: 0.8, 
+                  marginBottom: '24px' 
+                }}>Highlights</div>
+                {topActivities.map((activity, index) => (
+                  <div key={index} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '16px',
+                    marginBottom: '16px'
+                  }}>
+                    <div style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: 'currentColor',
+                      opacity: 0.6
+                    }}></div>
+                    <div style={{ 
+                      fontSize: selectedFormat.id === 'instagram-post' || selectedFormat.id === 'facebook-post' ? '28px' : '32px',
+                      opacity: 0.9 
+                    }}>{activity}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className={selectedTheme.textColor} style={{ opacity: 0.7 }}>
+            <div style={{ fontSize: '20px' }}>
+              Created with Remvana • remvana.com
             </div>
           </div>
         </div>

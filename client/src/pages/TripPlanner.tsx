@@ -568,30 +568,6 @@ export default function TripPlanner() {
         </div>
       )}
       
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
-        {/* Tour Recommendations Button */}
-        <button
-          onClick={() => setShowTourRecommendations(!showTourRecommendations)}
-          className="bg-gradient-to-br from-green-600 to-teal-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-          aria-label="Toggle Tour Recommendations"
-        >
-          <Sparkles className="w-6 h-6" />
-        </button>
-        
-        {/* AI Chat Button */}
-        <button
-          onClick={() => setShowAIChat(!showAIChat)}
-          className="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-          aria-label="Toggle AI Assistant"
-        >
-          {showAIChat ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <MessageCircle className="w-6 h-6" />
-          )}
-        </button>
-      </div>
 
       {/* Create Template Modal */}
       {trip && createTemplateModalOpen && (
