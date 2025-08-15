@@ -122,7 +122,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     // Build update object with only provided fields
     const updateFields: any = {};
     
-    // Only include fields that are actually in the request
+    // Only include fields that are actually in the request and not empty strings
     if (req.body.title !== undefined) updateFields.title = req.body.title;
     if (req.body.date !== undefined) updateFields.date = req.body.date;
     if (req.body.time !== undefined) updateFields.time = req.body.time;
@@ -131,7 +131,10 @@ router.put("/:id", async (req: Request, res: Response) => {
     if (req.body.longitude !== undefined) updateFields.longitude = req.body.longitude;
     if (req.body.notes !== undefined) updateFields.notes = req.body.notes;
     if (req.body.tag !== undefined) updateFields.tag = req.body.tag;
-    if (req.body.assigned_to !== undefined) updateFields.assigned_to = req.body.assigned_to;
+    // assigned_to should be a number (user ID) or null, not empty string
+    if (req.body.assigned_to !== undefined && req.body.assigned_to !== '') {
+      updateFields.assigned_to = req.body.assigned_to;
+    }
     if (req.body.order !== undefined) updateFields.order = req.body.order;
     if (req.body.travel_mode !== undefined) updateFields.travel_mode = req.body.travel_mode;
     // Cost tracking fields
@@ -170,6 +173,11 @@ router.put("/:id", async (req: Request, res: Response) => {
     res.json(updatedActivity);
   } catch (error) {
     if (error instanceof z.ZodError) {
+      logger.error(`Activity update validation error for ID ${req.params.id}:`, {
+        body: req.body,
+        errors: error.errors,
+        issues: error.issues
+      });
       return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
     }
     logger.error("Error updating activity:", error);
