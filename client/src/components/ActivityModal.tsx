@@ -638,23 +638,24 @@ export default function ActivityModal({
                 <Textarea
                   {...register("notes")}
                   placeholder="Add any details or special instructions"
-                  className="min-h-[100px]"
+                  className="min-h-[60px] max-h-[80px]"
+                  rows={2}
                 />
               </div>
 
-              <div className="mb-4">
+              <div className="mb-3">
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Type</label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-3 gap-1">
                   {Object.values(ACTIVITY_TAGS).map((tag) => (
                     <Button
                       key={tag.id}
                       type="button"
                       variant={selectedTag === tag.id ? "default" : "outline"}
-                      className="px-3 py-1 h-8"
+                      className="px-2 py-1 h-7 text-xs"
                       onClick={() => handleTagChange(tag.id)}
                     >
-                      {tag.icon && <span className="mr-1">{tag.icon}</span>}
-                      {tag.label}
+                      {tag.icon && <span className="mr-0.5 text-sm">{tag.icon}</span>}
+                      <span>{tag.label}</span>
                     </Button>
                   ))}
                 </div>

@@ -277,11 +277,12 @@ export default function ItinerarySidebar({
               )}
             </div>
 
-            {/* Split buttons into separate containers */}
-            <div className="space-y-2 mb-4">
-              {/* Add Activity Button */}
+            {/* Compact button layout */}
+            <div className="grid grid-cols-3 gap-1 mb-3">
+              {/* Add Activity */}
               <Button
-                className="w-full"
+                size="sm"
+                className="text-xs px-2 py-1.5"
                 onClick={() => {
                   if (onAddActivity) {
                     onAddActivity(null, activeDay);
@@ -295,29 +296,30 @@ export default function ItinerarySidebar({
                   }
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                Add Activity
+                Add
               </Button>
 
-              {/* AI Assistant Button */}
+              {/* AI Assistant */}
               <Button
                 variant="outline"
-                className="w-full"
+                size="sm"
+                className="text-xs px-2 py-1.5"
                 onClick={() => setIsAIModalOpen(true)}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                 </svg>
-                AI Assistant
+                AI
               </Button>
 
-              {/* AI Itinerary Optimization Button */}
+              {/* Optimize */}
               <Button
                 variant="secondary"
                 size="sm"
-                className="w-full"
+                className="text-xs px-2 py-1.5"
                 onClick={handleAutoOptimize}
                 disabled={activities.length === 0 || isAutoOptimizing}
               >
@@ -331,7 +333,7 @@ export default function ItinerarySidebar({
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                     </svg>
-                    Auto-Optimize
+                    Optimize
                   </>
                 )}
               </Button>
