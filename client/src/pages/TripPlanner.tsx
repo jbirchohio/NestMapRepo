@@ -230,11 +230,11 @@ export default function TripPlanner() {
     }
   }, [JSON.stringify(sortedMapMarkers.map(m => ({ id: m.id, lat: m.latitude, lng: m.longitude }))), fetchRouteDirections]);
   
-  // Calculate map center based on markers or trip city coordinates
+  // Calculate map center - center on first activity of the day if available
   const mapCenter = mapMarkers.length > 0
     ? [
-        mapMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / mapMarkers.length,
-        mapMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / mapMarkers.length,
+        mapMarkers[0].longitude,  // Center on first activity
+        mapMarkers[0].latitude,
       ] as [number, number]
     : (trip?.cityLatitude && trip?.cityLongitude && 
        !isNaN(parseFloat(trip.cityLatitude)) && !isNaN(parseFloat(trip.cityLongitude)))

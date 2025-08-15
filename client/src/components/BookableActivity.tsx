@@ -103,18 +103,8 @@ export default function BookableActivity({
     );
   }
 
-  // Show a subtle message if no products found in this city
+  // Hide completely if no products found
   if (hasSearched && products.length === 0) {
-    // Only show message if we have a city but no activities
-    if (city) {
-      return (
-        <div className="mt-4 p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground text-center">
-            No bookable tours found for this activity in {city}
-          </p>
-        </div>
-      );
-    }
     return null;
   }
 
