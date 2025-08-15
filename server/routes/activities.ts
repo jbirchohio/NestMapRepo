@@ -119,29 +119,32 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     // After case conversion middleware, req.body already has snake_case fields
-    // The insertActivitySchema expects snake_case (matching the database schema)
-    const updateData = insertActivitySchema.partial().parse({
-      trip_id: req.body.trip_id,
-      title: req.body.title,
-      date: req.body.date,
-      time: req.body.time,
-      location_name: req.body.location_name,
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
-      notes: req.body.notes,
-      tag: req.body.tag,
-      assigned_to: req.body.assigned_to,
-      order: req.body.order,
-      travel_mode: req.body.travel_mode,
-      // Cost tracking fields
-      price: req.body.price,
-      actual_cost: req.body.actual_cost,
-      cost_category: req.body.cost_category,
-      split_between: req.body.split_between,
-      is_paid: req.body.is_paid,
-      paid_by: req.body.paid_by,
-      currency: req.body.currency
-    });
+    // Build update object with only provided fields
+    const updateFields: any = {};
+    
+    // Only include fields that are actually in the request
+    if (req.body.title !== undefined) updateFields.title = req.body.title;
+    if (req.body.date !== undefined) updateFields.date = req.body.date;
+    if (req.body.time !== undefined) updateFields.time = req.body.time;
+    if (req.body.location_name !== undefined) updateFields.location_name = req.body.location_name;
+    if (req.body.latitude !== undefined) updateFields.latitude = req.body.latitude;
+    if (req.body.longitude !== undefined) updateFields.longitude = req.body.longitude;
+    if (req.body.notes !== undefined) updateFields.notes = req.body.notes;
+    if (req.body.tag !== undefined) updateFields.tag = req.body.tag;
+    if (req.body.assigned_to !== undefined) updateFields.assigned_to = req.body.assigned_to;
+    if (req.body.order !== undefined) updateFields.order = req.body.order;
+    if (req.body.travel_mode !== undefined) updateFields.travel_mode = req.body.travel_mode;
+    // Cost tracking fields
+    if (req.body.price !== undefined) updateFields.price = req.body.price;
+    if (req.body.actual_cost !== undefined) updateFields.actual_cost = req.body.actual_cost;
+    if (req.body.cost_category !== undefined) updateFields.cost_category = req.body.cost_category;
+    if (req.body.split_between !== undefined) updateFields.split_between = req.body.split_between;
+    if (req.body.is_paid !== undefined) updateFields.is_paid = req.body.is_paid;
+    if (req.body.paid_by !== undefined) updateFields.paid_by = req.body.paid_by;
+    if (req.body.currency !== undefined) updateFields.currency = req.body.currency;
+    
+    // Parse with the schema - trip_id should not be updated
+    const updateData = insertActivitySchema.partial().parse(updateFields);
 
     // If location name changed but no new coordinates, geocode the new location
     if (updateData.location_name &&
