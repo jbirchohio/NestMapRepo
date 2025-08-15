@@ -1278,7 +1278,7 @@ router.post("/weather-activities", async (req, res) => {
     // After case conversion middleware, fields are in snake_case
     const location = req.body.location;
     const date = req.body.date;
-    const weatherCondition = req.body.weather_condition;
+    const weatherCondition = req.body.weather_condition || req.body.weatherCondition; // Handle both cases
 
     if (!req.user) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
