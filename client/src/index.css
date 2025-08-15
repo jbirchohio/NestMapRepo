@@ -9,16 +9,8 @@
   z-index: 50 !important;
 }
 
-/* Center regular dialogs but not sheets */
-[data-state="open"][data-radix-dialog-content]:not([data-side]) {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 50 !important;
-  max-height: 85vh !important;
-  max-width: 90vw !important;
-}
+/* Center regular dialogs but not sheets - REMOVED due to mobile issues */
+/* These styles were causing dialog positioning problems on mobile */
 
 /* Ensure dialog overlay covers entire viewport */
 [data-radix-dialog-overlay] {
@@ -49,16 +41,7 @@ body {
   position: fixed !important;
 }
 
-/* Ensure all dialogs are properly centered */
-[role="dialog"] {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  max-height: 90vh !important;
-  max-width: 95vw !important;
-  z-index: 50 !important;
-}
+/* Dialog centering removed - was causing mobile issues */
 
 /* Toast/notification positioning */
 [data-radix-toast-viewport] {
@@ -465,22 +448,9 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
     transition: none;
   }
 
-  /* Fix modal zoom issues */
+  /* Fix modal zoom issues - removed transform rules that were breaking positioning */
   [role="dialog"] {
-    transform: none !important;
     zoom: 1;
-  }
-
-  /* Force proper centering on mobile for dialogs but not sheets */
-  [data-radix-dialog-content]:not([data-side]) {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: calc(100vw - 2rem) !important;
-    max-width: min(400px, 90vw) !important;
-    max-height: 85vh !important;
-    margin: 0 !important;
   }
 
   .modal-content, [role="dialog"] .card, [data-radix-dialog-content] .card {
