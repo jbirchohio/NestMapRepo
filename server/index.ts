@@ -287,6 +287,8 @@ app.use((req, res, next) => {
   console.log('  - NODE_ENV:', process.env.NODE_ENV);
   console.log('  - DATABASE_URL loaded:', !!process.env.DATABASE_URL);
   console.log('  - JWT_SECRET loaded:', !!process.env.JWT_SECRET);
+  console.log('  - VIATOR_API_KEY loaded:', !!process.env.VIATOR_API_KEY);
+  console.log('  - OPENAI_API_KEY loaded:', !!process.env.OPENAI_API_KEY);
 
   // Run database migrations on startup
   if (process.env.NODE_ENV === 'production') {

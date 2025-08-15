@@ -104,7 +104,7 @@ export default function EnhancedAIAssistantModalV2({
         duration: 1
       });
 
-      return res.json();
+      return res; // apiRequest already returns parsed JSON
     },
     onSuccess: (data, category) => {
       if (data.activities && data.activities.length > 0) {
@@ -152,7 +152,7 @@ export default function EnhancedAIAssistantModalV2({
         aiRegenerationsUsed: (trip.aiRegenerationsUsed || 0) + 1
       });
 
-      return res.json();
+      return res; // apiRequest already returns parsed JSON
     },
     onSuccess: (data) => {
       setRegenerationsRemaining(prev => prev - 1);
@@ -211,7 +211,7 @@ export default function EnhancedAIAssistantModalV2({
             location: trip.city,
             foodType: "restaurant"
           });
-          const data = await res.json();
+          const data = res; // apiRequest already returns parsed JSON
           
           if (data.suggestions && data.suggestions.length > 0) {
             setAvailableActivities(data.suggestions.map((s: any) => ({
@@ -252,7 +252,7 @@ export default function EnhancedAIAssistantModalV2({
             location: trip.city,
             date: selectedDate.toISOString().split('T')[0]
           });
-          const data = await res.json();
+          const data = res; // apiRequest already returns parsed JSON
           
           if (data.activities && data.activities.length > 0) {
             setConversation(prev => [...prev, {
@@ -353,7 +353,7 @@ export default function EnhancedAIAssistantModalV2({
         }))
       });
 
-      const response = await res.json();
+      const response = res; // apiRequest already returns parsed JSON
       const responseText = typeof response === 'object' && response.answer ? 
         response.answer : response.toString();
       
@@ -400,8 +400,8 @@ export default function EnhancedAIAssistantModalV2({
                 value={selectedDate.toISOString().split('T')[0]}
                 onChange={(e) => setSelectedDate(new Date(e.target.value))}
                 className="text-sm border border-purple-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                min={trip.startDate}
-                max={trip.endDate}
+                min={trip.startDate?.toString().split('T')[0]}
+                max={trip.endDate?.toString().split('T')[0]}
               />
             </div>
           </div>

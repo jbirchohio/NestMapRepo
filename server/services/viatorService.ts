@@ -192,6 +192,10 @@ export class ViatorService {
    */
   async searchActivities(params: ViatorSearchParams): Promise<ViatorProduct[]> {
     try {
+      // Debug: Log API key status
+      console.log('[VIATOR SERVICE] API Key present:', !!VIATOR_API_KEY);
+      console.log('[VIATOR SERVICE] API Key length:', VIATOR_API_KEY?.length);
+      
       // console.log('Viator searchActivities called with params:', params);
       
       // For now, use New York as default destination
@@ -231,7 +235,12 @@ export class ViatorService {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Viator API error response:', errorText);
+        console.error('[VIATOR ERROR] Status:', response.status);
+        console.error('[VIATOR ERROR] Response:', errorText);
+        console.error('[VIATOR ERROR] Headers sent:', {
+          hasApiKey: !!this.headers['exp-api-key'],
+          apiKeyLength: this.headers['exp-api-key']?.length
+        });
         
         // Return empty array instead of throwing to avoid breaking the UI
         return [];
