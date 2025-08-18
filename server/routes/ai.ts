@@ -138,7 +138,7 @@ router.post("/suggest-food", async (req, res) => {
     if (cuisine_type) {
       const cuisineLower = cuisine_type.toLowerCase();
       filteredRestaurants = restaurants.filter(r => {
-        const restaurantCuisine = (r.tags?.cuisine || '').toLowerCase();
+        const restaurantCuisine = (r.cuisine || '').toLowerCase();
         return restaurantCuisine.includes(cuisineLower) || 
                r.name.toLowerCase().includes(cuisineLower);
       });
@@ -151,20 +151,18 @@ router.post("/suggest-food", async (req, res) => {
     
     // Select top 5 restaurants (or fewer if not available)
     const recommendations = filteredRestaurants.slice(0, 5).map(restaurant => {
-      // Determine price range based on tags or random for demo
-      const priceRange = restaurant.tags?.['price:range'] || 
-                        (budget_range === 'budget' ? '$' :
-                         budget_range === 'luxury' ? '$$$' : '$$');
+      // Determine price range based on budget_range input
+      const priceRange = budget_range === 'budget' ? '$' :
+                         budget_range === 'luxury' ? '$$$' : '$$';
       
       return {
         name: restaurant.name,
-        description: restaurant.tags?.description || 
-                    `Popular ${restaurant.tags?.cuisine || 'local'} restaurant in ${city}`,
-        specialty: restaurant.tags?.cuisine || "Local specialties",
+        description: `Popular ${restaurant.cuisine || 'local'} restaurant in ${city}`,
+        specialty: restaurant.cuisine || "Local specialties",
         price_range: priceRange,
         latitude: restaurant.lat,
         longitude: restaurant.lon,
-        address: restaurant.tags?.['addr:street'] || restaurant.tags?.address || city
+        address: city
       };
     });
 
@@ -799,7 +797,7 @@ router.post("/generate-full-itinerary", async (req, res) => {
           locationName: breakfastCafe.name,
           latitude: breakfastCafe.lat,
           longitude: breakfastCafe.lon,
-          notes: breakfastCafe.tags?.cuisine ? `Enjoy ${breakfastCafe.tags.cuisine} breakfast` : "Start your day with coffee and pastries",
+          notes: "Start your day with coffee and pastries",
           tag: "food"
         });
         usedRestaurants.add(breakfastCafe.name);
@@ -815,7 +813,7 @@ router.post("/generate-full-itinerary", async (req, res) => {
           locationName: morningAttraction.name,
           latitude: morningAttraction.lat,
           longitude: morningAttraction.lon,
-          notes: morningAttraction.tags?.tourism || "Explore this popular attraction",
+          notes: morningAttraction.tourism || "Explore this popular attraction",
           tag: "sightseeing"
         });
         visitedAttractions.add(morningAttraction.name);
@@ -831,7 +829,7 @@ router.post("/generate-full-itinerary", async (req, res) => {
           locationName: lunchPlace.name,
           latitude: lunchPlace.lat,
           longitude: lunchPlace.lon,
-          notes: lunchPlace.tags?.cuisine ? `${lunchPlace.tags.cuisine} cuisine` : "Enjoy local cuisine",
+          notes: lunchPlace.cuisine ? `${lunchPlace.cuisine} cuisine` : "Enjoy local cuisine",
           tag: "food"
         });
         usedRestaurants.add(lunchPlace.name);
@@ -847,7 +845,7 @@ router.post("/generate-full-itinerary", async (req, res) => {
           locationName: dinnerPlace.name,
           latitude: dinnerPlace.lat,
           longitude: dinnerPlace.lon,
-          notes: dinnerPlace.tags?.cuisine ? `${dinnerPlace.tags.cuisine} dining experience` : "Evening dining",
+          notes: dinnerPlace.cuisine ? `${dinnerPlace.cuisine} dining experience` : "Evening dining",
           tag: "food"
         });
         usedRestaurants.add(dinnerPlace.name);
@@ -1007,9 +1005,9 @@ router.post("/generate-weekend", async (req, res) => {
       // Generate appropriate notes based on type
       if (place.cuisine) {
         notes = `Enjoy authentic ${place.cuisine} cuisine at this local favorite`;
-      } else if (place.type === 'viewpoint') {
+      } else if (place.tourism === 'viewpoint') {
         notes = 'Take in panoramic views of the city and surrounding landscape';
-      } else if (place.type === 'museum' || place.type === 'attraction') {
+      } else if (place.tourism === 'museum' || place.tourism === 'attraction') {
         notes = 'Explore the exhibits and learn about local history and culture';
       } else if (place.tag === 'food') {
         notes = 'Experience local flavors and traditional dishes';
@@ -1020,7 +1018,7 @@ router.post("/generate-weekend", async (req, res) => {
       return {
         title: place.title,
         locationName: place.name,
-        locationAddress: place.address || '',
+        locationAddress: '',
         latitude: place.lat.toString(),
         longitude: place.lon.toString(),
         time: place.time,
@@ -1310,7 +1308,7 @@ router.post("/weather-activities", async (req, res) => {
     }
 
     // Parse location to get city and country
-    const locationParts = location.split(',').map(p => p.trim());
+    const locationParts = location.split(',').map((p: string) => p.trim());
     const cityToSearch = locationParts[0];
     const countryToSearch = locationParts[1] || '';
 
@@ -1328,10 +1326,7 @@ router.post("/weather-activities", async (req, res) => {
       // Indoor activities - museums, restaurants, cafes
       suitablePlaces = [
         ...realPlaces.attractions.filter(a => 
-          a.tags?.tourism === 'museum' || 
-          a.tags?.building || 
-          a.tags?.amenity === 'theatre' ||
-          a.tags?.shop
+          a.tourism === 'museum'
         ).slice(0, 3),
         ...realPlaces.restaurants.slice(0, 1),
         ...realPlaces.cafes.slice(0, 1)
@@ -1340,10 +1335,9 @@ router.post("/weather-activities", async (req, res) => {
       // Outdoor activities - parks, viewpoints, outdoor attractions
       suitablePlaces = [
         ...realPlaces.attractions.filter(a => 
-          a.tags?.leisure === 'park' || 
-          a.tags?.tourism === 'viewpoint' ||
-          a.tags?.natural ||
-          a.tags?.historic === 'monument'
+          a.tourism === 'park' || 
+          a.tourism === 'viewpoint' ||
+          a.tourism === 'monument'
         ).slice(0, 5)
       ];
     } else {
@@ -1365,7 +1359,7 @@ router.post("/weather-activities", async (req, res) => {
     ${date ? `Date: ${date}` : ''}
 
 Available real places:
-${suitablePlaces.slice(0, 10).map(p => `- ${p.name} (${p.type || 'attraction'})`).join('\n')}
+${suitablePlaces.slice(0, 10).map(p => `- ${p.name} (${(p as any).tourism || (p as any).cuisine || 'attraction'})`).join('\n')}
 
 Format as JSON:
 {
@@ -1403,7 +1397,7 @@ IMPORTANT: Only use places from the provided list. Include the exact coordinates
 
     // Add coordinates to the activities
     if (result.activities) {
-      result.activities = result.activities.map(activity => {
+      result.activities = result.activities.map((activity: any) => {
         const matchingPlace = suitablePlaces.find(p => 
           p.name === activity.name || 
           activity.name.includes(p.name) ||
@@ -2083,12 +2077,14 @@ router.post("/regenerate-activity", async (req, res) => {
     }
 
     // Check regeneration limit
-    if (trip.ai_regenerations_used >= trip.ai_regenerations_limit) {
+    const regenerationsUsed = trip.ai_regenerations_used ?? 0;
+    const regenerationsLimit = trip.ai_regenerations_limit ?? 10;
+    if (regenerationsUsed >= regenerationsLimit) {
       return res.status(429).json({
         success: false,
         error: "Regeneration limit reached",
-        limit: trip.ai_regenerations_limit,
-        used: trip.ai_regenerations_used
+        limit: regenerationsLimit,
+        used: regenerationsUsed
       });
     }
 
@@ -2111,7 +2107,7 @@ router.post("/regenerate-activity", async (req, res) => {
       .from(activities)
       .where(and(
         eq(activities.trip_id, trip_id),
-        eq(activities.date, oldActivity.date)
+        eq(activities.date, oldActivity.date || '')
       ));
 
     const existingTitles = dayActivities
@@ -2180,8 +2176,8 @@ router.post("/regenerate-activity", async (req, res) => {
         : `Visit ${selectedPlace.name}`,
       location_name: selectedPlace.name,
       notes: `Experience ${selectedPlace.name} in ${trip.city}. ${
-        selectedPlace.tags?.tourism ? `A ${selectedPlace.tags.tourism} attraction.` : 
-        selectedPlace.tags?.cuisine ? `Featuring ${selectedPlace.tags.cuisine} cuisine.` : 
+        (selectedPlace as any).tourism ? `A ${(selectedPlace as any).tourism} attraction.` : 
+        (selectedPlace as any).cuisine ? `Featuring ${(selectedPlace as any).cuisine} cuisine.` : 
         'A popular local destination.'
       }`,
       tag: activityType,
@@ -2209,7 +2205,7 @@ router.post("/regenerate-activity", async (req, res) => {
     await db
       .update(trips)
       .set({
-        ai_regenerations_used: trip.ai_regenerations_used + 1
+        ai_regenerations_used: regenerationsUsed + 1
       })
       .where(eq(trips.id, trip_id));
 
@@ -2224,7 +2220,7 @@ router.post("/regenerate-activity", async (req, res) => {
     res.json({
       success: true,
       activity: updatedActivity,
-      regenerations_remaining: trip.ai_regenerations_limit - trip.ai_regenerations_used - 1
+      regenerations_remaining: regenerationsLimit - regenerationsUsed - 1
     });
 
   } catch (error) {

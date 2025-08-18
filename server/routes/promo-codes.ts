@@ -10,7 +10,7 @@ const router = Router();
 
 // Initialize Stripe if API key is available
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-11-20.acacia' })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-07-30.basil' as any })
   : null;
 
 // Schema for creating promo codes
@@ -120,9 +120,9 @@ router.get('/', requireAuth, async (req, res) => {
 
       return {
         ...code,
-        times_used: uses[0]?.count || 0,
+        times_used: Number(uses[0]?.count) || 0,
         is_expired: code.valid_until ? new Date(code.valid_until) < new Date() : false,
-        is_maxed_out: code.max_uses ? (uses[0]?.count || 0) >= code.max_uses : false,
+        is_maxed_out: code.max_uses ? (Number(uses[0]?.count) || 0) >= code.max_uses : false,
       };
     }));
 
@@ -173,7 +173,7 @@ router.post('/validate', requireAuth, async (req, res) => {
         .from(promoCodeUses)
         .where(eq(promoCodeUses.promo_code_id, promoCode.id));
 
-      if ((totalUses.count || 0) >= promoCode.max_uses) {
+      if ((Number(totalUses.count) || 0) >= promoCode.max_uses) {
         return res.status(400).json({ error: 'This promo code has reached its usage limit' });
       }
     }
@@ -186,7 +186,7 @@ router.post('/validate', requireAuth, async (req, res) => {
         eq(promoCodeUses.user_id, userId)
       ));
 
-    if ((userUses.count || 0) >= (promoCode.max_uses_per_user || 1)) {
+    if ((Number(userUses.count) || 0) >= (promoCode.max_uses_per_user || 1)) {
       return res.status(400).json({ error: 'You have already used this promo code' });
     }
 
@@ -396,7 +396,7 @@ router.get('/stats', requireAuth, async (req, res) => {
       total_codes: totalCodes.count || 0,
       active_codes: activeCodes.count || 0,
       total_uses: totalUses.count || 0,
-      total_discount_given: totalUses.total_discount ? parseFloat(totalUses.total_discount) : 0,
+      total_discount_given: totalUses.total_discount ? parseFloat(totalUses.total_discount as string) : 0,
       top_performing_codes: topCodes.map(code => ({
         ...code,
         uses: code.uses || 0,

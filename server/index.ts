@@ -16,8 +16,6 @@ const __dirname = dirname(__filename);
 import apiRoutes from "./routes/index";
 import sitemapRoutes from "./routes/sitemap";
 import { setupVite, serveStatic, log } from "./vite";
-// System settings not needed for consumer app
-// import { initializeSystemSettings, checkMaintenanceMode, getSetting } from "./services/systemSettingsService";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { performanceOptimizer } from "./services/performanceOptimizer";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
@@ -26,9 +24,6 @@ import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } 
 import { apiRateLimit, authRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
 // Organization scoping removed for consumer app
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
-// CSRF removed - was causing too many issues
-// import { csrfSetToken, csrfVerify } from "./middleware/csrf";
-// Migration import removed - handled inline
 import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";

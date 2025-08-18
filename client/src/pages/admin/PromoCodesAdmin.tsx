@@ -103,14 +103,14 @@ export default function PromoCodesAdmin() {
       setFormData({
         code: editingCode.code,
         description: editingCode.description || '',
-        discount_type: editingCode.discount_type,
-        discount_amount: editingCode.discount_amount.toString(),
-        minimum_purchase: editingCode.minimum_purchase?.toString() || '',
-        max_uses: editingCode.max_uses?.toString() || '',
-        max_uses_per_user: editingCode.max_uses_per_user.toString(),
-        valid_until: editingCode.valid_until ? new Date(editingCode.valid_until).toISOString().slice(0, 16) : '',
-        template_id: editingCode.template_id?.toString() || '',
-        creator_id: editingCode.creator_id?.toString() || '',
+        discount_type: editingCode.discountType,
+        discount_amount: editingCode.discountAmount.toString(),
+        minimum_purchase: editingCode.minimumPurchase?.toString() || '',
+        max_uses: editingCode.maxUses?.toString() || '',
+        max_uses_per_user: editingCode.maxUsesPerUser.toString(),
+        valid_until: editingCode.validUntil ? new Date(editingCode.validUntil).toISOString().slice(0, 16) : '',
+        template_id: editingCode.templateId?.toString() || '',
+        creator_id: editingCode.creatorId?.toString() || '',
       });
     }
   }, [editingCode]);
@@ -249,7 +249,7 @@ export default function PromoCodesAdmin() {
   const toggleActive = (code: PromoCode) => {
     updateMutation.mutate({
       id: code.id,
-      updates: { is_active: !code.isActive }
+      updates: { isActive: !code.isActive }
     });
   };
 
@@ -676,12 +676,12 @@ export default function PromoCodesAdmin() {
                 <Label>Discount</Label>
                 <div className="flex gap-2 items-center">
                   <Input
-                    value={editingCode?.discount_amount || ''}
+                    value={editingCode?.discountAmount || ''}
                     disabled
                     className="bg-muted"
                   />
                   <span className="text-muted-foreground">
-                    {editingCode?.discount_type === 'percentage' ? '%' : '$'}
+                    {editingCode?.discountType === 'percentage' ? '%' : '$'}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Discount cannot be changed</p>
@@ -773,18 +773,18 @@ export default function PromoCodesAdmin() {
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Times Used:</span>
-                  <p className="font-medium">{editingCode?.times_used || 0}</p>
+                  <p className="font-medium">{editingCode?.timesUsed || 0}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Created:</span>
                   <p className="font-medium">
-                    {editingCode?.created_at ? new Date(editingCode.created_at).toLocaleDateString() : '-'}
+                    {editingCode?.createdAt ? new Date(editingCode.createdAt).toLocaleDateString() : '-'}
                   </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Status:</span>
                   <p className="font-medium">
-                    {editingCode?.is_active ? 'Active' : 'Inactive'}
+                    {editingCode?.isActive ? 'Active' : 'Inactive'}
                   </p>
                 </div>
               </div>

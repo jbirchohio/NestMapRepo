@@ -6,7 +6,6 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { MapPin, Navigation, Baby, Moon, Cookie, Coffee, RefreshCw } from "lucide-react";
-// import BookableActivity from "@/components/BookableActivity"; // Hidden for now
 
 interface ActivityItemProps {
   activity: ClientActivity;

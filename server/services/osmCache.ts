@@ -63,7 +63,9 @@ class OSMCache {
     // Enforce cache size limit (LRU-like behavior)
     if (this.cache.size >= this.MAX_ENTRIES) {
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
       logger.info(`[OSMCache] Evicted oldest entry: ${firstKey}`);
     }
 

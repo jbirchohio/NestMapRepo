@@ -17,7 +17,6 @@ import adminRoutes from './admin';
 import checkoutRoutes from './checkout';
 import uploadRoutes from './upload';
 import webhookRoutes from './webhooks';
-// import analyticsRoutes from './analytics'; // Enterprise feature
 import monitoringRoutes from './monitoring';
 import geocodeRoutes from './geocode';
 import budgetRoutes from './budget';
@@ -52,7 +51,6 @@ router.use('/admin', adminRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/webhooks', webhookRoutes);
-// router.use('/analytics', analyticsRoutes); // Enterprise feature
 router.use('/monitoring', monitoringRoutes);
 router.use('/geocode', geocodeRoutes);
 router.use('/budget', budgetRoutes);

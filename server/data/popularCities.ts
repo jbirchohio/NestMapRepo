@@ -3,7 +3,7 @@
  * This data is used when OSM API is unavailable
  */
 
-export const POPULAR_CITIES = {
+export const POPULAR_CITIES: Record<string, any> = {
   'sigmaringen_germany': {
     restaurants: [
       { name: "King's Garden", lat: 48.0892132, lon: 9.2120122, cuisine: "chinese" },
