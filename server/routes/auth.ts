@@ -161,7 +161,13 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
 
 // Logout endpoint
 router.post('/logout', (req: Request, res: Response) => {
-  res.clearCookie('auth_token');
+  // Clear the cookie with the same options that were used to set it
+  res.clearCookie('auth_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/'
+  });
   res.json({ message: 'Logged out successfully' });
 });
 

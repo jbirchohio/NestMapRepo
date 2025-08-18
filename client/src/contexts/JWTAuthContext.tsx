@@ -143,19 +143,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      jwtAuth.signOut();
+      await jwtAuth.signOut();
       setUser(null);
       setUserId(null);
-
-      toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
-      });
-
-      // Redirect to home page after sign out
-      window.location.href = '/';
     } catch (error) {
-      }
+      // Even if logout fails on server, clear local state
+      setUser(null);
+      setUserId(null);
+      throw error;
+    }
   };
 
   const signInWithProvider = async (provider: string) => {

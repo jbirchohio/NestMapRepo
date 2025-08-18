@@ -98,11 +98,16 @@ class JWTAuth {
 
   async signOut(): Promise<void> {
     try {
-      await fetch('/api/auth/logout', {
+      const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include' // Important: include cookies
       });
+      
+      if (!response.ok) {
+        console.error('Logout failed on server:', response.status);
+      }
     } catch (error) {
+      console.error('Logout request failed:', error);
       // Even if logout fails, clear local state
     } finally {
       this.user = null;
