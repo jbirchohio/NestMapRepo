@@ -1837,11 +1837,7 @@ Be aggressive in extracting information. For example:
       logger.info(`Auto-filled dates: ${extractedData.startDate} to ${extractedData.endDate}`);
     }
     
-    // Auto-fill budget if missing
-    if (!extractedData.budget) {
-      extractedData.budget = 3000;
-      logger.info(`Auto-filled budget: $${extractedData.budget}`);
-    }
+    // Budget is no longer used for AI generation since we don't have real prices
 
     if (missingFields.length > 0) {
       // Return questions to gather missing information
@@ -1866,7 +1862,7 @@ Any other preferences like:
     }
     
     // All required info is present - we're generating the trip immediately
-    logger.info(`Generating trip for ${extractedData.destination} from ${extractedData.startDate} to ${extractedData.endDate} with budget $${extractedData.budget}`);
+    logger.info(`Generating trip for ${extractedData.destination} from ${extractedData.startDate} to ${extractedData.endDate}`);
 
     // Calculate trip duration
     const startDate = new Date(extractedData.startDate);
@@ -1880,7 +1876,6 @@ Any other preferences like:
     const itineraryPrompt = `Create a detailed ${extractedData.tripPurpose || 'vacation'} itinerary for:
 Destination: ${extractedData.destination}
 Dates: ${extractedData.startDate} to ${extractedData.endDate} (${tripDurationDays} days)
-Budget: $${extractedData.budget || 3000} USD total
 Travelers: ${extractedData.groupSize || 2} people
 Accommodation preference: ${extractedData.preferences?.accommodationType || 'mid-range'}
 Activities: ${extractedData.preferences?.activityTypes?.join(', ') || 'sightseeing, culture, relaxation'}
@@ -1891,12 +1886,11 @@ ${tripDurationDays > MAX_DAYS_PER_REQUEST ?
   'Please provide a complete vacation itinerary.'}
 
 Please provide:
-1. Recommended flights (with realistic prices)
-2. Hotel suggestions (2-3 options with nightly rates) - use REAL hotel names or chains
+1. Recommended flights (departure/arrival times and airlines)
+2. Hotel suggestions (2-3 options) - use REAL hotel names or chains
 3. Daily activities schedule (morning, afternoon, evening) ${tripDurationDays > MAX_DAYS_PER_REQUEST ? `for days 1-${MAX_DAYS_PER_REQUEST}` : ''} - use REAL attractions
 4. Restaurant recommendations - use ACTUAL restaurant names you know exist
 5. Transportation tips
-6. Total budget breakdown
 
 CRITICAL: Use ONLY real places from your knowledge base. NO generic names!
 
@@ -1906,7 +1900,6 @@ Format as JSON with this structure:
     "title": "Trip title",
     "description": "Brief description",
     "duration": number_of_days,
-    "totalCost": estimated_total,
     "highlights": ["highlight1", "highlight2"]
   },
   "flights": [
@@ -1916,7 +1909,6 @@ Format as JSON with this structure:
       "route": "NYC to Paris",
       "departure": "2024-03-15 10:00 AM",
       "arrival": "2024-03-15 11:00 PM",
-      "price": 600,
       "cabin": "Economy"
     }
   ],
@@ -1925,7 +1917,6 @@ Format as JSON with this structure:
       "name": "Hotel name",
       "address": "Address",
       "stars": 4,
-      "pricePerNight": 150,
       "checkIn": "2024-03-15",
       "checkOut": "2024-03-18",
       "amenities": ["WiFi", "Pool", "Breakfast"]
@@ -1939,7 +1930,6 @@ Format as JSON with this structure:
       "description": "Description",
       "duration": "2 hours",
       "location": "Location",
-      "price": 50,
       "category": "sightseeing",
       "bookingRequired": true
     }
@@ -1951,7 +1941,6 @@ Format as JSON with this structure:
       "restaurant": "REAL restaurant name that exists (not generic like 'Local Restaurant')",
       "cuisine": "French",
       "location": "Address",
-      "estimatedCost": 40,
       "type": "lunch",
       "mustTry": "Dish name"
     }
@@ -1959,19 +1948,9 @@ Format as JSON with this structure:
   "transportation": [
     {
       "type": "Airport Transfer",
-      "description": "Taxi from airport to hotel",
-      "cost": 45
+      "description": "Taxi from airport to hotel"
     }
   ],
-  "budgetBreakdown": {
-    "flights": 1200,
-    "hotels": 450,
-    "meals": 300,
-    "activities": 400,
-    "transportation": 150,
-    "shopping": 200,
-    "contingency": 300
-  },
   "recommendations": [
     "Pack light layers for variable weather",
     "Book popular restaurants in advance",
@@ -2049,7 +2028,6 @@ Return ONLY a JSON object with this structure:
       "description": "Description",
       "duration": "X hours",
       "location": "Location",
-      "price": 50,
       "category": "sightseeing/culture/food/relaxation"
     }
   ],
@@ -2060,7 +2038,6 @@ Return ONLY a JSON object with this structure:
       "restaurant": "Restaurant name",
       "cuisine": "Type",
       "location": "Address",
-      "estimatedCost": 40,
       "type": "breakfast/lunch/dinner"
     }
   ]
@@ -2172,7 +2149,6 @@ Return ONLY a JSON object with this structure:
       activities: formattedActivities,
       meals: allMeals,
       groundTransportation: generatedTrip.transportation,
-      budgetBreakdown: generatedTrip.budgetBreakdown,
       recommendations: generatedTrip.recommendations,
       weatherConsiderations: generatedTrip.weatherConsiderations,
       message: `Perfect! I've created your ${tripDurationDays}-day ${extractedData.destination} itinerary with ${formattedActivities.length} activities, ${allMeals.length} dining recommendations, and complete travel arrangements!`,
@@ -2319,7 +2295,6 @@ router.post("/regenerate-activity", async (req, res) => {
         'A popular local destination.'
       }`,
       tag: activityType,
-      price: activityType === 'dining' ? 30 : 15, // Default prices
       latitude: selectedPlace.lat,
       longitude: selectedPlace.lon
     };
@@ -2332,7 +2307,6 @@ router.post("/regenerate-activity", async (req, res) => {
         location_name: newActivityData.location_name || oldActivity.location_name,
         notes: newActivityData.notes || '',
         tag: newActivityData.tag || oldActivity.tag,
-        price: newActivityData.price ? String(newActivityData.price) : oldActivity.price,
         latitude: newActivityData.latitude ? String(newActivityData.latitude) : oldActivity.latitude,
         longitude: newActivityData.longitude ? String(newActivityData.longitude) : oldActivity.longitude,
         updated_at: new Date()
