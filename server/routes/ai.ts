@@ -781,74 +781,212 @@ router.post("/generate-full-itinerary", async (req, res) => {
     const visitedAttractions = new Set(); // Track unique attractions to avoid duplicates
     const usedRestaurants = new Set(); // Track used restaurants to ensure variety
     
+    // First check if trip already has activities
+    const existingActivities = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.trip_id, trip_id));
+    
+    logger.info(`[FULL-ITINERARY] Trip ${trip_id} has ${existingActivities.length} existing activities`);
+    
+    // If trip already has sufficient activities (at least 2 per day), don't add more
+    const minActivitiesNeeded = tripDays * 2;
+    if (existingActivities.length >= minActivitiesNeeded) {
+      logger.info(`[FULL-ITINERARY] Trip already has sufficient activities (${existingActivities.length} >= ${minActivitiesNeeded}), skipping generation`);
+      return res.json({
+        success: true,
+        activitiesCreated: 0,
+        message: `Trip already has ${existingActivities.length} activities`
+      });
+    }
+    
+    // Group existing activities by date to see which days need activities
+    const activitiesByDate = new Map<string, any[]>();
+    for (const activity of existingActivities) {
+      if (activity.date) {
+        const dateStr = activity.date;
+        if (!activitiesByDate.has(dateStr)) {
+          activitiesByDate.set(dateStr, []);
+        }
+        activitiesByDate.get(dateStr)!.push(activity);
+      }
+    }
+    
     // Create activities for each day using real OSM places
     for (let dayIndex = 0; dayIndex < tripDays; dayIndex++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + dayIndex);
       const dateStr = currentDate.toISOString().split('T')[0];
       
-      // Pick breakfast place (cafe)
-      const breakfastCafe = cafes.find(c => !usedRestaurants.has(c.name)) || cafes[dayIndex % cafes.length];
-      if (breakfastCafe) {
-        allActivities.push({
-          date: dateStr,
-          time: "08:30",
-          title: `Breakfast at ${breakfastCafe.name}`,
-          locationName: breakfastCafe.name,
-          latitude: breakfastCafe.lat,
-          longitude: breakfastCafe.lon,
-          notes: "Start your day with coffee and pastries",
-          tag: "food"
-        });
-        usedRestaurants.add(breakfastCafe.name);
-      }
+      // Check how many activities exist for this day
+      const dayActivities = activitiesByDate.get(dateStr) || [];
+      const hasMeals = dayActivities.some(a => 
+        a.title?.toLowerCase().includes('breakfast') || 
+        a.title?.toLowerCase().includes('lunch') || 
+        a.title?.toLowerCase().includes('dinner') ||
+        a.tag === 'food' || a.tag === 'dining'
+      );
       
-      // Pick morning attraction
-      const morningAttraction = attractions.find(a => !visitedAttractions.has(a.name)) || attractions[dayIndex % attractions.length];
-      if (morningAttraction) {
-        allActivities.push({
-          date: dateStr,
-          time: "10:00",
-          title: `Visit ${morningAttraction.name}`,
-          locationName: morningAttraction.name,
-          latitude: morningAttraction.lat,
-          longitude: morningAttraction.lon,
-          notes: morningAttraction.tourism || "Explore this popular attraction",
-          tag: "sightseeing"
-        });
-        visitedAttractions.add(morningAttraction.name);
-      }
+      logger.info(`[FULL-ITINERARY] Day ${dateStr} has ${dayActivities.length} activities, hasMeals: ${hasMeals}`);
       
-      // Pick lunch restaurant
-      const lunchPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[dayIndex % restaurants.length];
-      if (lunchPlace) {
-        allActivities.push({
-          date: dateStr,
-          time: "13:00",
-          title: `Lunch at ${lunchPlace.name}`,
-          locationName: lunchPlace.name,
-          latitude: lunchPlace.lat,
-          longitude: lunchPlace.lon,
-          notes: lunchPlace.cuisine ? `${lunchPlace.cuisine} cuisine` : "Enjoy local cuisine",
-          tag: "food"
-        });
-        usedRestaurants.add(lunchPlace.name);
-      }
-      
-      // Pick dinner restaurant
-      const dinnerPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[(dayIndex + 10) % restaurants.length];
-      if (dinnerPlace) {
-        allActivities.push({
-          date: dateStr,
-          time: "19:00",
-          title: `Dinner at ${dinnerPlace.name}`,
-          locationName: dinnerPlace.name,
-          latitude: dinnerPlace.lat,
-          longitude: dinnerPlace.lon,
-          notes: dinnerPlace.cuisine ? `${dinnerPlace.cuisine} dining experience` : "Evening dining",
-          tag: "food"
-        });
-        usedRestaurants.add(dinnerPlace.name);
+      // If this day already has meals, only add attractions
+      if (hasMeals) {
+        // Only add attractions if there are fewer than 2 non-meal activities
+        const nonMealActivities = dayActivities.filter(a => 
+          a.tag !== 'food' && a.tag !== 'dining' && 
+          !a.title?.toLowerCase().includes('breakfast') &&
+          !a.title?.toLowerCase().includes('lunch') &&
+          !a.title?.toLowerCase().includes('dinner')
+        );
+        
+        if (nonMealActivities.length < 2) {
+          // Add one or two attractions
+          const morningAttraction = attractions.find(a => !visitedAttractions.has(a.name)) || attractions[dayIndex % attractions.length];
+          if (morningAttraction) {
+            allActivities.push({
+              date: dateStr,
+              time: "10:00",
+              title: `Visit ${morningAttraction.name}`,
+              locationName: morningAttraction.name,
+              latitude: morningAttraction.lat,
+              longitude: morningAttraction.lon,
+              notes: morningAttraction.tourism || "Explore this popular attraction",
+              tag: "sightseeing"
+            });
+            visitedAttractions.add(morningAttraction.name);
+          }
+          
+          if (nonMealActivities.length === 0 && attractions.length > dayIndex + 1) {
+            const afternoonAttraction = attractions.find(a => !visitedAttractions.has(a.name)) || attractions[(dayIndex + 1) % attractions.length];
+            if (afternoonAttraction && afternoonAttraction.name !== morningAttraction?.name) {
+              allActivities.push({
+                date: dateStr,
+                time: "14:30",
+                title: `Explore ${afternoonAttraction.name}`,
+                locationName: afternoonAttraction.name,
+                latitude: afternoonAttraction.lat,
+                longitude: afternoonAttraction.lon,
+                notes: afternoonAttraction.tourism || "Discover this attraction",
+                tag: "sightseeing"
+              });
+              visitedAttractions.add(afternoonAttraction.name);
+            }
+          }
+        }
+      } else if (dayActivities.length === 0) {
+        // No activities for this day, add full day plan
+        // Pick breakfast place (cafe)
+        const breakfastCafe = cafes.find(c => !usedRestaurants.has(c.name)) || cafes[dayIndex % cafes.length];
+        if (breakfastCafe) {
+          allActivities.push({
+            date: dateStr,
+            time: "08:30",
+            title: `Breakfast at ${breakfastCafe.name}`,
+            locationName: breakfastCafe.name,
+            latitude: breakfastCafe.lat,
+            longitude: breakfastCafe.lon,
+            notes: "Start your day with coffee and pastries",
+            tag: "food"
+          });
+          usedRestaurants.add(breakfastCafe.name);
+        }
+        
+        // Pick morning attraction
+        const morningAttraction = attractions.find(a => !visitedAttractions.has(a.name)) || attractions[dayIndex % attractions.length];
+        if (morningAttraction) {
+          allActivities.push({
+            date: dateStr,
+            time: "10:00",
+            title: `Visit ${morningAttraction.name}`,
+            locationName: morningAttraction.name,
+            latitude: morningAttraction.lat,
+            longitude: morningAttraction.lon,
+            notes: morningAttraction.tourism || "Explore this popular attraction",
+            tag: "sightseeing"
+          });
+          visitedAttractions.add(morningAttraction.name);
+        }
+        
+        // Pick lunch restaurant
+        const lunchPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[dayIndex % restaurants.length];
+        if (lunchPlace) {
+          allActivities.push({
+            date: dateStr,
+            time: "13:00",
+            title: `Lunch at ${lunchPlace.name}`,
+            locationName: lunchPlace.name,
+            latitude: lunchPlace.lat,
+            longitude: lunchPlace.lon,
+            notes: lunchPlace.cuisine ? `${lunchPlace.cuisine} cuisine` : "Enjoy local cuisine",
+            tag: "food"
+          });
+          usedRestaurants.add(lunchPlace.name);
+        }
+        
+        // Pick dinner restaurant
+        const dinnerPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[(dayIndex + 10) % restaurants.length];
+        if (dinnerPlace) {
+          allActivities.push({
+            date: dateStr,
+            time: "19:00",
+            title: `Dinner at ${dinnerPlace.name}`,
+            locationName: dinnerPlace.name,
+            latitude: dinnerPlace.lat,
+            longitude: dinnerPlace.lon,
+            notes: dinnerPlace.cuisine ? `${dinnerPlace.cuisine} dining experience` : "Evening dining",
+            tag: "food"
+          });
+          usedRestaurants.add(dinnerPlace.name);
+        }
+      } else {
+        // Day has some activities but no meals, add meals only
+        logger.info(`[FULL-ITINERARY] Day ${dateStr} has activities but no meals, adding meals only`);
+        
+        // Only add meals if they don't exist
+        const breakfastCafe = cafes.find(c => !usedRestaurants.has(c.name)) || cafes[dayIndex % cafes.length];
+        if (breakfastCafe) {
+          allActivities.push({
+            date: dateStr,
+            time: "08:30",
+            title: `Breakfast at ${breakfastCafe.name}`,
+            locationName: breakfastCafe.name,
+            latitude: breakfastCafe.lat,
+            longitude: breakfastCafe.lon,
+            notes: "Start your day with coffee and pastries",
+            tag: "food"
+          });
+          usedRestaurants.add(breakfastCafe.name);
+        }
+        
+        const lunchPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[dayIndex % restaurants.length];
+        if (lunchPlace) {
+          allActivities.push({
+            date: dateStr,
+            time: "13:00",
+            title: `Lunch at ${lunchPlace.name}`,
+            locationName: lunchPlace.name,
+            latitude: lunchPlace.lat,
+            longitude: lunchPlace.lon,
+            notes: lunchPlace.cuisine ? `${lunchPlace.cuisine} cuisine` : "Enjoy local cuisine",
+            tag: "food"
+          });
+          usedRestaurants.add(lunchPlace.name);
+        }
+        
+        const dinnerPlace = restaurants.find(r => !usedRestaurants.has(r.name)) || restaurants[(dayIndex + 10) % restaurants.length];
+        if (dinnerPlace) {
+          allActivities.push({
+            date: dateStr,
+            time: "19:00",
+            title: `Dinner at ${dinnerPlace.name}`,
+            locationName: dinnerPlace.name,
+            latitude: dinnerPlace.lat,
+            longitude: dinnerPlace.lon,
+            notes: dinnerPlace.cuisine ? `${dinnerPlace.cuisine} dining experience` : "Evening dining",
+            tag: "food"
+          });
+          usedRestaurants.add(dinnerPlace.name);
+        }
       }
     }
     
