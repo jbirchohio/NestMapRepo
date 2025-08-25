@@ -1,31 +1,79 @@
 {
-  "name": "Remvana",
+  "name": "Remvana - Travel Planning Made Simple",
   "short_name": "Remvana",
   "description": "AI-powered travel planning platform that transforms trip preparation into a delightful, personalized experience",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#4374CB",
+  "categories": ["travel", "productivity", "lifestyle"],
+  "dir": "ltr",
+  "lang": "en-US",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "assets/icon/favicon.png",
       "sizes": "64x64",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "assets/icon/icon-128.png",
       "sizes": "128x128",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "assets/icon/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "assets/icon/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create New Trip",
+      "short_name": "New Trip",
+      "description": "Start planning a new trip",
+      "url": "/trips/new",
+      "icons": [
+        {
+          "src": "assets/icon/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "My Trips",
+      "short_name": "Trips",
+      "description": "View all your trips",
+      "url": "/trips",
+      "icons": [
+        {
+          "src": "assets/icon/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
