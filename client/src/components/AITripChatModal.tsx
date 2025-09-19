@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { queryClient } from '@/lib/queryClient';
 import { API_ENDPOINTS } from '@/lib/constants';
+import { aiChat } from '@/lib/ai';
 import {
   X, Send, Sparkles, MapPin, Calendar,
   Users, DollarSign, Loader2, Bot, User
@@ -126,25 +127,10 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
       // Removed old confirmation flow - trips are now auto-created
 
       // Otherwise, continue the conversation
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
-            role: m.role,
-            content: m.content
-          }))
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-
-      const data = await response.json();
+      const data = await aiChat([...messages, userMessage].map(m => ({
+        role: m.role,
+        content: m.content
+      })) as any);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

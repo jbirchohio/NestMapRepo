@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { aiGenerateTrip } from '@/lib/ai';
 import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -190,29 +191,13 @@ export default function AITripGenerator() {
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
       
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/ai/generate-trip', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({
-            prompt: userPrompt,
-            conversation,
-            tripId: null
-          }),
-          signal: controller.signal
+        const result = await aiGenerateTrip({
+          prompt: userPrompt,
+          conversation,
+          tripId: null as any
         });
-        
         clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          const error = await response.text();
-          throw new Error(error || 'Failed to generate trip');
-        }
-        
-        return response.json();
+        return result as any;
       } catch (error: any) {
         clearTimeout(timeoutId);
         if (error.name === 'AbortError') {

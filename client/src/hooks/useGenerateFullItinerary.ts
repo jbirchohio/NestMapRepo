@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { API_ENDPOINTS } from '@/lib/constants';
+import { aiGenerateFullItinerary } from '@/lib/ai';
 
 interface GenerateFullItineraryOptions {
   tripId: number;
@@ -35,20 +37,7 @@ export function useGenerateFullItinerary() {
     setIsGenerating(true);
     
     try {
-      const response = await fetch('/api/ai/generate-full-itinerary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ trip_id: tripId })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate full itinerary');
-      }
-
-      const result = await response.json();
+      const result = await aiGenerateFullItinerary({ trip_id: tripId });
       const activitiesCreated = result.activitiesCreated || 0;
       
       console.log(`Generated ${activitiesCreated} activities for trip ${tripId}`);

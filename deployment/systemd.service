@@ -1,11 +1,11 @@
 [Unit]
-Description=NestMap Application
+Description=Remvana Application
 After=network.target
 
 [Service]
 Type=simple
 User=nodejs
-WorkingDirectory=/opt/nestmap
+WorkingDirectory=/opt/remvana
 ExecStart=/usr/bin/npm start
 Restart=on-failure
 Environment=NODE_ENV=production

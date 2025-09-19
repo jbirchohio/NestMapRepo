@@ -1,8 +1,8 @@
 #!/bin/bash
-# Standard startup script for NestMap that works on any hosting platform
+# Standard startup script for Remvana that works on any hosting platform
 
 # Log startup information
-echo "Starting NestMap application..."
+echo "Starting Remvana application..."
 echo "Node version: $(node -v)"
 echo "NPM version: $(npm -v)"
 echo "Environment: $NODE_ENV"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="512px" height="512px" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <g id="NestMap-Icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g id="Remvana-Icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <rect id="Background" fill="#4374CB" x="0" y="0" width="512" height="512" rx="96"></rect>
         <g id="Map-Pin" transform="translate(106.000000, 64.000000)" fill="#FFFFFF">
             <path d="M150,0 C232.84,0 300,67.16 300,150 C300,200 275,240 250,275 C225,310 175,350 150,384 C125,350 75,310 50,275 C25,240 0,200 0,150 C0,67.16 67.16,0 150,0 Z" id="Pin"></path>

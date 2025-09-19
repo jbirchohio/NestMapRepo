@@ -73,19 +73,9 @@ export default function PlacesSearch({
         return null;
       }
 
-      const response = await fetch("/api/ai/find-location", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ search_query: debouncedSearchTerm, city_context: "" })
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to find location");
-      }
-
-      return await response.json() as AILocationResponse;
+      const { aiFindLocation } = await import('@/lib/ai');
+      const data = await aiFindLocation({ searchQuery: debouncedSearchTerm, cityContext: "" });
+      return data as AILocationResponse;
     },
     enabled: debouncedSearchTerm.length >= 3,
   });

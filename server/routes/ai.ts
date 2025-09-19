@@ -303,6 +303,170 @@ Provide specific time optimizations in JSON format:
   }
 });
 
+// POST /api/ai/detect-conflicts - Stub: detect basic time overlaps in provided activities
+router.post("/detect-conflicts", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    const activities = Array.isArray(req.body.activities) ? req.body.activities : [];
+
+    // Helpers
+    const timeToMinutes = (t?: string): number | null => {
+      if (!t || typeof t !== 'string') return null;
+      const m = t.match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) return null;
+      const hh = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10);
+      if (isNaN(hh) || isNaN(mm)) return null;
+      return hh * 60 + mm;
+    };
+    const inferDuration = (a: any): number => {
+      const explicit = a.duration_minutes ?? a.duration ?? a.estimated_duration;
+      if (typeof explicit === 'number' && explicit > 0) return explicit;
+      const title = (a.title || '').toLowerCase();
+      const tag = (a.tag || a.category || '').toLowerCase();
+      if (/breakfast|coffee|cafe/.test(title) || tag === 'food') return 60;
+      if (/lunch/.test(title)) return 75;
+      if (/dinner/.test(title)) return 90;
+      if (/museum|gallery|exhibit/.test(title) || tag === 'culture') return 120;
+      if (/park|walk|viewpoint|hike/.test(title) || tag === 'outdoor') return 90;
+      return 90; // default
+    };
+    const toFloat = (v: any): number | null => {
+      if (v === null || v === undefined || v === '') return null;
+      const n = typeof v === 'string' ? parseFloat(v) : v;
+      return typeof n === 'number' && !isNaN(n) ? n : null;
+    };
+    const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const toRad = (d: number) => d * Math.PI / 180;
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+    const travelBufferForDistance = (km: number): number => {
+      if (!isFinite(km)) return 10; // minutes
+      if (km > 10) return 60;
+      if (km > 5) return 45;
+      if (km > 1) return 20;
+      return 10;
+    };
+
+    type Conflict = {
+      type: 'time_overlap' | 'travel_time_insufficient';
+      date: string;
+      a: { id?: any; title?: string; start?: string; end?: string };
+      b: { id?: any; title?: string; start?: string; end?: string };
+      details: string;
+    };
+    const conflicts: Conflict[] = [];
+
+    // Group by date
+    const byDate: Record<string, any[]> = {};
+    for (const raw of activities) {
+      const date = raw.date || raw.activity_date || raw.day || '';
+      if (!date) continue;
+      byDate[date] = byDate[date] || [];
+      byDate[date].push(raw);
+    }
+
+    for (const date of Object.keys(byDate)) {
+      const list = byDate[date];
+      // Normalize list with computed intervals
+      const normalized = list.map((a) => {
+        const startMin = timeToMinutes(a.time || a.start_time || a.startTime);
+        const duration = inferDuration(a);
+        const endMin = startMin !== null ? startMin + duration : null;
+        const lat = toFloat(a.latitude);
+        const lon = toFloat(a.longitude);
+        return { raw: a, startMin, endMin, lat, lon, duration };
+      });
+
+      for (let i = 0; i < normalized.length; i++) {
+        for (let j = i + 1; j < normalized.length; j++) {
+          const A = normalized[i];
+          const B = normalized[j];
+
+          // If both have start times, check overlap
+          if (A.startMin !== null && B.startMin !== null && A.endMin !== null && B.endMin !== null) {
+            const overlap = A.startMin < B.endMin && B.startMin < A.endMin;
+            if (overlap) {
+              conflicts.push({
+                type: 'time_overlap',
+                date,
+                a: { id: A.raw.id, title: A.raw.title, start: A.raw.time, end: minutesToTime(A.endMin) },
+                b: { id: B.raw.id, title: B.raw.title, start: B.raw.time, end: minutesToTime(B.endMin) },
+                details: `Overlapping times on ${date}`,
+              });
+            }
+
+            // Travel buffer insufficiency (A -> B)
+            const km = (A.lat !== null && A.lon !== null && B.lat !== null && B.lon !== null)
+              ? haversineKm(A.lat, A.lon, B.lat, B.lon)
+              : NaN;
+            const buffer = travelBufferForDistance(km);
+
+            if (A.endMin + buffer > B.startMin) {
+              conflicts.push({
+                type: 'travel_time_insufficient',
+                date,
+                a: { id: A.raw.id, title: A.raw.title, start: A.raw.time, end: minutesToTime(A.endMin) },
+                b: { id: B.raw.id, title: B.raw.title, start: B.raw.time, end: minutesToTime(B.startMin!) },
+                details: `Only ${Math.max(0, B.startMin - A.endMin)} min gap between activities; ~${isFinite(km) ? km.toFixed(1) + ' km' : 'unknown distance'} apart`,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return res.json({ success: true, conflicts });
+
+    function minutesToTime(min: number): string {
+      const h = Math.floor(min / 60);
+      const m = min % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Failed to detect conflicts" });
+  }
+});
+
+// POST /api/ai/themed-itinerary - Stub: generate simple themed suggestions without AI
+router.post("/themed-itinerary", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    const { location, theme, duration } = req.body;
+    const days = Math.max(1, parseInt(duration, 10) || 1);
+    const themes: Record<string, string[]> = {
+      culture: ["Museum", "Historic Walk", "Gallery"],
+      food: ["Breakfast Cafe", "Local Market", "Dinner Spot"],
+      outdoors: ["City Park", "Viewpoint", "Riverside Walk"],
+    };
+    const picks = themes[(theme || '').toLowerCase()] || ["Highlight 1", "Highlight 2", "Highlight 3"]; 
+
+    const activities = Array.from({ length: days }).flatMap((_, d) => (
+      picks.map((p, i) => ({
+        title: `${p} - ${location || 'Destination'}`,
+        dateOffset: d,
+        slotIndex: i,
+        notes: `Themed: ${theme || 'General'}`,
+      }))
+    ));
+
+    res.json({ success: true, activities });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Failed to generate themed itinerary" });
+  }
+});
+
 // POST /api/ai/chat - Conversational AI assistant for trip planning
 router.post("/chat", async (req, res) => {
   try {
@@ -319,40 +483,56 @@ router.post("/chat", async (req, res) => {
       });
     }
 
-    // Check if this looks like a trip creation request
+    // Determine if we should generate a trip automatically based on the entire conversation
     const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || "";
-    const isCreatingTrip = lastMessage.includes("create") ||
-                          lastMessage.includes("plan") ||
-                          lastMessage.includes("itinerary") ||
-                          lastMessage.includes("weekend") ||
-                          lastMessage.includes("going on a trip") ||
-                          lastMessage.includes("going to") ||
-                          lastMessage.includes("travel to") ||
-                          lastMessage.includes("visiting") ||
-                          lastMessage.includes("trip to") ||
-                          (lastMessage.includes("budget") && lastMessage.includes("day")) ||
-                          (lastMessage.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i) && 
-                           lastMessage.match(/\d{1,2}(st|nd|rd|th)?/));
+    const allText = messages.map((m: any) => (m?.content || "")).join(" ").toLowerCase();
 
-    // Extract city and country from the user's message if they're creating a trip
+    // Heuristics: detect dates anywhere in the conversation
+    const hasIsoDate = /\b20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/.test(allText);
+    const hasMonthDate = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b.*\b\d{1,2}(st|nd|rd|th)?\b/i.test(allText);
+    const hasRelativeDates = /(next\s+(week|weekend)|this\s+(week|weekend)|in\s+\d+\s+(days|weeks))/i.test(allText);
+    const hasDates = hasIsoDate || hasMonthDate || hasRelativeDates;
+
+    // Heuristics: detect destination anywhere in the conversation
+    const cityKeywords = /(\bto\b|\bin\b|\bat\b|\bvisit(ing)?\b|\btravel(ing)?\b|\bgoing\s+to\b)/i;
+    const hasCityCue = cityKeywords.test(allText);
+
+    // Original intent triggers (user explicitly asks to create/plan)
+    const explicitCreate = lastMessage.includes("create") ||
+                           lastMessage.includes("plan") ||
+                           lastMessage.includes("itinerary") ||
+                           lastMessage.includes("trip to");
+
+    // New behavior: if we have destination cues AND some form of dates anywhere, treat as creation intent
+    const isCreatingTrip = explicitCreate || (hasCityCue && hasDates) || lastMessage.includes("weekend") ||
+                           lastMessage.includes("going on a trip") ||
+                           lastMessage.includes("going to") ||
+                           lastMessage.includes("travel to") ||
+                           lastMessage.includes("visiting") ||
+                           (lastMessage.includes("budget") && lastMessage.includes("day"));
+
+    // Extract city and country from the conversation if we're creating a trip
     let realPlaces = null;
     let cityToSearch = null;
     let countryToSearch = null;
     
     if (isCreatingTrip) {
-      // Try to extract city from the message
-      const cityMatch = lastMessage.match(/(?:to|in|at|visit|visiting)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
+      // Try to extract city from the entire conversation first, then fall back to last message
+      const cityMatchAll = allText.match(/(?:to|in|at|visit|visiting)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
+      const cityMatchLast = lastMessage.match(/(?:to|in|at|visit|visiting)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
       const commonCities = ['Berlin', 'Munich', 'Hamburg', 'Paris', 'London', 'Rome', 'Barcelona', 'Amsterdam', 'Prague', 'Vienna'];
-      
+
       for (const city of commonCities) {
-        if (lastMessage.toLowerCase().includes(city.toLowerCase())) {
+        if (allText.includes(city.toLowerCase())) {
           cityToSearch = city;
           break;
         }
       }
-      
-      if (!cityToSearch && cityMatch) {
-        cityToSearch = cityMatch[1];
+      if (!cityToSearch && cityMatchAll) {
+        cityToSearch = cityMatchAll[1];
+      }
+      if (!cityToSearch && cityMatchLast) {
+        cityToSearch = cityMatchLast[1];
       }
       
       // Default country based on common cities or use Germany as default

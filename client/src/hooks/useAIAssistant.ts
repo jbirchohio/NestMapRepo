@@ -8,26 +8,23 @@ export default function useAIAssistant() {
   const { toast } = useToast();
   // Summarize a day's activities
   const summarizeDay = useMutation({
-    mutationFn: async (activities: ClientActivity[]): Promise<AIResponse> => {
-      const res = await apiRequest("POST", API_ENDPOINTS.AI.SUMMARIZE_DAY, { activities });
-      return res.json();
+    // Server expects { trip_id, date }
+    mutationFn: async ({ tripId, date }: { tripId: number; date: string }): Promise<AIResponse> => {
+      const res = await apiRequest("POST", API_ENDPOINTS.AI.SUMMARIZE_DAY, { tripId, date });
+      return res as AIResponse;
     },
   });
 
   // Suggest food near a location
   const suggestFood = useMutation({
-    mutationFn: async ({
-      location,
-      foodType = "food",
-    }: {
-      location: string;
-      foodType?: string;
-    }): Promise<AIResponse> => {
+    // Server expects { city, cuisine_type?, budget_range? }
+    mutationFn: async ({ city, cuisineType, budgetRange }: { city: string; cuisineType?: string; budgetRange?: 'budget' | 'mid-range' | 'luxury' }): Promise<AIResponse> => {
       const res = await apiRequest("POST", API_ENDPOINTS.AI.SUGGEST_FOOD, {
-        location,
-        foodType,
+        city,
+        ...(cuisineType ? { cuisineType } : {}),
+        ...(budgetRange ? { budgetRange } : {}),
       });
-      return res.json();
+      return res as AIResponse;
     },
   });
 
@@ -35,7 +32,7 @@ export default function useAIAssistant() {
   const detectConflicts = useMutation({
     mutationFn: async (activities: ClientActivity[]): Promise<AIResponse> => {
       const res = await apiRequest("POST", API_ENDPOINTS.AI.DETECT_CONFLICTS, { activities });
-      return res.json();
+      return res as AIResponse;
     },
   });
 
@@ -55,7 +52,7 @@ export default function useAIAssistant() {
         theme,
         duration,
       });
-      return res.json();
+      return res as AIResponse;
     },
   });
 
@@ -64,19 +61,21 @@ export default function useAIAssistant() {
     mutationFn: async ({
       question,
       tripContext,
+      tripId,
+      conversationHistory,
     }: {
       question: string;
-      tripContext: {
-        trip: ClientTrip;
-        currentDate: Date;
-        activities: ClientActivity[];
-      };
+      tripContext: { trip: ClientTrip; currentDate: Date; activities: ClientActivity[] };
+      tripId?: number;
+      conversationHistory?: Array<{ role: string; content: string }>;
     }): Promise<AIResponse> => {
       const res = await apiRequest("POST", API_ENDPOINTS.AI.ASSISTANT, {
         question,
+        tripId,
         tripContext,
+        conversationHistory,
       });
-      return res.json();
+      return res as AIResponse;
     },
   });
 
@@ -91,10 +90,8 @@ export default function useAIAssistant() {
       }>;
       recommendations: string[];
     }> => {
-      const result = await apiRequest("POST", "/api/ai/optimize-itinerary", {
-        tripId,
-      });
-      return result;
+      const result = await apiRequest("POST", "/api/ai/optimize-itinerary", { tripId });
+      return result as any;
     },
   });
 

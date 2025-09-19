@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { API_ENDPOINTS } from '@/lib/constants';
+import { aiGenerateFullItinerary } from '@/lib/ai';
 import { Progress } from '@/components/ui/progress';
 
 interface ActivityGeneratorProps {
@@ -154,16 +156,8 @@ export default function ActivityGenerator({ tripId, onActivitiesGenerated }: Act
     const maxPolls = 60; // Max 60 seconds
     
     // Start the generation
-    const genResponse = await fetch('/api/ai/generate-full-itinerary', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({ trip_id: parseInt(tripId) })
-    });
-    
-    if (!genResponse.ok) {
+    const startResp = await aiGenerateFullItinerary({ trip_id: parseInt(tripId) });
+    if ((startResp as any)?.success === false) {
       throw new Error('Failed to start generation');
     }
     

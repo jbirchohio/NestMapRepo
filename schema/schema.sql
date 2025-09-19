@@ -1,4 +1,4 @@
--- NestMap Database Schema
+-- Remvana Database Schema
 -- This file can be executed directly in your PostgreSQL database to set up the schema
 
 -- Users Table

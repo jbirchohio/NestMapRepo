@@ -430,23 +430,11 @@ export default function ActivityModal({
 
                         }
 
-                        const aiResponse = await fetch("/api/ai/find-location", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            searchQuery: locationName,
-                            cityContext
-                          })
+                        const { aiFindLocation } = await import('@/lib/ai');
+                        const aiData = await aiFindLocation({
+                          searchQuery: locationName,
+                          cityContext,
                         });
-
-                        if (!aiResponse.ok) {
-                          throw new Error("Error searching for location");
-                        }
-
-                        // Parse the AI response
-                        const aiData = await aiResponse.json();
 
                         // Remove hardcoded location - let AI handle all location searches
 

@@ -1,0 +1,31 @@
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:",
+    "style-src 'self' 'unsafe-inline' https:",
+    "img-src 'self' data: https: http: blob:",
+    "connect-src 'self' https: http: wss: ws:",
+    "font-src 'self' data: https:",
+    "frame-src 'self' https:",
+    "media-src 'self' https: blob:",
+    "worker-src 'self' blob:",
+    "child-src 'self' blob: https:",
+    "form-action 'self' https:",
+    "frame-ancestors 'self' https:",
+    "base-uri 'self'",
+    "manifest-src 'self'"
+  ].join('; ');
+
+  res.setHeader('Content-Security-Policy', csp);
+  next();
+});
+
+// Cookie parser middleware (must be early for auth)
+app.use(cookieParser());
+
+// Correlation ID middleware (must be early in stack)
+app.use(correlationIdMiddleware);
+
+// HTTP caching middleware (early in stack for best performance)
+app.use(smartCache());
+app.use(contentTypeCache());
+
+// Performance optimization middleware (early in stack)
+app.use(performanceOptimizer.viteAssetOptimizer());

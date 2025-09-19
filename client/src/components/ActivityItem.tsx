@@ -59,7 +59,7 @@ export default function ActivityItem({
   // Regenerate activity mutation
   const regenerateActivity = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/ai/regenerate-activity", {
+      return apiRequest("POST", API_ENDPOINTS.AI.REGENERATE_ACTIVITY, {
         activity_id: activity.id,
         trip_id: activity.tripId
       });

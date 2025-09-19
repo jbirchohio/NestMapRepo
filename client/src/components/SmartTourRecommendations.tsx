@@ -12,6 +12,7 @@ import {
   Mountain, Utensils, Music, Camera,
   Palette, Building, TreePine, Waves
 } from 'lucide-react';
+import { aiRecommendTours } from '@/lib/ai';
 
 interface SmartTourRecommendationsProps {
   tripId: string;
@@ -69,26 +70,15 @@ export default function SmartTourRecommendations({
 
   const fetchAIRecommendations = async () => {
     try {
-      const response = await fetch('/api/ai/recommend-tours', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          destination,
-          startDate,
-          endDate,
-          interests: [] // Could be passed from user preferences
-        })
+      const data = await aiRecommendTours({
+        destination,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        interests: []
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAiRecommendations(data.recommendations || []);
-      }
+      setAiRecommendations((data as any).recommendations || []);
     } catch (error) {
-      }
+    }
   };
 
   const fetchTours = async (category: string) => {

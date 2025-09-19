@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { aiSuggestActivities, aiWeatherActivities } from "@/lib/ai";
 import { useToast } from "@/hooks/use-toast";
 import { ClientTrip } from "@/lib/types";
 import { CloudSun, Umbrella, ThermometerSun, Snowflake, Wind, Sparkles, MapPin } from "lucide-react";
@@ -157,12 +158,12 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
         `${selectedDayWeather.description} with temperature ${selectedDayWeather.temperature}°F` : 
         weatherLabels[weatherCondition];
 
-      const res = await apiRequest("POST", API_ENDPOINTS.AI.WEATHER_ACTIVITIES, {
+      const data = await aiWeatherActivities({
         location: trip.city || trip.location || trip.title,
         date: selectedDate,
         weatherCondition: weatherToUse
       });
-      return res as WeatherResponse;
+      return data as WeatherResponse;
     },
     onError: (error) => {
       toast({
@@ -177,12 +178,12 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
   // General activity suggestions
   const generalMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/ai/suggest-activities", {
+      const data = await aiSuggestActivities({
         city: trip.city || trip.location || trip.title,
         interests: ["popular attractions", "local experiences"],
         duration: 1
       });
-      return res as { activities: WeatherActivitySuggestion[] };
+      return data as { activities: WeatherActivitySuggestion[] };
     },
     onError: (error) => {
       toast({

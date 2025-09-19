@@ -14,6 +14,8 @@ import {
   Bot
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { API_ENDPOINTS } from '@/lib/constants';
+import { aiTripAssistant } from '@/lib/ai';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 
@@ -78,23 +80,12 @@ What would you like to do?`,
 
     try {
       // Call the AI assistant endpoint
-      const response = await fetch('/api/ai/trip-assistant', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          trip_id: tripId,
-          question: input,
-          trip_context: tripDetails,
-          conversation_history: messages.slice(-5), // Last 5 messages for context
-        }),
+      const data = await aiTripAssistant({
+        tripId: tripId,
+        question: input,
+        tripContext: tripDetails,
+        conversationHistory: messages.slice(-5),
       });
-
-      if (!response.ok) throw new Error('Failed to get AI response');
-
-      const data = await response.json();
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

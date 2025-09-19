@@ -65,24 +65,39 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
 
-  // Consumer-friendly Content Security Policy
-  // Allows common analytics, ads, social media, etc.
-  const csp = [
-    "default-src 'self' https:",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:",
-    "style-src 'self' 'unsafe-inline' https:",
-    "img-src 'self' data: https: http: blob:",
-    "connect-src 'self' https: http: wss: ws:",
-    "font-src 'self' data: https:",
-    "frame-src 'self' https:",
-    "media-src 'self' https: blob:",
-    "worker-src 'self' blob:",
-    "child-src 'self' blob: https:",
-    "form-action 'self' https:",
-    "frame-ancestors 'self' https:",
-    "base-uri 'self'",
-    "manifest-src 'self'"
-  ].join('; ');
+  // Content Security Policy
+  // Use stricter CSP in production, more permissive in development
+  const csp = (process.env.NODE_ENV === 'production')
+    ? [
+      "default-src 'self' https:",
+      "script-src 'self' https://js.stripe.com https://www.googletagmanager.com",
+      "style-src 'self' 'unsafe-inline' https:",
+      "img-src 'self' data: blob: https:",
+      "connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://api.stripe.com wss:",
+      "frame-src 'self' https://js.stripe.com",
+      "worker-src 'self' blob:",
+      "font-src 'self' data: https:",
+      "form-action 'self' https:",
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+      "manifest-src 'self'"
+    ].join('; ')
+    : [
+      "default-src 'self' https:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:",
+      "style-src 'self' 'unsafe-inline' https:",
+      "img-src 'self' data: https: http: blob:",
+      "connect-src 'self' https: http: wss: ws:",
+      "font-src 'self' data: https:",
+      "frame-src 'self' https:",
+      "media-src 'self' https: blob:",
+      "worker-src 'self' blob:",
+      "child-src 'self' blob: https:",
+      "form-action 'self' https:",
+      "frame-ancestors 'self' https:",
+      "base-uri 'self'",
+      "manifest-src 'self'"
+    ].join('; ');
 
   res.setHeader('Content-Security-Policy', csp);
   next();

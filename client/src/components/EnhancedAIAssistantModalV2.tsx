@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { aiSuggestActivities, aiWeatherActivities } from "@/lib/ai";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -98,13 +99,11 @@ export default function EnhancedAIAssistantModalV2({
         'outdoor': 'park'
       };
 
-      const res = await apiRequest("POST", "/api/ai/suggest-activities", {
+      return aiSuggestActivities({
         city: trip.city,
         interests: [categoryMap[category] || category],
         duration: 1
       });
-
-      return res; // apiRequest already returns parsed JSON
     },
     onSuccess: (data, category) => {
       if (data.activities && data.activities.length > 0) {
@@ -204,21 +203,21 @@ export default function EnhancedAIAssistantModalV2({
         break;
         
       case 'food':
-        // Fetch food suggestions
+        // Fetch food suggestions (align payload with server: expects { city, cuisine_type?, budget_range? })
         setIsProcessing(true);
         try {
           const res = await apiRequest("POST", API_ENDPOINTS.AI.SUGGEST_FOOD, {
-            location: trip.city,
-            foodType: "restaurant"
+            city: trip.city,
           });
           const data = res; // apiRequest already returns parsed JSON
           
-          if (data.suggestions && data.suggestions.length > 0) {
-            setAvailableActivities(data.suggestions.map((s: any) => ({
+          // Server returns { recommendations: [...] }
+          if (data.recommendations && data.recommendations.length > 0) {
+            setAvailableActivities(data.recommendations.map((s: any) => ({
               ...s,
               title: s.name,
               locationName: s.name,
-              description: s.type + " - " + s.priceRange,
+              description: (s.specialty ? s.specialty + ' - ' : '') + (s.price_range || ''),
               category: 'food'
             })));
             
@@ -226,11 +225,11 @@ export default function EnhancedAIAssistantModalV2({
               role: "assistant",
               content: "I found these great dining options in " + trip.city + ":",
               showActivityPicker: true,
-              suggestions: data.suggestions.map((s: any) => ({
+              suggestions: data.recommendations.map((s: any) => ({
                 ...s,
                 title: s.name,
                 locationName: s.name,
-                description: s.type + " - " + s.priceRange,
+                description: (s.specialty ? s.specialty + ' - ' : '') + (s.price_range || ''),
                 category: 'food'
               }))
             }]);
@@ -245,14 +244,14 @@ export default function EnhancedAIAssistantModalV2({
         break;
         
       case 'weather':
-        // Fetch weather-based suggestions
+        // Fetch weather-based suggestions (server requires weatherCondition)
         setIsProcessing(true);
         try {
-          const res = await apiRequest("POST", API_ENDPOINTS.AI.WEATHER_ACTIVITIES, {
+          const data = await aiWeatherActivities({
             location: trip.city,
-            date: selectedDate.toISOString().split('T')[0]
+            date: selectedDate.toISOString().split('T')[0],
+            weatherCondition: 'current conditions'
           });
-          const data = res; // apiRequest already returns parsed JSON
           
           if (data.activities && data.activities.length > 0) {
             setConversation(prev => [...prev, {

@@ -11,6 +11,7 @@ import { Calendar, MapPin, Sunset, X, ChevronRight, Sparkles } from "lucide-reac
 import { format, addDays, differenceInDays, nextFriday, nextSaturday, nextSunday } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { analytics } from '@/lib/analytics';
+import { aiGenerateWeekend } from '@/lib/ai';
 
 interface WeekendTripModalProps {
   isOpen: boolean;
@@ -235,20 +236,14 @@ export default function WeekendTripModal({
       // If AI generation requested, generate activities
       if (useAI) {
         try {
-          const aiResponse = await fetch("/api/ai/generate-weekend", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              trip_id: trip.id,
-              destination: data.city,
-              duration: 3,
-            }),
+          const result = await aiGenerateWeekend({
+            destination: data.city,
+            startDate: format(data.startDate, "yyyy-MM-dd"),
+            endDate: format(data.endDate, "yyyy-MM-dd"),
+            interests: [],
           });
 
-          if (aiResponse.ok) {
+          if (result && (result as any).success !== false) {
             toast({
               title: "✨ AI is planning your weekend!",
               description: "Activities are being generated...",

@@ -1,4 +1,4 @@
--- Initial schema migration for NestMap
+-- Initial schema migration for Remvana
 -- This migration creates the core database structure with proper indexing
 
 -- Organizations table

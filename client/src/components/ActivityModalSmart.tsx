@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Coffee, Utensils, ShoppingBag, Camera, Loader2, MapPin, Star, ShoppingCart, Sparkles } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { aiFindLocation, aiSuggestActivities } from "@/lib/ai";
 import useTrip from "@/hooks/useTrip";
 import BookableActivity from "@/components/BookableActivity";
 // Removed InAppBooking import
@@ -92,24 +93,7 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
 
       // Call AI to find places
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/ai/find-location", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          searchQuery: searchQuery,
-          cityContext: cityContext,
-          limit: 6
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await aiFindLocation({ searchQuery, cityContext, limit: 6 });
 
       if (data.locations && Array.isArray(data.locations)) {
         // Enrich with coordinates using Mapbox
@@ -213,22 +197,11 @@ export default function ActivityModalSmart({ onClose, onSave, date, tripId, acti
     setShowAiSuggestions(true);
     setLoading(true);
     try {
-      const response = await fetch("/api/ai/suggest-activities", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          city: trip?.city || "current location",
-          interests: ["popular attractions", "local favorites"],
-          duration: 1
-        })
+      const data = await aiSuggestActivities({
+        city: trip?.city || "current location",
+        interests: ["popular attractions", "local favorites"],
+        duration: 1
       });
-
-      if (!response.ok) throw new Error("Failed to get suggestions");
-
-      const data = await response.json();
 
       if (data.activities && Array.isArray(data.activities)) {
         // Convert AI suggestions to quick options format

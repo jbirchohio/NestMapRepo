@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nestmap
+    name: remvana
     env: node
     plan: starter
     buildCommand: npm install && npm run build

@@ -13,6 +13,10 @@ export const API_ENDPOINTS = {
     WEATHER_ACTIVITIES: "/api/ai/weather-activities",
     BUDGET_OPTIONS: "/api/ai/budget-options",
     FIND_LOCATION: "/api/ai/find-location",
+    SUGGEST_ACTIVITIES: "/api/ai/suggest-activities",
+    GENERATE_FULL_ITINERARY: "/api/ai/generate-full-itinerary",
+    REGENERATE_ACTIVITY: "/api/ai/regenerate-activity",
+    CHAT: "/api/ai/chat",
   },
   WEATHER: {
     FORECAST: "/api/weather/forecast",
