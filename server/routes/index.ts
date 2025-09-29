@@ -27,6 +27,7 @@ import rsvpRoutes from './rsvp';
 import travelAnalyticsRoutes from './travel-analytics';
 import bundlesRoutes from './bundles';
 import promoCodesRoutes from './promo-codes';
+import notificationsRoutes from './notifications';
 
 const router = Router();
 
@@ -60,6 +61,7 @@ router.use('/rsvp', rsvpRoutes);
 router.use('/travel-analytics', travelAnalyticsRoutes);
 router.use('/bundles', bundlesRoutes);
 router.use('/promo-codes', promoCodesRoutes);
+router.use('/push', notificationsRoutes);
 
 // User permissions endpoint - simplified for consumer app
 router.get('/user/permissions', async (req, res) => {

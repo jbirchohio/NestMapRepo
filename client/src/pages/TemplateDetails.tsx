@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { ClientTemplate, ClientTemplateReview } from '@/lib/types';
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { motion } from 'framer-motion';
@@ -30,6 +31,7 @@ export default function TemplateDetails() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -74,10 +76,7 @@ export default function TemplateDetails() {
   // Handle successful payment
   const handlePaymentSuccess = (data: any) => {
     setShowPaymentDialog(false);
-    toast({
-      title: 'Purchase successful!',
-      description: 'The template has been added to your trips.',
-    });
+    notifySnackbar({ message: 'Template purchased.' });
     refetch();
 
     // Track template purchase
@@ -93,7 +92,7 @@ export default function TemplateDetails() {
     // The backend returns tripId in the response
     const tripId = data.tripId || data.trip_id;
     if (tripId) {
-      navigate(`/trip/${tripId}`);
+      navigate(`/trip/${tripId}?created=1`);
     } else {
       navigate('/trips');
     }
@@ -442,7 +441,7 @@ export default function TemplateDetails() {
                   <p className="text-sm text-gray-600">one-time purchase</p>
                 </div>
 
-                {template.hasPurchased ? (
+                {template.hasPurchased || template.isOwner ? (
                   <div className="space-y-3">
                     <Button
                       className="w-full"

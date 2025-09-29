@@ -1,0 +1,13 @@
+      // Invalidate activities query to refresh the list
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] });
+
+      toast({
+        title: "✨ Activity Regenerated!",
+        description: `New activity created. ${data.regenerations_remaining} regenerations remaining.`,
+      });
+
+      // Update parent component with remaining regenerations
+      if (onRegenerationsUpdate) {
+        onRegenerationsUpdate(data.regenerations_remaining);
+      }
+    },

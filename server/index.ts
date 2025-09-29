@@ -401,3 +401,4 @@ app.use((req, res, next) => {
     process.on('SIGINT', () => server.close());
   }
 })();
+

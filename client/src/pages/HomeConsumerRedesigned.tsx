@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
-import NewTripModalConsumer from "@/components/NewTripModalConsumer";
-import WeekendTripModal from "@/components/WeekendTripModal";
-import AITripChatModal from "@/components/AITripChatModal";
+const NewTripModalConsumer = lazy(() => import("@/components/NewTripModalConsumer"));
+const WeekendTripModal = lazy(() => import("@/components/WeekendTripModal"));
+const AITripChatModal = lazy(() => import("@/components/AITripChatModal"));
 // Removed PackageSearch import
 import PopularDestinations from "@/components/PopularDestinations";
+import MyTemplatesPanel from "@/components/MyTemplatesPanel";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModalSimple from "@/components/auth/AuthModalSimple";
@@ -755,23 +756,34 @@ export default function HomeConsumerRedesigned() {
       {/* Popular Destinations Section */}
       <PopularDestinations />
 
+      {/* My Templates (created or purchased) */}
+      {user && (
+        <MyTemplatesPanel />
+      )}
+
       {/* Modals */}
-      <NewTripModalConsumer
-        isOpen={isNewTripModalOpen}
-        onClose={() => setIsNewTripModalOpen(false)}
-        onTripCreated={handleTripCreated}
-      />
+      <Suspense fallback={null}>
+        <NewTripModalConsumer
+          isOpen={isNewTripModalOpen}
+          onClose={() => setIsNewTripModalOpen(false)}
+          onTripCreated={handleTripCreated}
+        />
+      </Suspense>
 
-      <WeekendTripModal
-        isOpen={isWeekendTripModalOpen}
-        onClose={() => setIsWeekendTripModalOpen(false)}
-        onTripCreated={handleTripCreated}
-      />
+      <Suspense fallback={null}>
+        <WeekendTripModal
+          isOpen={isWeekendTripModalOpen}
+          onClose={() => setIsWeekendTripModalOpen(false)}
+          onTripCreated={handleTripCreated}
+        />
+      </Suspense>
 
-      <AITripChatModal
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <AITripChatModal
+          isOpen={isAIChatOpen}
+          onClose={() => setIsAIChatOpen(false)}
+        />
+      </Suspense>
 
       {isAuthModalOpen && (
         <AuthModalSimple

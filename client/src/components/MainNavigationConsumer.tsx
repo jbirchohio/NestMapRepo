@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useToast } from '@/hooks/use-toast';
-import NewTripModalConsumer from '@/components/NewTripModalConsumer';
+const NewTripModalConsumer = lazy(() => import('@/components/NewTripModalConsumer'));
 import AuthModalSimple from '@/components/auth/AuthModalSimple';
 import {
   User,
@@ -247,19 +247,18 @@ export default function MainNavigationConsumer() {
 
       {/* New Trip Modal */}
       {showNewTripModal && (
-        <NewTripModalConsumer
-          isOpen={showNewTripModal}
-          onClose={() => setShowNewTripModal(false)}
-          onTripCreated={(trip) => {
-            setShowNewTripModal(false);
-
-            // Make sure we have a valid ID before navigating
-            if (trip && trip.id) {
-              setLocation(`/trip/${trip.id}`);
-            } else {
+        <Suspense fallback={null}>
+          <NewTripModalConsumer
+            isOpen={showNewTripModal}
+            onClose={() => setShowNewTripModal(false)}
+            onTripCreated={(trip) => {
+              setShowNewTripModal(false);
+              if (trip && trip.id) {
+                setLocation(`/trip/${trip.id}`);
               }
-          }}
-        />
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Auth Modal */}

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { aiGenerateFullItinerary } from '@/lib/ai';
 import { Progress } from '@/components/ui/progress';
@@ -19,6 +20,7 @@ export default function ActivityGenerator({ tripId, onActivitiesGenerated }: Act
   const [activitiesCreated, setActivitiesCreated] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -66,15 +68,9 @@ export default function ActivityGenerator({ tripId, onActivitiesGenerated }: Act
         onActivitiesGenerated();
       }
       
-      toast({
-        title: "✨ Itinerary Complete!",
-        description: `Created ${activitiesCreated} activities for your ${days}-day trip`,
-      });
+      // Final banner will be shown after polling completes
       
-      // Hide the generator after a short delay
-      setTimeout(() => {
-        setIsGenerating(false);
-      }, 2000);
+      // Hide will be handled after polling confirms creation
       
     } catch (error) {
       console.error('Error generating activities:', error);
@@ -84,11 +80,7 @@ export default function ActivityGenerator({ tripId, onActivitiesGenerated }: Act
       localStorage.removeItem(`trip_${tripId}_generating`);
       localStorage.removeItem(`trip_${tripId}_metadata`);
       
-      toast({
-        title: "Partial Generation",
-        description: "Some activities were created. You can add more manually.",
-        variant: "default",
-      });
+      // Final banner will be shown after polling completes
     }
   };
 
@@ -193,6 +185,18 @@ export default function ActivityGenerator({ tripId, onActivitiesGenerated }: Act
               intervalRef.current = null;
             }
             setProgress(100);
+
+            // Clean up and final notifications
+            localStorage.removeItem(`trip_${tripId}_generating`);
+            localStorage.removeItem(`trip_${tripId}_metadata`);
+
+            // Final banner
+            notifyBanner({ message: `Created ${currentCount} activities for your ${days}-day trip` });
+
+            if (onActivitiesGenerated) {
+              onActivitiesGenerated();
+            }
+            setTimeout(() => setIsGenerating(false), 1500);
           }
         }
       } catch (error) {
@@ -245,3 +249,6 @@ export default function ActivityGenerator({ tripId, onActivitiesGenerated }: Act
     </AnimatePresence>
   );
 }
+
+
+

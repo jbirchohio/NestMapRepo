@@ -1,4 +1,5 @@
 import { toast } from "@/hooks/use-toast";
+import { useNotification } from "@/components/notifications/NotificationCenter";
 
 export class ApplicationError extends Error {
   public readonly code: string;
@@ -55,27 +56,17 @@ export interface ErrorContext {
 
 export class ErrorHandler {
   static handle(error: Error, context: ErrorContext = {}) {
-
-    // Show user-friendly error message
-    if (error instanceof ApplicationError) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else if (error instanceof TypeError) {
-      toast({
-        title: "System Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive"
-      });
-    }
+    // Use snackbar for mobile-friendly UX; fall back to toast if provider not mounted
+    try {
+      const { notifySnackbar } = (window as any).__notificationCenter || {};
+      const msg = error instanceof ApplicationError
+        ? error.message
+        : error instanceof TypeError
+          ? "An unexpected error occurred. Please try again."
+          : "Something went wrong. Please try again.";
+      if (notifySnackbar) notifySnackbar({ message: msg });
+      else toast({ title: "Error", description: msg, variant: "destructive" });
+    } catch {}
 
     // In production, send to error reporting service
     if (process.env.NODE_ENV === 'production') {

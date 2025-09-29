@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { motion } from 'framer-motion';
@@ -36,6 +37,7 @@ export default function HelpCenter() {
     category: 'general'
   });
   const { toast } = useToast();
+  const { notifySnackbar } = useNotification();
 
   const faqData = [
     {
@@ -143,10 +145,7 @@ export default function HelpCenter() {
     e.preventDefault();
 
     // In a real implementation, this would send the message via email or support system
-    toast({
-      title: "Message Sent",
-      description: "We'll get back to you within 24 hours.",
-    });
+    notifySnackbar({ message: "Message sent. We'll get back to you within 24 hours." });
 
     setContactForm({
       name: '',

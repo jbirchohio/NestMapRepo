@@ -37,6 +37,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const createdRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -81,12 +82,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
 
       const newTrip = await tripResponse.json();
       
-      // Success! Navigate to the trip immediately
-      toast({
-        title: "✈️ Trip Created!",
-        description: `Your trip to ${suggestion.city} is ready!`,
-      });
-
+      // Use trip page flash banner instead of toast\r\n      // localStorage.setItem(	rip_{newTrip.id}_flash, Your trip to {suggestion.city} is ready!);\r\n
       // Store trip metadata for generation on the trip page
       const tripMetadata = {
         city: suggestion.city,
@@ -96,12 +92,12 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
         initialActivities: suggestion.activities || []
       };
       
-      localStorage.setItem(`trip_${newTrip.id}_generating`, 'true');
-      localStorage.setItem(`trip_${newTrip.id}_metadata`, JSON.stringify(tripMetadata));
+      // localStorage.setItem(`trip_${newTrip.id}_generating`, 'true');
+      // localStorage.setItem(`trip_${newTrip.id}_metadata`, JSON.stringify(tripMetadata));
       
       // Navigate immediately - activities will be generated on the trip page
       onClose();
-      setLocation(`/trip/${newTrip.id}`);
+      setLocation(`/trip/${newTrip.id}?created=1`);
 
       return newTrip;
     } catch (error) {
@@ -143,6 +139,10 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
 
       // If the AI suggests creating a trip, offer to create it
       if (data.tripSuggestion) {
+        // Prevent multiple auto-creates per chat session
+        if (createdRef.current) {
+          return;
+        }
         // Validate that the suggestion has proper dates
         const startDate = new Date(data.tripSuggestion.startDate);
         const endDate = new Date(data.tripSuggestion.endDate);
@@ -168,6 +168,7 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
         // Automatically create the trip
         setTimeout(async () => {
           try {
+            createdRef.current = true;
             await createTripFromSuggestion(data.tripSuggestion);
           } catch (error) {
             const errorMessage: Message = {
@@ -331,3 +332,6 @@ export default function AITripChatModal({ isOpen, onClose }: AITripChatModalProp
     </AnimatePresence>
   );
 }
+
+
+

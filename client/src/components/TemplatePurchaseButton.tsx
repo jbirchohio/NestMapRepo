@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useLocation } from 'wouter';
 import { ShoppingCart, Loader2, Check } from 'lucide-react';
@@ -45,6 +46,7 @@ function CheckoutForm({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,10 +94,8 @@ function CheckoutForm({
 
         if (response.ok) {
           const data = await response.json();
-          toast({
-            title: 'Purchase successful!',
-            description: 'The template has been added to your trips.',
-          });
+          // Show a small snackbar and pass through
+          notifySnackbar({ message: 'Template purchased.' });
           onSuccess(data.tripId);
         } else {
           throw new Error('Failed to confirm purchase');
@@ -141,6 +141,7 @@ export default function TemplatePurchaseButton({
 }: TemplatePurchaseButtonProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { notifySnackbar } = useNotification();
   const [, setLocation] = useLocation();
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -148,21 +149,14 @@ export default function TemplatePurchaseButton({
 
   const handlePurchaseClick = async () => {
     if (!user) {
-      toast({
-        title: 'Sign in required',
-        description: 'Please sign in to purchase templates',
-        variant: 'destructive',
-      });
+      notifySnackbar({ message: 'Please sign in to purchase templates' });
       setLocation('/?auth=login');
       return;
     }
 
     if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
       // For now, just show a message if Stripe isn't configured
-      toast({
-        title: 'Coming soon!',
-        description: 'Template purchases will be available soon.',
-      });
+      notifySnackbar({ message: 'Template purchases coming soon.' });
       return;
     }
 
@@ -187,11 +181,7 @@ export default function TemplatePurchaseButton({
       setClientSecret(secret);
       setShowCheckout(true);
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to start checkout',
-        variant: 'destructive',
-      });
+      notifySnackbar({ message: error.message || 'Failed to start checkout' });
     } finally {
       setIsLoading(false);
     }
@@ -203,7 +193,7 @@ export default function TemplatePurchaseButton({
       onPurchaseComplete(tripId);
     } else {
       // Navigate to the new trip
-      setLocation(`/trip/${tripId}`);
+      setLocation(`/trip/${tripId}?created=1`);
     }
   };
 

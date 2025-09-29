@@ -1,9 +1,6 @@
 import { useCallback, useRef } from "react";
-import mapboxgl from "mapbox-gl";
+import type mapboxgl from "mapbox-gl";
 import { MapMarker, MapRoute } from "@/lib/types";
-
-// Import the Mapbox CSS
-import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -15,6 +12,15 @@ if (MAPBOX_TOKEN === 'pk.your_mapbox_token' || !MAPBOX_TOKEN) {
 // Simple in-memory cache for geocoding results
 const geocodeCache = new Map<string, { result: any; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+let mapboxglRuntime: typeof import("mapbox-gl") | null = null;
+
+async function loadMapbox() {
+  if (!mapboxglRuntime) {
+    mapboxglRuntime = await import("mapbox-gl");
+  }
+  return mapboxglRuntime;
+}
 
 export default function useMapbox() {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
@@ -41,8 +47,9 @@ export default function useMapbox() {
         center = [-74.006, 40.7128]; // Default to NYC
       }
       
+      const mb = await loadMapbox();
       // Set the access token
-      mapboxgl.accessToken = MAPBOX_TOKEN;
+      (mb as any).accessToken = MAPBOX_TOKEN;
       // Mapbox configuration and initialization
       
       // Add a delay to ensure DOM is ready
@@ -55,7 +62,7 @@ export default function useMapbox() {
       try {
         // Creating Mapbox map with provided options
         
-        map = new mapboxgl.Map({
+        map = new (mb as any).Map({
           container,
           style: 'mapbox://styles/mapbox/streets-v12',
           center: center as [number, number],
@@ -79,9 +86,10 @@ export default function useMapbox() {
       });
       
       // Wait for map to load before adding controls
-      map.on('load', () => {
+      map.on('load', async () => {
         try {
-          map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+          const mb = await loadMapbox();
+          map.addControl(new (mb as any).NavigationControl(), 'bottom-right');
         } catch (controlError) {
           // Failed to add navigation controls
         }
@@ -152,7 +160,9 @@ export default function useMapbox() {
       el.appendChild(label);
 
       // Create and add marker
-      const marker = new mapboxgl.Marker(el)
+      const mb = mapboxglRuntime as any;
+      if (!mb) return; // Mapbox not loaded yet
+      const marker = new mb.Marker(el)
         .setLngLat([markerData.longitude, markerData.latitude])
         .addTo(mapInstance.current!);
 

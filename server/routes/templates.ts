@@ -195,9 +195,10 @@ router.get("/:slug", async (req, res) => {
     // Increment view count
     await storage.incrementTemplateViews(template.id);
 
-    // Check if user has purchased (if requireAuthd)
+    // Check if user has purchased and ownership
     let hasPurchased = false;
     let purchaseStatus = null;
+    const isOwner = !!req.user && template.user_id === req.user.id;
     if (req.user) {
       // Check not just if purchased, but if purchase is still valid
       const purchases = await db.select()
@@ -271,6 +272,7 @@ router.get("/:slug", async (req, res) => {
         coverImage: template.cover_image,
         viewCount: template.view_count || 0,
         hasPurchased,
+        isOwner,
         creator: creatorProfile,
         reviews,
       }),

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { logger } from '../utils/logger';
 import { db } from '../db-connection';
 import { templatePurchases, templates, users, creatorBalances } from '@shared/schema';
+import CONFIG from '../config/constants';
 import { eq, and, sql } from 'drizzle-orm';
 import { storage } from '../storage';
 import { webhookRateLimit } from '../middleware/rateLimiting';
@@ -141,12 +142,12 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     return;
   }
 
-  // Calculate fees
+  // Calculate fees using CONFIG
   const grossPrice = paymentIntent.amount / 100; // Convert from cents
-  const stripeFee = (grossPrice * 0.029) + 0.30;
+  const stripeFee = (grossPrice * CONFIG.STRIPE_FEE_PERCENTAGE) + CONFIG.STRIPE_FEE_FIXED;
   const netRevenue = grossPrice - stripeFee;
-  const sellerEarnings = netRevenue * 0.70;
-  const platformFee = netRevenue * 0.30;
+  const platformFee = netRevenue * CONFIG.PLATFORM_FEE_PERCENTAGE;
+  const sellerEarnings = netRevenue - platformFee;
 
   // Create purchase record
   const [purchase] = await db.insert(templatePurchases)
@@ -284,34 +285,8 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     })
     .where(eq(templates.id, purchase.template_id));
 
-  // REVOKE ACCESS: Delete or mark the trip created from this template
-  try {
-    // Find trips created from this purchase
-    const { trips } = await import('@shared/schema');
-    const tripsToRevoke = await db.select()
-      .from(trips)
-      .where(and(
-        eq(trips.user_id, purchase.buyer_id),
-        eq(trips.source_template_id, purchase.template_id),
-        // Only delete trips created around the purchase time (within 1 hour)
-        sql`created_at BETWEEN ${purchase.purchased_at} - INTERVAL '1 hour' AND ${purchase.purchased_at} + INTERVAL '1 hour'`
-      ));
-
-    if (tripsToRevoke.length > 0) {
-      // Option 1: Soft delete (mark as revoked)
-      await db.update(trips)
-        .set({
-          status: 'revoked',
-          revoked_reason: 'Template purchase refunded',
-          revoked_at: new Date()
-        })
-        .where(eq(trips.id, tripsToRevoke[0].id));
-
-      logger.info(`Revoked access to trip ${tripsToRevoke[0].id} due to refund`);
-    }
-  } catch (error) {
-    logger.error('Failed to revoke trip access after refund:', error);
-  }
+  // Option C policy: do NOT revoke existing trips on refund
+  logger.info(`Refund processed for purchase ${purchase.id}; policy keeps existing trips intact`);
 
   // Adjust seller's balance
   const sellerEarnings = parseFloat(purchase.seller_earnings || '0');

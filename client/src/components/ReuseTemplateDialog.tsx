@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Calendar, Loader2, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ReuseTemplateDialogProps {
@@ -14,6 +15,7 @@ interface ReuseTemplateDialogProps {
 
 export default function ReuseTemplateDialog({ template, isOpen, onClose, onSuccess }: ReuseTemplateDialogProps) {
   const { toast } = useToast();
+  const { notifyBanner, notifySnackbar } = useNotification();
   const [isProcessing, setIsProcessing] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -68,19 +70,12 @@ export default function ReuseTemplateDialog({ template, isOpen, onClose, onSucce
 
       const data = await response.json();
 
-      toast({
-        title: 'Trip created!',
-        description: `Your ${template.duration}-day ${template.title} trip has been created.`,
-      });
+      notifyBanner({ message: `Created ${template.duration}-day ${template.title} trip.` });
 
       onSuccess(data);
     } catch (err: any) {
       setError(err.message || 'An error occurred');
-      toast({
-        title: 'Failed to create trip',
-        description: err.message,
-        variant: 'destructive',
-      });
+      notifySnackbar({ message: err.message || 'Failed to create trip' });
     } finally {
       setIsProcessing(false);
     }

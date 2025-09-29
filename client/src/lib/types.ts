@@ -31,7 +31,8 @@ export interface ClientTemplate {
   updatedAt: Date;
   // Additional client fields
   creator?: ClientCreatorProfile;
-  hasPurchased?: boolean;
+    hasPurchased?: boolean;
+    isOwner?: boolean;
   reviews?: ClientTemplateReview[];
 }
 

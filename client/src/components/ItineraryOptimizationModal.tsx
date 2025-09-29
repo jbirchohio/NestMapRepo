@@ -9,6 +9,7 @@ import { Loader2, Clock, MapPin, CheckCircle, AlertTriangle, Sparkles } from "lu
 import useAIAssistant from "@/hooks/useAIAssistant";
 import { ClientTrip, ClientActivity } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/components/notifications/NotificationCenter";
 
 interface ItineraryOptimizationModalProps {
   open: boolean;
@@ -39,6 +40,7 @@ export function ItineraryOptimizationModal({
 
   const { optimizeItinerary } = useAIAssistant();
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
 
   const handleOptimize = async () => {
     try {
@@ -48,28 +50,18 @@ export function ItineraryOptimizationModal({
       // Auto-apply if enabled
       if (autoApply && onApplyOptimization) {
         onApplyOptimization(result.optimizedActivities);
-        toast({
-          title: "Itinerary Auto-Optimized!",
-          description: "Your activities have been automatically reordered for better efficiency.",
-        });
+        notifyBanner({ message: "Itinerary auto-optimized." });
         onOpenChange(false);
       }
     } catch (error) {
-      toast({
-        title: "Optimization Failed",
-        description: "Unable to optimize your itinerary. Please try again.",
-        variant: "destructive",
-      });
+      notifySnackbar({ message: "Unable to optimize your itinerary." });
     }
   };
 
   const handleApplyChanges = () => {
     if (optimizationResult && onApplyOptimization) {
       onApplyOptimization(optimizationResult.optimizedActivities);
-      toast({
-        title: "Itinerary Optimized!",
-        description: "Your activities have been reordered for better efficiency.",
-      });
+      notifySnackbar({ message: "Itinerary optimized." });
       onOpenChange(false);
     }
   };

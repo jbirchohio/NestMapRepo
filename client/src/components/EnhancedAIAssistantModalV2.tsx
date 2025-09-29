@@ -54,11 +54,11 @@ const ACTIVITY_CATEGORIES = [
 
 // Quick action prompts
 const QUICK_PROMPTS = [
-  { id: 'activities', label: '🎯 Add more activities', action: 'category' },
-  { id: 'food', label: '🍽️ Find restaurants nearby', action: 'food' },
-  { id: 'weather', label: '☀️ Weather-based suggestions', action: 'weather' },
-  { id: 'budget', label: '💰 Budget-friendly options', action: 'budget' },
-  { id: 'attractions', label: '🏛️ Must-see attractions', action: 'attractions' }
+  { id: 'activities', label: 'Add more activities', action: 'category' },
+  { id: 'food', label: 'Find restaurants nearby', action: 'food' },
+  { id: 'weather', label: 'Weather-based suggestions', action: 'weather' },
+  { id: 'budget', label: 'Budget-friendly options', action: 'budget' },
+  { id: 'attractions', label: 'Must-see attractions', action: 'attractions' }
 ];
 
 export default function EnhancedAIAssistantModalV2({
@@ -100,7 +100,7 @@ export default function EnhancedAIAssistantModalV2({
       };
 
       return aiSuggestActivities({
-        city: trip.city,
+        city: trip.city || trip.title || "",
         interests: [categoryMap[category] || category],
         duration: 1
       });
@@ -248,7 +248,7 @@ export default function EnhancedAIAssistantModalV2({
         setIsProcessing(true);
         try {
           const data = await aiWeatherActivities({
-            location: trip.city,
+            location: trip.city || trip.title || "",
             date: selectedDate.toISOString().split('T')[0],
             weatherCondition: 'current conditions'
           });
@@ -279,7 +279,7 @@ export default function EnhancedAIAssistantModalV2({
         // Show budget options inline
         setConversation(prev => [...prev, {
           role: "assistant",
-          content: "Here are budget-friendly options for " + trip.city + ":\n\n💵 **Free Activities:**\n• Walk through city parks\n• Visit free museums on designated days\n• Explore local markets\n• Self-guided walking tours\n\n💰 **Low-Cost Options:**\n• Public transportation day passes\n• Street food tours\n• Local cafes over tourist restaurants\n• Group discounts for attractions\n\nWould you like specific recommendations for any of these?"
+          content: "Here are budget-friendly ideas:\n\nFree Activities:\n  - Walk through city parks\n  - Visit free museums on designated days\n  - Explore local markets\n  - Self-guided walking tours\n\nLow-Cost:\n  - Public transportation day passes\n  - Street food tours\n  - Local cafes over tourist restaurants\n  - Group discounts for attractions\n\nWant specific recommendations for any of these?"
         }]);
         break;
         
@@ -401,8 +401,8 @@ export default function EnhancedAIAssistantModalV2({
                 value={selectedDate.toISOString().split('T')[0]}
                 onChange={(e) => setSelectedDate(new Date(e.target.value))}
                 className="text-sm border border-purple-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                min={trip.startDate?.toString().split('T')[0]}
-                max={trip.endDate?.toString().split('T')[0]}
+                min={trip.startDate ? trip.startDate.toString().split('T')[0] : ""}
+                max={trip.endDate ? trip.endDate.toString().split('T')[0] : ""}
               />
             </div>
           </div>
@@ -566,3 +566,8 @@ export default function EnhancedAIAssistantModalV2({
     </Dialog>
   );
 }
+
+
+
+
+

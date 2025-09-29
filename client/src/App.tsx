@@ -3,34 +3,36 @@ import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { NotificationProvider } from "@/components/notifications/NotificationCenter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/JWTAuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { analytics } from "@/lib/analytics";
 import MainNavigationConsumer from "@/components/MainNavigationConsumer";
+import PWAUpdatePrompt from "@/components/PWAUpdatePrompt";
 import SimpleFooter from "@/components/SimpleFooter";
 import HomeConsumerRedesigned from "@/pages/HomeConsumerRedesigned";
 import TripPlanner from "@/pages/TripPlanner";
-import SimpleShare from "@/pages/SimpleShare";
-import TripOptimizer from "@/pages/TripOptimizer";
-import ProfileSettings from "@/pages/ProfileSettings";
-import HelpCenter from "@/pages/HelpCenter";
-import AITripGeneratorPage from "@/pages/AITripGenerator";
-import { ContactPage } from "@/pages/Contact";
-import { PrivacyPage } from "@/pages/Privacy";
-import { TermsPage } from "@/pages/Terms";
-import { HelpPage } from "@/pages/Help";
-import DestinationGuide from "@/pages/DestinationGuide";
+const SimpleShare = lazy(() => import("@/pages/SimpleShare"));
+const TripOptimizer = lazy(() => import("@/pages/TripOptimizer"));
+const ProfileSettings = lazy(() => import("@/pages/ProfileSettings"));
+const HelpCenter = lazy(() => import("@/pages/HelpCenter"));
+const AITripGeneratorPage = lazy(() => import("@/pages/AITripGenerator"));
+const ContactPage = lazy(() => import("@/pages/Contact").then(m => ({ default: m.ContactPage })));
+const PrivacyPage = lazy(() => import("@/pages/Privacy").then(m => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import("@/pages/Terms").then(m => ({ default: m.TermsPage })));
+const HelpPage = lazy(() => import("@/pages/Help").then(m => ({ default: m.HelpPage })));
+const DestinationGuide = lazy(() => import("@/pages/DestinationGuide"));
 import NotFound from "@/pages/not-found";
 import Explore from "@/pages/Explore";
-import TemplateMarketplace from "@/pages/TemplateMarketplace";
-import TemplateDetails from "@/pages/TemplateDetails";
-import CreateTemplate from "@/pages/CreateTemplate";
-import PublicTemplate from "@/pages/PublicTemplate";
-import CreatorDashboard from "@/pages/CreatorDashboard";
-import TemplateAnalytics from "@/pages/TemplateAnalytics";
-import AdminDashboard from "@/pages/AdminDashboard";
-import YearInTravelPage from "@/pages/YearInTravelPage";
+const TemplateMarketplace = lazy(() => import("@/pages/TemplateMarketplace"));
+const TemplateDetails = lazy(() => import("@/pages/TemplateDetails"));
+const CreateTemplate = lazy(() => import("@/pages/CreateTemplate"));
+const PublicTemplate = lazy(() => import("@/pages/PublicTemplate"));
+const CreatorDashboard = lazy(() => import("@/pages/CreatorDashboard"));
+const TemplateAnalytics = lazy(() => import("@/pages/TemplateAnalytics"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const YearInTravelPage = lazy(() => import("@/pages/YearInTravelPage"));
 
 // Lazy load the Destinations page
 const Destinations = lazy(() => import("@/pages/Destinations"));
@@ -89,6 +91,7 @@ function Router() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-white to-pink-50">
       <NavigationWrapper />
       <main className="flex-1">
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading…</div>}>
         <Switch>
           {/* Core consumer routes */}
           <Route path="/" component={HomePage} />
@@ -138,6 +141,7 @@ function Router() {
           {/* 404 */}
           <Route component={NotFound} />
         </Switch>
+        </Suspense>
       </main>
       <SimpleFooter />
     </div>
@@ -150,8 +154,11 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <ErrorBoundary>
-            <Toaster />
-            <Router />
+            <NotificationProvider>
+              <Toaster />
+              <PWAUpdatePrompt />
+              <Router />
+            </NotificationProvider>
           </ErrorBoundary>
         </TooltipProvider>
       </AuthProvider>

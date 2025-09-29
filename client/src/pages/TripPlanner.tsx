@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/components/notifications/NotificationCenter";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import AppShell from "@/components/AppShell";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
-import MapView from "@/components/MapView";
-import ShareTripModal from "@/components/ShareTripModal";
-import ActivityModal from "@/components/ActivityModal";
-import ActivityModalConsumer from "@/components/ActivityModalConsumer";
-import AITripChat from "@/components/AITripChat";
-import SmartTourRecommendations from "@/components/SmartTourRecommendations";
+import React, { Suspense, lazy } from "react";
+const MapView = lazy(() => import("@/components/MapView"));
+const ShareTripModal = lazy(() => import("@/components/ShareTripModal"));
+// ActivityModal is not used directly here; its consumer is lazy-loaded below
+const ActivityModalConsumer = lazy(() => import("@/components/ActivityModalConsumer"));
+const AITripChat = lazy(() => import("@/components/AITripChat"));
+const SmartTourRecommendations = lazy(() => import("@/components/SmartTourRecommendations"));
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
 import { useMapboxDirections } from "@/hooks/useMapboxDirections";
@@ -19,7 +22,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { MessageCircle, X, Sparkles, Package, Share2, Camera } from "lucide-react";
 import CreateTemplateModal from "@/components/CreateTemplateModal";
 import TripPosterGenerator from "@/components/TripPosterGenerator";
-import ActivityGenerator from "@/components/ActivityGenerator";
+const ActivityGenerator = lazy(() => import("@/components/ActivityGenerator"));
 
 export default function TripPlanner() {
   const [match, params] = useRoute("/trip/:id");
@@ -33,6 +36,8 @@ export default function TripPlanner() {
   }
   
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
+  const [flashMessage, setFlashMessage] = useState<string | null>(null);
   const { fetchRouteDirections } = useMapboxDirections();
   
   // If no trip ID, redirect to home
@@ -114,6 +119,20 @@ export default function TripPlanner() {
     }
   }, [trip, activeDay]);
 
+  // Read flash banner intent (e.g., after navigation from AI creation)
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1] || '');
+    const flash = localStorage.getItem(`trip_${tripId}_flash`);
+    if (flash) {
+      setFlashMessage(flash);
+      localStorage.removeItem(`trip_${tripId}_flash`);
+      setTimeout(() => setFlashMessage(null), 4000);
+    } else if (params.get('created') === '1') {
+      setFlashMessage('Trip created successfully');
+      setTimeout(() => setFlashMessage(null), 4000);
+    }
+  }, [location, tripId]);
+
   // Calculate days and store trip info whenever trip changes
   useEffect(() => {
     if (trip && trip.startDate && trip.endDate) {
@@ -144,21 +163,8 @@ export default function TripPlanner() {
   
   // Show errors
   useEffect(() => {
-    if (tripError) {
-      toast({
-        title: "Error",
-        description: "Failed to load trip details. Please try again.",
-        variant: "destructive",
-      });
-    }
-    
-    if (activitiesError) {
-      toast({
-        title: "Error",
-        description: "Failed to load activities. Please try again.",
-        variant: "destructive",
-      });
-    }
+    if (tripError) notifySnackbar({ message: "Failed to load trip details." });
+    if (activitiesError) notifySnackbar({ message: "Failed to load activities." });
   }, [tripError, activitiesError, toast]);
   
   // Filter activities for current day
@@ -270,17 +276,10 @@ export default function TripPlanner() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      toast({
-        title: "Success",
-        description: "Share settings updated successfully",
-      });
+      notifySnackbar({ message: "Share settings updated." });
     } catch (error) {
       // Error updating share settings
-      toast({
-        title: "Error",
-        description: "Failed to update share settings",
-        variant: "destructive",
-      });
+      notifySnackbar({ message: "Failed to update share settings." });
       throw error;
     }
   };
@@ -294,28 +293,26 @@ export default function TripPlanner() {
         allowAnonymous: true
       });
 
-      toast({
-        title: newMode ? "Collaborative Mode Enabled" : "Collaborative Mode Disabled",
-        description: newMode 
-          ? "Others can now suggest activities and comment on your trip!"
-          : "Collaborative features have been disabled.",
-      });
+      notifyBanner({ message: newMode ? "Collaborative mode enabled." : "Collaborative mode disabled." });
 
       // Refetch trip to get updated state
       if (refetchActivities) refetchActivities();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to toggle collaborative mode",
-        variant: "destructive",
-      });
+      notifySnackbar({ message: "Failed to toggle collaborative mode." });
     }
   };
   
   // Loading state
   if (isTripLoading || isActivitiesLoading) {
-    return (
-      <AppShell>
+  return (
+    <AppShell>
+      {flashMessage && (
+        <div className="p-3">
+          <Alert>
+            <AlertDescription>{flashMessage}</AlertDescription>
+          </Alert>
+        </div>
+      )}
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin h-8 w-8 border-4 border-[hsl(var(--primary))] border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -444,6 +441,7 @@ export default function TripPlanner() {
         </div>
         
         <div className="h-full">
+          <Suspense fallback={<div className="w-full h-full bg-[hsl(var(--muted))]" />}> 
           <MapView
             markers={mapMarkers}
             routes={calculatedRoutes}
@@ -451,6 +449,7 @@ export default function TripPlanner() {
             zoom={13}
             onMarkerClick={handleMarkerClick}
           />
+          </Suspense>
         </div>
       </div>
       
@@ -478,6 +477,7 @@ export default function TripPlanner() {
       {/* Mobile map view - must be outside other containers to be full screen */}
       {mobileView === 'map' && (
         <div className="md:hidden fixed inset-0 top-[108px] z-10" style={{ height: 'calc(100vh - 108px)' }}>
+          <Suspense fallback={<div className="w-full h-full bg-[hsl(var(--muted))]" />}> 
           <MapView
             markers={mapMarkers}
             routes={calculatedRoutes}
@@ -485,6 +485,7 @@ export default function TripPlanner() {
             zoom={13}
             onMarkerClick={handleMarkerClick}
           />
+          </Suspense>
         </div>
       )}
       
@@ -555,6 +556,7 @@ export default function TripPlanner() {
             </Button>
           </div>
           <div className="p-4">
+            <Suspense fallback={<div className="p-6 text-sm text-[hsl(var(--muted-foreground))]">Loading tours…</div>}>
             <SmartTourRecommendations
               tripId={tripId}
               destination={trip.city || trip.location || ''}
@@ -564,6 +566,7 @@ export default function TripPlanner() {
               longitude={trip.longitude ? parseFloat(trip.longitude) : undefined}
               onTourAdded={() => refetchActivities()}
             />
+            </Suspense>
           </div>
         </div>
       )}

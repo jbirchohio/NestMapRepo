@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Loader2, CreditCard, Lock, CheckCircle, Calendar, Tag, Percent } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { apiRequest } from '@/lib/queryClient';
 
 // Initialize Stripe - check for the key and handle gracefully
@@ -33,6 +34,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>('');
@@ -78,10 +80,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
       });
 
       setPromoData(response);
-      toast({
-        title: 'Promo code applied!',
-        description: `You saved $${response.discountApplied.toFixed(2)}`,
-      });
+      notifySnackbar({ message: `Promo applied: saved $${response.discountApplied.toFixed(2)}` });
     } catch (err: any) {
       setPromoError(err.error || 'Invalid promo code');
       setPromoData(null);
@@ -125,11 +124,7 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
         const purchaseData = await confirmResponse.json();
         
         // Success!
-        toast({
-          title: 'Success!',
-          description: `You've got "${templateTitle}" for free!`,
-        });
-
+        notifySnackbar({ message: `"${templateTitle}" unlocked for free.` });
         onSuccess(purchaseData);
         return;
       }
@@ -201,19 +196,11 @@ function CheckoutForm({ templateId, templateTitle, templateDuration = 7, price, 
 
       const purchaseData = await confirmResponse.json();
       // Success!
-      toast({
-        title: 'Payment successful!',
-        description: `You've purchased "${templateTitle}"`,
-      });
-
+      notifySnackbar({ message: `Purchased "${templateTitle}".` });
       onSuccess(purchaseData);
     } catch (err: any) {
       setError(err.message || 'An error occurred during payment');
-      toast({
-        title: 'Payment failed',
-        description: err.message,
-        variant: 'destructive',
-      });
+      notifySnackbar({ message: err.message || 'Payment failed' });
     } finally {
       setIsProcessing(false);
     }

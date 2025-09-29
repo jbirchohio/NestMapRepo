@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Key, Shield, Bell } from 'lucide-react';
@@ -56,6 +57,7 @@ interface NotificationSettings {
 export default function ProfileSettings() {
   const { user, userId } = useAuth();
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
   const queryClient = useQueryClient();
 
   // Privacy settings state
@@ -103,18 +105,11 @@ export default function ProfileSettings() {
       return apiRequest('PUT', '/api/user/profile', { ...data, userId });
     },
     onSuccess: () => {
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
+      notifySnackbar({ message: "Profile updated." });
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update profile",
-        variant: "destructive",
-      });
+      notifySnackbar({ message: error.message || 'Failed to update profile' });
     },
   });
 

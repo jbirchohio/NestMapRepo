@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,7 @@ export default function CreateTemplate() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
 
   // Form state
   const [title, setTitle] = useState('');
@@ -130,20 +132,15 @@ export default function CreateTemplate() {
       return template;
     },
     onSuccess: (data, publish) => {
-      toast({
-        title: publish ? 'Template Published!' : 'Template Saved!',
-        description: publish
-          ? 'Your template is now live in the marketplace'
-          : 'Your template has been saved as a draft',
-      });
+      if (publish) {
+        notifyBanner({ message: 'Template published.' });
+      } else {
+        notifySnackbar({ message: 'Template saved as draft.' });
+      }
       navigate('/creator/dashboard');
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      notifySnackbar({ message: error.message || 'Failed to create template.' });
     }
   });
 
@@ -176,16 +173,9 @@ export default function CreateTemplate() {
       const data = await response.json();
       setUploadedImageUrl(data.coverUrl);
       setCoverImageUrl(data.coverUrl);
-      toast({
-        title: 'Image uploaded!',
-        description: 'Your cover image has been uploaded successfully.',
-      });
+      notifySnackbar({ message: 'Cover image uploaded.' });
     } catch (error) {
-      toast({
-        title: 'Upload failed',
-        description: 'Failed to upload image. Please try again.',
-        variant: 'destructive',
-      });
+      notifySnackbar({ message: 'Failed to upload image. Please try again.' });
     } finally {
       setIsUploading(false);
     }
@@ -196,11 +186,7 @@ export default function CreateTemplate() {
     if (file) {
       // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: 'File too large',
-          description: 'Please select an image under 10MB',
-          variant: 'destructive',
-        });
+        notifySnackbar({ message: 'File too large. Max 10MB.' });
         return;
       }
 

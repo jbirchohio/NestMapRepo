@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { aiSuggestActivities, aiWeatherActivities } from "@/lib/ai";
 import { useToast } from "@/hooks/use-toast";
+import { useNotification } from "@/components/notifications/NotificationCenter";
 import { ClientTrip } from "@/lib/types";
 import { CloudSun, Umbrella, ThermometerSun, Snowflake, Wind, Sparkles, MapPin } from "lucide-react";
 import TripDatePicker from "@/components/TripDatePicker";
@@ -63,6 +64,7 @@ interface WeatherForecastResponse {
 
 export default function WeatherSuggestionsPanel({ trip, activities = [], onAddActivity }: WeatherSuggestionsPanelProps) {
   const { toast } = useToast();
+  const { notifySnackbar } = useNotification();
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     if (trip.startDate) {
       const date = new Date(trip.startDate);
@@ -135,18 +137,11 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
       } else if (data.current) {
         setAutoWeatherData([data.current]);
         setIsAutoDetected(true);
-        toast({
-          title: "Current weather detected!",
-          description: "Found current weather for your location.",
-        });
+        notifySnackbar({ message: "Found current weather for your location." });
       }
     },
     onError: (error) => {
-      toast({
-        title: "Weather detection failed",
-        description: "Couldn't auto-detect weather. You can still use manual selection.",
-        variant: "destructive",
-      });
+      notifySnackbar({ message: "Couldn't auto-detect weather. Try manual selection." });
       // Error getting auto weather
     },
   });
@@ -161,16 +156,12 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
       const data = await aiWeatherActivities({
         location: trip.city || trip.location || trip.title,
         date: selectedDate,
-        weatherCondition: weatherToUse
+        weatherCondition: selectedDayWeather ? `${selectedDayWeather.description} with temperature ${selectedDayWeather.temperature}°${selectedDayWeather.unit || 'F'}` : weatherLabels[weatherCondition]
       });
       return data as WeatherResponse;
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Could not get weather-based suggestions. Please try again.",
-        variant: "destructive",
-      });
+      notifySnackbar({ message: "Could not get weather-based suggestions." });
       // Error getting weather suggestions
     },
   });
@@ -186,11 +177,7 @@ export default function WeatherSuggestionsPanel({ trip, activities = [], onAddAc
       return data as { activities: WeatherActivitySuggestion[] };
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Could not get activity suggestions. Please try again.",
-        variant: "destructive",
-      });
+      notifySnackbar({ message: "Could not get activity suggestions." });
       // Error getting general suggestions
     },
   });

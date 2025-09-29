@@ -6,6 +6,7 @@ import { db } from '../db-connection';
 import { users, templatePurchases, templates, promoCodes, promoCodeUses } from '@shared/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import Stripe from 'stripe';
+import CONFIG from '../config/constants';
 import { paymentRateLimit } from '../middleware/rateLimiting';
 import { auditService } from '../services/auditService';
 import { paymentIdempotency } from '../middleware/idempotency';
@@ -47,6 +48,11 @@ router.post('/create-payment-intent', requireAuth, paymentRateLimit, paymentIdem
     const template = await storage.getTemplate(template_id);
     if (!template || template.status !== 'published') {
       return res.status(404).json({ message: 'Template not found or not available' });
+    }
+
+    // Prevent creators from purchasing their own template
+    if (template.user_id === userId) {
+      return res.status(400).json({ message: 'You cannot purchase your own template' });
     }
 
     // Check if already purchased
@@ -215,6 +221,11 @@ router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempoten
       return res.status(404).json({ message: 'Template not found' });
     }
 
+    // Prevent creators from purchasing their own template
+    if (template.user_id === userId) {
+      return res.status(400).json({ message: 'You cannot purchase your own template' });
+    }
+
     // Check if already processed
     const existingPurchase = await db.select()
       .from(templatePurchases)
@@ -256,13 +267,12 @@ router.post('/confirm-purchase', requireAuth, paymentRateLimit, paymentIdempoten
 
     // Calculate fees - Industry standard: deduct Stripe fees first
     const grossPrice = parseFloat(template.price || '0');
-    // Stripe fees: 2.9% + $0.30 per transaction
-    const stripeFee = (grossPrice * 0.029) + 0.30;
+    // Stripe fees from CONFIG
+    const stripeFee = (grossPrice * CONFIG.STRIPE_FEE_PERCENTAGE) + CONFIG.STRIPE_FEE_FIXED;
     const netRevenue = grossPrice - stripeFee;
-
-    // Split net revenue: 70% to creator, 30% to platform
-    const sellerEarnings = netRevenue * 0.70;
-    const platformFee = netRevenue * 0.30;
+    // Split net revenue per CONFIG (platform fee percentage of net)
+    const platformFee = netRevenue * CONFIG.PLATFORM_FEE_PERCENTAGE;
+    const sellerEarnings = netRevenue - platformFee;
 
     // Create purchase record
     const [purchase] = await db.insert(templatePurchases)

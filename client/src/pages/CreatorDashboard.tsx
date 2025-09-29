@@ -29,6 +29,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useNotification } from '@/components/notifications/NotificationCenter';
 import { ClientCreatorDashboard, ClientTemplate } from '@/lib/types';
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { Link, useLocation } from 'wouter';
@@ -51,6 +52,7 @@ import {
 export default function CreatorDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { notifySnackbar, notifyBanner } = useNotification();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const [selectedTimeframe, setSelectedTimeframe] = useState('30d');
@@ -95,20 +97,13 @@ export default function CreatorDashboard() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: 'Payout requested!',
-        description: `Your ${payoutMethod} payout of $${payoutAmount} will arrive by ${data.estimatedArrival}`,
-      });
+      notifySnackbar({ message: `Payout requested. ETA ${data.estimatedArrival}` });
       setShowPayoutModal(false);
       setPayoutAmount('');
       refetch();
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Payout failed',
-        description: error.message,
-        variant: 'destructive',
-      });
+      notifySnackbar({ message: error.message || 'Payout failed' });
     },
   });
 
@@ -402,10 +397,7 @@ export default function CreatorDashboard() {
                           size="sm"
                           onClick={() => {
                             navigator.clipboard.writeText(`${window.location.origin}/template/${template.slug}`);
-                            toast({
-                              title: 'Link copied!',
-                              description: 'Template link copied to clipboard'
-                            });
+                            notifySnackbar({ message: 'Template link copied.' });
                           }}
                         >
                           <Share2 className="h-4 w-4" />
